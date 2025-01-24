@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="./src/index.css" />
+</head>
+<body>
+ <h1>Logging In</h1>
+<script>
+    // I'll get back following in querystrings:
+    // token, walletAddress, email
+    // Get the current URL query string (everything after ?)
+    const queryString = window.location.search;
+
+    // Use URLSearchParams to parse the query string
+    const params = new URLSearchParams(queryString);
+
+    // Loop through each query parameter and log it
+    console.log('Query Parameters:');
+    params.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+        localStorage.setItem(key, value);
+    });
+    window.location.href = "/app.html";
+</script>
+</body>
+</html>
