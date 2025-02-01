@@ -5,7 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DIMO B2B Fleet Manager</title>
-    <link rel="stylesheet" href="./src/index.css" />
+    <link rel="stylesheet" href="./public/monospace-web/index.css" />
+    <link rel="stylesheet" href="./public/monospace-web/reset.css" />
   </head>
   <body>
   <div>
@@ -23,9 +24,10 @@
       </defs>
     </svg>
   </div>
+  <h1 class="title">Fleet Onboarding App</h1>
   <slot></slot>
-  <div>
-    <a href="https://login.dimo.org/?clientId=${this.clientId}&redirectUri=http://localhost:3008/login.html&entryState=EMAIL_INPUT">Login with DIMO!</a>
+  <div class="grid place-items-center">
+    <a href="https://login.dimo.org/?clientId=0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB&redirectUri=http://localhost:3008/login.html&entryState=EMAIL_INPUT">Login with DIMO!</a>
   </div>
   <script>
     function isTokenExpired(token) {
@@ -54,5 +56,6 @@
       window.location.href = "/app.html";
     }
   </script>
+  <script src="./public/monospace-web/index.js"></script>
   </body>
 </html>

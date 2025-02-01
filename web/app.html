@@ -3,14 +3,27 @@
 <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + Lit</title>
-    <link rel="stylesheet" href="./src/index.css" />
-    <script type="module" src="/src/my-element.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <title>DIMO B2B Fleet Onboarding App</title>
+    <link rel="stylesheet" href="./monospace-web/index.css" />
+    <link rel="stylesheet" href="./monospace-web/reset.css" />
+    <script type="module" src="./src/add-vin-element.js"></script>
 </head>
 <body>
-<my-element>
-    <h1>Vehicles:</h1>
-</my-element>
+<h1 class="title">Fleet Onboarding App</h1>
+<add-vin-element></add-vin-element>
+
+<h2>My Vehicles</h2>
+<table>
+    <tr>
+        <th>VIN</th>
+        <th>Make</th>
+        <th>Model</th>
+        <th>Year</th>
+        <th>Status</th>
+    </tr>
+</table>
+
+<script src="./monospace-web/index.js"></script>
 </body>
 </html>

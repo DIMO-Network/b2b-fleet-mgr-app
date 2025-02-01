@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dimo-network/transactions": "^0.1.79",
+    "@turnkey/webauthn-stamper": "^0.5.0",
     "lit": "^3.2.1"
   },
   "devDependencies": {
