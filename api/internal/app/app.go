@@ -39,6 +39,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	// what auth am i supposed to use now? priv tokens i heard were being deprecated?
 	app.Post("/v1/vehicles", vehiclesCtrl.AddVehicles)
+	app.Get("/v1/settings", vehiclesCtrl.AddVehicles)
 
 	return app
 }

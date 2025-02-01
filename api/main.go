@@ -29,12 +29,11 @@ func main() {
 
 	monApp := createMonitoringServer(strconv.Itoa(settings.MonitoringPort))
 	group, gCtx := errgroup.WithContext(ctx)
-	// todo need something where we define the fiber app server
-	webAPI := app.App()
+	webAPI := app.App(&settings, &logger)
 
-	logger.Info().Str("port", strconv.Itoa(settings.MonitoringPort)).Msgf("Starting monitoring server")
+	logger.Info().Str("port", strconv.Itoa(settings.MonitoringPort)).Msgf("Starting monitoring server %d", settings.MonitoringPort)
 	runFiber(gCtx, monApp, ":"+strconv.Itoa(settings.MonitoringPort), group)
-	logger.Info().Str("port", strconv.Itoa(settings.APIPort)).Msgf("Starting web server")
+	logger.Info().Str("port", strconv.Itoa(settings.APIPort)).Msgf("Starting web server %d", settings.APIPort)
 	runFiber(gCtx, webAPI, ":"+strconv.Itoa(settings.APIPort), group)
 
 	if err := group.Wait(); err != nil {

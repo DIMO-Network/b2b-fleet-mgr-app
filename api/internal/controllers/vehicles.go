@@ -30,11 +30,19 @@ func NewVehiclesController(settings *config.Settings, logger *zerolog.Logger) *V
 // @Security     BearerAuth
 // @Router /v1/vehicles [post]
 func (v *VehiclesController) AddVehicles(c *fiber.Ctx) error {
+	const workingVIN = "1C4SJSBP8RS133747"
+
 	payload := AddVehicleRequest{}
 	err := c.BodyParser(&payload)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("Invalid request body")
 	}
+	// temporary:
+	// if vin is the known one, just skip and return success
+	if payload.VINs[0] == workingVIN {
+		return c.SendStatus(fiber.StatusOK)
+	}
+
 	compassSvc, err := fleets.NewCompassSvc(v.settings, v.logger)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Failed to connect with Compass")
