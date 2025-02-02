@@ -10,7 +10,8 @@ export class AddVinElement extends LitElement {
         processing: { type: Boolean },
         token: {type: String },
     }
-
+    // we're gonna need a way to handle errors and display them in the frontend, as well as continuation for something that
+    // errored half way
     constructor() {
         super();
         this.vin = "";
@@ -45,17 +46,28 @@ export class AddVinElement extends LitElement {
     _submitVIN(event) {
         this.processing = true;
         console.log(this.vin);
-        // call backend endpoint
-        // call dd-api decode vin
+        // todo if _submitVIN can be async, then can change below to use await for each one.
         this.addToCompass().then(() => {
             this.addToUserDevicesAndDecode().then(res => {
                 this.getMintVehicle(res.userDeviceId, res.definitionId).then(mintRes => {
                     // need to sign the payload
                     console.log("payload to sign", mintRes);
-
+                    this.signMintVehiclePayload(mintRes).then(res => {
+                        console.log("signed mint vehicle", res);
+                    })
                 })
             });
         });
+
+        // todo: we don't have the tokenid yet, i think we need to do polling somwewhere to get the tokenid to be able to call below
+        // const result = await kernelSigner.setVehiclePermissions({
+        //     tokenId, // the token id from the post response from devices-api? or do we get this later?
+        //     grantee, // same as above grantee
+        //     perms,
+        //     expiration,
+        //     source: `ipfs://${ipfsRes.data?.cid}`,
+        // });
+        // does devices-api already do this? ^
 
         // reset form
         this.processing = false;
@@ -159,13 +171,41 @@ export class AddVinElement extends LitElement {
             });
     }
 
-    async signMintVehiclePayload(nft) {
+    /**
+     * calls devices-api to mint a vehicle from a signed payload
+     */
+    async postMintVehicle(userDeviceId, signedNftPayload) {
+        const url = `${this.settings.getDevicesApiUrl()}/v1/user/devices/${userDeviceId}/commands/mint`;
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${this.token}`
+            },
+            body: JSON.stringify({
+                signature: signedNftPayload,
+                // we could also add the imageData
+            }),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+    }
+
+    async signMintVehiclePayload(userDeviceId, nft) {
         const kernelConfig = newKernelConfig({
             rpcUrl: this.settings.getRpcUrl(),
             bundlerUrl: this.settings.getBundlerUrl(),
             paymasterUrl: this.settings.getPaymasterUrl(),
-            // todo more things that should be configurable
-            clientId: "0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB",
+            // todo more things that should be configurable /dynamic
+            clientId: this.settings.getAppClientId(),
             domain: "localhost:3008",
             redirectUri: "http://localhost:3008/login.html",
             environment: "dev",
@@ -176,10 +216,8 @@ export class AddVinElement extends LitElement {
             rpId: "localhost:3008",
         });
         const kernelSigner = new KernelSigner(kernelConfig);
-        await kernelSigner.init("todo?", stamper);
-
-        // // do i need this?
-        // const perms = kernelSigner.getDefaultPermissionValue();
+        await kernelSigner.init(this.settings.getAppSubOrganizationId(), stamper); // not sure if value here is correct
+        await kernelSigner.openSessionWithPasskey(); // is this needed?
 
         const perms = sacdPermissionValue({
             NONLOCATION_TELEMETRY: true,
@@ -191,45 +229,27 @@ export class AddVinElement extends LitElement {
             RAW_DATA: true,
             APPROXIMATE_LOCATION: true,
         });
+        const expiration = BigInt(2933125200); // 40 years
     // convert to JS, todo settings for appId and grantee
         const ipfsRes = await kernelSigner.signAndUploadSACDAgreement({
-            driverID: args.owner,
-            appID: process.env.SACD_DEFAULT_GRANTEE as `0x${string}`, // my client id? or is there still and app id
-            appName: "dimo-driver",
-            expiration: BigInt(2933125200), // 40 years
+            driverID: this.settings.getAppSubOrganizationId(), // current user wallet addres??
+            appID: this.settings.getAppClientId(), // assuming clientId
+            appName: "B2B Fleet Manager App DEV", // todo from app prompt
+            expiration: expiration,
             permissions: perms,
-            grantee: process.env.SACD_DEFAULT_GRANTEE as `0x${string}`, // the dev license ?
+            grantee: this.settings.getAppSubOrganizationId(), // granting the organization the perms
             attachments: [],
-            grantor: args.owner,
+            grantor: this.settings.getAppSubOrganizationId, // current user...
         });
         if (!ipfsRes.success) {
             throw new Error(`Failed to upload SACD agreement`);
         }
-        const result = await kernelSigner.setVehiclePermissions({
-            tokenId,
-            grantee,
-            perms,
-            expiration,
-            source: `ipfs://${ipfsRes.data?.cid}`,
-        });
-        // instead of doing below, call devices-api b/c it will do mint vehicle and synthetic
-    // convert to js
-    //     const response = await kernelSigner.mintVehicleWithDeviceDefinition(
-    //         {
-    //             manufacturerNode: args.manufacturerNode,
-    //             owner: args.owner, // 0x addr of my wallet address of the person that will own the nft
-    //             deviceDefinitionID: args.deviceDefinitionID,
-    //             attributeInfo: args.attributeInfo, // make model year
-    //             sacdInput: {
-    //                 grantee: process.env.SACD_DEFAULT_GRANTEE as `0x${string}`,
-    //                 permissions: perms,
-    //                 expiration: BigInt(2933125200), // 40 years
-    //                 source: `ipfs://${ipfsRes.cid}`,
-    //             },
-    //         },
-    //         false // dont wait for transaction, probably set to true
-    //     );
-        // synthetic device?
+        // mint vehicle by calling devices-api here
+        // before calling devices-api need to sign the nft payload variable that is input here
+        const signedNft = await kernelSigner.signChallenge(nft);// this may need to be signtypeddata
+        // now send this to devices-api post (wrap it in a function)
+        console.log("signedNft", signedNft);
+        await this.postMintVehicle(userDeviceId, signedNft);
     }
 
 }

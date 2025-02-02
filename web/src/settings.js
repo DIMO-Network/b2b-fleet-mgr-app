@@ -57,4 +57,18 @@ export class Settings {
     getBundlerUrl() {
         return this.get("bundlerUrl");
     }
+    getAppClientId() {
+        return "0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB"; // for now hard coded
+
+        // todo implement prompt for clientId... what object do we store it for under?
+        //return this.get("appClientId");
+    }
+
+    /**
+     * Organization wallet address is what i'm assuming here, from DC, same as DC admin user wallet addr
+     */
+    getAppSubOrganizationId(){
+        return localStorage.getItem("walletAddress");
+    }
+
 }
