@@ -26,7 +26,7 @@ func NewSettingsController(settings *config.Settings, logger *zerolog.Logger) *S
 // @Success 200
 // @Security     BearerAuth
 // @Router /v1/settings [get]
-func (v *VehiclesController) GetSettings(c *fiber.Ctx) error {
+func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
 
 	payload := SettingsResponse{
 		DevicesAPIURL: v.settings.DevicesAPIURL,

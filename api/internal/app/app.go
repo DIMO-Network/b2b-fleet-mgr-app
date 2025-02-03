@@ -30,16 +30,26 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 		StackTraceHandler: nil,
 	}))
 
-	app.Use(cors.New()) // may not need this
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "*", // Allows requests from any domain
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowHeaders:     "Origin, Content-Type, Accept",
+		AllowCredentials: true,
+	}))
 
 	// application routes
 	app.Get("/", healthCheck)
 
 	vehiclesCtrl := controllers.NewVehiclesController(settings, logger)
+	settingsCtrl := controllers.NewSettingsController(settings, logger)
 
 	// what auth am i supposed to use now? priv tokens i heard were being deprecated?
 	app.Post("/v1/vehicles", vehiclesCtrl.AddVehicles)
-	app.Get("/v1/settings", vehiclesCtrl.AddVehicles)
+	app.Get("/v1/user/devices/:userDeviceId/commands/mint", vehiclesCtrl.GetDevicesAPIMint)
+	app.Post("/v1/user/devices/:userDeviceId/commands/mint", vehiclesCtrl.PostDevicesAPIMint)
+	app.Post("/v1/user/devices/fromvin", vehiclesCtrl.PostDevicesAPIFromVin)
+
+	app.Get("/v1/settings", settingsCtrl.GetSettings)
 
 	return app
 }

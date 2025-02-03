@@ -1,10 +1,14 @@
 package controllers
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/fleets"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
+	"io"
+	"net/http"
 )
 
 type VehiclesController struct {
@@ -17,6 +21,79 @@ func NewVehiclesController(settings *config.Settings, logger *zerolog.Logger) *V
 		settings: settings,
 		logger:   logger,
 	}
+}
+
+func (v *VehiclesController) PostDevicesAPIFromVin(c *fiber.Ctx) error {
+	targetURL := v.settings.DevicesAPIURL + "/v1/user/devices/fromvin"
+
+	return proxyRequest(c, targetURL, c.Body())
+}
+
+func (v *VehiclesController) PostDevicesAPIMint(c *fiber.Ctx) error {
+	udID := c.Params("userDeviceId", "")
+	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/commands/mint", v.settings.DevicesAPIURL, udID)
+
+	return proxyRequest(c, targetURL, c.Body())
+}
+
+func (v *VehiclesController) GetDevicesAPIMint(c *fiber.Ctx) error {
+	udID := c.Params("userDeviceId", "")
+	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/commands/mint", v.settings.DevicesAPIURL, udID)
+
+	return proxyRequest(c, targetURL, nil)
+}
+
+func proxyRequest(c *fiber.Ctx, targetURL string, requestBody []byte) error {
+	// Perform GET request to the target URL
+	req, err := http.NewRequest("GET", targetURL, nil)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create request",
+		})
+	}
+
+	if len(requestBody) != 0 {
+		// Create a new POST request
+		req, err = http.NewRequest("POST", targetURL, bytes.NewBuffer(requestBody))
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to create request",
+			})
+		}
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	// copy any request headers
+	for key, values := range c.GetReqHeaders() {
+		for _, value := range values {
+			req.Header.Add(key, value)
+		}
+	}
+
+	// Perform the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+			"error": "Failed to send request",
+		})
+	}
+	defer resp.Body.Close()
+
+	// Read response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to read response",
+		})
+	}
+
+	// Set headers to match the original response
+	c.Set("Content-Type", "application/json")
+	c.Status(resp.StatusCode)
+
+	// Send the exact same JSON response
+	return c.Send(body)
 }
 
 // AddVehicles
