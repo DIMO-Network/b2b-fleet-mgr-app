@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberrecover "github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/rs/zerolog"
+	"os"
 	"strconv"
 )
 
@@ -37,8 +38,20 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 		AllowCredentials: true,
 	}))
 
+	// serve static content for production
+	app.Get("/", loadStaticIndex)
+	// btw we may need routes setup like we do in dimo-admin if we bring in a routing engine etc
+
+	staticConfig := fiber.Static{
+		Compress: true,
+		MaxAge:   0,
+		Index:    "index.html",
+	}
+
+	app.Static("/", "./dist", staticConfig)
+
 	// application routes
-	app.Get("/", healthCheck)
+	app.Get("/health", healthCheck)
 
 	vehiclesCtrl := controllers.NewVehiclesController(settings, logger)
 	settingsCtrl := controllers.NewSettingsController(settings, logger)
@@ -66,6 +79,15 @@ func healthCheck(c *fiber.Ctx) error {
 	}
 
 	return nil
+}
+
+func loadStaticIndex(ctx *fiber.Ctx) error {
+	dat, err := os.ReadFile("dist/index.html")
+	if err != nil {
+		return err
+	}
+	ctx.Set("Content-Type", "text/html; charset=utf-8")
+	return ctx.Status(fiber.StatusOK).Send(dat)
 }
 
 // ErrorHandler custom handler to log recovered errors using our logger and return json instead of string

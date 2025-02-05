@@ -11,11 +11,13 @@
   "dependencies": {
     "@dimo-network/transactions": "^0.1.79",
     "@turnkey/webauthn-stamper": "^0.5.0",
+    "events": "^3.3.0",
     "lit": "^3.2.1"
   },
   "devDependencies": {
     "eslint-plugin-prettier": "^5.2.3",
     "vite": "^6.0.5",
-    "vite-plugin-eslint": "^1.8.1"
+    "vite-plugin-eslint": "^1.8.1",
+    "vite-plugin-static-copy": "^2.2.0"
   }
 }
