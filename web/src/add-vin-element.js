@@ -51,7 +51,7 @@ export class AddVinElement extends LitElement {
     async _submitVIN(event) {
         this.processing = true;
         console.log("onboarding vin", this.vin);
-// temporary
+// temporary - ok to test with this in prod to get over passkey signing
         const userDeviceId = "2sbhun5x8pyte98RfwHNAYx6Jjn";
         const definitionId = "jeep_wagoneer-l_2024";
 

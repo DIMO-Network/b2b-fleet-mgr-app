@@ -5,6 +5,7 @@ import (
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/controllers"
 	"github.com/DIMO-Network/shared/middleware/metrics"
+	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberrecover "github.com/gofiber/fiber/v2/middleware/recover"
@@ -56,13 +57,17 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	vehiclesCtrl := controllers.NewVehiclesController(settings, logger)
 	settingsCtrl := controllers.NewSettingsController(settings, logger)
 
-	// todo auth - what auth am i supposed to use now? priv tokens i heard were being deprecated?
-	app.Post("/v1/vehicles", vehiclesCtrl.AddVehicles)
-	app.Get("/v1/user/devices/:userDeviceId/commands/mint", vehiclesCtrl.GetDevicesAPIMint)
-	app.Post("/v1/user/devices/:userDeviceId/commands/mint", vehiclesCtrl.PostDevicesAPIMint)
-	app.Post("/v1/user/devices/fromvin", vehiclesCtrl.PostDevicesAPIFromVin)
+	jwtAuth := jwtware.New(jwtware.Config{
+		JWKSetURLs: []string{settings.JwtKeySetURL},
+	})
 
-	app.Get("/v1/settings", settingsCtrl.GetSettings)
+	// just using regular auth, which works with the LIWD JWT
+	app.Post("/v1/vehicles", jwtAuth, vehiclesCtrl.AddVehicles) // todo future: check that your wallet address has access to compass etc
+	app.Get("/v1/user/devices/:userDeviceId/commands/mint", jwtAuth, vehiclesCtrl.GetDevicesAPIMint)
+	app.Post("/v1/user/devices/:userDeviceId/commands/mint", jwtAuth, vehiclesCtrl.PostDevicesAPIMint)
+	app.Post("/v1/user/devices/fromvin", jwtAuth, vehiclesCtrl.PostDevicesAPIFromVin)
+
+	app.Get("/v1/settings", jwtAuth, settingsCtrl.GetSettings)
 
 	return app
 }

@@ -7,6 +7,8 @@ export class Settings {
         }
 
         this.settings = this.loadSettings(); // Load from localStorage initially
+
+        this.token = localStorage.getItem("token");
     }
 
     isLocalhost() {
@@ -18,7 +20,13 @@ export class Settings {
     // Fetch settings from API
     async fetchSettings() {
         try {
-            const response = await fetch(this.apiUrl + "/v1/settings");
+            const response = await fetch(this.apiUrl + "/v1/settings", {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "Authorization": `Bearer ${this.token}`
+                },
+            });
             if (!response.ok) throw new Error("Failed to fetch settings");
 
             this.settings = await response.json();

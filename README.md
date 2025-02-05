@@ -32,5 +32,12 @@ any framework or just follow like what rob eisenberg did in his web component ex
 first experiment:
 regular web app, with javascript to store clientid, get login to work
 
+## Helpful stuff along the way
+https://www.w3.org/TR/webauthn-2/#rp-id
+the rpid must be dimo.org basically
+
+to get components to build for transactions-sdk
+https://www.npmjs.com/package/vite-plugin-node-polyfills
+
 
 
