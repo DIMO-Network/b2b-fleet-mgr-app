@@ -1,7 +1,7 @@
 import {html, LitElement} from 'lit'
 import {Settings} from "./settings.js";
 import {KernelSigner, newKernelConfig, sacdPermissionValue} from '@dimo-network/transactions';
-import { WebauthnStamper } from "@turnkey/webauthn-stamper";
+import {WebauthnStamper} from "@turnkey/webauthn-stamper";
 
 export class AddVinElement extends LitElement {
     static properties = {
@@ -19,12 +19,17 @@ export class AddVinElement extends LitElement {
         this.email = "";
         this.token = localStorage.getItem("token");
         this.settings = new Settings();
+
     }
 
     async connectedCallback() {
         super.connectedCallback(); // Always call super.connectedCallback()
         await this.settings.fetchSettings(); // Fetch settings on load
         console.log("Loaded Settings:");
+
+        const r = this.setupKernelSigner();
+        this.kernelSigner = r.kernelSigner;
+        this.stamper = r.stamper;
     }
 
     render() {
@@ -46,22 +51,27 @@ export class AddVinElement extends LitElement {
     async _submitVIN(event) {
         this.processing = true;
         console.log("onboarding vin", this.vin);
+// temporary
+        const userDeviceId = "2sbhun5x8pyte98RfwHNAYx6Jjn";
+        const definitionId = "jeep_wagoneer-l_2024";
 
-        const compassResp = await this.addToCompass(this.vin);
-        if (!compassResp.success) {
-            // todo have an area for showing errors
-            alert("failed to add vin to compass:" + compassResp.error)
-            return;
+        if(userDeviceId == null) {
+            const compassResp = await this.addToCompass(this.vin);
+            if (!compassResp.success) {
+                // todo have an area for showing errors
+                alert("failed to add vin to compass:" + compassResp.error)
+                return;
+            }
+
+            const fromVinResp = await this.addToUserDevicesAndDecode(this.vin);
+            if (!fromVinResp.success) {
+                alert("failed to add vin to user devices:" + fromVinResp.error);
+                return;
+            }
+
+            const definitionId = fromVinResp.data.userDevice.deviceDefinition.definitionId;
+            const userDeviceId = fromVinResp.data.userDevice.id;
         }
-
-        const fromVinResp = await this.addToUserDevicesAndDecode(this.vin);
-        if (!fromVinResp.success) {
-            alert("failed to add vin to user devices:" + fromVinResp.error);
-            return;
-        }
-
-        const definitionId = fromVinResp.data.userDevice.deviceDefinition.definitionId;
-        const userDeviceId = fromVinResp.data.userDevice.id;
 
         const mintResp = await this.getMintVehicle(userDeviceId, definitionId)
         if (!mintResp.success) {
@@ -70,8 +80,14 @@ export class AddVinElement extends LitElement {
         }
         console.log("payload to sign", mintResp.data);
 
-        const signResp = await this.signMintVehiclePayload(mintResp.data)
-        console.log("signed mint vehicle", signResp);
+        const signedNftResp = await this.signMintVehiclePayload(mintResp.data)
+        if (!signedNftResp.success) {
+            alert("failed to get the message to mint" + signedNftResp.error);
+            return;
+        }
+        console.log("signed mint vehicle", signedNftResp.signature);
+
+        await this.postMintVehicle(userDeviceId, signedNftResp.signature);
 
         // start polling to get token id and synthetic token_id, just users/devices/me
 
@@ -213,35 +229,7 @@ export class AddVinElement extends LitElement {
         }
     }
 
-    /**
-     * calls devices-api to mint a vehicle from a signed payload
-     */
-    async postMintVehicle(userDeviceId, signedNftPayload) {
-        const url = `${this.settings.getBackendUrl()}/v1/user/devices/${userDeviceId}/commands/mint`;
-
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${this.token}`
-            },
-            body: JSON.stringify({
-                signature: signedNftPayload,
-                // we could also add the imageData
-            }),
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-            });
-    }
-
-    async signMintVehiclePayload(userDeviceId, nft) {
+    setupKernelSigner() {
         const kernelConfig = newKernelConfig({
             rpcUrl: this.settings.getRpcUrl(),
             bundlerUrl: this.settings.getBundlerUrl(),
@@ -255,12 +243,61 @@ export class AddVinElement extends LitElement {
         })
         // use the webauthn stamper
         const stamper = new WebauthnStamper({
-            rpId: "localhost:3008",
+            rpId: "http://localhost:3008",
         });
         const kernelSigner = new KernelSigner(kernelConfig);
-        await kernelSigner.init(this.settings.getAppSubOrganizationId(), stamper); // not sure if value here is correct
-        await kernelSigner.openSessionWithPasskey(); // is this needed?
 
+        return {
+            kernelSigner,
+            stamper,
+        };
+    }
+    /**
+     * calls devices-api to mint a vehicle from a signed payload
+     */
+    async postMintVehicle(userDeviceId, signedNftPayload) {
+        const url = `${this.settings.getBackendUrl()}/v1/user/devices/${userDeviceId}/commands/mint`;
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${this.token}`
+                },
+                body: JSON.stringify({
+                    signature: signedNftPayload,
+                    // Optionally add imageData here
+                }),
+            });
+
+            // Check if the HTTP status indicates an error.
+            if (!response.ok) {
+                // Optionally, try to parse additional error information from the response.
+                let errorDetail;
+                try {
+                    errorDetail = await response.json();
+                } catch (parseError) {
+                    errorDetail = await response.text();
+                }
+                return {
+                    success: false,
+                    error: errorDetail.error || errorDetail || `HTTP error! Status: ${response.status}`,
+                    status: response.status,
+                };
+            }
+            return { success: true };
+
+        } catch (error) {
+            console.error("Error in postMintVehicle:", error);
+            return {
+                success: false,
+                error: error.message || "An unexpected error occurred",
+            };
+        }
+    }
+    async signMintVehiclePayload(userDeviceId, nft) {
         const perms = sacdPermissionValue({
             NONLOCATION_TELEMETRY: true,
             COMMANDS: true,
@@ -272,26 +309,42 @@ export class AddVinElement extends LitElement {
             APPROXIMATE_LOCATION: true,
         });
         const expiration = BigInt(2933125200); // 40 years
-    // convert to JS, todo settings for appId and grantee
-        const ipfsRes = await kernelSigner.signAndUploadSACDAgreement({
-            driverID: this.settings.getAppSubOrganizationId(), // current user wallet addres??
-            appID: this.settings.getAppClientId(), // assuming clientId
-            appName: "B2B Fleet Manager App DEV", // todo from app prompt
-            expiration: expiration,
-            permissions: perms,
-            grantee: this.settings.getAppSubOrganizationId(), // granting the organization the perms
-            attachments: [],
-            grantor: this.settings.getAppSubOrganizationId, // current user...
-        });
-        if (!ipfsRes.success) {
-            throw new Error(`Failed to upload SACD agreement`);
+
+        try{
+            // not sure if value here is correct
+            await this.kernelSigner.init(this.settings.getAppSubOrganizationId(), this.stamper);
+            await this.kernelSigner.openSessionWithPasskey(); // is this needed?
+
+            const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
+                driverID: this.settings.getAppSubOrganizationId(), // current user wallet addres??
+                appID: this.settings.getAppClientId(), // assuming clientId
+                appName: "B2B Fleet Manager App DEV", // todo from app prompt
+                expiration: expiration,
+                permissions: perms,
+                grantee: this.settings.getAppSubOrganizationId(), // granting the organization the perms
+                attachments: [],
+                grantor: this.settings.getAppSubOrganizationId, // current user...
+            });
+            if (!ipfsRes.success) {
+                throw new Error(`Failed to upload SACD agreement`);
+            }
+            // before calling devices-api need to sign the nft payload variable that is input here
+            // this may need to be signtypeddata
+
+            const signedNFT = await this.kernelSigner.signChallenge(nft);
+            return {
+                success: true,
+                signature: signedNFT,
+            }
+        } catch (error) {
+            console.error("Error message:", error.message);
+            console.error("Stack trace:", error.stack);
+
+            return {
+                success: false,
+                error: error.message || "An unexpected error occurred",
+            }
         }
-        // mint vehicle by calling devices-api here
-        // before calling devices-api need to sign the nft payload variable that is input here
-        const signedNft = await kernelSigner.signChallenge(nft);// this may need to be signtypeddata
-        // now send this to devices-api post (wrap it in a function)
-        console.log("signedNft", signedNft);
-        await this.postMintVehicle(userDeviceId, signedNft);
     }
 
 }
