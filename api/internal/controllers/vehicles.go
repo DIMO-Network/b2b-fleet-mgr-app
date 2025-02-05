@@ -7,8 +7,10 @@ import (
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/fleets"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
+	"github.com/tidwall/sjson"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type VehiclesController struct {
@@ -25,25 +27,28 @@ func NewVehiclesController(settings *config.Settings, logger *zerolog.Logger) *V
 
 func (v *VehiclesController) PostDevicesAPIFromVin(c *fiber.Ctx) error {
 	targetURL := v.settings.DevicesAPIURL + "/v1/user/devices/fromvin"
-
-	return proxyRequest(c, targetURL, c.Body())
+	setBytes, err := sjson.SetBytes(c.Body(), "preApprovedPSK", v.settings.CompassPreSharedKey)
+	if err != nil {
+		return err
+	}
+	return v.proxyRequest(c, targetURL, setBytes)
 }
 
 func (v *VehiclesController) PostDevicesAPIMint(c *fiber.Ctx) error {
 	udID := c.Params("userDeviceId", "")
 	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/commands/mint", v.settings.DevicesAPIURL, udID)
 
-	return proxyRequest(c, targetURL, c.Body())
+	return v.proxyRequest(c, targetURL, c.Body())
 }
 
 func (v *VehiclesController) GetDevicesAPIMint(c *fiber.Ctx) error {
 	udID := c.Params("userDeviceId", "")
 	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/commands/mint", v.settings.DevicesAPIURL, udID)
 
-	return proxyRequest(c, targetURL, nil)
+	return v.proxyRequest(c, targetURL, nil)
 }
 
-func proxyRequest(c *fiber.Ctx, targetURL string, requestBody []byte) error {
+func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL string, requestBody []byte) error {
 	// Perform GET request to the target URL
 	req, err := http.NewRequest("GET", targetURL, nil)
 	if err != nil {
@@ -87,9 +92,14 @@ func proxyRequest(c *fiber.Ctx, targetURL string, requestBody []byte) error {
 			"error": "Failed to read response",
 		})
 	}
+	v.logger.Info().Str("response", string(body)).Msgf("Proxied request to %s", targetURL)
 
 	// Set headers to match the original response
-	c.Set("Content-Type", "application/json")
+	for k, val := range resp.Header {
+		if len(val) > 0 {
+			c.Set(k, val[0])
+		}
+	}
 	c.Status(resp.StatusCode)
 
 	// Send the exact same JSON response
@@ -116,8 +126,16 @@ func (v *VehiclesController) AddVehicles(c *fiber.Ctx) error {
 	}
 	// temporary:
 	// if vin is the known one, just skip and return success
-	if payload.VINs[0] == workingVIN {
+	if strings.TrimSpace(payload.VINs[0]) == workingVIN {
+		v.logger.Info().Msgf("Using workingvin, skipping adding vehicle %s", payload.VINs[0])
 		return c.SendStatus(fiber.StatusOK)
+	}
+
+	// validation
+	for _, vin := range payload.VINs {
+		if len(vin) != 17 {
+			return c.Status(fiber.StatusBadRequest).SendString("Invalid VIN")
+		}
 	}
 
 	compassSvc, err := fleets.NewCompassSvc(v.settings, v.logger)
@@ -143,7 +161,7 @@ func (v *VehiclesController) AddVehicles(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.SendStatus(fiber.StatusOK)
+	return c.SendStatus(fiber.StatusOK) // we could return the status per vin
 }
 
 type AddVehicleRequest struct {

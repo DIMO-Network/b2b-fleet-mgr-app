@@ -31,9 +31,9 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	}))
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*", // Allows requests from any domain
+		AllowOrigins:     "http://localhost:3008", // localhost development
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
-		AllowHeaders:     "Origin, Content-Type, Accept",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true,
 	}))
 
