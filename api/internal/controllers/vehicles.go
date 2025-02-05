@@ -56,8 +56,11 @@ func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL string, reques
 			"error": "Failed to create request",
 		})
 	}
+	req.Header.Set("Accept", "application/json")
+	//req.Header.Set("Accept-Encoding", "utf-8")
+	//i think issue is because content is being returned compress and then browser doesn't know to decompress it
 
-	if len(requestBody) != 0 {
+	if len(requestBody) > 0 {
 		// Create a new POST request
 		req, err = http.NewRequest("POST", targetURL, bytes.NewBuffer(requestBody))
 		if err != nil {

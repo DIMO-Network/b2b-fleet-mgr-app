@@ -1,0 +1,83 @@
+replicaCount: 2
+image:
+  repository: dimozone/fleet-onboard-app
+  pullPolicy: IfNotPresent
+  tag: '7e02765'
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ''
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+env:
+  ENVIRONMENT: prod
+  API_PORT: '8080'
+  MONITORING_PORT: 8888
+  LOG_LEVEL: info
+  SERVICE_NAME: fleet-onboard-app
+  API_BASEURL: api/v1
+  DIMO_IDENTITY_API: https://identity-api.dimo.zone
+  POLYGON_URL: https://polygonscan.com
+  VEHICLE_NFT_ADDRESS: '0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF'
+
+  CHAIN_ID: 137
+  DEVICES_API_URL: https://devices-api.dimo.zone
+service:
+  type: ClusterIP
+  ports:
+    mon-http:
+      port: 8888
+      targetPort: mon-http
+      protocol: TCP
+    http:
+      port: 8080
+      targetPort: http
+      protocol: TCP
+ports:
+  - name: mon-http
+    containerPort: 8888
+    protocol: TCP
+  - name: http
+    containerPort: 8080
+    protocol: TCP
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/auth-tls-secret: ingress/cf-origin-ca
+    nginx.ingress.kubernetes.io/auth-tls-verify-client: 'on'
+    nginx.ingress.kubernetes.io/enable-cors: 'true'
+    nginx.ingress.kubernetes.io/cors-allow-origin: https://fleet-onboard.dimo.org
+    external-dns.alpha.kubernetes.io/hostname: fleet-onboard.dimo.org
+  hosts:
+    - host: fleet-onboard.dimo.org
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+nodeSelector: {}
+tolerations: []
+affinity: {}
+podDisruptionBudget:
+  minAvailable: 1
+serviceMonitor:
+  enabled: true
+  path: /metrics
+  port: mon-http
+  interval: 30s

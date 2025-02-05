@@ -13,7 +13,7 @@ import (
 )
 
 func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
-	// todo put in all the fiber logic here, routes, authorization
+	// all the fiber logic here, routes, authorization
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			return ErrorHandler(c, err, logger, settings.IsProduction())
@@ -43,7 +43,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	vehiclesCtrl := controllers.NewVehiclesController(settings, logger)
 	settingsCtrl := controllers.NewSettingsController(settings, logger)
 
-	// what auth am i supposed to use now? priv tokens i heard were being deprecated?
+	// todo auth - what auth am i supposed to use now? priv tokens i heard were being deprecated?
 	app.Post("/v1/vehicles", vehiclesCtrl.AddVehicles)
 	app.Get("/v1/user/devices/:userDeviceId/commands/mint", vehiclesCtrl.GetDevicesAPIMint)
 	app.Post("/v1/user/devices/:userDeviceId/commands/mint", vehiclesCtrl.PostDevicesAPIMint)

@@ -236,14 +236,14 @@ export class AddVinElement extends LitElement {
             paymasterUrl: this.settings.getPaymasterUrl(),
             // todo more things that should be configurable /dynamic
             clientId: this.settings.getAppClientId(),
-            domain: "localhost:3008",
+            domain: "dimo.org",
             redirectUri: "http://localhost:3008/login.html",
-            environment: "dev",
+            // environment: "dev",
             useWalletSession: true,
         })
         // use the webauthn stamper
         const stamper = new WebauthnStamper({
-            rpId: "http://localhost:3008",
+            rpId: "dimo.org", // passkeys need to be on the same rpid - must match LIWD. should be: dimo.org, works on subdomain
         });
         const kernelSigner = new KernelSigner(kernelConfig);
 

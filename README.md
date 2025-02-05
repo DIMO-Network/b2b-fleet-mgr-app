@@ -19,6 +19,11 @@ Onboarding a VIN:
 - user_devices db records?
 I think the last two start to tie in to the Open Integrations concept, how can we make that generic....
 
+Minting example: https://github.com/DIMO-Network/dimo-driver/blob/3ce9c249630b9a548c7617529381150b24b53279/src/layouts/MintVehicle/WaasWeb3HardwareVehicleId/hooks/mutations/useMintVehicle.ts#L36
+Parameters for kernel signer: https://github.com/DIMO-Network/dimo-driver/blob/3ce9c249630b9a548c7617529381150b24b53279/src/lib/transactions.ts#L22-L39
+These import dimo libraries from the sdk, so like I could do this from the frontend.
+But if user uploads many VIN's they'd need to leave the browser open while it processes. 
+Ideally figure out what these libraries are doing and calling and then do the same from here. 
 
 Architecture:
 SPA, javascript based web app, dev from vite/ node, build and deploy from go, same as admin.
