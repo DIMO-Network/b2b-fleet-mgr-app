@@ -3,14 +3,15 @@ package controllers
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/fleets"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
 	"github.com/tidwall/sjson"
-	"io"
-	"net/http"
-	"strings"
 )
 
 type VehiclesController struct {
@@ -153,6 +154,9 @@ func (v *VehiclesController) AddVehicles(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).SendString("Failed to authenticate with Compass")
 	}
 	statuses, err := compassSvc.AddVINs(ctx, payload.VINs, payload.Email)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString("Failed to add vehicles to Compass")
+	}
 	for _, status := range statuses {
 		if status.Status == "APPROVED" { // status come from nativeconnect.pb.go enum
 			v.logger.Info().Msgf("Vehicle %s added to Compass", status.VIN)

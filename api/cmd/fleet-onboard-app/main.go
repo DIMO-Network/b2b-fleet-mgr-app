@@ -3,14 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"strconv"
+
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/app"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
-	"os"
-	"os/signal"
-	"strconv"
 
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/DIMO-Network/shared"
@@ -27,7 +28,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	monApp := createMonitoringServer(strconv.Itoa(settings.MonitoringPort))
+	monApp := createMonitoringServer()
 	group, gCtx := errgroup.WithContext(ctx)
 	webAPI := app.App(&settings, &logger)
 
@@ -58,7 +59,7 @@ func runFiber(ctx context.Context, fiberApp *fiber.App, addr string, group *errg
 	})
 }
 
-func createMonitoringServer(port string) *fiber.App {
+func createMonitoringServer() *fiber.App {
 	monApp := fiber.New(fiber.Config{DisableStartupMessage: true})
 
 	monApp.Get("/", func(*fiber.Ctx) error { return nil })

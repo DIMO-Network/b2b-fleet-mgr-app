@@ -1,16 +1,17 @@
 package fleets
 
 import (
+	"context"
+	"strings"
+
 	"buf.build/gen/go/nativeconnect/api/grpc/go/nativeconnect/api/v1/apiv1grpc"
 	v1 "buf.build/gen/go/nativeconnect/api/protocolbuffers/go/nativeconnect/api/v1"
-	"context"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/friendsofgo/errors"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
-	"strings"
 )
 
 // todo token caching

@@ -2,6 +2,9 @@ package app
 
 import (
 	"errors"
+	"os"
+	"strconv"
+
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/controllers"
 	"github.com/DIMO-Network/shared/middleware/metrics"
@@ -10,8 +13,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberrecover "github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/rs/zerolog"
-	"os"
-	"strconv"
 )
 
 func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
