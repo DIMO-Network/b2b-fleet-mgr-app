@@ -1,10 +1,11 @@
 export class Settings {
     constructor() {
         if (this.isLocalhost()) {
-            this.apiUrl = "http://localhost:3007/v1/settings";
+            this.apiUrl = "http://localhost:3007";
         } else {
-            this.apiUrl = "/api/v1/settings" // assumption is go app runs under /api path
+            this.apiUrl = "/api" // assumption is go app runs under /api path
         }
+
         this.settings = this.loadSettings(); // Load from localStorage initially
     }
 
@@ -17,7 +18,7 @@ export class Settings {
     // Fetch settings from API
     async fetchSettings() {
         try {
-            const response = await fetch(this.apiUrl);
+            const response = await fetch(this.apiUrl + "/v1/settings");
             if (!response.ok) throw new Error("Failed to fetch settings");
 
             this.settings = await response.json();
@@ -43,6 +44,11 @@ export class Settings {
     // Get a specific setting
     get(key) {
         return this.settings[key];
+    }
+
+    // getters for specific settings
+    getBackendUrl() {
+        return this.apiUrl;
     }
 
     getDevicesApiUrl() {

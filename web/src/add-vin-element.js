@@ -43,21 +43,37 @@ export class AddVinElement extends LitElement {
         `;
     }
 
-    _submitVIN(event) {
+    async _submitVIN(event) {
         this.processing = true;
-        console.log(this.vin);
-        // todo if _submitVIN can be async, then can change below to use await for each one.
-        this.addToCompass().then(() => {
-            this.addToUserDevicesAndDecode().then(res => {
-                this.getMintVehicle(res.userDeviceId, res.definitionId).then(mintRes => {
-                    // need to sign the payload
-                    console.log("payload to sign", mintRes);
-                    this.signMintVehiclePayload(mintRes).then(res => {
-                        console.log("signed mint vehicle", res);
-                    })
-                })
-            });
-        });
+        console.log("onboarding vin", this.vin);
+
+        const compassResp = await this.addToCompass(this.vin);
+        if (!compassResp.success) {
+            // todo have an area for showing errors
+            alert("failed to add vin to compass:" + compassResp.error)
+            return;
+        }
+
+        const fromVinResp = await this.addToUserDevicesAndDecode(this.vin);
+        if (!fromVinResp.success) {
+            alert("failed to add vin to user devices:" + fromVinResp.error);
+            return;
+        }
+
+        const definitionId = fromVinResp.data.userDevice.deviceDefinition.definitionId;
+        const userDeviceId = fromVinResp.data.userDevice.id;
+
+        const mintResp = await this.getMintVehicle(userDeviceId, definitionId)
+        if (!mintResp.success) {
+            alert("failed to get the message to mint" + mintResp.error);
+            return;
+        }
+        console.log("payload to sign", mintResp.data);
+
+        const signResp = await this.signMintVehiclePayload(mintResp.data)
+        console.log("signed mint vehicle", signResp);
+
+        // start polling to get token id and synthetic token_id, just users/devices/me
 
         // todo: we don't have the tokenid yet, i think we need to do polling somwewhere to get the tokenid to be able to call below
         // const result = await kernelSigner.setVehiclePermissions({
@@ -67,115 +83,141 @@ export class AddVinElement extends LitElement {
         //     expiration,
         //     source: `ipfs://${ipfsRes.data?.cid}`,
         // });
-        // does devices-api already do this? ^
+        // does devices-api already do this? ^ My understanding is above is not needed.
 
         // reset form
         this.processing = false;
-        this.vin = "";
+        // this.vin = ""; // to reset the input this won't work since it doesn't push up to the input, ie. this is not mvvm.
     }
 
-    async addToCompass() {
-        // we'll need a configuration settings api endpoint we call on load -> could this be passed into the element?
-        // call api
-        const url = this.settings.getDevicesApiUrl() + "/v1/vehicles"
-
+    async addToCompass(vin) {
+        // Construct the target URL and payload.
+        const url = this.settings.getBackendUrl() + "/v1/vehicles";
         const data = {
-            vins: [this.vin], // Example VINs
+            vins: [vin],
             email: this.email,
         };
 
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${this.token}`
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(result => {
-                console.log("Success adding to compass:", result);
-
-            })
-            .catch(error => {
-                console.error("Error:", error);
+        try {
+            // Make the POST request using fetch and await the response.
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${this.token}`
+                },
+                body: JSON.stringify(data)
             });
+            //const result = await response.json();
+
+            // Check if the response was not OK and return a standardized error.
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: response.text, // Depending on the API, error details might be here.
+                    status: response.status,
+                };
+            }
+
+            console.log("Success adding to compass:");
+            return {
+                success: true,
+                // data: result,
+            };
+
+        } catch (error) {
+            // Handle network or parsing errors and return a standardized error object.
+            console.error("Error in addToCompass:", error);
+            return {
+                success: false,
+                error: error.message || "An unexpected error occurred",
+            };
+        }
     }
 
-    async addToUserDevicesAndDecode() {
-        const url = this.settings.getDevicesApiUrl() + "/v1/user/devices/fromvin"
-
+    async addToUserDevicesAndDecode(vin) {
+        const url = this.settings.getBackendUrl() + "/v1/user/devices/fromvin";
         const data = {
             countryCode: "USA",
-            vin: this.vin,
+            vin: vin,
         };
 
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${this.token}`
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(result => {
-                console.log("Success adding to compass:", result);
-                const definitionId = result.deviceDefinition.definitionId;
-                const userDeviceId = result.id;
-
-                return {
-                    definitionId: definitionId,
-                    userDeviceId: userDeviceId,
-                };
-
-            })
-            .catch(error => {
-                console.error("Error:", error);
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${this.token}`
+                },
+                body: JSON.stringify(data)
             });
+            const result = await response.json();
+
+            // Check for HTTP errors
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: result.error || result,
+                    status: response.status,
+                };
+            }
+            console.log("Success registering with devices-api:", result);
+            return {
+                success: true,
+                data: result,
+            };
+        } catch (error) {
+            // Handle network or parsing errors
+            console.error("Error in addToUserDevicesAndDecode:", error);
+            return {
+                success: false,
+                error: error.message || "An unexpected error occurred",
+            };
+        }
     }
 
     async getMintVehicle(userDeviceId, definitionId) {
-        // returns content to sign
-        const url = `${this.settings.getDevicesApiUrl()}/v1/user/devices/${userDeviceId}/commands/mint`;
+        const url = `${this.settings.getBackendUrl()}/v1/user/devices/${userDeviceId}/commands/mint`;
 
-        fetch(url, {
-            method: "GET",
-            headers: {
-                "Accept": "application/json",
-                "Authorization": `Bearer ${this.token}`
-            },
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(result => {
-                console.log("Success adding to compass:", result);
-                return result;
-            })
-            .catch(error => {
-                console.error("Error:", error);
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${this.token}`
+                },
             });
+            const result = await response.json();
+
+            // Check if the response was not OK and return a standardized error object.
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: result.error || result,
+                    status: response.status,
+                };
+            }
+            console.log("Success getting mint vehicle:", result);
+            return {
+                success: true,
+                data: result,
+            };
+        } catch (error) {
+            // Handle network or parsing errors and return a standardized error object.
+            console.error("Error in getMintVehicle:", error);
+            return {
+                success: false,
+                error: error.message || "An unexpected error occurred",
+            };
+        }
     }
 
     /**
      * calls devices-api to mint a vehicle from a signed payload
      */
     async postMintVehicle(userDeviceId, signedNftPayload) {
-        const url = `${this.settings.getDevicesApiUrl()}/v1/user/devices/${userDeviceId}/commands/mint`;
+        const url = `${this.settings.getBackendUrl()}/v1/user/devices/${userDeviceId}/commands/mint`;
 
         fetch(url, {
             method: "POST",
