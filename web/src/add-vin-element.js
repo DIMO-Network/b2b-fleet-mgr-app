@@ -1,4 +1,4 @@
-import {html, LitElement} from 'lit'
+import {html, LitElement, css} from 'lit'
 import {Settings} from "./settings.js";
 import {KernelSigner, newKernelConfig, sacdPermissionValue} from '@dimo-network/transactions';
 import {WebauthnStamper} from "@turnkey/webauthn-stamper";
@@ -9,6 +9,7 @@ export class AddVinElement extends LitElement {
         email: { type: String },
         processing: { type: Boolean },
         token: {type: String },
+        alertText: {type: String },
     }
     // we're gonna need a way to handle errors and display them in the frontend, as well as continuation for something that
     // errored half way
@@ -19,7 +20,7 @@ export class AddVinElement extends LitElement {
         this.email = "";
         this.token = localStorage.getItem("token");
         this.settings = new Settings();
-
+        this.alertText = "";
     }
 
     async connectedCallback() {
@@ -32,8 +33,38 @@ export class AddVinElement extends LitElement {
         this.stamper = r.stamper;
     }
 
+    static styles = css`
+        /* Base style for all alerts */
+        .alert {
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: sans-serif;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        /* Success alert theme */
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        /* Error (failure) alert theme */
+        .alert-error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+    `;
+
     render() {
         return html`
+            <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
+                ${this.alertText}
+            </div>
             <form class="grid">
                 <label>VIN
                     <input type="text" placeholder="VIN" maxlength="17"
@@ -49,6 +80,7 @@ export class AddVinElement extends LitElement {
     }
 
     async _submitVIN(event) {
+        this.alertText = "";
         this.processing = true;
         console.log("onboarding vin", this.vin);
 // temporary - ok to test with this in prod to get over passkey signing
@@ -58,14 +90,13 @@ export class AddVinElement extends LitElement {
         if(userDeviceId == null) {
             const compassResp = await this.addToCompass(this.vin);
             if (!compassResp.success) {
-                // todo have an area for showing errors
-                alert("failed to add vin to compass:" + compassResp.error)
+                this.alertText = "failed to add vin to compass:" + compassResp.error;
                 return;
             }
 
             const fromVinResp = await this.addToUserDevicesAndDecode(this.vin);
             if (!fromVinResp.success) {
-                alert("failed to add vin to user devices:" + fromVinResp.error);
+                this.alertText = "failed to add vin to user devices:" + fromVinResp.error;
                 return;
             }
 
@@ -75,19 +106,22 @@ export class AddVinElement extends LitElement {
 
         const mintResp = await this.getMintVehicle(userDeviceId, definitionId)
         if (!mintResp.success) {
-            alert("failed to get the message to mint" + mintResp.error);
+            this.alertText = "failed to get the message to mint" + mintResp.error;
             return;
         }
         console.log("payload to sign", mintResp.data);
 
         const signedNftResp = await this.signMintVehiclePayload(mintResp.data)
         if (!signedNftResp.success) {
-            alert("failed to get the message to mint" + signedNftResp.error);
+            this.alertText = "failed to get the message to mint" + signedNftResp.error;
             return;
         }
         console.log("signed mint vehicle", signedNftResp.signature);
 
-        await this.postMintVehicle(userDeviceId, signedNftResp.signature);
+        const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
+        if (!postMintResp.success) {
+            this.alertText = "failed to get the message to mint" + postMintResp.error;
+        }
 
         // start polling to get token id and synthetic token_id, just users/devices/me
 
