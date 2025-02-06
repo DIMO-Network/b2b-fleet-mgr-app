@@ -269,12 +269,13 @@ export class AddVinElement extends LitElement {
             rpcUrl: this.settings.getRpcUrl(),
             bundlerUrl: this.settings.getBundlerUrl(),
             paymasterUrl: this.settings.getPaymasterUrl(),
-            // todo more things that should be configurable /dynamic
             clientId: this.settings.getAppClientId(),
+            // todo more things that should be configurable /dynamic
             domain: "dimo.org",
             redirectUri: "http://localhost:3008/login.html",
             // environment: "dev",
             useWalletSession: true,
+            sessionTimeoutSeconds: 60*60*4,
         })
         // use the webauthn stamper
         const stamper = new WebauthnStamper({
@@ -332,6 +333,7 @@ export class AddVinElement extends LitElement {
             };
         }
     }
+
     async signMintVehiclePayload(userDeviceId, nft) {
         const perms = sacdPermissionValue({
             NONLOCATION_TELEMETRY: true,
@@ -348,25 +350,26 @@ export class AddVinElement extends LitElement {
         try{
             // not sure if value here is correct
             await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
-            await this.kernelSigner.openSessionWithPasskey(); // is this needed?
-
-            const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
-                driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
-                appID: this.settings.getAppClientId(), // assuming clientId
-                appName: "B2B Fleet Manager App DEV", // todo from app prompt
-                expiration: expiration,
-                permissions: perms,
-                grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
-                attachments: [],
-                grantor: this.settings.getOrgWalletAddress, // current user...
-            });
-            if (!ipfsRes.success) {
-                throw new Error(`Failed to upload SACD agreement`);
-            }
+            // await this.kernelSigner.openSessionWithPasskey(); // this causes Passkey window to show up twice, may not be needed
+            // this part already succeeded, temporarily commenting out
+            // const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
+            //     driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
+            //     appID: this.settings.getAppClientId(), // assuming clientId
+            //     appName: "B2B Fleet Manager App DEV", // todo from app prompt
+            //     expiration: expiration,
+            //     permissions: perms,
+            //     grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
+            //     attachments: [],
+            //     grantor: this.settings.getOrgWalletAddress, // current user...
+            // });
+            // if (!ipfsRes.success) {
+            //     throw new Error(`Failed to upload SACD agreement`);
+            // }
+            // console.log("ipfs sacd CID: " + ipfsRes.cid);
             // before calling devices-api need to sign the nft payload variable that is input here
             // this may need to be signtypeddata
 
-            const signedNFT = await this.kernelSigner.signChallenge(nft);
+            const signedNFT = await this.kernelSigner.signTypedData(nft);
             return {
                 success: true,
                 signature: signedNFT,
