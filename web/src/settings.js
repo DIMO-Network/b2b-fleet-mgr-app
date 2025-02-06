@@ -7,6 +7,7 @@ export class Settings {
         }
 
         this.settings = this.loadSettings(); // Load from localStorage initially
+        this.accountInfo = this.loadAccountInfo(); // load from localstorage
 
         this.token = localStorage.getItem("token");
     }
@@ -38,9 +39,34 @@ export class Settings {
         }
     }
 
+    async fetchAccountInfo(email) {
+        try {
+            const response = await fetch(`https://accounts.dimo.org/api/account/${email}`, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                }
+            });
+            if (!response.ok) throw new Error("Failed to fetch account info");
+
+            this.accountInfo = await response.json();
+            this.saveAccountInfo();
+            return this.accountInfo;
+        } catch (error) {
+            return {
+                success: false,
+                error: error
+            }
+        }
+    }
+
     // Save settings to localStorage
     saveSettings() {
         localStorage.setItem("appSettings", JSON.stringify(this.settings));
+    }
+
+    saveAccountInfo() {
+        localStorage.setItem("accountInfo", JSON.stringify(this.accountInfo));
     }
 
     // Load settings from localStorage
@@ -48,10 +74,18 @@ export class Settings {
         const storedSettings = localStorage.getItem("appSettings");
         return storedSettings ? JSON.parse(storedSettings) : {};
     }
+    loadAccountInfo() {
+        const ls = localStorage.getItem("accountInfo");
+        return ls ? JSON.parse(ls) : {};
+    }
 
     // Get a specific setting
-    get(key) {
+    getSetting(key) {
         return this.settings[key];
+    }
+
+    getAccountInfo(key) {
+        return this.accountInfo[key];
     }
 
     // getters for specific settings
@@ -60,29 +94,29 @@ export class Settings {
     }
 
     getDevicesApiUrl() {
-        return this.get("devicesApiUrl");
+        return this.getSetting("devicesApiUrl");
     }
     getRpcUrl() {
-        return this.get("rpcUrl");
+        return this.getSetting("rpcUrl");
     }
     getPaymasterUrl() {
-        return this.get("paymasterUrl");
+        return this.getSetting("paymasterUrl");
     }
     getBundlerUrl() {
-        return this.get("bundlerUrl");
+        return this.getSetting("bundlerUrl");
     }
     getAppClientId() {
-        return "0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB"; // for now hard coded
-
-        // todo implement prompt for clientId... what object do we store it for under?
-        //return this.get("appClientId");
+        return localStorage.getItem("clientId");
     }
 
     /**
      * Organization wallet address is what i'm assuming here, from DC, same as DC admin user wallet addr
      */
-    getAppSubOrganizationId(){
+    getOrgWalletAddress(){
         return localStorage.getItem("walletAddress");
     }
 
+    getTurnkeySubOrgId() {
+        return this.getAccountInfo("subOrganizationId");
+    }
 }

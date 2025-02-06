@@ -26,7 +26,8 @@ export class AddVinElement extends LitElement {
     async connectedCallback() {
         super.connectedCallback(); // Always call super.connectedCallback()
         await this.settings.fetchSettings(); // Fetch settings on load
-        console.log("Loaded Settings:");
+        // todo email should come from LIWD, but if qs empty prompt for it in login.html
+        await this.settings.fetchAccountInfo("james@dimo.zone"); // load account info
 
         const r = this.setupKernelSigner();
         this.kernelSigner = r.kernelSigner;
@@ -346,18 +347,18 @@ export class AddVinElement extends LitElement {
 
         try{
             // not sure if value here is correct
-            await this.kernelSigner.init(this.settings.getAppSubOrganizationId(), this.stamper);
+            await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
             await this.kernelSigner.openSessionWithPasskey(); // is this needed?
 
             const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
-                driverID: this.settings.getAppSubOrganizationId(), // current user wallet addres??
+                driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
                 appID: this.settings.getAppClientId(), // assuming clientId
                 appName: "B2B Fleet Manager App DEV", // todo from app prompt
                 expiration: expiration,
                 permissions: perms,
-                grantee: this.settings.getAppSubOrganizationId(), // granting the organization the perms
+                grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
                 attachments: [],
-                grantor: this.settings.getAppSubOrganizationId, // current user...
+                grantor: this.settings.getOrgWalletAddress, // current user...
             });
             if (!ipfsRes.success) {
                 throw new Error(`Failed to upload SACD agreement`);

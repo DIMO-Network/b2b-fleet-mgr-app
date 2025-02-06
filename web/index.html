@@ -7,6 +7,7 @@
     <title>DIMO B2B Fleet Manager</title>
     <link rel="stylesheet" href="./monospace-web/index.css" />
     <link rel="stylesheet" href="./monospace-web/reset.css" />
+    <script type="module" src="./src/login-element.js"></script>
   </head>
   <body>
   <div>
@@ -26,13 +27,11 @@
   </div>
   <h1 class="title">Fleet Onboarding App</h1>
   <slot></slot>
-  <div class="grid place-items-center">
-    <a id="loginLink" href="#wait">Login with DIMO!</a>
-  </div>
+  <login-element></login-element>
   <script>
     function isTokenExpired(token) {
       if (!token) {
-        console.error("No token found");
+        console.log("No token found");
         return true; // If there's no token, treat it as expired
       }
 
@@ -50,31 +49,11 @@
         return true; // If parsing fails, assume token is expired
       }
     }
-    // sets the login url dynamically depending if on localhost or prod
-    function setLoginHref(anchorElement) {
-      if (!anchorElement) return; // Exit if no element is provided
-
-      let redirectUrl = "";
-      // Check if the hostname is "localhost" or "127.0.0.1"
-      const hostname = window.location.hostname;
-      if (hostname === "localhost" || hostname === "127.0.0.1") {
-        redirectUrl = "http://localhost:3008/login.html";
-      } else {
-        redirectUrl = "https://fleet-onboard.dimo.org/login.html";
-      }
-
-      anchorElement.href = `https://login.dimo.org/?clientId=0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB&redirectUri=${redirectUrl}&entryState=EMAIL_INPUT`;
-    }
 
     token = localStorage.getItem("token");
     if (isTokenExpired(token) === false) {
       window.location.href = "/app.html";
     }
-    // set login link
-    document.addEventListener("DOMContentLoaded", () => {
-      const loginLink = document.getElementById("loginLink");
-      setLoginHref(loginLink);
-    });
   </script>
   <script src="./monospace-web/index.js"></script>
   </body>

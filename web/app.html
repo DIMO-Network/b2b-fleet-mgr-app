@@ -9,8 +9,34 @@
     <link rel="stylesheet" href="./monospace-web/reset.css" />
     <script type="module" src="./src/add-vin-element.js"></script>
 </head>
+<style>
+    .header {
+        display: flex;
+        justify-content: space-between; /* Places h1 and button at opposite ends */
+        align-items: center;           /* Vertically centers the items */
+        padding: 1rem;
+        background-color: #f0f0f0;     /* Optional background for visibility */
+    }
+    .logout-btn {
+        padding: 0.4rem 0.8rem;
+        background-color: #d9534f;     /* A red tone for the button */
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+    }
+
+    /* Optional: Hover state for the button */
+    .logout-btn:hover {
+        background-color: #c9302c;
+    }
+</style>
 <body>
-<h1 class="title">Fleet Onboarding App</h1>
+<div class="header">
+    <h1 class="title">Fleet Onboarding App</h1>
+    <button class="logout-btn">Logout</button>
+</div>
 <add-vin-element></add-vin-element>
 
 <h2>My Vehicles</h2>
@@ -25,5 +51,28 @@
 </table>
 
 <script src="./monospace-web/index.js"></script>
+<script>
+    function handleLogout() {
+        // List the keys you want to remove
+        const keysToRemove = ['token', 'email', 'appSettings', 'walletAddress'];
+
+        keysToRemove.forEach(key => {
+            localStorage.removeItem(key);
+        });
+
+        console.log('Selected localStorage keys removed.');
+
+        // Optionally, you can also redirect the user after logout:
+        window.location.href = '/';
+    }
+
+    // Attach the click event listener once the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        const logoutButton = document.querySelector('.logout-btn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', handleLogout);
+        }
+    });
+</script>
 </body>
 </html>
