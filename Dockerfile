@@ -36,4 +36,4 @@ USER dimo
 EXPOSE 8080
 EXPOSE 8888
 
-CMD /dimo-admin
+CMD /fleet-onboard-app
