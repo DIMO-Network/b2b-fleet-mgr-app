@@ -275,7 +275,6 @@ export class AddVinElement extends LitElement {
             redirectUri: "http://localhost:3008/login.html",
             // environment: "dev",
             useWalletSession: true,
-            sessionTimeoutSeconds: 60*60*4,
         })
         // use the webauthn stamper
         const stamper = new WebauthnStamper({
