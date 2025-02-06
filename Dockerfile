@@ -28,7 +28,7 @@ WORKDIR /
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /etc/passwd /etc/passwd
-COPY --from=build /go/src/github.com/dimo-network/b2b-fleet-mgr-app/target/bin/b2b-fleet-mgr-app .
+COPY --from=build /go/src/github.com/dimo-network/b2b-fleet-mgr-app/target/bin/fleet-onboard-app .
 COPY --from=build /go/src/github.com/dimo-network/b2b-fleet-mgr-app/dist /dist
 
 USER dimo

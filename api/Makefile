@@ -24,7 +24,7 @@ all: $(APPS)
 
 install: $(APPS)
 	@mkdir -p bin
-	@cp $(PATHINSTBIN)/b2b-fleet-mgr-app ./bin/ #name here may need to be b2b-fleet-mgr-app
+	@cp $(PATHINSTBIN)/fleet-onboard-app ./bin/ #name here may need to be b2b-fleet-mgr-app
 
 deps:
 	@go mod tidy
@@ -60,7 +60,7 @@ lint:
 
 test: $(APPS)
 	@go test $(GO_FLAGS) -timeout 3m -race ./...
-	@$(PATHINSTBIN)/b2b-fleet-mgr-app test ./config/test/...
+	@$(PATHINSTBIN)/fleet-onboard-app test ./config/test/...
 
 clean:
 	rm -rf $(PATHINSTBIN)

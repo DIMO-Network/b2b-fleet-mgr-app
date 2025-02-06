@@ -3,7 +3,7 @@ export class Settings {
         if (this.isLocalhost()) {
             this.apiUrl = "http://localhost:3007";
         } else {
-            this.apiUrl = "/api" // assumption is go app runs under /api path
+            this.apiUrl = "" // assumption is go app runs under in same place but could move to /api
         }
 
         this.settings = this.loadSettings(); // Load from localStorage initially
