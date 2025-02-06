@@ -36,8 +36,12 @@ regular web app, with javascript to store clientid, get login to work
 https://www.w3.org/TR/webauthn-2/#rp-id
 the rpid must be dimo.org basically
 
+https://stackoverflow.com/questions/73617833/webauthn-the-relying-party-id-is-not-a-registrable-domain-suffix-of-nor-equal-t
+
 to get components to build for transactions-sdk
 https://www.npmjs.com/package/vite-plugin-node-polyfills
+
+
 
 
 
