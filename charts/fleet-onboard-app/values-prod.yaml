@@ -2,7 +2,7 @@ replicaCount: 2
 image:
   repository: dimozone/fleet-onboard-app
   pullPolicy: IfNotPresent
-  tag: '7e02765'
+  tag: 6a5e5a1
 imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
@@ -23,7 +23,6 @@ env:
   DIMO_IDENTITY_API: https://identity-api.dimo.zone
   POLYGON_URL: https://polygonscan.com
   VEHICLE_NFT_ADDRESS: '0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF'
-
   CHAIN_ID: 137
   DEVICES_API_URL: https://devices-api.dimo.zone
 service:
