@@ -2,7 +2,6 @@ import {html, LitElement, css} from 'lit'
 import {Settings} from "./settings.js";
 import {KernelSigner, newKernelConfig, sacdPermissionValue} from '@dimo-network/transactions';
 import {WebauthnStamper} from "@turnkey/webauthn-stamper";
-import { ApiKeyStamper } from "@turnkey/api-key-stamper";
 
 export class AddVinElement extends LitElement {
     static properties = {
@@ -33,7 +32,6 @@ export class AddVinElement extends LitElement {
         const r = this.setupKernelSigner();
         this.kernelSigner = r.kernelSigner;
         this.stamper = r.stamper;
-        this.apiKeyStamper = r.apiKeyStamper;
     }
 
     static styles = css`
@@ -86,9 +84,6 @@ export class AddVinElement extends LitElement {
         this.alertText = "";
         this.processing = true;
         console.log("onboarding vin", this.vin);
-// // temporary - ok to test with this in prod to get over passkey signing
-//         const userDeviceId = "2sbhun5x8pyte98RfwHNAYx6Jjn";
-//         const definitionId = "jeep_wagoneer-l_2024";
 
         const compassResp = await this.addToCompass(this.vin);
         if (!compassResp.success) {
@@ -268,7 +263,7 @@ export class AddVinElement extends LitElement {
             bundlerUrl: this.settings.getBundlerUrl(),
             paymasterUrl: this.settings.getPaymasterUrl(),
             clientId: this.settings.getAppClientId(),
-            // todo more things that should be configurable /dynamic
+
             // domain: "dimo.org",
             // redirectUri: "https://fleet-onboard.dimo.org/login.html",
             // environment: "dev", // same error if set env to dev, no difference
@@ -280,15 +275,10 @@ export class AddVinElement extends LitElement {
         const stamper = new WebauthnStamper({
             rpId: "dimo.org", // passkeys need to be on the same rpid - must match LIWD. should be: dimo.org, works on subdomain
         });
-        const apiKeyStamper = new ApiKeyStamper({
-            apiPublicKey: this.settings.getSignerPublicKey(),
-            apiPrivateKey: this.settings.getSignerApiKey(),
-        })
 
         return {
             kernelSigner,
             stamper,
-            apiKeyStamper,
         };
     }
     /**
@@ -351,12 +341,11 @@ export class AddVinElement extends LitElement {
         const expiration = BigInt(2933125200); // 40 years
 
         try{
-            await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.apiKeyStamper);
-            // potentially an option I like, no passkey required
-            await this.kernelSigner.openSessionWithApiStamper(this.settings.getTurnkeySubOrgId(), this.apiKeyStamper);
+            await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
             // doing any of below resulted in no active client error
             // await this.kernelSigner.passkeyToSession(this.settings.getTurnkeySubOrgId(), this.stamper)
             // await this.kernelSigner.passkeyInit(this.settings.getTurnkeySubOrgId(), this.settings.getOrgWalletAddress(), this.stamper);
+            // still need to try this one
             // this.kernelSigner.passkeyToSession()
 
             // bug? activity type should be set

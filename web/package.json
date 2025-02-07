@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@dimo-network/transactions": "^0.1.79",
-    "@turnkey/api-key-stamper": "^0.4.4",
     "@turnkey/webauthn-stamper": "^0.5.0",
     "events": "^3.3.0",
     "lit": "^3.2.1"
