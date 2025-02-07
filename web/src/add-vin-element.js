@@ -110,7 +110,6 @@ export class AddVinElement extends LitElement {
             this.alertText = "failed to get the message to mint" + mintResp.error;
             return;
         }
-        console.log("payload to sign", mintResp.data);
 
         const signedNftResp = await this.signMintVehiclePayload(mintResp.data)
         if (!signedNftResp.success) {
@@ -192,6 +191,7 @@ export class AddVinElement extends LitElement {
             countryCode: "USA",
             vin: vin,
         };
+        // todo we could do something where we check if this vin already exists, use the vin check endpoint for compass
 
         try {
             const response = await fetch(url, {
@@ -273,7 +273,7 @@ export class AddVinElement extends LitElement {
             // todo more things that should be configurable /dynamic
             domain: "dimo.org",
             redirectUri: "https://fleet-onboard.dimo.org/login.html",
-            environment: "dev",
+            // environment: "dev", // next thing to experiment turning off
             useWalletSession: true,
         })
         // use the webauthn stamper
@@ -367,8 +367,10 @@ export class AddVinElement extends LitElement {
             // console.log("ipfs sacd CID: " + ipfsRes.cid);
             // before calling devices-api need to sign the nft payload variable that is input here
             // this may need to be signtypeddata
+            const nftStr = JSON.stringify(nft);
+            console.log("payload to sign", nftStr);
 
-            const signedNFT = await this.kernelSigner.signChallenge(nft);
+            const signedNFT = await this.kernelSigner.signChallenge(nftStr);
             return {
                 success: true,
                 signature: signedNFT,
