@@ -267,10 +267,10 @@ export class AddVinElement extends LitElement {
             paymasterUrl: this.settings.getPaymasterUrl(),
             clientId: this.settings.getAppClientId(),
             // todo more things that should be configurable /dynamic
-            domain: "dimo.org",
-            redirectUri: "https://fleet-onboard.dimo.org/login.html",
+            // domain: "dimo.org",
+            // redirectUri: "https://fleet-onboard.dimo.org/login.html",
             // environment: "dev", // same error if set env to dev, no difference
-            useWalletSession: true,
+            // useWalletSession: true,
         })
         // use the webauthn stamper
         const stamper = new WebauthnStamper({
@@ -343,9 +343,11 @@ export class AddVinElement extends LitElement {
         const expiration = BigInt(2933125200); // 40 years
 
         try{
-            await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
-
-            // this part I think succeeded in past
+            await this.kernelSigner.passkeyInit(this.settings.getTurnkeySubOrgId(), this.settings.getOrgWalletAddress(), this.stamper);
+            // this.kernelSigner.passkeyToSession()
+            // this.kernelSigner.openSessionWithApiStamper() - potentially an option I like, no passkey required
+            // bug? activity type should be set
+            // todo blocked: Turnkey error 3: no runner registered with activity type ""
             const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
                 driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
                 appID: this.settings.getAppClientId(), // assuming clientId

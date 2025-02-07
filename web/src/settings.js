@@ -110,7 +110,7 @@ export class Settings {
     }
 
     /**
-     * Organization wallet address is what i'm assuming here, from DC, same as DC admin user wallet addr
+     * Organization wallet address from DC, same as DC admin user wallet address
      */
     getOrgWalletAddress(){
         return localStorage.getItem("walletAddress");
