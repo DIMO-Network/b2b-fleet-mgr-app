@@ -333,7 +333,7 @@ export class AddVinElement extends LitElement {
         }
     }
 
-    async signMintVehiclePayload(userDeviceId, nft) {
+    async signMintVehiclePayload(nft) {
         const perms = sacdPermissionValue({
             NONLOCATION_TELEMETRY: true,
             COMMANDS: true,
