@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"buf.build/gen/go/nativeconnect/api/grpc/go/nativeconnect/api/v1/apiv1grpc"
 	v1 "buf.build/gen/go/nativeconnect/api/protocolbuffers/go/nativeconnect/api/v1"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
@@ -54,6 +56,31 @@ func (cs *compassSvc) AuthenticateCompass(ctx context.Context) (context.Context,
 	ctx = metadata.NewOutgoingContext(ctx, md)
 
 	return ctx, nil
+}
+
+func (cs *compassSvc) GetVehicles(ctx context.Context) ([]CompassVehicle, error) {
+	vehicles, err := cs.client.GetVehicles(ctx, &emptypb.Empty{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get vehicles from compass")
+	}
+	if vehicles.ProviderGet != nil {
+		items := make([]CompassVehicle, len(vehicles.ProviderGet))
+		for i, request := range vehicles.ProviderGet {
+
+			car := request.GetChrysler()
+			items[i] = CompassVehicle{
+				VIN:  car.GetVin(),
+				Make: car.String(),
+			}
+		}
+		return items, nil
+	}
+	return nil, errors.New("no vehicles found")
+}
+
+type CompassVehicle struct {
+	VIN  string `json:"vin"`
+	Make string `json:"make"`
 }
 
 func (cs *compassSvc) AddVINs(ctx context.Context, vins []string, email string) ([]CompassAddVINStatus, error) {

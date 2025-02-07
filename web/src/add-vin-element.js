@@ -84,26 +84,22 @@ export class AddVinElement extends LitElement {
         this.alertText = "";
         this.processing = true;
         console.log("onboarding vin", this.vin);
-// temporary - ok to test with this in prod to get over passkey signing
-        const userDeviceId = "2sbhun5x8pyte98RfwHNAYx6Jjn";
-        const definitionId = "jeep_wagoneer-l_2024";
+// // temporary - ok to test with this in prod to get over passkey signing
+//         const userDeviceId = "2sbhun5x8pyte98RfwHNAYx6Jjn";
+//         const definitionId = "jeep_wagoneer-l_2024";
 
-        if(userDeviceId == null) {
-            const compassResp = await this.addToCompass(this.vin);
-            if (!compassResp.success) {
-                this.alertText = "failed to add vin to compass:" + compassResp.error;
-                return;
-            }
-
-            const fromVinResp = await this.addToUserDevicesAndDecode(this.vin);
-            if (!fromVinResp.success) {
-                this.alertText = "failed to add vin to user devices:" + fromVinResp.error;
-                return;
-            }
-
-            const definitionId = fromVinResp.data.userDevice.deviceDefinition.definitionId;
-            const userDeviceId = fromVinResp.data.userDevice.id;
+        const compassResp = await this.addToCompass(this.vin);
+        if (!compassResp.success) {
+            this.alertText = "failed to add vin to compass:" + compassResp.error;
+            return;
         }
+        const fromVinResp = await this.addToUserDevicesAndDecode(this.vin);
+        if (!fromVinResp.success) {
+            this.alertText = "failed to add vin to user devices:" + fromVinResp.error;
+            return;
+        }
+        const definitionId = fromVinResp.data.userDevice.deviceDefinition.definitionId;
+        const userDeviceId = fromVinResp.data.userDevice.id;
 
         const mintResp = await this.getMintVehicle(userDeviceId, definitionId)
         if (!mintResp.success) {
@@ -116,7 +112,7 @@ export class AddVinElement extends LitElement {
             this.alertText = "failed to get the message to mint" + signedNftResp.error;
             return;
         }
-        console.log("signed mint vehicle", signedNftResp.signature);
+        console.log("signed mint vehicle:", signedNftResp.signature);
 
         const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
         if (!postMintResp.success) {
@@ -273,7 +269,7 @@ export class AddVinElement extends LitElement {
             // todo more things that should be configurable /dynamic
             domain: "dimo.org",
             redirectUri: "https://fleet-onboard.dimo.org/login.html",
-            environment: "dev", // next thing to experiment turning off
+            // environment: "dev", // same error if set env to dev, no difference
             useWalletSession: true,
         })
         // use the webauthn stamper
@@ -347,25 +343,24 @@ export class AddVinElement extends LitElement {
         const expiration = BigInt(2933125200); // 40 years
 
         try{
-
             await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
 
-            // this part already succeeded, temporarily commenting out
-            // const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
-            //     driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
-            //     appID: this.settings.getAppClientId(), // assuming clientId
-            //     appName: "B2B Fleet Manager App DEV", // todo from app prompt call identity-api
-            //     expiration: expiration,
-            //     permissions: perms,
-            //     grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
-            //     attachments: [],
-            //     grantor: this.settings.getOrgWalletAddress, // current user...
-            // });
-            // if (!ipfsRes.success) {
-            //     throw new Error(`Failed to upload SACD agreement`);
-            // }
-            // console.log("ipfs sacd CID: " + ipfsRes.cid);
-            // before calling devices-api need to sign the nft payload variable that is input here
+            // this part I think succeeded in past
+            const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
+                driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
+                appID: this.settings.getAppClientId(), // assuming clientId
+                appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api
+                expiration: expiration,
+                permissions: perms,
+                grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
+                attachments: [],
+                grantor: this.settings.getOrgWalletAddress, // current user...
+            });
+            if (!ipfsRes.success) {
+                throw new Error(`Failed to upload SACD agreement`);
+            }
+            console.log("ipfs sacd CID: " + ipfsRes.cid);
+
             // this may need to be signtypeddata
             const nftStr = JSON.stringify(nft);
             console.log("payload to sign", nftStr);
