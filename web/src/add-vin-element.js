@@ -272,8 +272,8 @@ export class AddVinElement extends LitElement {
             clientId: this.settings.getAppClientId(),
             // todo more things that should be configurable /dynamic
             domain: "dimo.org",
-            redirectUri: "http://localhost:3008/login.html",
-            // environment: "dev",
+            redirectUri: "https://fleet-onboard.dimo.org/login.html",
+            environment: "dev",
             useWalletSession: true,
         })
         // use the webauthn stamper
@@ -347,9 +347,9 @@ export class AddVinElement extends LitElement {
         const expiration = BigInt(2933125200); // 40 years
 
         try{
-            // not sure if value here is correct
+
             await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
-            // await this.kernelSigner.openSessionWithPasskey(); // this causes Passkey window to show up twice, may not be needed
+
             // this part already succeeded, temporarily commenting out
             // const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
             //     driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
@@ -368,7 +368,7 @@ export class AddVinElement extends LitElement {
             // before calling devices-api need to sign the nft payload variable that is input here
             // this may need to be signtypeddata
 
-            const signedNFT = await this.kernelSigner.signTypedData(nft);
+            const signedNFT = await this.kernelSigner.signChallenge(nft);
             return {
                 success: true,
                 signature: signedNFT,
