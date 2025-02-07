@@ -2,6 +2,7 @@ import {html, LitElement, css} from 'lit'
 import {Settings} from "./settings.js";
 import {KernelSigner, newKernelConfig, sacdPermissionValue} from '@dimo-network/transactions';
 import {WebauthnStamper} from "@turnkey/webauthn-stamper";
+import { ApiKeyStamper } from "@turnkey/api-key-stamper";
 
 export class AddVinElement extends LitElement {
     static properties = {
@@ -32,6 +33,7 @@ export class AddVinElement extends LitElement {
         const r = this.setupKernelSigner();
         this.kernelSigner = r.kernelSigner;
         this.stamper = r.stamper;
+        this.apiKeyStamper = r.apiKeyStamper;
     }
 
     static styles = css`
@@ -273,14 +275,20 @@ export class AddVinElement extends LitElement {
             // useWalletSession: true,
         })
         // use the webauthn stamper
+        const kernelSigner = new KernelSigner(kernelConfig);
+
         const stamper = new WebauthnStamper({
             rpId: "dimo.org", // passkeys need to be on the same rpid - must match LIWD. should be: dimo.org, works on subdomain
         });
-        const kernelSigner = new KernelSigner(kernelConfig);
+        const apiKeyStamper = new ApiKeyStamper({
+            apiPublicKey: this.settings.getSignerPublicKey(),
+            apiPrivateKey: this.settings.getSignerApiKey(),
+        })
 
         return {
             kernelSigner,
             stamper,
+            apiKeyStamper,
         };
     }
     /**
@@ -343,7 +351,10 @@ export class AddVinElement extends LitElement {
         const expiration = BigInt(2933125200); // 40 years
 
         try{
-            await this.kernelSigner.passkeyInit(this.settings.getTurnkeySubOrgId(), this.settings.getOrgWalletAddress(), this.stamper);
+            await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
+            await this.kernelSigner.passkeyToSession(this.settings.getTurnkeySubOrgId(), this.stamper)
+           // await this.kernelSigner.passkeyInit(this.settings.getTurnkeySubOrgId(), this.settings.getOrgWalletAddress(), this.stamper);
+
             // this.kernelSigner.passkeyToSession()
             // this.kernelSigner.openSessionWithApiStamper() - potentially an option I like, no passkey required
             // bug? activity type should be set

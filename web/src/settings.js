@@ -119,4 +119,11 @@ export class Settings {
     getTurnkeySubOrgId() {
         return this.getAccountInfo("subOrganizationId");
     }
+
+    getSignerApiKey() {
+        return localStorage.getItem("signerApiKey");
+    }
+    getSignerPublicKey() {
+        return localStorage.getItem("signerPublicKey");
+    }
 }
