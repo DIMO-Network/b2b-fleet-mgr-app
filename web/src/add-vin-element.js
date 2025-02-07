@@ -273,7 +273,7 @@ export class AddVinElement extends LitElement {
             // todo more things that should be configurable /dynamic
             domain: "dimo.org",
             redirectUri: "https://fleet-onboard.dimo.org/login.html",
-            // environment: "dev", // next thing to experiment turning off
+            environment: "dev", // next thing to experiment turning off
             useWalletSession: true,
         })
         // use the webauthn stamper
@@ -354,7 +354,7 @@ export class AddVinElement extends LitElement {
             // const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
             //     driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
             //     appID: this.settings.getAppClientId(), // assuming clientId
-            //     appName: "B2B Fleet Manager App DEV", // todo from app prompt
+            //     appName: "B2B Fleet Manager App DEV", // todo from app prompt call identity-api
             //     expiration: expiration,
             //     permissions: perms,
             //     grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
@@ -371,6 +371,8 @@ export class AddVinElement extends LitElement {
             console.log("payload to sign", nftStr);
 
             const signedNFT = await this.kernelSigner.signChallenge(nftStr);
+            // todo blocked: Turnkey error 3: no runner registered with activity type ""
+            // error 3 means invalid argument
             return {
                 success: true,
                 signature: signedNFT,
