@@ -206,7 +206,7 @@ export class AddVinElement extends LitElement {
             if (!response.ok) {
                 return {
                     success: false,
-                    error: result.error || result,
+                    error: result.message,
                     status: response.status,
                 };
             }
@@ -351,12 +351,14 @@ export class AddVinElement extends LitElement {
         const expiration = BigInt(2933125200); // 40 years
 
         try{
-            await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
-            await this.kernelSigner.passkeyToSession(this.settings.getTurnkeySubOrgId(), this.stamper)
-           // await this.kernelSigner.passkeyInit(this.settings.getTurnkeySubOrgId(), this.settings.getOrgWalletAddress(), this.stamper);
-
+            await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.apiKeyStamper);
+            // potentially an option I like, no passkey required
+            await this.kernelSigner.openSessionWithApiStamper(this.settings.getTurnkeySubOrgId(), this.apiKeyStamper);
+            // doing any of below resulted in no active client error
+            // await this.kernelSigner.passkeyToSession(this.settings.getTurnkeySubOrgId(), this.stamper)
+            // await this.kernelSigner.passkeyInit(this.settings.getTurnkeySubOrgId(), this.settings.getOrgWalletAddress(), this.stamper);
             // this.kernelSigner.passkeyToSession()
-            // this.kernelSigner.openSessionWithApiStamper() - potentially an option I like, no passkey required
+
             // bug? activity type should be set
             // todo blocked: Turnkey error 3: no runner registered with activity type ""
             const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
