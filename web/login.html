@@ -11,16 +11,16 @@
 <body>
  <h1>Logging In</h1>
  <form class="grid" id="emailForm">
-     <p>We couldn't get the email from your account, please enter it below.</p>
+     <p style="display: block">We couldn't get the email from your account, please enter it below.</p>
      <label>Your Account Email:
          <input id="email" type="text" placeholder="me@company.com" maxlength="60"></label>
+     <br>
      <button type="button" id="submitEmail">
          Continue
      </button>
  </form>
 <script>
-    const emailForm = document.getElementById('myDiv');
-    emailForm.style.display = 'none';
+
     // I'll get back following in querystrings:
     // token, walletAddress, email
     // Get the current URL query string (everything after ?)
@@ -35,13 +35,19 @@
         console.log(`${key}: ${value}`);
         localStorage.setItem(key, value);
     });
-    const email = localStorage.getItem("email");
-    if (email == null || email === '') {
-        emailForm.style.display = 'block';
-    } else {
-    window.location.href = "/app.html"; }
+
 
     document.addEventListener("DOMContentLoaded", () => {
+        const emailForm = document.getElementById('emailForm');
+        emailForm.style.display = 'none';
+
+        const email = localStorage.getItem("email");
+        if (email == null || email === '' || email === undefined) {
+            emailForm.style.display = 'block';
+        } else {
+            window.location.href = "/app.html";
+        }
+
         // Get the input and button elements by their IDs
         const textInput = document.getElementById('email');
         const myButton = document.getElementById('submitEmail');
