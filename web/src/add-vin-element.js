@@ -19,6 +19,7 @@ export class AddVinElement extends LitElement {
         this.processing = false;
         this.email = "";
         this.token = localStorage.getItem("token");
+        this.email = localStorage.getItem("email");
         this.settings = new Settings();
         this.alertText = "";
     }
@@ -27,7 +28,7 @@ export class AddVinElement extends LitElement {
         super.connectedCallback(); // Always call super.connectedCallback()
         await this.settings.fetchSettings(); // Fetch settings on load
         // todo email should come from LIWD, but if qs empty prompt for it in login.html
-        await this.settings.fetchAccountInfo("james@dimo.zone"); // load account info
+        await this.settings.fetchAccountInfo(this.email); // load account info
 
         const r = this.setupKernelSigner();
         this.kernelSigner = r.kernelSigner;
@@ -269,7 +270,6 @@ export class AddVinElement extends LitElement {
             // environment: "dev", // same error if set env to dev, no difference
             // useWalletSession: true,
         })
-        // use the webauthn stamper
         const kernelSigner = new KernelSigner(kernelConfig);
 
         const stamper = new WebauthnStamper({
@@ -365,12 +365,11 @@ export class AddVinElement extends LitElement {
             }
             console.log("ipfs sacd CID: " + ipfsRes.cid);
 
-            // this may need to be signtypeddata
             const nftStr = JSON.stringify(nft);
             console.log("payload to sign", nftStr);
 
+            // todo blocked: Turnkey error 3: no runner registered with activity type "", if comment above can reach test this one, but got same error
             const signedNFT = await this.kernelSigner.signChallenge(nftStr);
-            // todo blocked: Turnkey error 3: no runner registered with activity type ""
             // error 3 means invalid argument
             return {
                 success: true,
