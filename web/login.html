@@ -10,14 +10,18 @@
 </head>
 <body>
  <h1>Logging In</h1>
- <form class="grid" id="emailForm">
-     <p style="display: block">We couldn't get the email from your account, please enter it below.</p>
-     <label>Your Account Email:
-         <input id="email" type="text" placeholder="me@company.com" maxlength="60"></label>
-     <br>
-     <button type="button" id="submitEmail">
-         Continue
-     </button>
+ <form id="emailForm">
+     <div class="grid">
+        <p>We couldn't get the email from your account, please enter it below.</p>
+     </div>
+     <div class="grid">
+        <label>Your Account Email:
+            <input id="email" type="text" placeholder="me@company.com" maxlength="60"></label>
+
+        <button type="button" id="submitEmail">
+            Continue
+        </button>
+     </div>
  </form>
 <script>
 

@@ -24,6 +24,11 @@ export class AddVinElement extends LitElement {
         this.alertText = "";
     }
 
+    // Disable shadow DOM to allow inherit css
+    createRenderRoot() {
+        return this;
+    }
+
     async connectedCallback() {
         super.connectedCallback(); // Always call super.connectedCallback()
         await this.settings.fetchSettings(); // Fetch settings on load
