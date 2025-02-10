@@ -360,12 +360,15 @@ export class AddVinElement extends LitElement {
 
             const signedData = await this.stamper.stamp(mintPayload);
 
-            console.log("webauthn stamper sign", JSON.stringify(signedData.stampHeaderValue));
+            console.log("webauthn stamper sign");
+            console.log(signedData.stampHeaderValue);
+
+            const json = JSON.parse(signedData.stampHeaderValue)
 
             // temporary?
             return {
                 success: true,
-                signature: signedData.stampHeaderValue.signature,
+                signature: json.signature,
             }
             // doing any of below resulted in no active client error
             // await this.kernelSigner.passkeyToSession(this.settings.getTurnkeySubOrgId(), this.stamper)
