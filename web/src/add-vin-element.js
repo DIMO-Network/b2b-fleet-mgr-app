@@ -119,10 +119,10 @@ export class AddVinElement extends LitElement {
         }
         console.log("signed mint vehicle:", signedNftResp.signature);
         // temporary - uncomment if sign challenge works
-        // const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
-        // if (!postMintResp.success) {
-        //     this.alertText = "failed to get the message to mint" + postMintResp.error;
-        // }
+        const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
+        if (!postMintResp.success) {
+            this.alertText = "failed to get the message to mint" + postMintResp.error;
+        }
 
         // start polling to get token id and synthetic token_id, just users/devices/me
 
@@ -359,12 +359,13 @@ export class AddVinElement extends LitElement {
             // const payloadBytes = new TextEncoder().encode(payloadString);
 
             const signedData = await this.stamper.stamp(mintPayload);
-            console.log("webauthn stamper sign", signedData);
 
-            // temporary
+            console.log("webauthn stamper sign", JSON.stringify(signedData.stampHeaderValue));
+
+            // temporary?
             return {
                 success: true,
-                signature: signedData,
+                signature: signedData.stampHeaderValue.signature,
             }
             // doing any of below resulted in no active client error
             // await this.kernelSigner.passkeyToSession(this.settings.getTurnkeySubOrgId(), this.stamper)
@@ -374,23 +375,23 @@ export class AddVinElement extends LitElement {
 
             // bug? activity type should be set
             // todo blocked: Turnkey error 3: no runner registered with activity type ""
-            const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
-                driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
-                appID: this.settings.getAppClientId(), // assuming clientId
-                appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api
-                expiration: expiration,
-                permissions: perms,
-                grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
-                attachments: [],
-                grantor: this.settings.getOrgWalletAddress, // current user...
-            });
-            if (!ipfsRes.success) {
-                throw new Error(`Failed to upload SACD agreement`);
-            }
-            console.log("ipfs sacd CID: " + ipfsRes.cid);
-
-            // todo blocked: Turnkey error 3: no runner registered with activity type "", if comment above can reach test this one, but got same error
-            const signedNFT = await this.kernelSigner.signChallenge(mintPayload);
+            // const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
+            //     driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
+            //     appID: this.settings.getAppClientId(), // assuming clientId
+            //     appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api
+            //     expiration: expiration,
+            //     permissions: perms,
+            //     grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
+            //     attachments: [],
+            //     grantor: this.settings.getOrgWalletAddress, // current user...
+            // });
+            // if (!ipfsRes.success) {
+            //     throw new Error(`Failed to upload SACD agreement`);
+            // }
+            // console.log("ipfs sacd CID: " + ipfsRes.cid);
+            //
+            // // todo blocked: Turnkey error 3: no runner registered with activity type "", if comment above can reach test this one, but got same error
+            // const signedNFT = await this.kernelSigner.signChallenge(mintPayload);
             // error 3 means invalid argument
             return {
                 success: true,
