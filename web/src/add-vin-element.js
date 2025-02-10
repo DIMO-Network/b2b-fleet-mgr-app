@@ -110,22 +110,15 @@ export class AddVinElement extends LitElement {
             return;
         }
 
-        // experimental code to sign nft
-        const signer = new WebauthnStamper({
-            rpId: "dimo.org"
-        });
         const payloadString = JSON.stringify(mintResp.data);
-        // const payloadBytes = new TextEncoder().encode(payloadString);
-        const signedData = await signer.stamp(payloadString);
-        console.log("webauthn stamper sign", signedData);
 
-        // const signedNftResp = await this.signMintVehiclePayload(mintResp.data)
-        // if (!signedNftResp.success) {
-        //     this.alertText = "failed to get the message to mint" + signedNftResp.error;
-        //     return;
-        // }
-        // console.log("signed mint vehicle:", signedNftResp.signature);
-        //
+        const signedNftResp = await this.signMintVehiclePayload(payloadString)
+        if (!signedNftResp.success) {
+            this.alertText = "failed to get the message to mint" + signedNftResp.error;
+            return;
+        }
+        console.log("signed mint vehicle:", signedNftResp.signature);
+        // temporary - uncomment if sign challenge works
         // const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
         // if (!postMintResp.success) {
         //     this.alertText = "failed to get the message to mint" + postMintResp.error;
@@ -341,7 +334,12 @@ export class AddVinElement extends LitElement {
         }
     }
 
-    async signMintVehiclePayload(nft) {
+    /**
+     *
+     * @param mintPayload {string} challenge payload to be signed
+     * @returns {Promise<{success: boolean, error: string}|{success: boolean, signature: `0x${string}`}>}
+     */
+    async signMintVehiclePayload(mintPayload) {
         const perms = sacdPermissionValue({
             NONLOCATION_TELEMETRY: true,
             COMMANDS: true,
@@ -356,6 +354,18 @@ export class AddVinElement extends LitElement {
 
         try{
             await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
+
+            console.log("payload to sign", mintPayload);
+            // const payloadBytes = new TextEncoder().encode(payloadString);
+
+            const signedData = await this.stamper.stamp(mintPayload);
+            console.log("webauthn stamper sign", signedData);
+
+            // temporary
+            return {
+                success: true,
+                signature: signedData,
+            }
             // doing any of below resulted in no active client error
             // await this.kernelSigner.passkeyToSession(this.settings.getTurnkeySubOrgId(), this.stamper)
             // await this.kernelSigner.passkeyInit(this.settings.getTurnkeySubOrgId(), this.settings.getOrgWalletAddress(), this.stamper);
@@ -379,11 +389,8 @@ export class AddVinElement extends LitElement {
             }
             console.log("ipfs sacd CID: " + ipfsRes.cid);
 
-            const nftStr = JSON.stringify(nft);
-            console.log("payload to sign", nftStr);
-
             // todo blocked: Turnkey error 3: no runner registered with activity type "", if comment above can reach test this one, but got same error
-            const signedNFT = await this.kernelSigner.signChallenge(nftStr);
+            const signedNFT = await this.kernelSigner.signChallenge(mintPayload);
             // error 3 means invalid argument
             return {
                 success: true,
