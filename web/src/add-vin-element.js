@@ -335,6 +335,34 @@ export class AddVinElement extends LitElement {
     }
 
     /**
+     * Converts a Base64 (URL-safe) encoded signature to a 0x-prefixed hex string.
+     *
+     * @param {string} base64Signature - The Base64-encoded DER signature.
+     * @returns {string} A 0x-prefixed hex string representation of the signature.
+     *
+     * @example
+     * const base64Sig = "MEQCIFCMaXMmZ2tI9RoED9oBJ7j_q-k4rBUxAkIYOMiYoiASAiApW81JJz_Efv8MKYfUAMD43bXwm8er0wS4P9Q9lh0Jbg";
+     * const hexSig = base64ToHex(base64Sig);
+     * console.log(hexSig); // Output: "0x..."
+     */
+    base64ToHex(base64Signature) {
+        // Decode Base64 (URL-safe variant) to a byte array
+        const binaryString = atob(base64Signature.replace(/_/g, '/').replace(/-/g, '+'));
+        const byteArray = new Uint8Array(binaryString.length);
+
+        for (let i = 0; i < binaryString.length; i++) {
+            byteArray[i] = binaryString.charCodeAt(i);
+        }
+
+        // Convert byte array to a hex string
+        const hexString = Array.from(byteArray)
+            .map(byte => byte.toString(16).padStart(2, '0'))
+            .join('');
+
+        return `0x${hexString}`;
+    }
+
+    /**
      *
      * @param mintPayload {string} challenge payload to be signed
      * @returns {Promise<{success: boolean, error: string}|{success: boolean, signature: `0x${string}`}>}
@@ -368,7 +396,7 @@ export class AddVinElement extends LitElement {
             // temporary?
             return {
                 success: true,
-                signature: json.signature,
+                signature: this.base64ToHex(json.signature),
             }
             // doing any of below resulted in no active client error
             // await this.kernelSigner.passkeyToSession(this.settings.getTurnkeySubOrgId(), this.stamper)
