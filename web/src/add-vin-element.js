@@ -110,17 +110,26 @@ export class AddVinElement extends LitElement {
             return;
         }
 
-        const signedNftResp = await this.signMintVehiclePayload(mintResp.data)
-        if (!signedNftResp.success) {
-            this.alertText = "failed to get the message to mint" + signedNftResp.error;
-            return;
-        }
-        console.log("signed mint vehicle:", signedNftResp.signature);
+        // experimental code to sign nft
+        const signer = new WebauthnStamper({
+            rpId: "dimo.org"
+        });
+        const payloadString = JSON.stringify(mintResp.data);
+        // const payloadBytes = new TextEncoder().encode(payloadString);
+        const signedData = await signer.stamp(payloadString);
+        console.log("webauthn stamper sign", signedData);
 
-        const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
-        if (!postMintResp.success) {
-            this.alertText = "failed to get the message to mint" + postMintResp.error;
-        }
+        // const signedNftResp = await this.signMintVehiclePayload(mintResp.data)
+        // if (!signedNftResp.success) {
+        //     this.alertText = "failed to get the message to mint" + signedNftResp.error;
+        //     return;
+        // }
+        // console.log("signed mint vehicle:", signedNftResp.signature);
+        //
+        // const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
+        // if (!postMintResp.success) {
+        //     this.alertText = "failed to get the message to mint" + postMintResp.error;
+        // }
 
         // start polling to get token id and synthetic token_id, just users/devices/me
 
