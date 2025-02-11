@@ -358,11 +358,10 @@ export class AddVinElement extends LitElement {
 
             console.log("payload to sign", mintPayload);
 
-            // experiments
-            const client = await this.kernelSigner.getActiveClient()
-            console.log("Client Key: ")
-            console.log(client.key) // is this the pkey?
-
+            // this gives: no active client
+            // const client = await this.kernelSigner.getActiveClient()
+            // console.log("Client Key: ")
+            // console.log(client.key) // is this the pkey?
 
             const httpClient = new TurnkeyClient(
                 { baseUrl: "https://api.turnkey.com" },
