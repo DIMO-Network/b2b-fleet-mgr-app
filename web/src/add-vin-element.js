@@ -2,6 +2,7 @@ import {html, LitElement, css} from 'lit'
 import {Settings} from "./settings.js";
 import {KernelSigner, newKernelConfig, sacdPermissionValue} from '@dimo-network/transactions';
 import {WebauthnStamper} from "@turnkey/webauthn-stamper";
+import { TurnkeyClient } from "@turnkey/http";
 
 export class AddVinElement extends LitElement {
     static properties = {
@@ -117,12 +118,12 @@ export class AddVinElement extends LitElement {
             this.alertText = "failed to get the message to mint" + signedNftResp.error;
             return;
         }
-        console.log("signed mint vehicle:", signedNftResp.signature);
-        // temporary - uncomment if sign challenge works
-        const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
-        if (!postMintResp.success) {
-            this.alertText = "failed to get the message to mint" + postMintResp.error;
-        }
+        // console.log("signed mint vehicle:", signedNftResp.signature);
+        // uncomment below if sign challenge works
+        // const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
+        // if (!postMintResp.success) {
+        //     this.alertText = "failed to get the message to mint" + postMintResp.error;
+        // }
 
         // start polling to get token id and synthetic token_id, just users/devices/me
 
@@ -335,34 +336,6 @@ export class AddVinElement extends LitElement {
     }
 
     /**
-     * Converts a Base64 (URL-safe) encoded signature to a 0x-prefixed hex string.
-     *
-     * @param {string} base64Signature - The Base64-encoded DER signature.
-     * @returns {string} A 0x-prefixed hex string representation of the signature.
-     *
-     * @example
-     * const base64Sig = "MEQCIFCMaXMmZ2tI9RoED9oBJ7j_q-k4rBUxAkIYOMiYoiASAiApW81JJz_Efv8MKYfUAMD43bXwm8er0wS4P9Q9lh0Jbg";
-     * const hexSig = base64ToHex(base64Sig);
-     * console.log(hexSig); // Output: "0x..."
-     */
-    base64ToHex(base64Signature) {
-        // Decode Base64 (URL-safe variant) to a byte array
-        const binaryString = atob(base64Signature.replace(/_/g, '/').replace(/-/g, '+'));
-        const byteArray = new Uint8Array(binaryString.length);
-
-        for (let i = 0; i < binaryString.length; i++) {
-            byteArray[i] = binaryString.charCodeAt(i);
-        }
-
-        // Convert byte array to a hex string
-        const hexString = Array.from(byteArray)
-            .map(byte => byte.toString(16).padStart(2, '0'))
-            .join('');
-
-        return `0x${hexString}`;
-    }
-
-    /**
      *
      * @param mintPayload {string} challenge payload to be signed
      * @returns {Promise<{success: boolean, error: string}|{success: boolean, signature: `0x${string}`}>}
@@ -384,19 +357,36 @@ export class AddVinElement extends LitElement {
             await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
 
             console.log("payload to sign", mintPayload);
-            // const payloadBytes = new TextEncoder().encode(payloadString);
 
-            const signedData = await this.stamper.stamp(mintPayload);
+            // experiments
+            const client = await this.kernelSigner.getActiveClient()
+            console.log("Client Key: ")
+            console.log(client.key) // is this the pkey?
 
-            console.log("webauthn stamper sign");
-            console.log(signedData.stampHeaderValue);
 
-            const json = JSON.parse(signedData.stampHeaderValue)
+            const httpClient = new TurnkeyClient(
+                { baseUrl: "https://api.turnkey.com" },
+                this.stamper
+            );
+
+            const signRawResult = await httpClient.signRawPayload({
+                "type": "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
+                "timestampMs": Date.now(),
+                "organizationId": this.settings.getTurnkeySubOrgId(), // may need to be the top level account
+                "parameters": {
+                    "signWith": this.settings.getOrgWalletAddress(),
+                    "payload": mintPayload,
+                    "encoding": "PAYLOAD_ENCODING_HEXADECIMAL",
+                    "hashFunction": "HASH_FUNCTION_KECCAK256"
+                }
+            })
+            console.log("signRawResult", signRawResult)
+            console.log(JSON.stringify(signRawResult))
 
             // temporary?
             return {
                 success: true,
-                signature: this.base64ToHex(json.signature),
+                signature: "0x",
             }
             // doing any of below resulted in no active client error
             // await this.kernelSigner.passkeyToSession(this.settings.getTurnkeySubOrgId(), this.stamper)
