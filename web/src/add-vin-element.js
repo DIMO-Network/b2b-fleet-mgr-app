@@ -372,7 +372,7 @@ export class AddVinElement extends LitElement {
             const signRawResult = await httpClient.signRawPayload({
                 "type": "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
                 "timestampMs": ts.toString(),
-                "organizationId": this.settings.getTurnkeySubOrgId(), // may need to be the top level account
+                "organizationId": "c28319a1-73ec-489a-a212-ec8dbd65dd52", // dimo org id, test
                 "parameters": {
                     "signWith": this.settings.getOrgWalletAddress(),
                     "payload": mintPayload,
