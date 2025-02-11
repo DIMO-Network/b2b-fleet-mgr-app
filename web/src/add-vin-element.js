@@ -367,10 +367,11 @@ export class AddVinElement extends LitElement {
                 { baseUrl: "https://api.turnkey.com" },
                 this.stamper
             );
+            const ts = Date.now();
 
             const signRawResult = await httpClient.signRawPayload({
                 "type": "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
-                "timestampMs": Date.now(),
+                "timestampMs": ts.toString(),
                 "organizationId": this.settings.getTurnkeySubOrgId(), // may need to be the top level account
                 "parameters": {
                     "signWith": this.settings.getOrgWalletAddress(),
