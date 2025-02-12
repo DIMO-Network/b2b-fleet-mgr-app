@@ -34,7 +34,6 @@ export class AddVinElement extends LitElement {
     async connectedCallback() {
         super.connectedCallback(); // Always call super.connectedCallback()
         await this.settings.fetchSettings(); // Fetch settings on load
-        // todo email should come from LIWD, but if qs empty prompt for it in login.html
         await this.settings.fetchAccountInfo(this.email); // load account info
 
         const r = this.setupKernelSigner();
@@ -84,6 +83,8 @@ export class AddVinElement extends LitElement {
             this.alertText = "failed to get the message to mint" + mintResp.error;
             return;
         }
+        // saw this fix in the mobile app https://github.com/DIMO-Network/dimo-driver/blob/development/src/hooks/custom/useSignCallback.ts#L40
+        mintResp.data.domain.chainId = Number(mintResp.data.domain.chainId);
 
         const payloadString = JSON.stringify(mintResp.data);
 
@@ -334,7 +335,7 @@ export class AddVinElement extends LitElement {
      * @returns {Promise<{success: boolean, error: string}|{success: boolean, signature: `0x${string}`}>}
      */
     async signMintVehiclePayload(mintPayload) {
-        // todo move this elsewhere
+        // todo move this permissions stuff elsewhere
         const perms = sacdPermissionValue({
             NONLOCATION_TELEMETRY: true,
             COMMANDS: true,
@@ -358,13 +359,13 @@ export class AddVinElement extends LitElement {
             const ts = Date.now();
 
             // Convert byte array to hex string
-            const byteArray = new TextEncoder().encode(mintPayload);
-            const hexString = Array.from(byteArray)
-                .map(byte => byte.toString(16).padStart(2, '0'))
-                .join('');
-            const payload = `0x${hexString}`;
-
-            console.log("payload to sign hex:", payload);
+            // const byteArray = new TextEncoder().encode(mintPayload);
+            // const hexString = Array.from(byteArray)
+            //     .map(byte => byte.toString(16).padStart(2, '0'))
+            //     .join('');
+            // const payload = `0x${hexString}`;
+            //
+            // console.log("payload to sign hex:", payload);
 
             const signRawResult = await httpClient.signRawPayload({
                 "type": "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
@@ -409,7 +410,7 @@ export class AddVinElement extends LitElement {
             // console.log("ipfs sacd CID: " + ipfsRes.cid);
             //
             // // todo blocked: Turnkey error 3: no runner registered with activity type "", if comment above can reach test this one, but got same error
-            // const signedNFT = await this.kernelSigner.signChallenge(mintPayload);
+            // const signedNFT = await this.kernelSigner.signTypedData(mintPayload);
             // error 3 means invalid argument
         } catch (error) {
             console.error("Error message:", error.message);

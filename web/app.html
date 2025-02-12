@@ -77,13 +77,13 @@
 <script>
     function handleLogout() {
         // List the keys you want to remove
-        const keysToRemove = ['token', 'email', 'appSettings', 'walletAddress'];
+        const keysToRemove = ['token', 'email', 'appSettings', 'walletAddress', 'accountInfo'];
 
         keysToRemove.forEach(key => {
             localStorage.removeItem(key);
         });
 
-        console.log('Selected localStorage keys removed.');
+        console.log('Selected localStorage keys removed for logout.');
 
         // Optionally, you can also redirect the user after logout:
         window.location.href = '/';
