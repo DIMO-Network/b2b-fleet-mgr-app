@@ -110,10 +110,17 @@ export class Settings {
     }
 
     /**
-     * Organization wallet address from DC, same as DC admin user wallet address
+     * @returns {string} 0x Organization smart contract address from Turnkey. Not be confused with the user's wallet address
      */
-    getOrgWalletAddress(){
-        return localStorage.getItem("walletAddress");
+    getOrgSmartContractAddress(){
+        return this.getAccountInfo("smartContractAddress");
+    }
+
+    /**
+     * @returns {string} 0x formatted string with the turnkey account user wallet addr
+     */
+    getUserWalletAddress(){
+        return this.getAccountInfo("walletAddress");
     }
 
     getTurnkeySubOrgId() {

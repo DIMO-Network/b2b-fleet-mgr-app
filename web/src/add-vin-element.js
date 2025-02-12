@@ -354,7 +354,7 @@ export class AddVinElement extends LitElement {
         const expiration = BigInt(2933125200); // 40 years
 
         try{
-            await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
+            //await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
 
             console.log("payload to sign", mintPayload);
 
@@ -372,9 +372,9 @@ export class AddVinElement extends LitElement {
             const signRawResult = await httpClient.signRawPayload({
                 "type": "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
                 "timestampMs": ts.toString(),
-                "organizationId": "c28319a1-73ec-489a-a212-ec8dbd65dd52", // dimo org id, test
+                "organizationId": this.settings.getTurnkeySubOrgId(),
                 "parameters": {
-                    "signWith": this.settings.getOrgWalletAddress(),
+                    "signWith": this.settings.getUserWalletAddress(),
                     "payload": mintPayload,
                     "encoding": "PAYLOAD_ENCODING_HEXADECIMAL",
                     "hashFunction": "HASH_FUNCTION_KECCAK256"
@@ -402,6 +402,7 @@ export class AddVinElement extends LitElement {
             //     appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api
             //     expiration: expiration,
             //     permissions: perms,
+            // todo this is wrong, should be the wallet address i think
             //     grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
             //     attachments: [],
             //     grantor: this.settings.getOrgWalletAddress, // current user...
@@ -414,10 +415,6 @@ export class AddVinElement extends LitElement {
             // // todo blocked: Turnkey error 3: no runner registered with activity type "", if comment above can reach test this one, but got same error
             // const signedNFT = await this.kernelSigner.signChallenge(mintPayload);
             // error 3 means invalid argument
-            return {
-                success: true,
-                signature: signedNFT,
-            }
         } catch (error) {
             console.error("Error message:", error.message);
             console.error("Stack trace:", error.stack);
