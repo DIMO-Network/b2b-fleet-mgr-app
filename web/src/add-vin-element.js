@@ -428,7 +428,9 @@ export class AddVinElement extends LitElement {
             }
         }
     }
-
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
     /**
      * uses dimo transactions sdk to init kernel signer and then sign the payload object
      * @param {Object} mintPayload
@@ -436,6 +438,8 @@ export class AddVinElement extends LitElement {
      */
     async signPayloadWithSDK(mintPayload) {
         await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
+        // error is "no active client"
+        await this.sleep(2000);
         const signed = await this.kernelSigner.signTypedData(mintPayload);
         console.log("Signature from sdk:", signed);
         console.log(JSON.stringify(signed));
