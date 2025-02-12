@@ -86,14 +86,14 @@ export class AddVinElement extends LitElement {
         // saw this fix in the mobile app https://github.com/DIMO-Network/dimo-driver/blob/development/src/hooks/custom/useSignCallback.ts#L40
         mintResp.data.domain.chainId = Number(mintResp.data.domain.chainId);
 
-        const payloadString = JSON.stringify(mintResp.data);
-
-        const signedNftResp = await this.signMintVehiclePayload(payloadString)
-        if (!signedNftResp.success) {
-            this.alertText = "failed to get the message to mint" + signedNftResp.error;
-            return;
-        }
-        console.log("signed mint vehicle:", signedNftResp.signature);
+        // const payloadString = JSON.stringify(mintResp.data);
+        //
+        // const signedNftResp = await this.signMintVehiclePayload(payloadString)
+        // if (!signedNftResp.success) {
+        //     this.alertText = "failed to get the message to mint" + signedNftResp.error;
+        //     return;
+        // }
+        // console.log("signed mint vehicle:", signedNftResp.signature);
 
         const sdkSignResult = await this.signPayloadWithSDK(mintResp.data);
 
@@ -437,9 +437,21 @@ export class AddVinElement extends LitElement {
      * @returns {Promise<`0x${string}`>} should be the final eth style ecdsa signature
      */
     async signPayloadWithSDK(mintPayload) {
+        // could try with passkeyinit too
         await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
+        const tc = new TurnkeyClient({ baseUrl: "https://api.turnkey.com" }, this.stamper);
+        this.kernelSigner.passkeyClient.turnkeyClient = tc;
         // error is "no active client"
-        await this.sleep(2000);
+
+        const wallets = await tc.getWallets({
+            organizationId: this.settings.getTurnkeySubOrgId(),
+        });
+        const walletAddr = await tc.getWalletAccounts({
+            organizationId: this.settings.getTurnkeySubOrgId(),
+            walletId: wallets.wallets[0].walletId,
+        });
+        console.log(walletAddr)
+
         const signed = await this.kernelSigner.signTypedData(mintPayload);
         console.log("Signature from sdk:", signed);
         console.log(JSON.stringify(signed));

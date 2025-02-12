@@ -79,6 +79,10 @@ export class Settings {
         return ls ? JSON.parse(ls) : {};
     }
 
+    /*
+    * {"devicesApiUrl":"https://devices-api.dimo.zone","paymasterUrl":"https://rpc.zerodev.app/api/v2/paymaster/c3526d90-4977-44e3-8584-8820693a7fd9","rpcUrl":"https://polygon.gateway.tenderly.co/2QTagH5V4szp7BLAgpZYIf","bundlerUrl":"https://rpc.zerodev.app/api/v2/bundler/c3526d90-4977-44e3-8584-8820693a7fd9"}
+
+     */
     // Get a specific setting
     getSetting(key) {
         return this.settings[key];
