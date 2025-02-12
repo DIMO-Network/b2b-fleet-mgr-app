@@ -95,6 +95,8 @@ export class AddVinElement extends LitElement {
         }
         console.log("signed mint vehicle:", signedNftResp.signature);
 
+        const sdkSignResult = await this.signPayloadWithSDK(mintResp.data);
+
         const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
         if (!postMintResp.success) {
             this.alertText = "failed mint vehicle: " + postMintResp.error;
@@ -367,6 +369,10 @@ export class AddVinElement extends LitElement {
             //
             // console.log("payload to sign hex:", payload);
 
+            // What have tried so far:
+            // encoding - as hex
+            // hasfunction, sha256 and keccak256
+
             const signRawResult = await httpClient.signRawPayload({
                 "type": "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
                 "timestampMs": ts.toString(),
@@ -423,10 +429,18 @@ export class AddVinElement extends LitElement {
         }
     }
 
-    async signPayloadWithSDK(payload) {
-        // todo fill in
-        return "0x";
-    }
+    /**
+     * uses dimo transactions sdk to init kernel signer and then sign the payload object
+     * @param {Object} mintPayload
+     * @returns {Promise<`0x${string}`>} should be the final eth style ecdsa signature
+     */
+    async signPayloadWithSDK(mintPayload) {
+        await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
+        const signed = await this.kernelSigner.signTypedData(mintPayload);
+        console.log("Signature from sdk:", signed);
+        console.log(JSON.stringify(signed));
 
+        return signed;
+    }
 }
 window.customElements.define('add-vin-element', AddVinElement);
