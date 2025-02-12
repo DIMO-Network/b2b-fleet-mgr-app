@@ -375,7 +375,7 @@ export class AddVinElement extends LitElement {
                     "signWith": this.settings.getUserWalletAddress(),
                     "payload": mintPayload,
                     "encoding": "PAYLOAD_ENCODING_TEXT_UTF8",
-                    "hashFunction": "HASH_FUNCTION_KECCAK256"
+                    "hashFunction": "HASH_FUNCTION_SHA256" //HASH_FUNCTION_SHA256, HASH_FUNCTION_KECCAK256
                 }
             })
             console.log(JSON.stringify(signRawResult))
@@ -421,6 +421,11 @@ export class AddVinElement extends LitElement {
                 error: error.message || "An unexpected error occurred",
             }
         }
+    }
+
+    async signPayloadWithSDK(payload) {
+        // todo fill in
+        return "0x";
     }
 
 }
