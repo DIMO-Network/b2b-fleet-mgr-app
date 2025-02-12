@@ -369,13 +369,22 @@ export class AddVinElement extends LitElement {
             );
             const ts = Date.now();
 
+            // Convert byte array to hex string
+            const byteArray = new TextEncoder().encode(mintPayload);
+            const hexString = Array.from(byteArray)
+                .map(byte => byte.toString(16).padStart(2, '0'))
+                .join('');
+            const payload = `0x${hexString}`;
+
+            console.log("payload to sign hex:", payload);
+
             const signRawResult = await httpClient.signRawPayload({
                 "type": "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
                 "timestampMs": ts.toString(),
                 "organizationId": this.settings.getTurnkeySubOrgId(),
                 "parameters": {
                     "signWith": this.settings.getUserWalletAddress(),
-                    "payload": mintPayload,
+                    "payload": payload,
                     "encoding": "PAYLOAD_ENCODING_HEXADECIMAL",
                     "hashFunction": "HASH_FUNCTION_KECCAK256"
                 }
