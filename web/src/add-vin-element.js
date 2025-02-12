@@ -27,6 +27,7 @@ export class AddVinElement extends LitElement {
 
     // Disable shadow DOM to allow inherit css
     createRenderRoot() {
+        // there is another function to do this.
         return this;
     }
 
@@ -40,33 +41,6 @@ export class AddVinElement extends LitElement {
         this.kernelSigner = r.kernelSigner;
         this.stamper = r.stamper;
     }
-
-    static styles = css`
-        /* Base style for all alerts */
-        .alert {
-            padding: 1rem;
-            margin: 1rem 0;
-            border: 1px solid transparent;
-            border-radius: 4px;
-            font-size: 1rem;
-            font-family: sans-serif;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-        }
-
-        /* Success alert theme */
-        .alert-success {
-            color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-        }
-
-        /* Error (failure) alert theme */
-        .alert-error {
-            color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-        }
-    `;
 
     render() {
         return html`
@@ -122,7 +96,7 @@ export class AddVinElement extends LitElement {
 
         const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
         if (!postMintResp.success) {
-            this.alertText = "failed to get the message to mint" + postMintResp.error;
+            this.alertText = "failed mint vehicle: " + postMintResp.error;
         }
 
         // start polling to get token id and synthetic token_id, just users/devices/me
@@ -398,8 +372,8 @@ export class AddVinElement extends LitElement {
                 "organizationId": this.settings.getTurnkeySubOrgId(),
                 "parameters": {
                     "signWith": this.settings.getUserWalletAddress(),
-                    "payload": payload,
-                    "encoding": "PAYLOAD_ENCODING_HEXADECIMAL",
+                    "payload": mintPayload,
+                    "encoding": "PAYLOAD_ENCODING_TEXT_UTF8",
                     "hashFunction": "HASH_FUNCTION_KECCAK256"
                 }
             })
