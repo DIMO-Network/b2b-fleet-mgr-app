@@ -118,12 +118,12 @@ export class AddVinElement extends LitElement {
             this.alertText = "failed to get the message to mint" + signedNftResp.error;
             return;
         }
-        // console.log("signed mint vehicle:", signedNftResp.signature);
-        // uncomment below if sign challenge works
-        // const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
-        // if (!postMintResp.success) {
-        //     this.alertText = "failed to get the message to mint" + postMintResp.error;
-        // }
+        console.log("signed mint vehicle:", signedNftResp.signature);
+
+        const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
+        if (!postMintResp.success) {
+            this.alertText = "failed to get the message to mint" + postMintResp.error;
+        }
 
         // start polling to get token id and synthetic token_id, just users/devices/me
 
@@ -289,6 +289,25 @@ export class AddVinElement extends LitElement {
             stamper,
         };
     }
+
+    /**
+     * Converts an ECDSA signature (r, s, v) into a full Ethereum hex signature.
+     *
+     * Ethereum uses a 65-byte signature format: `r (32 bytes) + s (32 bytes) + v (1 byte)`.
+     * This function ensures `v` is correctly formatted (27 or 28) before concatenating.
+     *
+     * @param {Object} signResult - The signature result object.
+     * @param {string} signResult.r - The 32-byte hex string representing the `r` value.
+     * @param {string} signResult.s - The 32-byte hex string representing the `s` value.
+     * @param {string} signResult.v - The recovery ID as a hex string (typically `"00"` or `"01"`).
+     * @returns {`0x${string}`} The full Ethereum signature as a 0x-prefixed hex string.
+     */
+    formatEthereumSignature(signResult) {
+        const { r, s, v } = signResult;
+        const vHex = (parseInt(v, 16) + 27).toString(16).padStart(2, '0');
+        return `0x${r}${s}${vHex}`;
+    }
+
     /**
      * calls devices-api to mint a vehicle from a signed payload
      */
@@ -341,6 +360,7 @@ export class AddVinElement extends LitElement {
      * @returns {Promise<{success: boolean, error: string}|{success: boolean, signature: `0x${string}`}>}
      */
     async signMintVehiclePayload(mintPayload) {
+        // todo move this elsewhere
         const perms = sacdPermissionValue({
             NONLOCATION_TELEMETRY: true,
             COMMANDS: true,
@@ -355,13 +375,7 @@ export class AddVinElement extends LitElement {
 
         try{
             //await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
-
             console.log("payload to sign", mintPayload);
-
-            // this gives: no active client
-            // const client = await this.kernelSigner.getActiveClient()
-            // console.log("Client Key: ")
-            // console.log(client.key) // is this the pkey?
 
             const httpClient = new TurnkeyClient(
                 { baseUrl: "https://api.turnkey.com" },
@@ -389,13 +403,12 @@ export class AddVinElement extends LitElement {
                     "hashFunction": "HASH_FUNCTION_KECCAK256"
                 }
             })
-            console.log("signRawResult", signRawResult)
             console.log(JSON.stringify(signRawResult))
+            const ethStyleECDSA = this.formatEthereumSignature(signRawResult.activity.result.signRawPayloadResult);
 
-            // temporary?
             return {
                 success: true,
-                signature: "0x",
+                signature: ethStyleECDSA,
             }
             // doing any of below resulted in no active client error
             // await this.kernelSigner.passkeyToSession(this.settings.getTurnkeySubOrgId(), this.stamper)
