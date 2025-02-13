@@ -442,15 +442,15 @@ export class AddVinElement extends LitElement {
             APPROXIMATE_LOCATION: true,
         });
         const sacdInput = {
-            driverID: this.settings.getOrgSmartContractAddress(), // current user wallet addres??
+            driverID: this.settings.getUserWalletAddress(), // current user's wallet address
             appID: this.settings.getAppClientId(), // assuming clientId
-            appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api
+            // appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api, doesn't seem this is required
             expiration: expiration,
             permissions: perms,
-            // todo this is wrong, should be the wallet address i think? or the smart contract addr?
-            grantee: this.settings.getOrgSmartContractAddress(), // granting the organization the perms
+            grantee: this.settings.getOrgSmartContractAddress(), // this is the kernel account address, that owns the NFT
             attachments: [],
-            grantor: this.settings.getOrgSmartContractAddress(), // current user...
+            grantor: this.settings.getOrgSmartContractAddress(), // seems this is fine
+            // todo set source, or i think we'd just use SDK signAndUploadSACDAgreement once it works
         }
         return sacdInput;
     }
