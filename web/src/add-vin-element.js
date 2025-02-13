@@ -92,9 +92,7 @@ export class AddVinElement extends LitElement {
         // saw this fix in the mobile app https://github.com/DIMO-Network/dimo-driver/blob/development/src/hooks/custom/useSignCallback.ts#L40
         mintResp.data.domain.chainId = Number(mintResp.data.domain.chainId);
 
-        const payloadString = JSON.stringify(mintResp.data);
-
-        const signedNftResp = await this.signPayloadWithTurnkeyZerodev(payloadString)
+        const signedNftResp = await this.signPayloadWithTurnkeyZerodev(mintResp.data)
         if (!signedNftResp.success) {
             this.alertText = "failed to get the message to mint" + signedNftResp.error;
             return;
@@ -322,7 +320,7 @@ export class AddVinElement extends LitElement {
                 }
                 return {
                     success: false,
-                    error: errorDetail.error || errorDetail || `HTTP error! Status: ${response.status}`,
+                    error: errorDetail.message || errorDetail || `HTTP error! Status: ${response.status}`,
                     status: response.status,
                 };
             }
@@ -339,7 +337,7 @@ export class AddVinElement extends LitElement {
 
     /**
      *
-     * @param mintPayload {string} challenge payload to be signed
+     * @param mintPayload {Object} challenge payload to be signed, as original object
      * @returns {Promise<{success: boolean, error: string}|{success: boolean, signature: `0x${string}`}>}
      */
     async signPayloadWithTurnkeyZerodev(mintPayload) {
@@ -376,13 +374,11 @@ export class AddVinElement extends LitElement {
                 entryPoint: getEntryPoint("0.7"),
                 kernelVersion: KERNEL_V3_1,
             });
-            console.log("try signing the message"); // this did not hit
-            const signature = await kernelAccount.signMessage({
-                message: mintPayload,
-            })
+            console.log("try signing the message");
+            // have to use signTypedData
+            const signature = await kernelAccount.signTypedData(mintPayload)
 
-            // signing with turnkey won't work, must use zero dev
-            //const ethStyleECDSA = this.formatEthereumSignature(signRawResult.activity.result.signRawPayloadResult);
+
             console.log(signature)
 
             return {
