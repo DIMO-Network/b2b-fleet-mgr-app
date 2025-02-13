@@ -336,28 +336,16 @@ export class AddVinElement extends LitElement {
      * @param mintPayload {string} challenge payload to be signed
      * @returns {Promise<{success: boolean, error: string}|{success: boolean, signature: `0x${string}`}>}
      */
-    async signMintVehiclePayload(mintPayload) {
-        // todo move this permissions stuff elsewhere
-        const perms = sacdPermissionValue({
-            NONLOCATION_TELEMETRY: true,
-            COMMANDS: true,
-            CURRENT_LOCATION: true,
-            ALLTIME_LOCATION: true,
-            CREDENTIALS: true,
-            STREAMS: true,
-            RAW_DATA: true,
-            APPROXIMATE_LOCATION: true,
-        });
-        const expiration = BigInt(2933125200); // 40 years
+    async signPayloadWithTurnkeyZerodev(mintPayload) {
 
         try{
-            //await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
             console.log("payload to sign", mintPayload);
 
             const httpClient = new TurnkeyClient(
                 { baseUrl: "https://api.turnkey.com" },
                 this.stamper
             );
+
             const ts = Date.now();
 
             // Convert byte array to hex string
@@ -369,10 +357,7 @@ export class AddVinElement extends LitElement {
             //
             // console.log("payload to sign hex:", payload);
 
-            // What have tried so far:
-            // encoding - as hex
-            // hasfunction, sha256 and keccak256
-
+            // signing with turnkey won't work, must use zero dev
             const signRawResult = await httpClient.signRawPayload({
                 "type": "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
                 "timestampMs": ts.toString(),
@@ -399,21 +384,7 @@ export class AddVinElement extends LitElement {
 
             // bug? activity type should be set
             // todo blocked: Turnkey error 3: no runner registered with activity type ""
-            // const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
-            //     driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
-            //     appID: this.settings.getAppClientId(), // assuming clientId
-            //     appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api
-            //     expiration: expiration,
-            //     permissions: perms,
-            // todo this is wrong, should be the wallet address i think
-            //     grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
-            //     attachments: [],
-            //     grantor: this.settings.getOrgWalletAddress, // current user...
-            // });
-            // if (!ipfsRes.success) {
-            //     throw new Error(`Failed to upload SACD agreement`);
-            // }
-            // console.log("ipfs sacd CID: " + ipfsRes.cid);
+
             //
             // // todo blocked: Turnkey error 3: no runner registered with activity type "", if comment above can reach test this one, but got same error
             // const signedNFT = await this.kernelSigner.signTypedData(mintPayload);
@@ -438,7 +409,7 @@ export class AddVinElement extends LitElement {
      */
     async signPayloadWithSDK(mintPayload) {
         // could try with passkeyinit too
-        await this.kernelSigner.init(this.settings.getTurnkeySubOrgId(), this.stamper);
+        await this.kernelSigner.passkeyInit(this.settings.getTurnkeySubOrgId(), this.settings.getUserWalletAddress(), this.stamper);
         const tc = new TurnkeyClient({ baseUrl: "https://api.turnkey.com" }, this.stamper);
         this.kernelSigner.passkeyClient.turnkeyClient = tc;
         // error is "no active client"
@@ -457,6 +428,37 @@ export class AddVinElement extends LitElement {
         console.log(JSON.stringify(signed));
 
         return signed;
+    }
+
+    async uploadSACDPermissions() {
+        // todo move this permissions stuff elsewhere
+        const perms = sacdPermissionValue({
+            NONLOCATION_TELEMETRY: true,
+            COMMANDS: true,
+            CURRENT_LOCATION: true,
+            ALLTIME_LOCATION: true,
+            CREDENTIALS: true,
+            STREAMS: true,
+            RAW_DATA: true,
+            APPROXIMATE_LOCATION: true,
+        });
+        const expiration = BigInt(2933125200); // 40 years
+
+        // const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
+        //     driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
+        //     appID: this.settings.getAppClientId(), // assuming clientId
+        //     appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api
+        //     expiration: expiration,
+        //     permissions: perms,
+        // todo this is wrong, should be the wallet address i think
+        //     grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
+        //     attachments: [],
+        //     grantor: this.settings.getOrgWalletAddress, // current user...
+        // });
+        // if (!ipfsRes.success) {
+        //     throw new Error(`Failed to upload SACD agreement`);
+        // }
+        // console.log("ipfs sacd CID: " + ipfsRes.cid);
     }
 }
 window.customElements.define('add-vin-element', AddVinElement);

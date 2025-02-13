@@ -121,7 +121,7 @@ export class Settings {
     }
 
     /**
-     * @returns {string} 0x formatted string with the turnkey account user wallet addr
+     * @returns {`0x{string}`} 0x formatted string with the turnkey account user wallet addr
      */
     getUserWalletAddress(){
         return this.getAccountInfo("walletAddress");
