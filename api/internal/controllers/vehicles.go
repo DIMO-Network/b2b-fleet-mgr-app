@@ -32,24 +32,55 @@ func (v *VehiclesController) PostDevicesAPIFromVin(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return v.proxyRequest(c, targetURL, setBytes)
+	return v.proxyRequest(c, targetURL, setBytes, false)
 }
 
 func (v *VehiclesController) PostDevicesAPIMint(c *fiber.Ctx) error {
 	udID := c.Params("userDeviceId", "")
 	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/commands/mint", v.settings.DevicesAPIURL, udID)
 
-	return v.proxyRequest(c, targetURL, c.Body())
+	return v.proxyRequest(c, targetURL, c.Body(), false)
+}
+
+func (v *VehiclesController) PostDevicesAPISyntheticMint(c *fiber.Ctx) error {
+	udID := c.Params("userDeviceId", "")
+	integrationID := c.Params("integrationId", "")
+	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/integrations/%s/commands/mint", v.settings.DevicesAPIURL, udID, integrationID)
+
+	return v.proxyRequest(c, targetURL, c.Body(), false)
+}
+
+func (v *VehiclesController) GetDevicesAPISyntheticMint(c *fiber.Ctx) error {
+	udID := c.Params("userDeviceId", "")
+	integrationID := c.Params("integrationId", "")
+	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/integrations/%s/commands/mint", v.settings.DevicesAPIURL, udID, integrationID)
+
+	return v.proxyRequest(c, targetURL, nil, false)
 }
 
 func (v *VehiclesController) GetDevicesAPIMint(c *fiber.Ctx) error {
 	udID := c.Params("userDeviceId", "")
 	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/commands/mint", v.settings.DevicesAPIURL, udID)
 
-	return v.proxyRequest(c, targetURL, nil)
+	return v.proxyRequest(c, targetURL, nil, false)
 }
 
-func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL string, requestBody []byte) error {
+func (v *VehiclesController) GetDevicesAPICompassVINLookup(c *fiber.Ctx) error {
+	vin := c.Params("vin", "")
+	targetURL := fmt.Sprintf("%s/v1/compass/device-by-vin/%s", v.settings.DevicesAPIURL, vin)
+
+	return v.proxyRequest(c, targetURL, nil, true)
+}
+
+func (v *VehiclesController) PostDevicesAPIRegisterIntegration(c *fiber.Ctx) error {
+	udID := c.Params("userDeviceId", "")
+	integrationID := c.Params("integrationId", "")
+	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/integrations/%s", v.settings.DevicesAPIURL, udID, integrationID)
+
+	return v.proxyRequest(c, targetURL, c.Body(), false)
+}
+
+func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL string, requestBody []byte, useCompassPSK bool) error {
 	// Perform GET request to the target URL
 	req, err := http.NewRequest("GET", targetURL, nil)
 	if err != nil {
@@ -77,6 +108,9 @@ func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL string, reques
 		for _, value := range values {
 			req.Header.Add(key, value)
 		}
+	}
+	if useCompassPSK {
+		req.Header.Set("Authorization", fmt.Sprintf("PSK %s", v.settings.CompassPreSharedKey))
 	}
 
 	// Perform the request

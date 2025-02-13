@@ -64,9 +64,13 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	// just using regular auth, which works with the LIWD JWT
 	app.Post("/v1/vehicles", jwtAuth, vehiclesCtrl.AddVehicles) // todo future: check that your wallet address has access to compass etc
+	app.Get("/v1/compass/device-by-vin/:vin", jwtAuth, vehiclesCtrl.GetDevicesAPICompassVINLookup)
 	app.Get("/v1/user/devices/:userDeviceId/commands/mint", jwtAuth, vehiclesCtrl.GetDevicesAPIMint)
 	app.Post("/v1/user/devices/:userDeviceId/commands/mint", jwtAuth, vehiclesCtrl.PostDevicesAPIMint)
+	app.Get("/v1/user/devices/:userDeviceId/integrations/:integrationId/commands/mint", jwtAuth, vehiclesCtrl.GetDevicesAPISyntheticMint)
+	app.Post("/v1/user/devices/:userDeviceId/integrations/:integrationId/commands/mint", jwtAuth, vehiclesCtrl.PostDevicesAPISyntheticMint)
 	app.Post("/v1/user/devices/fromvin", jwtAuth, vehiclesCtrl.PostDevicesAPIFromVin)
+	app.Post("/v1/user/devices/:userDeviceId/integrations/:integrationId", jwtAuth, vehiclesCtrl.PostDevicesAPIRegisterIntegration)
 
 	app.Get("/v1/settings", jwtAuth, settingsCtrl.GetSettings)
 
