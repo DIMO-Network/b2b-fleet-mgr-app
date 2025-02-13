@@ -100,8 +100,10 @@ export class AddVinElement extends LitElement {
         console.log("signed mint vehicle:", signedNftResp.signature);
 
         //const sdkSignResult = await this.signPayloadWithSDK(mintResp.data);
+        const imageBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAQAAAD8x0bcAAAAh0lEQVR42mNgGAWjYBSMglEwCchGJsyMlMH4H4g3gZgYgyRGJoxhCTIsA2AEMBhQGEQF8iIhMMgg3MNQC3GFwnXhkIZCUAYCIEgghAIhBGCABDCMQiGVghQBIDTBDGEokFBAIFCBoEaBIEaAyAbmNkXYIMgAADzTxhvTleYAgAAAABJRU5ErkJggg=="
+        const sacd = this.buildPermissions();
 
-        const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
+        const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature, imageBase64, sacd);
         if (!postMintResp.success) {
             this.alertText = "failed mint vehicle: " + postMintResp.error;
         }
@@ -290,9 +292,13 @@ export class AddVinElement extends LitElement {
     }
 
     /**
+     * @param {string} userDeviceId
+     * @param {`0x${string}`} payloadSignature
+     * @param {string} base64Image
+     * @param {Object} sacdInput the SACD permissions input
      * calls devices-api to mint a vehicle from a signed payload
      */
-    async postMintVehicle(userDeviceId, signedNftPayload) {
+    async postMintVehicle(userDeviceId, payloadSignature, base64Image, sacdInput) {
         const url = `${this.settings.getBackendUrl()}/v1/user/devices/${userDeviceId}/commands/mint`;
 
         try {
@@ -304,7 +310,9 @@ export class AddVinElement extends LitElement {
                     "Authorization": `Bearer ${this.token}`
                 },
                 body: JSON.stringify({
-                    signature: signedNftPayload,
+                    signature: payloadSignature,
+                    imageData: base64Image,
+                    sacdInput: sacdInput,
                     // Optionally add imageData here
                 }),
             });
@@ -354,19 +362,16 @@ export class AddVinElement extends LitElement {
                 organizationId: this.settings.getTurnkeySubOrgId(), // sub org id
                 signWith: this.settings.getUserWalletAddress(), // normally the wallet address
             })
-            console.log("created turnkeyAccount");
             const publicClient = await createPublicClient({
                 // Use your own RPC provider (e.g. Infura/Alchemy).
                 transport: http(this.settings.getRpcUrl()),
                 chain: polygonAmoy,
             })
-            console.log("created publicClient");
             const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
                 signer: turnkeyAccount,
                 entryPoint: getEntryPoint("0.7"),
                 kernelVersion: KERNEL_V3_1
             })
-            console.log("created ecdsaValidator");
             const kernelAccount = await createKernelAccount(publicClient, {
                 plugins: {
                     sudo: ecdsaValidator,
@@ -374,10 +379,8 @@ export class AddVinElement extends LitElement {
                 entryPoint: getEntryPoint("0.7"),
                 kernelVersion: KERNEL_V3_1,
             });
-            console.log("try signing the message");
             // have to use signTypedData
             const signature = await kernelAccount.signTypedData(mintPayload)
-
 
             console.log(signature)
 
@@ -424,6 +427,32 @@ export class AddVinElement extends LitElement {
         console.log(JSON.stringify(signed));
 
         return signed;
+    }
+
+    buildPermissions() {
+        const expiration = BigInt(2933125200); // 40 years
+        const perms = sacdPermissionValue({
+            NONLOCATION_TELEMETRY: true,
+            COMMANDS: true,
+            CURRENT_LOCATION: true,
+            ALLTIME_LOCATION: true,
+            CREDENTIALS: true,
+            STREAMS: true,
+            RAW_DATA: true,
+            APPROXIMATE_LOCATION: true,
+        });
+        const sacdInput = {
+            driverID: this.settings.getOrgSmartContractAddress(), // current user wallet addres??
+            appID: this.settings.getAppClientId(), // assuming clientId
+            appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api
+            expiration: expiration,
+            permissions: perms,
+            // todo this is wrong, should be the wallet address i think? or the smart contract addr?
+            grantee: this.settings.getOrgSmartContractAddress(), // granting the organization the perms
+            attachments: [],
+            grantor: this.settings.getOrgSmartContractAddress(), // current user...
+        }
+        return sacdInput;
     }
 
     async uploadSACDPermissions() {
