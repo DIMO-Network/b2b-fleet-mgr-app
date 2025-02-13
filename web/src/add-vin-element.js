@@ -441,12 +441,14 @@ export class AddVinElement extends LitElement {
             RAW_DATA: true,
             APPROXIMATE_LOCATION: true,
         });
+        const permsStr = perms.toString(); // bigint so can't be json.stringify
+
         const sacdInput = {
             driverID: this.settings.getUserWalletAddress(), // current user's wallet address
             appID: this.settings.getAppClientId(), // assuming clientId
             // appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api, doesn't seem this is required
             expiration: expiration,
-            permissions: perms,
+            permissions: Number(permsStr),
             grantee: this.settings.getOrgSmartContractAddress(), // this is the kernel account address, that owns the NFT
             attachments: [],
             grantor: this.settings.getOrgSmartContractAddress(), // seems this is fine
