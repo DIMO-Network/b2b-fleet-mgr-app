@@ -366,14 +366,14 @@ export class AddVinElement extends LitElement {
                 entryPoint: getEntryPoint("0.7"),
                 kernelVersion: KERNEL_V3_1
             })
-            const kernelAccount = await createKernelAccount(this.publicClient, {
+            const kernelAccount = await createKernelAccount(publicClient, {
                 plugins: {
                     sudo: ecdsaValidator,
                 },
                 entryPoint: getEntryPoint("0.7"),
                 kernelVersion: KERNEL_V3_1,
             });
-
+            console.log("try signing the message")
             const signature = await kernelAccount.signMessage({
                 message: mintPayload,
             })
