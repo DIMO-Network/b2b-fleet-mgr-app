@@ -1,14 +1,14 @@
 import {html, LitElement, css} from 'lit'
 import {Settings} from "./settings.js";
 import {KernelSigner, newKernelConfig, sacdPermissionValue} from '@dimo-network/transactions';
-import {WebauthnStamper} from "@turnkey/webauthn-stamper";
-import { TurnkeyClient } from "@turnkey/http";
-import { createAccount } from "@turnkey/viem";
-import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator"
-import { KERNEL_V3_1, getEntryPoint } from "@zerodev/sdk/constants"
-import {createWalletClient, createPublicClient, http} from "viem";
+import {WebauthnStamper} from '@turnkey/webauthn-stamper';
+import { TurnkeyClient } from '@turnkey/http';
+import { createAccount } from '@turnkey/viem';
+import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator'
+import { KERNEL_V3_1, getEntryPoint } from '@zerodev/sdk/constants'
+import { createPublicClient, http} from 'viem';
 import { polygonAmoy } from 'viem/chains';
-import {createKernelAccount} from "@zerodev/sdk";
+import {createKernelAccount} from '@zerodev/sdk';
 
 export class AddVinElement extends LitElement {
     static properties = {
