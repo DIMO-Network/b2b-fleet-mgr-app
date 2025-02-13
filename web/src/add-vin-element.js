@@ -3,6 +3,12 @@ import {Settings} from "./settings.js";
 import {KernelSigner, newKernelConfig, sacdPermissionValue} from '@dimo-network/transactions';
 import {WebauthnStamper} from "@turnkey/webauthn-stamper";
 import { TurnkeyClient } from "@turnkey/http";
+import { createAccount } from "@turnkey/viem";
+import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator"
+import { KERNEL_V3_1, getEntryPoint } from "@zerodev/sdk/constants"
+import {createWalletClient, createPublicClient, http} from "viem";
+import { polygonAmoy } from 'viem/chains';
+import {createKernelAccount} from "@zerodev/sdk";
 
 export class AddVinElement extends LitElement {
     static properties = {
@@ -86,16 +92,16 @@ export class AddVinElement extends LitElement {
         // saw this fix in the mobile app https://github.com/DIMO-Network/dimo-driver/blob/development/src/hooks/custom/useSignCallback.ts#L40
         mintResp.data.domain.chainId = Number(mintResp.data.domain.chainId);
 
-        // const payloadString = JSON.stringify(mintResp.data);
-        //
-        // const signedNftResp = await this.signMintVehiclePayload(payloadString)
-        // if (!signedNftResp.success) {
-        //     this.alertText = "failed to get the message to mint" + signedNftResp.error;
-        //     return;
-        // }
-        // console.log("signed mint vehicle:", signedNftResp.signature);
+        const payloadString = JSON.stringify(mintResp.data);
 
-        const sdkSignResult = await this.signPayloadWithSDK(mintResp.data);
+        const signedNftResp = await this.signPayloadWithTurnkeyZerodev(payloadString)
+        if (!signedNftResp.success) {
+            this.alertText = "failed to get the message to mint" + signedNftResp.error;
+            return;
+        }
+        console.log("signed mint vehicle:", signedNftResp.signature);
+
+        //const sdkSignResult = await this.signPayloadWithSDK(mintResp.data);
 
         const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature);
         if (!postMintResp.success) {
@@ -345,50 +351,41 @@ export class AddVinElement extends LitElement {
                 { baseUrl: "https://api.turnkey.com" },
                 this.stamper
             );
+            const turnkeyAccount = createAccount({
+                client: httpClient,
+                organizationId: this.settings.getTurnkeySubOrgId(), // sub org id
+                signWith: this.settings.getUserWalletAddress(), // normally the wallet address
+            })
+            const publicClient = createPublicClient({
+                // Use your own RPC provider (e.g. Infura/Alchemy).
+                transport: http(this.settings.getRpcUrl()),
+                chain: polygonAmoy,
+            })
+            const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
+                signer: turnkeyAccount,
+                entryPoint: getEntryPoint("0.7"),
+                kernelVersion: KERNEL_V3_1
+            })
+            const kernelAccount = await createKernelAccount(this.publicClient, {
+                plugins: {
+                    sudo: ecdsaValidator,
+                },
+                entryPoint: getEntryPoint("0.7"),
+                kernelVersion: KERNEL_V3_1,
+            });
 
-            const ts = Date.now();
-
-            // Convert byte array to hex string
-            // const byteArray = new TextEncoder().encode(mintPayload);
-            // const hexString = Array.from(byteArray)
-            //     .map(byte => byte.toString(16).padStart(2, '0'))
-            //     .join('');
-            // const payload = `0x${hexString}`;
-            //
-            // console.log("payload to sign hex:", payload);
+            const signature = await kernelAccount.signMessage({
+                message: mintPayload,
+            })
 
             // signing with turnkey won't work, must use zero dev
-            const signRawResult = await httpClient.signRawPayload({
-                "type": "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
-                "timestampMs": ts.toString(),
-                "organizationId": this.settings.getTurnkeySubOrgId(),
-                "parameters": {
-                    "signWith": this.settings.getUserWalletAddress(),
-                    "payload": mintPayload,
-                    "encoding": "PAYLOAD_ENCODING_TEXT_UTF8",
-                    "hashFunction": "HASH_FUNCTION_SHA256" //HASH_FUNCTION_SHA256, HASH_FUNCTION_KECCAK256
-                }
-            })
-            console.log(JSON.stringify(signRawResult))
-            const ethStyleECDSA = this.formatEthereumSignature(signRawResult.activity.result.signRawPayloadResult);
+            //const ethStyleECDSA = this.formatEthereumSignature(signRawResult.activity.result.signRawPayloadResult);
+            console.log(signature)
 
             return {
                 success: true,
-                signature: ethStyleECDSA,
+                signature: signature,
             }
-            // doing any of below resulted in no active client error
-            // await this.kernelSigner.passkeyToSession(this.settings.getTurnkeySubOrgId(), this.stamper)
-            // await this.kernelSigner.passkeyInit(this.settings.getTurnkeySubOrgId(), this.settings.getOrgWalletAddress(), this.stamper);
-            // still need to try this one
-            // this.kernelSigner.passkeyToSession()
-
-            // bug? activity type should be set
-            // todo blocked: Turnkey error 3: no runner registered with activity type ""
-
-            //
-            // // todo blocked: Turnkey error 3: no runner registered with activity type "", if comment above can reach test this one, but got same error
-            // const signedNFT = await this.kernelSigner.signTypedData(mintPayload);
-            // error 3 means invalid argument
         } catch (error) {
             console.error("Error message:", error.message);
             console.error("Stack trace:", error.stack);
