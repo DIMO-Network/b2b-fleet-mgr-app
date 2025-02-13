@@ -351,21 +351,24 @@ export class AddVinElement extends LitElement {
                 { baseUrl: "https://api.turnkey.com" },
                 this.stamper
             );
-            const turnkeyAccount = createAccount({
+            const turnkeyAccount = await createAccount({
                 client: httpClient,
                 organizationId: this.settings.getTurnkeySubOrgId(), // sub org id
                 signWith: this.settings.getUserWalletAddress(), // normally the wallet address
             })
-            const publicClient = createPublicClient({
+            console.log("created turnkeyAccount");
+            const publicClient = await createPublicClient({
                 // Use your own RPC provider (e.g. Infura/Alchemy).
                 transport: http(this.settings.getRpcUrl()),
                 chain: polygonAmoy,
             })
+            console.log("created publicClient");
             const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
                 signer: turnkeyAccount,
                 entryPoint: getEntryPoint("0.7"),
                 kernelVersion: KERNEL_V3_1
             })
+            console.log("created ecdsaValidator");
             const kernelAccount = await createKernelAccount(publicClient, {
                 plugins: {
                     sudo: ecdsaValidator,
@@ -373,7 +376,7 @@ export class AddVinElement extends LitElement {
                 entryPoint: getEntryPoint("0.7"),
                 kernelVersion: KERNEL_V3_1,
             });
-            console.log("try signing the message")
+            console.log("try signing the message"); // this did not hit
             const signature = await kernelAccount.signMessage({
                 message: mintPayload,
             })
