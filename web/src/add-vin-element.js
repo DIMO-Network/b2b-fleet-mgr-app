@@ -73,6 +73,7 @@ export class AddVinElement extends LitElement {
 
     async _submitVIN(event) {
         this.alertText = "";
+        this.processingMessage = "";
         this.processing = true;
         console.log("onboarding vin", this.vin);
 
@@ -204,9 +205,10 @@ export class AddVinElement extends LitElement {
 
             // Check if the response was not OK and return a standardized error.
             if (!response.ok) {
+                const result = await response.json();
                 return {
                     success: false,
-                    error: response.text, // Depending on the API, error details might be here.
+                    error: result.message, // Depending on the API, error details might be here.
                     status: response.status,
                 };
             }

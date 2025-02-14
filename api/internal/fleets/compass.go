@@ -2,6 +2,7 @@ package fleets
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -46,6 +47,9 @@ func NewCompassSvc(settings *config.Settings, logger *zerolog.Logger) (CompassSv
 }
 
 func (cs *compassSvc) AuthenticateCompass(ctx context.Context) (context.Context, error) {
+	if cs.settings.CompassAPIKey == "" {
+		return ctx, fmt.Errorf("no api key found")
+	}
 	authenticate, err := cs.client.Authenticate(ctx, &v1.AuthenticateRequest{Token: cs.settings.CompassAPIKey})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to authenticate with compass")

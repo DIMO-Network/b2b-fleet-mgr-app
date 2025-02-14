@@ -3,6 +3,7 @@ package controllers
 import (
 	"bytes"
 	"fmt"
+	"github.com/friendsofgo/errors"
 	"io"
 	"net/http"
 	"strings"
@@ -166,7 +167,7 @@ func (v *VehiclesController) AddVehicles(c *fiber.Ctx) error {
 	payload := AddVehicleRequest{}
 	err := c.BodyParser(&payload)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString("Invalid request body")
+		return fiber.NewError(fiber.StatusBadRequest, errors.Wrap(err, "Invalid request body").Error())
 	}
 	// temporary:
 	// if vin is the known one, just skip and return success
@@ -178,24 +179,23 @@ func (v *VehiclesController) AddVehicles(c *fiber.Ctx) error {
 	// validation
 	for _, vin := range payload.VINs {
 		if len(vin) != 17 {
-			return c.Status(fiber.StatusBadRequest).SendString("Invalid VIN")
+			return fiber.NewError(fiber.StatusBadRequest, "Invalid vin")
 		}
 	}
 
 	compassSvc, err := fleets.NewCompassSvc(v.settings, v.logger)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to connect with Compass")
+		return errors.Wrap(err, "Failed to connect with compass service")
 	}
-	// eventually this needs to be in a worker to process adding vehicles in background
 
 	// 1. call compass
 	ctx, err := compassSvc.AuthenticateCompass(c.Context())
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to authenticate with Compass")
+		return errors.Wrap(err, "Failed to authenticate with compass service")
 	}
 	statuses, err := compassSvc.AddVINs(ctx, payload.VINs, payload.Email)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to add vehicles to Compass")
+		return errors.Wrap(err, "Failed to add vehicles to compass service")
 	}
 	for _, status := range statuses {
 		if status.Status == "APPROVED" { // status come from nativeconnect.pb.go enum
