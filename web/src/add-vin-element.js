@@ -65,7 +65,7 @@ export class AddVinElement extends LitElement {
                     Onboard VIN
                 </button>
             </form>
-            <div class="alert alert-success" ?hidden=${this.processingMessage === ""}>
+            <div class="alert alert-success" ?hidden=${this.processingMessage === "" && this.alertText.length > 0}>
                 ${this.processingMessage}
             </div>
         `;
