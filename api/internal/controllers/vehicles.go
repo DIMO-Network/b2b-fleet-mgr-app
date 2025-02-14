@@ -187,6 +187,7 @@ func (v *VehiclesController) AddVehicles(c *fiber.Ctx) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to connect with compass service")
 	}
+	defer compassSvc.CloseConnection() //nolint
 
 	// 1. call compass
 	ctx, err := compassSvc.AuthenticateCompass(c.Context())

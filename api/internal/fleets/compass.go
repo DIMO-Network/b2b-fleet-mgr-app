@@ -22,13 +22,16 @@ import (
 type CompassSvc interface {
 	AuthenticateCompass(ctx context.Context) (context.Context, error)
 	AddVINs(ctx context.Context, vins []string, email string) ([]CompassAddVINStatus, error)
+	CloseConnection() error
 }
 type compassSvc struct {
-	settings *config.Settings
-	client   apiv1grpc.ServiceClient
-	logger   *zerolog.Logger
+	settings   *config.Settings
+	client     apiv1grpc.ServiceClient
+	logger     *zerolog.Logger
+	connection *grpc.ClientConn
 }
 
+// NewCompassSvc instantiates new session with connection to compass. Transient lifeclye mgmt, not singleton. Close the connection when done.
 func NewCompassSvc(settings *config.Settings, logger *zerolog.Logger) (CompassSvc, error) {
 	creds := credentials.NewClientTLSFromCert(nil, "") // Load the system's root CA pool
 
@@ -36,14 +39,18 @@ func NewCompassSvc(settings *config.Settings, logger *zerolog.Logger) (CompassSv
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to nativeconnect")
 	}
-	defer conn.Close()
 
 	client := apiv1grpc.NewServiceClient(conn)
 	return &compassSvc{
-		settings: settings,
-		client:   client,
-		logger:   logger,
+		settings:   settings,
+		client:     client,
+		logger:     logger,
+		connection: conn,
 	}, nil
+}
+
+func (cs *compassSvc) CloseConnection() error {
+	return cs.connection.Close()
 }
 
 func (cs *compassSvc) AuthenticateCompass(ctx context.Context) (context.Context, error) {
