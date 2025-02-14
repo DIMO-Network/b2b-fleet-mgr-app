@@ -45,7 +45,7 @@ export class VehicleListElement extends LitElement {
                 ${repeat(this.items, (item) => item.id, (item, index) => html`
           <tr>
               <td>${item.vin}</td>
-              <td>${item.definitionId}</td>
+              <td>${item.deviceDefinition.name}</td>
               <td>${item.integrations.length > 0 ? item.integraions[0].status : 'no integration'}</td>
               <td><button>delete</button></td>
           </tr>`)}

@@ -65,7 +65,7 @@ export class AddVinElement extends LitElement {
                     Onboard VIN
                 </button>
             </form>
-            <div class="alert alert-success" ?hidden=${this.processingMessage === "" && this.alertText.length > 0}>
+            <div class="alert alert-success" ?hidden=${this.processingMessage === "" || this.alertText.length > 0}>
                 ${this.processingMessage}
             </div>
         `;
@@ -107,7 +107,7 @@ export class AddVinElement extends LitElement {
         if(syntheticDeviceTokenId === 0) {
             const registerResp = await this.registerIntegration(userDeviceId); // this call is idempotent
             if (!registerResp.success) {
-                this.alertText = "failed to register compass integration:" + registerResp.error;
+                this.alertText = "failed to register devices-api integration to compass: " + registerResp.error;
                 return;
             }
             this.processingMessage = "integration registered";
@@ -328,20 +328,25 @@ export class AddVinElement extends LitElement {
                 },
                 body: JSON.stringify(data)
             });
-            const result = await response.json();
-
+            // this doesn't return anything in the body
             // Check for HTTP errors
             if (!response.ok) {
+                let errorMsg = "";
+                // check for json error message
+                const body = await response.text();
+                if (body.length > 0) {
+                    const result = await response.json();
+                    errorMsg = result.message;
+                }
                 return {
                     success: false,
-                    error: result.message,
+                    error: errorMsg,
                     status: response.status,
                 };
             }
             console.log("Success registering compass integration devices-api:", result);
             return {
                 success: true,
-                data: result,
             };
         } catch (error) {
             // Handle network or parsing errors
