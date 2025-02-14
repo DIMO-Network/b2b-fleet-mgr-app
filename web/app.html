@@ -69,7 +69,7 @@
 <script>
     function handleLogout() {
         // List the keys you want to remove
-        const keysToRemove = ['token', 'email', 'appSettings', 'walletAddress', 'accountInfo'];
+        const keysToRemove = ['token', 'email', 'appSettings', 'accountInfo', 'signerPublicKey', 'signerApiKey'];
 
         keysToRemove.forEach(key => {
             localStorage.removeItem(key);

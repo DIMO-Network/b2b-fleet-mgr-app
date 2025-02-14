@@ -37,7 +37,10 @@
     console.log('Query Parameters:');
     params.forEach((value, key) => {
         console.log(`${key}: ${value}`);
-        localStorage.setItem(key, value);
+        // only store stuff we care about
+        if (key === 'email' || key === 'token') {
+            localStorage.setItem(key, value);
+        }
     });
 
 
