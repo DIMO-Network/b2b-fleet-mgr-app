@@ -86,6 +86,7 @@ export class AddVinElement extends LitElement {
             userDeviceId = lookupResp.data.userDeviceId;
             vehicleTokenId = lookupResp.data.vehicleTokenId;
             syntheticDeviceTokenId = lookupResp.data.syntheticDeviceTokenId;
+            definitionId = lookupResp.data.definitionId;
             this.processingMessage = "found existing device with vin: " + this.vin
         }
         // todo future, even if userDeviceId is found, check if compass integration exists and is attached to this smartcontract owner
@@ -139,6 +140,7 @@ export class AddVinElement extends LitElement {
         }
         // mint vehicle if hasn't been minted already. Since register is called above, synthetic will automatically get minted too
         if (vehicleTokenId === 0) {
+
             const mintResp = await this.getMintVehicle(userDeviceId, definitionId)
             if (!mintResp.success) {
                 this.alertText = "failed to get the message to mint" + mintResp.error;
@@ -236,6 +238,7 @@ export class AddVinElement extends LitElement {
      * @typedef {Object} VehicleLookup
      * @property {string} vin
      * @property {string} userDeviceId
+     * @property {string} definitionId
      * @property {number} vehicleTokenId - populated if vehicle is minted
      * @property {number} syntheticDeviceTokenId - populated if synthetic device is minted
      */
