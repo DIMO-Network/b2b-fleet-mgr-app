@@ -2,7 +2,7 @@ import {html, LitElement, css} from 'lit'
 import {repeat} from 'lit/directives/repeat.js';
 import {Settings} from "./settings.js";
 
-export class AddVinElement extends LitElement {
+export class VehicleListElement extends LitElement {
     static properties = {
         items: {type: Array},
         alertText: {type: String },
@@ -85,5 +85,5 @@ export class AddVinElement extends LitElement {
             };
         }
     }
-
 }
+window.customElements.define('vehicle-list-element', VehicleListElement);
