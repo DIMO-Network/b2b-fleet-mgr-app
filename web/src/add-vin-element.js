@@ -331,23 +331,20 @@ export class AddVinElement extends LitElement {
             // this doesn't return anything in the body
             // Check for HTTP errors
             if (!response.ok) {
-                let errorMsg = "";
-                // check for json error message
-                const body = await response.text();
-                if (body.length > 0) {
-                    const result = await response.json();
-                    errorMsg = result.message;
+                // Optionally, try to parse additional error information from the response.
+                let errorDetail;
+                try {
+                    errorDetail = await response.json();
+                } catch (parseError) {
+                    errorDetail = await response.text();
                 }
                 return {
                     success: false,
-                    error: errorMsg,
+                    error: errorDetail.message || errorDetail || `HTTP error! Status: ${response.status}`,
                     status: response.status,
                 };
             }
-            console.log("Success registering compass integration devices-api:", result);
-            return {
-                success: true,
-            };
+            return { success: true };
         } catch (error) {
             // Handle network or parsing errors
             console.error("Error in registerIntegration:", error);
