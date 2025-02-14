@@ -90,7 +90,6 @@ export class AddVinElement extends LitElement {
             this.processingMessage = "found existing device with vin: " + this.vin
         }
         // todo future, even if userDeviceId is found, check if compass integration exists and is attached to this smartcontract owner
-        this.processingMessage = "skipping adding to compass, already added"
 
         if(userDeviceId === "") {
             const compassResp = await this.addToCompass(this.vin);

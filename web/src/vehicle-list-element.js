@@ -39,7 +39,8 @@ export class VehicleListElement extends LitElement {
                 <tr>
                     <th>VIN</th>
                     <th>Make Model Year</th>
-                    <th>Status</th>
+                    <th>Web2 Status</th>
+                    <th>Synthetic Device</th>
                     <th></th>
                 </tr>
                 ${repeat(this.items, (item) => item.id, (item, index) => html`
@@ -47,6 +48,7 @@ export class VehicleListElement extends LitElement {
               <td>${item.vin}</td>
               <td>${item.deviceDefinition.name}</td>
               <td>${item.integrations.length > 0 ? item.integrations[0].status : 'no integration'}</td>
+              <td>${item.integrations.length > 0 ? item.integrations[0].syntheticDevice?.status : ''}</td>
               <td><button>delete</button></td>
           </tr>`)}
             </table>
