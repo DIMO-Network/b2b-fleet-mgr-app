@@ -24,6 +24,7 @@ export class AddVinElement extends LitElement {
         super();
         this.vin = "";
         this.processing = false;
+        this.processingMessage = "";
         this.email = "";
         this.token = localStorage.getItem("token");
         this.email = localStorage.getItem("email");
@@ -71,55 +72,95 @@ export class AddVinElement extends LitElement {
         this.processing = true;
         console.log("onboarding vin", this.vin);
 
+        const lookupResp = await this.getCompassLookup(this.vin);
+        let userDeviceId = "";
+        let vehicleTokenId = 0;
+        let syntheticDeviceTokenId = 0;
+        let definitionId = "";
+        if (lookupResp.success) {
+            userDeviceId = lookupResp.data.userDeviceId;
+            vehicleTokenId = lookupResp.data.vehicleTokenId;
+            syntheticDeviceTokenId = lookupResp.data.syntheticDeviceTokenId;
+            this.processingMessage = "found existing device with vin: " + this.vin
+        }
+
         const compassResp = await this.addToCompass(this.vin);
         if (!compassResp.success) {
             this.alertText = "failed to add vin to compass:" + compassResp.error;
             return;
         }
-        const fromVinResp = await this.addToUserDevicesAndDecode(this.vin);
-        if (!fromVinResp.success) {
-            this.alertText = "failed to add vin to user devices:" + fromVinResp.error;
-            return;
+        this.processingMessage = "added to compass OK"
+        if(userDeviceId === "") {
+            const fromVinResp = await this.addToUserDevicesAndDecode(this.vin); // this call is idempotent
+            if (!fromVinResp.success) {
+                this.alertText = "failed to add vin to user devices:" + fromVinResp.error;
+                return;
+            }
+            definitionId = fromVinResp.data.userDevice.deviceDefinition.definitionId;
+            userDeviceId = fromVinResp.data.userDevice.id;
+            this.processingMessage = "VIN decoded OK"
         }
-        const definitionId = fromVinResp.data.userDevice.deviceDefinition.definitionId;
-        const userDeviceId = fromVinResp.data.userDevice.id;
-
-        const mintResp = await this.getMintVehicle(userDeviceId, definitionId)
-        if (!mintResp.success) {
-            this.alertText = "failed to get the message to mint" + mintResp.error;
-            return;
+        if(syntheticDeviceTokenId === 0) {
+            const registerResp = await this.registerIntegration(userDeviceId); // this call is idempotent
+            if (!registerResp.success) {
+                this.alertText = "failed to register compass integration:" + registerResp.error;
+                return;
+            }
+            this.processingMessage = "integration registered";
+            if (vehicleTokenId > 0) {
+                // this means already minted but missing synthetic device
+                const syntheticMintResp = await this.getMintSyntheticDevice(userDeviceId);
+                if (!syntheticMintResp.success) {
+                    this.alertText = "failed to register synthetic device: " + syntheticMintResp.error;
+                    return;
+                }
+                // fix number
+                syntheticMintResp.data.domain.chainId = Number(syntheticMintResp.data.domain.chainId);
+                const signedResp = await this.signPayloadWithTurnkeyZerodev(syntheticMintResp.data);
+                if (!signedResp.success) {
+                    this.alertText = "failed to sign synthetic device payload: " + signedResp.error;
+                    return;
+                }
+                const postSyntheticMintResp = await this.postMintSyntheticDevice(userDeviceId, signedResp.signature);
+                if (!postSyntheticMintResp.success) {
+                    this.alertText = "failed to post synthetic device: " + postSyntheticMintResp.error;
+                    return;
+                }
+                this.processingMessage = "synthetic device minted OK";
+            }
         }
-        // saw this fix in the mobile app https://github.com/DIMO-Network/dimo-driver/blob/development/src/hooks/custom/useSignCallback.ts#L40
-        mintResp.data.domain.chainId = Number(mintResp.data.domain.chainId);
+        // mint vehicle if hasn't been minted already. Since register is called above, synthetic will automatically get minted too
+        if (vehicleTokenId === 0) {
+            const mintResp = await this.getMintVehicle(userDeviceId, definitionId)
+            if (!mintResp.success) {
+                this.alertText = "failed to get the message to mint" + mintResp.error;
+                return;
+            }
+            // saw this fix in the mobile app https://github.com/DIMO-Network/dimo-driver/blob/development/src/hooks/custom/useSignCallback.ts#L40
+            mintResp.data.domain.chainId = Number(mintResp.data.domain.chainId);
 
-        const signedNftResp = await this.signPayloadWithTurnkeyZerodev(mintResp.data)
-        if (!signedNftResp.success) {
-            this.alertText = "failed to get the message to mint" + signedNftResp.error;
-            return;
-        }
-        console.log("signed mint vehicle:", signedNftResp.signature);
+            const signedNftResp = await this.signPayloadWithTurnkeyZerodev(mintResp.data)
+            if (!signedNftResp.success) {
+                this.alertText = "failed to get the message to mint" + signedNftResp.error;
+                return;
+            }
+            console.log("signed mint vehicle:", signedNftResp.signature);
 
-        //const sdkSignResult = await this.signPayloadWithSDK(mintResp.data);
+            //const sdkSignResult = await this.signPayloadWithSDK(mintResp.data);
 
-        const imageBase64 = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAIRlWElmTU0AKgAAAAgABQESAAMAAAABAAEAAAEaAAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAIAAIdpAAQAAAABAAAAWgAAAAAAAABIAAAAAQAAAEgAAAABAAOgAQADAAAAAQABAACgAgAEAAAAAQAAABigAwAEAAAAAQAAABgAAAAAEQ8YrgAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDYuMC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KGV7hBwAAAe5JREFUSA3tlE9LlVEQh9XK/oKEFLgQFKqNmyDEArFMwoXgxm/gxzC3gkQrI9rkIsFFgUWRFSEVtGtTKxW/gBCWYKRo9ud53pzj4fJeLy6ijT94fIeZc+bMmTnXuroD/e8O1O9RQAMxqabfBH5WC9byH6q1YCd+uNa6shtY9S84DTd2bD5JVn4U5uETeMg2lKrygCOs+gHH4AOswVdoBBMr92xCF4zCfXC9+2KN37Ax//Y6b8sjfFNFpPqfdkKrMFSyxCJSvnyQZwjchqVskwvdkOON1EX4AjfhGlyAExBKuVvwPIFFeAHnQXl1lSfXVnFIJ/ZTeA8fwbnMQhsk3cF6DseTZ9dIV911JcthV8piH8M9A3GFk9ivYAOuwEt4AwPgW7daD8oxucPuhjl4Db2wDO4tbhgHWHlM/Rn2W5iEB+Br2QIPyjF5K8yAe3wYtuos+KIsunjDfq1+BBzWQ7gFyoG9A+OnIIpwDt/gOtyFCVBN4BxXYAyK4flVHTAMPXAZrNbBr8MkNIM+5c1XYRAugW1StvYzjMMCpAPsbWyexvb5fYcNuAp7yYGeA9ti5f2g8pyFw19xyKQOOORAjefoC/VhRGJ98YQjnr72VnLFQ8h9YddcX5nMjfoiqf/0YrDGyrTf9WU5Dnz/sAN/ACNpW1chdOTAAAAAAElFTkSuQmCC"
-        const sacd = this.buildPermissions();
+            const imageBase64 = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAIRlWElmTU0AKgAAAAgABQESAAMAAAABAAEAAAEaAAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAIAAIdpAAQAAAABAAAAWgAAAAAAAABIAAAAAQAAAEgAAAABAAOgAQADAAAAAQABAACgAgAEAAAAAQAAABigAwAEAAAAAQAAABgAAAAAEQ8YrgAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDYuMC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KGV7hBwAAAe5JREFUSA3tlE9LlVEQh9XK/oKEFLgQFKqNmyDEArFMwoXgxm/gxzC3gkQrI9rkIsFFgUWRFSEVtGtTKxW/gBCWYKRo9ud53pzj4fJeLy6ijT94fIeZc+bMmTnXuroD/e8O1O9RQAMxqabfBH5WC9byH6q1YCd+uNa6shtY9S84DTd2bD5JVn4U5uETeMg2lKrygCOs+gHH4AOswVdoBBMr92xCF4zCfXC9+2KN37Ax//Y6b8sjfFNFpPqfdkKrMFSyxCJSvnyQZwjchqVskwvdkOON1EX4AjfhGlyAExBKuVvwPIFFeAHnQXl1lSfXVnFIJ/ZTeA8fwbnMQhsk3cF6DseTZ9dIV911JcthV8piH8M9A3GFk9ivYAOuwEt4AwPgW7daD8oxucPuhjl4Db2wDO4tbhgHWHlM/Rn2W5iEB+Br2QIPyjF5K8yAe3wYtuos+KIsunjDfq1+BBzWQ7gFyoG9A+OnIIpwDt/gOtyFCVBN4BxXYAyK4flVHTAMPXAZrNbBr8MkNIM+5c1XYRAugW1StvYzjMMCpAPsbWyexvb5fYcNuAp7yYGeA9ti5f2g8pyFw19xyKQOOORAjefoC/VhRGJ98YQjnr72VnLFQ8h9YddcX5nMjfoiqf/0YrDGyrTf9WU5Dnz/sAN/ACNpW1chdOTAAAAAAElFTkSuQmCC"
+            const sacd = this.buildPermissions();
 
-        const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature, imageBase64, sacd);
-        if (!postMintResp.success) {
-            this.alertText = "failed mint vehicle: " + postMintResp.error;
+            const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature, imageBase64, sacd);
+            if (!postMintResp.success) {
+                this.alertText = "failed mint vehicle: " + postMintResp.error;
+            }
+            this.processingMessage = "Vehicle NFT mint accepted";
         }
 
         // start polling to get token id and synthetic token_id, just users/devices/me
 
         // todo: we don't have the tokenid yet, i think we need to do polling somwewhere to get the tokenid to be able to call below
-        // const result = await kernelSigner.setVehiclePermissions({
-        //     tokenId, // the token id from the post response from devices-api? or do we get this later?
-        //     grantee, // same as above grantee
-        //     perms,
-        //     expiration,
-        //     source: `ipfs://${ipfsRes.data?.cid}`,
-        // });
-        // does devices-api already do this? ^ My understanding is above is not needed.
 
         // reset form
         this.processing = false;
@@ -171,13 +212,59 @@ export class AddVinElement extends LitElement {
         }
     }
 
+    /**
+     * @typedef {Object} VehicleLookup
+     * @property {string} vin
+     * @property {string} userDeviceId
+     * @property {number} vehicleTokenId - populated if vehicle is minted
+     * @property {number} syntheticDeviceTokenId - populated if synthetic device is minted
+     */
+    /**
+     *
+     * @param {string} vin
+     * @returns {Promise<{success: boolean, data: VehicleLookup}|{success: boolean, error: string}|{success: boolean, error: any, status: number}>}
+     */
+    async getCompassLookup(vin) {
+        const url = this.settings.getBackendUrl() + "/v1/compass/device-by-vin/" + vin;
+
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${this.token}`
+                },
+            });
+            const result = await response.json();
+
+            // Check if the response was not OK and return a standardized error object.
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: result.message || result,
+                    status: response.status,
+                };
+            }
+            return {
+                success: true,
+                data: result,
+            };
+        } catch (error) {
+            console.error("Error in get compass lookup:", error);
+            return {
+                success: false,
+                error: error.message || "An unexpected error occurred",
+            };
+        }
+    }
+
     async addToUserDevicesAndDecode(vin) {
         const url = this.settings.getBackendUrl() + "/v1/user/devices/fromvin";
         const data = {
             countryCode: "USA",
             vin: vin,
         };
-        // todo we could do something where we check if this vin already exists, use the vin check endpoint for compass
 
         try {
             const response = await fetch(url, {
@@ -206,6 +293,127 @@ export class AddVinElement extends LitElement {
         } catch (error) {
             // Handle network or parsing errors
             console.error("Error in addToUserDevicesAndDecode:", error);
+            return {
+                success: false,
+                error: error.message || "An unexpected error occurred",
+            };
+        }
+    }
+
+    async registerIntegration(userDeviceId) {
+        const url = `${this.settings.getBackendUrl()}/v1/user/devices/${userDeviceId}/integrations/${this.settings.getCompassIntegrationId()}`;
+        const data = {}
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${this.token}`
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+
+            // Check for HTTP errors
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: result.message,
+                    status: response.status,
+                };
+            }
+            console.log("Success registering compass integration devices-api:", result);
+            return {
+                success: true,
+                data: result,
+            };
+        } catch (error) {
+            // Handle network or parsing errors
+            console.error("Error in registerIntegration:", error);
+            return {
+                success: false,
+                error: error.message || "An unexpected error occurred",
+            };
+        }
+    }
+
+    async getMintSyntheticDevice(userDeviceId) {
+        const url = `${this.settings.getBackendUrl()}/v1/user/devices/${userDeviceId}/integrations/${this.settings.getCompassIntegrationId()}/commands/mint`;
+
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${this.token}`
+                },
+            });
+            const result = await response.json();
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: result.message || result,
+                    status: response.status,
+                };
+            }
+            console.log("Success getting mint vehicle:", result);
+            return {
+                success: true,
+                data: result,
+            };
+        } catch (error) {
+            // Handle network or parsing errors and return a standardized error object.
+            console.error("Error in getMintVehicle:", error);
+            return {
+                success: false,
+                error: error.message || "An unexpected error occurred",
+            };
+        }
+    }
+
+    /**
+     * @param {string} userDeviceId
+     * @param {`0x${string}`} signature
+     * calls devices-api to mint a vehicle from a signed payload
+     */
+    async postMintSyntheticDevice(userDeviceId, signature) {
+        const url = `${this.settings.getBackendUrl()}/v1/user/devices/${userDeviceId}/integrations/${this.settings.getCompassIntegrationId()}/commands/mint`;
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${this.token}`
+                },
+                body: JSON.stringify({
+                    signature: signature,
+                }),
+            });
+
+            // Check if the HTTP status indicates an error.
+            if (!response.ok) {
+                // Optionally, try to parse additional error information from the response.
+                let errorDetail;
+                try {
+                    errorDetail = await response.json();
+                } catch (parseError) {
+                    errorDetail = await response.text();
+                }
+                return {
+                    success: false,
+                    error: errorDetail.message || errorDetail || `HTTP error! Status: ${response.status}`,
+                    status: response.status,
+                };
+            }
+            return { success: true };
+
+        } catch (error) {
+            console.error("Error in postMintVehicle:", error);
             return {
                 success: false,
                 error: error.message || "An unexpected error occurred",
@@ -399,9 +607,7 @@ export class AddVinElement extends LitElement {
             }
         }
     }
-    sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+
     /**
      * uses dimo transactions sdk to init kernel signer and then sign the payload object
      * @param {Object} mintPayload
@@ -429,6 +635,14 @@ export class AddVinElement extends LitElement {
 
         return signed;
     }
+
+    // const result = await kernelSigner.setVehiclePermissions({
+    //     tokenId, // the token id from the post response from devices-api? or do we get this later?
+    //     grantee, // same as above grantee
+    //     perms,
+    //     expiration,
+    //     source: `ipfs://${ipfsRes.data?.cid}`,
+    // });
 
     buildPermissions() {
         const expiration = BigInt(2933125200); // 40 years

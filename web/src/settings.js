@@ -130,4 +130,8 @@ export class Settings {
     getTurnkeySubOrgId() {
         return this.getAccountInfo("subOrganizationId");
     }
+
+    getCompassIntegrationId() {
+        return "2szgr5WqMQtK2ZFM8F8qW8WUfJa";
+    }
 }
