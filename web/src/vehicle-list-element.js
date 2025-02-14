@@ -46,7 +46,7 @@ export class VehicleListElement extends LitElement {
           <tr>
               <td>${item.vin}</td>
               <td>${item.definitionId}</td>
-              <td>${item.integrations[0].status}</td>
+              <td>${item.integrations.length > 0 ? item.integraions[0].status : 'no integration'}</td>
               <td><button>delete</button></td>
           </tr>`)}
             </table>
