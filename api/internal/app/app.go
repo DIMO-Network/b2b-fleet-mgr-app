@@ -121,9 +121,9 @@ func ErrorHandler(c *fiber.Ctx, err error, logger *zerolog.Logger, isProduction 
 			Msg("caught an error from http request")
 	}
 	// return an opaque error if we're in a higher level environment and we haven't specified an fiber type err.
-	if !isFiberErr && isProduction {
-		err = fiber.NewError(fiber.StatusInternalServerError, "Internal error")
-	}
+	//if !isFiberErr && isProduction {
+	//	err = fiber.NewError(fiber.StatusInternalServerError, "Internal error")
+	//}
 
 	return c.Status(code).JSON(ErrorRes{
 		Code:    code,
