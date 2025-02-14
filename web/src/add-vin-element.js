@@ -88,14 +88,17 @@ export class AddVinElement extends LitElement {
             syntheticDeviceTokenId = lookupResp.data.syntheticDeviceTokenId;
             this.processingMessage = "found existing device with vin: " + this.vin
         }
+        // todo future, even if userDeviceId is found, check if compass integration exists and is attached to this smartcontract owner
+        this.processingMessage = "skipping adding to compass, already added"
 
-        const compassResp = await this.addToCompass(this.vin);
-        if (!compassResp.success) {
-            this.alertText = "failed to add vin to compass:" + compassResp.error;
-            return;
-        }
-        this.processingMessage = "added to compass OK"
         if(userDeviceId === "") {
+            const compassResp = await this.addToCompass(this.vin);
+            if (!compassResp.success) {
+                this.alertText = "failed to add vin to compass:" + compassResp.error;
+                return;
+            }
+            this.processingMessage = "added to compass OK"
+
             const fromVinResp = await this.addToUserDevicesAndDecode(this.vin); // this call is idempotent
             if (!fromVinResp.success) {
                 this.alertText = "failed to add vin to user devices:" + fromVinResp.error;
