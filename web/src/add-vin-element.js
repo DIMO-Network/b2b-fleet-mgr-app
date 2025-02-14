@@ -65,6 +65,9 @@ export class AddVinElement extends LitElement {
                     Onboard VIN
                 </button>
             </form>
+            <div class="alert alert-success" ?hidden=${this.processingMessage === ""}>
+                ${this.processingMessage}
+            </div>
         `;
     }
 
@@ -165,7 +168,18 @@ export class AddVinElement extends LitElement {
 
         // reset form
         this.processing = false;
+        this.processingMessage = "VIN add Succeeded!";
+        this.sleepSync(2000)
+        this.processingMessage = "";
+
         // this.vin = ""; // to reset the input this won't work since it doesn't push up to the input, ie. this is not mvvm.
+    }
+
+    sleepSync(ms) {
+        const start = Date.now();
+        while (Date.now() - start < ms) {
+            // Busy-wait loop (blocks execution)
+        }
     }
 
     async addToCompass(vin) {
