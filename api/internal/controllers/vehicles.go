@@ -80,6 +80,12 @@ func (v *VehiclesController) PostDevicesAPIRegisterIntegration(c *fiber.Ctx) err
 	return v.proxyRequest(c, targetURL, c.Body(), false)
 }
 
+func (v *VehiclesController) GetDevicesAPIMe(c *fiber.Ctx) error {
+	targetURL := fmt.Sprintf("%s/v1/user/devices/me", v.settings.DevicesAPIURL)
+
+	return v.proxyRequest(c, targetURL, nil, false)
+}
+
 func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL string, requestBody []byte, useCompassPSK bool) error {
 	// Perform GET request to the target URL
 	req, err := http.NewRequest("GET", targetURL, nil)

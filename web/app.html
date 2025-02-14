@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="./monospace-web/index.css" />
     <link rel="stylesheet" href="./monospace-web/reset.css" />
     <script type="module" src="./src/add-vin-element.js"></script>
+    <script type="module" src="./src/vehicle-list-element.js"></script>
 </head>
 <style>
     .header {
@@ -63,16 +64,7 @@
 </div>
 <add-vin-element></add-vin-element>
 
-<h2>My Vehicles</h2>
-<table>
-    <tr>
-        <th>VIN</th>
-        <th>Make</th>
-        <th>Model</th>
-        <th>Year</th>
-        <th>Status</th>
-    </tr>
-</table>
+<vehicle-list-element></vehicle-list-element>
 
 <script>
     function handleLogout() {

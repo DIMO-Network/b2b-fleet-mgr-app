@@ -17,6 +17,7 @@ export class AddVinElement extends LitElement {
         processing: { type: Boolean },
         token: {type: String },
         alertText: {type: String },
+        processingMessage: {type: String },
     }
     // we're gonna need a way to handle errors and display them in the frontend, as well as continuation for something that
     // errored half way
