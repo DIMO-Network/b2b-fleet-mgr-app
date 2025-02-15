@@ -35,7 +35,7 @@ export class VehicleListElement extends LitElement {
     render() {
         return html`
             <h2>My Vehicles</h2>
-            <table>
+            <table style="font-size: 80%">
                 <tr>
                     <th>VIN</th>
                     <th>Make Model Year</th>

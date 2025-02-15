@@ -56,6 +56,30 @@
         background-color: #f8d7da;
         border-color: #f5c6cb;
     }
+    .processing {
+        position: relative;
+        pointer-events: none;
+        background-color: #ccc;
+    }
+
+    .processing::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 1em;
+        height: 1em;
+        border: 2px solid white;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.8s linear infinite;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes spin {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
 </style>
 <body>
 <div class="header">

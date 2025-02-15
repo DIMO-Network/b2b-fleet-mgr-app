@@ -209,7 +209,7 @@ func (v *VehiclesController) AddVehicles(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.SendStatus(fiber.StatusOK) // we could return the status per vin
+	return c.JSON(statuses)
 }
 
 type AddVehicleRequest struct {

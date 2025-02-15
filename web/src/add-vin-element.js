@@ -57,11 +57,11 @@ export class AddVinElement extends LitElement {
             <form class="grid">
                 <label>VIN
                     <input type="text" placeholder="VIN" maxlength="17"
-                           value="${this.vin}" @input="${e => this.vin = e.target.value}"></label>
+                           .value=${this.vin} @input="${e => this.vin = e.target.value}"></label>
                 <label>Consent Email
                     <input type="text" placeholder="me@company.com" maxlength="60"
                            value="${this.email}" @input="${e => this.email = e.target.value}"></label>
-                <button type="button" @click=${this._submitVIN} ?disabled=${this.processing}>
+                <button type="button" @click=${this._submitVIN} ?disabled=${this.processing} class=${this.processing ? 'processing' : ''} >
                     Onboard VIN
                 </button>
             </form>
@@ -71,13 +71,22 @@ export class AddVinElement extends LitElement {
         `;
     }
 
+    returnFailure(alertText) {
+        this.processing = false;
+        this.processingMessage = "";
+        this.alertText = alertText;
+    }
+
     async _submitVIN(event) {
         this.alertText = "";
         this.processingMessage = "";
         this.processing = true;
         console.log("onboarding vin", this.vin);
+        if (this.vin?.length !== 17) {
+            return this.returnFailure("vin is not 17 characters");
+        }
 
-        const lookupResp = await this.getCompassLookup(this.vin);
+        const lookupResp = await this.getDeviceAPILookup(this.vin);
         let userDeviceId = "";
         let vehicleTokenId = 0;
         let syntheticDeviceTokenId = 0;
@@ -90,68 +99,52 @@ export class AddVinElement extends LitElement {
             this.processingMessage = "found existing device with vin: " + this.vin
         }
         // todo future, even if userDeviceId is found, check if compass integration exists and is attached to this smartcontract owner
+        const compassResp = await this.addToCompass(this.vin);
+        if (!compassResp.success) {
+            return this.returnFailure("error when adding vin to compass:" + compassResp.error);
+        }
+        console.log(compassResp);
+        // process the result
+        const vinAddStatus = compassResp.data.find(x=> x.vin === this.vin);
+        if (vinAddStatus == null || vinAddStatus.status === "FAILED") {
+            return this.returnFailure("failed to add vin to compass: " + vinAddStatus?.status ?? "failed")
+        }
+        this.processingMessage = "added to compass OK";
 
+        if (this.settings.isLocalhost()) {
+            // locally we're not gonna be doing minting since no passkey, so just return here
+            this.processing = false;
+            this.vin = ""; // todo test this actually updates the form reactively.
+            return;
+        }
+        // 1. create the user device record & register the integration (web2 stuff)
         if(userDeviceId === "") {
-            const compassResp = await this.addToCompass(this.vin);
-            if (!compassResp.success) {
-                this.alertText = "failed to add vin to compass:" + compassResp.error;
-                return;
-            }
-            this.processingMessage = "added to compass OK"
-
             const fromVinResp = await this.addToUserDevicesAndDecode(this.vin); // this call is idempotent
             if (!fromVinResp.success) {
-                this.alertText = "failed to add vin to user devices:" + fromVinResp.error;
-                return;
+                return this.returnFailure("failed to add vin to user devices:" + fromVinResp.error)
             }
             definitionId = fromVinResp.data.userDevice.deviceDefinition.definitionId;
             userDeviceId = fromVinResp.data.userDevice.id;
             this.processingMessage = "VIN decoded OK"
-        }
-        if(syntheticDeviceTokenId === 0) {
+
             const registerResp = await this.registerIntegration(userDeviceId); // this call is idempotent
             if (!registerResp.success) {
-                this.alertText = "failed to register devices-api integration to compass: " + registerResp.error;
-                return;
+                return this.returnFailure("failed to register devices-api integration to compass: " + registerResp.error);
             }
             this.processingMessage = "integration registered";
-            if (vehicleTokenId > 0) {
-                // this means already minted but missing synthetic device
-                const syntheticMintResp = await this.getMintSyntheticDevice(userDeviceId);
-                if (!syntheticMintResp.success) {
-                    this.alertText = "failed to register synthetic device: " + syntheticMintResp.error;
-                    return;
-                }
-                // fix number
-                syntheticMintResp.data.domain.chainId = Number(syntheticMintResp.data.domain.chainId);
-                const signedResp = await this.signPayloadWithTurnkeyZerodev(syntheticMintResp.data);
-                if (!signedResp.success) {
-                    this.alertText = "failed to sign synthetic device payload: " + signedResp.error;
-                    return;
-                }
-                const postSyntheticMintResp = await this.postMintSyntheticDevice(userDeviceId, signedResp.signature);
-                if (!postSyntheticMintResp.success) {
-                    this.alertText = "failed to post synthetic device: " + postSyntheticMintResp.error;
-                    return;
-                }
-                this.processingMessage = "synthetic device minted OK";
-            }
         }
-        // mint vehicle if hasn't been minted already. Since register is called above, synthetic will automatically get minted too
+        // 2. Mint the vehicle nft with SACD permissions
         if (vehicleTokenId === 0) {
-
             const mintResp = await this.getMintVehicle(userDeviceId, definitionId)
             if (!mintResp.success) {
-                this.alertText = "failed to get the message to mint" + mintResp.error;
-                return;
+                return this.returnFailure("failed to get the message to mint" + mintResp.error);
             }
             // saw this fix in the mobile app https://github.com/DIMO-Network/dimo-driver/blob/development/src/hooks/custom/useSignCallback.ts#L40
             mintResp.data.domain.chainId = Number(mintResp.data.domain.chainId);
 
             const signedNftResp = await this.signPayloadWithTurnkeyZerodev(mintResp.data)
             if (!signedNftResp.success) {
-                this.alertText = "failed to get the message to mint" + signedNftResp.error;
-                return;
+                return this.returnFailure("failed to get the message to mint" + signedNftResp.error)
             }
             console.log("signed mint vehicle:", signedNftResp.signature);
 
@@ -162,20 +155,37 @@ export class AddVinElement extends LitElement {
 
             const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature, imageBase64, sacd);
             if (!postMintResp.success) {
-                this.alertText = "failed mint vehicle: " + postMintResp.error;
+                return this.returnFailure("failed mint vehicle: " + postMintResp.error);
             }
             this.processingMessage = "Vehicle NFT mint accepted";
         }
+        // 3. Mint the synthetic device
+        if(syntheticDeviceTokenId === 0) {
+            // wait a bit for previous mint trx to go through -
+            // todo: ideally we'd query something every 1 second? devices-api vin lookup
+            this.sleepSync(9000)
 
-        // start polling to get token id and synthetic token_id, just users/devices/me
-
+            const syntheticMintResp = await this.getMintSyntheticDevice(userDeviceId);
+            if (!syntheticMintResp.success) {
+                return this.returnFailure("failed to register synthetic device: " + syntheticMintResp.error);
+            }
+            // fix number
+            syntheticMintResp.data.domain.chainId = Number(syntheticMintResp.data.domain.chainId);
+            const signedResp = await this.signPayloadWithTurnkeyZerodev(syntheticMintResp.data);
+            if (!signedResp.success) {
+                return this.returnFailure("failed to sign synthetic device payload: " + signedResp.error);
+            }
+            const postSyntheticMintResp = await this.postMintSyntheticDevice(userDeviceId, signedResp.signature);
+            if (!postSyntheticMintResp.success) {
+                return this.returnFailure("failed to post synthetic device: " + postSyntheticMintResp.error);
+            }
+            this.processingMessage = "synthetic device minted OK";
+        }
         // todo: we don't have the tokenid yet, i think we need to do polling somwewhere to get the tokenid to be able to call below
 
         // reset form
         this.processing = false;
         this.processingMessage = "VIN add Succeeded!";
-        this.sleepSync(2000)
-        this.processingMessage = "";
 
         // this.vin = ""; // to reset the input this won't work since it doesn't push up to the input, ie. this is not mvvm.
     }
@@ -186,7 +196,16 @@ export class AddVinElement extends LitElement {
             // Busy-wait loop (blocks execution)
         }
     }
-
+    /**
+     * @typedef {Object} CompassAddVINStatus
+     * @property {string} vin
+     * @property {string} status
+     */
+    /**
+     *
+     * @param {string} vin
+     * @returns {Promise<{success: boolean, data: CompassAddVINStatus[]}|{success: boolean, error: string}|{success: boolean, error, status: number}>}
+     */
     async addToCompass(vin) {
         // Construct the target URL and payload.
         const url = this.settings.getBackendUrl() + "/v1/vehicles";
@@ -205,7 +224,7 @@ export class AddVinElement extends LitElement {
                 },
                 body: JSON.stringify(data)
             });
-            //const result = await response.json();
+            const result = await response.json();
 
             // Check if the response was not OK and return a standardized error.
             if (!response.ok) {
@@ -220,7 +239,7 @@ export class AddVinElement extends LitElement {
             console.log("Success adding to compass:");
             return {
                 success: true,
-                // data: result,
+                data: result,
             };
 
         } catch (error) {
@@ -242,11 +261,11 @@ export class AddVinElement extends LitElement {
      * @property {number} syntheticDeviceTokenId - populated if synthetic device is minted
      */
     /**
-     *
+     * looks up a vin in devices-api
      * @param {string} vin
      * @returns {Promise<{success: boolean, data: VehicleLookup}|{success: boolean, error: string}|{success: boolean, error: any, status: number}>}
      */
-    async getCompassLookup(vin) {
+    async getDeviceAPILookup(vin) {
         const url = this.settings.getBackendUrl() + "/v1/compass/device-by-vin/" + vin;
 
         try {

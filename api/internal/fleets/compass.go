@@ -117,12 +117,12 @@ func (cs *compassSvc) AddVINs(ctx context.Context, vins []string, email string) 
 	s := make([]CompassAddVINStatus, len(vehicleSignUp.VinWithStatuses))
 	for i, status := range vehicleSignUp.VinWithStatuses {
 		s[i].VIN = status.Vin
-		s[i].Status = status.AddConsentStatus.String()
+		s[i].Status = status.AddConsentStatus.Enum().String()
 	}
 	return s, nil
 }
 
 type CompassAddVINStatus struct {
-	VIN    string
-	Status string
+	VIN    string `json:"vin"`
+	Status string `json:"status"`
 }
