@@ -159,7 +159,7 @@ export class AddVinElement extends LitElement {
             if (!postMintResp.success) {
                 return this.returnFailure("failed mint vehicle: " + postMintResp.error);
             }
-            this.processingMessage = "Vehicle NFT mint accepted";
+            this.processingMessage = "Vehicle NFT mint accepted, waiting for transaction....";
 
             // before continuing, check that mint went through
             await this.checkIsMinted();
@@ -199,13 +199,17 @@ export class AddVinElement extends LitElement {
 
     async checkIsMinted() {
         let isMinted = false;
-
+        let count = 0;
         while(!isMinted) {
             const lookup = await this.getDeviceAPILookup(this.vin);
-
-            if (lookup.data.vehicleTokenId === 0) {
+            count++;
+            if (!lookup.success || (lookup.success && lookup.data.vehicleTokenId === 0)) {
                 await this.delay(10000);
-                this.processingMessage = "waiting for vehicle mint.";
+                this.processingMessage = "waiting for vehicle mint." + count.toString();
+
+                if (!lookup.success) {
+                    this.processingMessage = "check request failed but will try again: " + lookup.error;
+                }
             } else {
                 isMinted = true;
             }
