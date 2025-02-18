@@ -193,11 +193,8 @@ export class AddVinElement extends LitElement {
         // this.vin = ""; // to reset the input this won't work since it doesn't push up to the input, ie. this is not mvvm.
     }
 
-    sleepSync(ms) {
-        const start = Date.now();
-        while (Date.now() - start < ms) {
-            // Busy-wait loop (blocks execution)
-        }
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     async checkIsMinted() {
@@ -207,7 +204,7 @@ export class AddVinElement extends LitElement {
             const lookup = await this.getDeviceAPILookup(this.vin);
 
             if (lookup.data.vehicleTokenId === 0) {
-                this.sleepSync(4000);
+                await this.delay(10000);
                 this.processingMessage = "waiting for vehicle mint.";
             } else {
                 isMinted = true;
