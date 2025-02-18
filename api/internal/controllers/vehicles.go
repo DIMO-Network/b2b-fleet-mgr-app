@@ -3,16 +3,14 @@ package controllers
 import (
 	"bytes"
 	"fmt"
-	"github.com/friendsofgo/errors"
-	"io"
-	"net/http"
-	"strings"
-
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/fleets"
+	"github.com/friendsofgo/errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
 	"github.com/tidwall/sjson"
+	"io"
+	"net/http"
 )
 
 type VehiclesController struct {
@@ -162,18 +160,10 @@ func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL string, reques
 // @Security     BearerAuth
 // @Router /v1/vehicles [post]
 func (v *VehiclesController) AddVehicles(c *fiber.Ctx) error {
-	const workingVIN = "1C4SJSBP8RS133747"
-
 	payload := AddVehicleRequest{}
 	err := c.BodyParser(&payload)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, errors.Wrap(err, "Invalid request body").Error())
-	}
-	// temporary:
-	// if vin is the known one, just skip and return success
-	if strings.TrimSpace(payload.VINs[0]) == workingVIN {
-		v.logger.Info().Msgf("Using workingvin, skipping adding vehicle %s", payload.VINs[0])
-		return c.SendStatus(fiber.StatusOK)
 	}
 
 	// validation
