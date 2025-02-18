@@ -167,6 +167,10 @@ export class AddVinElement extends LitElement {
         }
         // 3. Mint the synthetic device
         if(syntheticDeviceTokenId === 0) {
+            const registerResp = await this.registerIntegration(userDeviceId); // this call is idempotent
+            if (!registerResp.success) {
+                return this.returnFailure("failed to register devices-api integration to compass: " + registerResp.error);
+            }
 
             const syntheticMintResp = await this.getMintSyntheticDevice(userDeviceId);
             if (!syntheticMintResp.success) {
