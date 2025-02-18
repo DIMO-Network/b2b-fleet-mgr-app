@@ -98,18 +98,20 @@ export class AddVinElement extends LitElement {
             definitionId = lookupResp.data.definitionId;
             this.processingMessage = "found existing device with vin: " + this.vin
         }
-        // todo future, even if userDeviceId is found, check if compass integration exists and is attached to this smartcontract owner
-        const compassResp = await this.addToCompass(this.vin);
-        if (!compassResp.success) {
-            return this.returnFailure("error when adding vin to compass:" + compassResp.error);
+        if (userDeviceId=== "") {
+            // todo future, even if userDeviceId is found, check if compass integration exists and is attached to this smartcontract owner
+            const compassResp = await this.addToCompass(this.vin);
+            if (!compassResp.success) {
+                return this.returnFailure("error when adding vin to compass:" + compassResp.error);
+            }
+            console.log(compassResp);
+            // process the result
+            const vinAddStatus = compassResp.data.find(x=> x.vin === this.vin);
+            if (vinAddStatus == null || vinAddStatus.status === "FAILED") {
+                return this.returnFailure("failed to add vin to compass: " + vinAddStatus?.status ?? "failed")
+            }
+            this.processingMessage = "added to compass OK";
         }
-        console.log(compassResp);
-        // process the result
-        const vinAddStatus = compassResp.data.find(x=> x.vin === this.vin);
-        if (vinAddStatus == null || vinAddStatus.status === "FAILED") {
-            return this.returnFailure("failed to add vin to compass: " + vinAddStatus?.status ?? "failed")
-        }
-        this.processingMessage = "added to compass OK";
 
         if (this.settings.isLocalhost()) {
             // locally we're not gonna be doing minting since no passkey, so just return here
@@ -158,12 +160,13 @@ export class AddVinElement extends LitElement {
                 return this.returnFailure("failed mint vehicle: " + postMintResp.error);
             }
             this.processingMessage = "Vehicle NFT mint accepted";
+
+            // before continuing, check that mint went through
+            await this.checkIsMinted();
+            this.processingMessage = "vehicle mint completed";
         }
         // 3. Mint the synthetic device
         if(syntheticDeviceTokenId === 0) {
-            // wait a bit for previous mint trx to go through -
-            // todo: ideally we'd query something every 1 second? devices-api vin lookup
-            this.sleepSync(9000)
 
             const syntheticMintResp = await this.getMintSyntheticDevice(userDeviceId);
             if (!syntheticMintResp.success) {
@@ -196,6 +199,23 @@ export class AddVinElement extends LitElement {
             // Busy-wait loop (blocks execution)
         }
     }
+
+    async checkIsMinted() {
+        let isMinted = false;
+
+        while(!isMinted) {
+            const lookup = await this.getDeviceAPILookup(this.vin);
+
+            if (lookup.data.vehicleTokenId === 0) {
+                this.sleepSync(4000);
+                this.processingMessage = "waiting for vehicle mint.";
+            } else {
+                isMinted = true;
+            }
+        }
+        return true;
+    }
+
     /**
      * @typedef {Object} CompassAddVINStatus
      * @property {string} vin
