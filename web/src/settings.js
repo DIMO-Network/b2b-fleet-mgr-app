@@ -49,9 +49,9 @@ export class Settings {
             });
             if (!response.ok) throw new Error("Failed to fetch account info");
 
-            this.accountInfo = await response.json();
-            this.saveAccountInfo();
-            return this.accountInfo;
+            const accountInfo = await response.json();
+            this.saveAccountInfo(accountInfo);
+            return accountInfo;
         } catch (error) {
             return {
                 success: false,
@@ -65,8 +65,8 @@ export class Settings {
         localStorage.setItem("appSettings", JSON.stringify(this.settings));
     }
 
-    saveAccountInfo() {
-        localStorage.setItem("accountInfo", JSON.stringify(this.accountInfo));
+    saveAccountInfo(accountInfo) {
+        localStorage.setItem("accountInfo", JSON.stringify(accountInfo));
     }
 
     // Load settings from localStorage
@@ -114,6 +114,7 @@ export class Settings {
     }
 
     /**
+     * todo: this needs to pull from the JWT
      * @returns {string} 0x Organization smart contract address from Turnkey. Not be confused with the user's wallet address
      */
     getOrgSmartContractAddress(){
@@ -121,6 +122,7 @@ export class Settings {
     }
 
     /**
+     * todo: account info won't have this anymore, ideally can get from LIWD redirect?
      * @returns {`0x{string}`} 0x formatted string with the turnkey account user wallet addr
      */
     getUserWalletAddress(){

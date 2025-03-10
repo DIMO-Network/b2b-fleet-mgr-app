@@ -620,6 +620,14 @@ export class AddVinElement extends LitElement {
         }
     }
 
+    async getWhoAmI() {
+        const httpClient = new TurnkeyClient(
+            { baseUrl: "https://api.turnkey.com" },
+            this.stamper
+        );
+        const me = await httpClient.getWhoami({organizationId: this.settings.getTurnkeySubOrgId()});
+    }
+
     /**
      *
      * @param mintPayload {Object} challenge payload to be signed, as original object
