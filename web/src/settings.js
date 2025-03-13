@@ -114,15 +114,15 @@ export class Settings {
     }
 
     /**
-     * todo: this needs to pull from the JWT
-     * @returns {string} 0x Organization smart contract address from Turnkey. Not be confused with the user's wallet address
+     * gets the wallet address returned from LIWD, which happens to be the ZeroDev org smart contract address
+     * @returns {string} 0x Organization smart contract address from ZeroDev/Turnkey. Not be confused with the user's wallet address
      */
     getOrgSmartContractAddress(){
-        return this.getAccountInfo("smartContractAddress");
+        return localStorage.getItem("walletAddress");
     }
 
     /**
-     * todo: account info won't have this anymore, ideally can get from LIWD redirect?
+     * todo: ask how to get this, not in JWT
      * @returns {`0x{string}`} 0x formatted string with the turnkey account user wallet addr
      */
     getUserWalletAddress(){

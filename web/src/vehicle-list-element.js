@@ -41,7 +41,7 @@ export class VehicleListElement extends LitElement {
                     <th>Make Model Year</th>
                     <th>Web2 Status</th>
                     <th>Token ID</th>
-                    <th>Synthetic Device ID</th>
+                    <th>Synthetic </br>Device ID</th>
                     <th></th>
                 </tr>
                 ${repeat(this.items, (item) => item.id, (item, index) => html`
