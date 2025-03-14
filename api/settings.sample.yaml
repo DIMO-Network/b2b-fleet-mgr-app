@@ -2,3 +2,10 @@ ENVIRONMENT: dev
 API_PORT: 3007
 COMPASS_API_KEY:
 MONITORING_PORT: 3010
+
+DEVICES_API_URL: https://devices-api.dimo.zone
+PAYMASTER_URL: https://rpc.zerodev.app/api/v2/paymaster/your-account-uuid
+RPC_URL: https://polygon.gateway.tenderly.co/your-account
+BUNDLER_URL: https://rpc.zerodev.app/api/v2/bundler/your-account-uuid
+COMPASS_PRE_SHARED_KEY: used for lookups
+JWT_KEY_SET_URL: https://auth.dimo.zone/keys

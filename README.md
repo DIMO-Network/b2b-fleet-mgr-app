@@ -2,35 +2,28 @@
 Web App for managing onboarding and removing vehicles, and their status. Meant for B2B customers.
 
 ## notes
-this will use LIWD, but this App is not tied to one Developer License.
-This App can be used with any dev license, ideally I could have user pick on start,
-what info is needed to persist for Dev License.
+This uses Login with DIMO, using the redirect flow (no react component). Users sign in with their Passkey.
 
-I'll need frontend token, not sure if will need backend token too. 
+We use the transactions-sdk for signing payloads. 
 
-Current thought is just to use the native web login method, having issues getting LIWD react component to work.
+B2B fleet users can use this to onboard their vehicles. Currently this is targeted mostly at fleets with Stellantis vehicles using the Compass Oracle.
 
-Onboarding a VIN:
-- add to compass iot
-- decode
-- mint (mint vehicle worker?)
-- sacd permissions to dev license
-- synthetic device? 
-- user_devices db records?
-I think the last two start to tie in to the Open Integrations concept, how can we make that generic....
+Can also serve as an example for developers wanting to build onboarding flows on DIMO, eg. Oracle onboarding vehicles flow. 
 
-Minting example: https://github.com/DIMO-Network/dimo-driver/blob/3ce9c249630b9a548c7617529381150b24b53279/src/layouts/MintVehicle/WaasWeb3HardwareVehicleId/hooks/mutations/useMintVehicle.ts#L36
-Parameters for kernel signer: https://github.com/DIMO-Network/dimo-driver/blob/3ce9c249630b9a548c7617529381150b24b53279/src/lib/transactions.ts#L22-L39
-These import dimo libraries from the sdk, so like I could do this from the frontend.
-But if user uploads many VIN's they'd need to leave the browser open while it processes. 
-Ideally figure out what these libraries are doing and calling and then do the same from here. 
+## Running locally
 
-Architecture:
-SPA, javascript based web app, dev from vite/ node, build and deploy from go, same as admin.
-any framework or just follow like what rob eisenberg did in his web component examples, keep it simple, vite native app
+1. Start the backend in `api` folder. You'll need some settings.yaml, there is a sample. 
+For certain features you'll need the zerodev etc url's and key. `$ go run ./cmd/fleet-onboard-app`
 
-first experiment:
-regular web app, with javascript to store clientid, get login to work
+2. Start the web app in the `web` folder. Install dependencies `$ npm i`, then start the vite server `$ npm run dev`.
+To mimmic prod deployment, run `$ npm run buld`, and then you can copy `dist` folder to the `api` folder and serve everything from Go server as in prod. 
+
+### Signing
+For signing with a users Wallet to work, the Passkey needs to be brought up in this same web app, which means it will depend on the Relying Party ID to match the users
+DIMO saved passkey with login with dimo. This means you need any subdomain of dimo.org. Locally you could mimic by modifying hosts file with 
+something.dimo.org pointing to localhost and using the app from that url in your browser. Or just deploy and test from cloud. 
+If you're a 3rd party building on DIMO and need to sign, there is an option to redirect to the DIMO login to handle signing payloads. 
+
 
 ## Helpful stuff along the way
 https://www.w3.org/TR/webauthn-2/#rp-id
