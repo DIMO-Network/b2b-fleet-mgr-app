@@ -39,6 +39,7 @@ export class AddVinElement extends LitElement {
         return this;
     }
 
+    // page lifecycle event
     async connectedCallback() {
         super.connectedCallback(); // Always call super.connectedCallback()
         await this.settings.fetchSettings(); // Fetch settings on load
@@ -67,6 +68,9 @@ export class AddVinElement extends LitElement {
             </form>
             <div class="alert alert-success" ?hidden=${this.processingMessage === "" || this.alertText.length > 0}>
                 ${this.processingMessage}
+            </div>
+            <div>
+                <button type="button" @click=${this.getWhoAmI}>Who ami i</button>
             </div>
         `;
     }
@@ -620,12 +624,34 @@ export class AddVinElement extends LitElement {
         }
     }
 
+    // experimenting to see how to get the current user's turnkey wallet, not the zerodev org wallet
     async getWhoAmI() {
         const httpClient = new TurnkeyClient(
             { baseUrl: "https://api.turnkey.com" },
             this.stamper
         );
-        const me = await httpClient.getWhoami({organizationId: this.settings.getTurnkeySubOrgId()});
+        // const me = await httpClient.getWhoami({organizationId: this.settings.getTurnkeySubOrgId()});
+        // console.log("whoami:", me);
+
+        const wallets = await httpClient.getWallets({organizationId: this.settings.getTurnkeySubOrgId()})
+        console.log("sub org wallets: ");
+        wallets.wallets.forEach(wallet => {
+            console.log("wallet:", wallet);
+        })
+
+        const { account } = await httpClient.getWalletAccounts({
+            organizationId: this.settings.getTurnkeySubOrgId(),
+            walletId: wallets[0].walletId,
+        });
+
+        const userWallet = `0x${account.address}`;
+        console.log("user wallet:", userWallet);
+
+        // const user = await httpClient.getUser({
+        //     organizationId: this.settings.getTurnkeySubOrgId(),
+        //     userId: me.userId,
+        // });
+        // console.log("user:", user.user.);
     }
 
     /**

@@ -2,10 +2,13 @@ import { defineConfig } from 'vite';
 import eslintPlugin from 'vite-plugin-eslint';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { resolve } from 'path';
+import mkcert from 'vite-plugin-mkcert';
 
 export default defineConfig({
     server: {
         port: 3008, // Use custom port, e.g., 3000
+        host: 'localdev.dimo.org',
+        https: true,
     },
     resolve: {
         alias: {
@@ -24,7 +27,9 @@ export default defineConfig({
             }
         }
     },
-    plugins: [eslintPlugin(),
+    plugins: [
+        mkcert(),
+        eslintPlugin(),
         viteStaticCopy({
             targets: [
                 {

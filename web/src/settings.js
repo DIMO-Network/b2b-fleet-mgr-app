@@ -1,6 +1,8 @@
+import {isLocalhost} from "./utils.js";
+
 export class Settings {
     constructor() {
-        if (this.isLocalhost()) {
+        if (isLocalhost()) {
             this.apiUrl = "http://localhost:3007";
         } else {
             this.apiUrl = "" // assumption is go app runs under in same place but could move to /api
@@ -10,12 +12,6 @@ export class Settings {
         this.accountInfo = this.loadAccountInfo(); // load from localstorage
 
         this.token = localStorage.getItem("token");
-    }
-
-    isLocalhost() {
-        return window.location.hostname === "localhost" ||
-            window.location.hostname === "127.0.0.1" ||
-            window.location.hostname === "";
     }
 
     // Fetch settings from API
@@ -122,7 +118,7 @@ export class Settings {
     }
 
     /**
-     * todo: ask how to get this, not in JWT
+     * todo: get this from turnkey api
      * @returns {`0x{string}`} 0x formatted string with the turnkey account user wallet addr
      */
     getUserWalletAddress(){

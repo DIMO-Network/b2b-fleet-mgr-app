@@ -12,10 +12,12 @@ Can also serve as an example for developers wanting to build onboarding flows on
 
 ## Running locally
 
-1. Start the backend in `api` folder. You'll need some settings.yaml, there is a sample. 
+1. Modify your hosts file to add a 127.0.0.1 entry for localdev.dimo.org . This should exist in the equivalent app configured in dimo dev console. 
+
+2. Start the backend in `api` folder. You'll need some settings.yaml, there is a sample. 
 For certain features you'll need the zerodev etc url's and key. `$ go run ./cmd/fleet-onboard-app`
 
-2. Start the web app in the `web` folder. Install dependencies `$ npm i`, then start the vite server `$ npm run dev`.
+3. Start the web app in the `web` folder. Install dependencies `$ npm i`, then start the vite server `$ npm run dev`.
 To mimmic prod deployment, run `$ npm run buld`, and then you can copy `dist` folder to the `api` folder and serve everything from Go server as in prod. 
 
 ### Signing
