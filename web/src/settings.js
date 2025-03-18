@@ -7,7 +7,8 @@ export class Settings {
         } else {
             this.apiUrl = "" // assumption is go app runs under in same place but could move to /api
         }
-
+        // todo rethink settings loading pattern, this is messy
+        // load config stuff from localstorage in case it exists already
         this.settings = this.loadSettings(); // Load from localStorage initially
         this.accountInfo = this.loadAccountInfo(); // load from localstorage
 
@@ -105,6 +106,7 @@ export class Settings {
 
     saveAccountInfo(accountInfo) {
         localStorage.setItem("accountInfo", JSON.stringify(accountInfo));
+        this.accountInfo = accountInfo;
     }
 
     // Load settings from localStorage
@@ -159,18 +161,14 @@ export class Settings {
         return localStorage.getItem("walletAddress");
     }
 
-    /**
-     * todo: get this from turnkey api
-     * @returns {`0x{string}`} 0x formatted string with the turnkey account user wallet addr
-     */
-    getUserWalletAddress(){
-        return this.getAccountInfo("walletAddress");
-    }
-
     getTurnkeySubOrgId() {
         return this.getAccountInfo("subOrganizationId");
     }
 
+    /**
+     * this does not change
+     * @returns {string}
+     */
     getCompassIntegrationId() {
         return "2szgr5WqMQtK2ZFM8F8qW8WUfJa";
     }

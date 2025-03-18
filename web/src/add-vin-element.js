@@ -70,9 +70,6 @@ export class AddVinElement extends LitElement {
             <div class="alert alert-success" ?hidden=${this.processingMessage === "" || this.alertText.length > 0}>
                 ${this.processingMessage}
             </div>
-            <div>
-                <button type="button" @click=${this.getWhoAmI}>Who ami i</button>
-            </div>
         `;
     }
 
@@ -537,11 +534,10 @@ export class AddVinElement extends LitElement {
             bundlerUrl: this.settings.getBundlerUrl(),
             paymasterUrl: this.settings.getPaymasterUrl(),
             clientId: this.settings.getAppClientId(),
-
+            useWalletSession: true, // doesn't seem to make difference, hoping this would reduce asking to sign every stamper call
             // domain: "dimo.org",
             // redirectUri: "https://fleet-onboard.dimo.org/login.html",
             // environment: "dev", // same error if set env to dev, no difference
-            // useWalletSession: true,
         })
         const kernelSigner = new KernelSigner(kernelConfig);
 
@@ -553,24 +549,6 @@ export class AddVinElement extends LitElement {
             kernelSigner,
             stamper,
         };
-    }
-
-    /**
-     * Converts an ECDSA signature (r, s, v) into a full Ethereum hex signature.
-     *
-     * Ethereum uses a 65-byte signature format: `r (32 bytes) + s (32 bytes) + v (1 byte)`.
-     * This function ensures `v` is correctly formatted (27 or 28) before concatenating.
-     *
-     * @param {Object} signResult - The signature result object.
-     * @param {string} signResult.r - The 32-byte hex string representing the `r` value.
-     * @param {string} signResult.s - The 32-byte hex string representing the `s` value.
-     * @param {string} signResult.v - The recovery ID as a hex string (typically `"00"` or `"01"`).
-     * @returns {`0x${string}`} The full Ethereum signature as a 0x-prefixed hex string.
-     */
-    formatEthereumSignature(signResult) {
-        const { r, s, v } = signResult;
-        const vHex = (parseInt(v, 16) + 27).toString(16).padStart(2, '0');
-        return `0x${r}${s}${vHex}`;
     }
 
     /**
@@ -625,34 +603,26 @@ export class AddVinElement extends LitElement {
         }
     }
 
-    // experimenting to see how to get the current user's turnkey wallet, not the zerodev org wallet
-    async getWhoAmI() {
+    // get the current user's turnkey wallet, not the zerodev org wallet
+    async getUserWalletAddress() {
         const httpClient = new TurnkeyClient(
             { baseUrl: "https://api.turnkey.com" },
             this.stamper
         );
-        // const me = await httpClient.getWhoami({organizationId: this.settings.getTurnkeySubOrgId()});
-        // console.log("whoami:", me);
-        // todo: check this settings sub org id etc is correct,
         const wallets = await httpClient.getWallets({organizationId: this.settings.getTurnkeySubOrgId()})
         console.log("sub org wallets: ");
         wallets.wallets.forEach(wallet => {
             console.log("wallet:", wallet);
         })
 
-        const { account } = await httpClient.getWalletAccounts({
+        const account = await httpClient.getWalletAccounts({
             organizationId: this.settings.getTurnkeySubOrgId(),
-            walletId: wallets[0].walletId,
+            walletId: wallets.wallets[0].walletId,
         });
 
-        const userWallet = `0x${account.address}`;
+        const userWallet = `0x${account.accounts[0].address}`;
         console.log("user wallet:", userWallet);
-
-        // const user = await httpClient.getUser({
-        //     organizationId: this.settings.getTurnkeySubOrgId(),
-        //     userId: me.userId,
-        // });
-        // console.log("user:", user.user.);
+        return userWallet;
     }
 
     /**
@@ -664,6 +634,7 @@ export class AddVinElement extends LitElement {
 
         try{
             console.log("payload to sign", mintPayload);
+            const userWallerAddr = await this.getUserWalletAddress();
 
             const httpClient = new TurnkeyClient(
                 { baseUrl: "https://api.turnkey.com" },
@@ -672,7 +643,7 @@ export class AddVinElement extends LitElement {
             const turnkeyAccount = await createAccount({
                 client: httpClient,
                 organizationId: this.settings.getTurnkeySubOrgId(), // sub org id
-                signWith: this.settings.getUserWalletAddress(), // normally the wallet address
+                signWith: userWallerAddr, // normally the wallet address
             })
             const publicClient = await createPublicClient({
                 // Use your own RPC provider (e.g. Infura/Alchemy).
@@ -711,42 +682,6 @@ export class AddVinElement extends LitElement {
         }
     }
 
-    /**
-     * uses dimo transactions sdk to init kernel signer and then sign the payload object
-     * @param {Object} mintPayload
-     * @returns {Promise<`0x${string}`>} should be the final eth style ecdsa signature
-     */
-    async signPayloadWithSDK(mintPayload) {
-        // could try with passkeyinit too
-        await this.kernelSigner.passkeyInit(this.settings.getTurnkeySubOrgId(), this.settings.getUserWalletAddress(), this.stamper);
-        const tc = new TurnkeyClient({ baseUrl: "https://api.turnkey.com" }, this.stamper);
-        this.kernelSigner.passkeyClient.turnkeyClient = tc;
-        // error is "no active client"
-
-        const wallets = await tc.getWallets({
-            organizationId: this.settings.getTurnkeySubOrgId(),
-        });
-        const walletAddr = await tc.getWalletAccounts({
-            organizationId: this.settings.getTurnkeySubOrgId(),
-            walletId: wallets.wallets[0].walletId,
-        });
-        console.log(walletAddr)
-
-        const signed = await this.kernelSigner.signTypedData(mintPayload);
-        console.log("Signature from sdk:", signed);
-        console.log(JSON.stringify(signed));
-
-        return signed;
-    }
-
-    // const result = await kernelSigner.setVehiclePermissions({
-    //     tokenId, // the token id from the post response from devices-api? or do we get this later?
-    //     grantee, // same as above grantee
-    //     perms,
-    //     expiration,
-    //     source: `ipfs://${ipfsRes.data?.cid}`,
-    // });
-
     buildPermissions() {
         const expiration = BigInt(2933125200); // 40 years
         const perms = sacdPermissionValue({
@@ -776,6 +711,7 @@ export class AddVinElement extends LitElement {
         return sacdInput;
     }
 
+    // todo future would be to be able to use this instead of devices-api, but it is not ready yet
     async uploadSACDPermissions() {
         // todo move this permissions stuff elsewhere
         const perms = sacdPermissionValue({
