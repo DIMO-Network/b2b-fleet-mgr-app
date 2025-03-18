@@ -3,6 +3,7 @@ import eslintPlugin from 'vite-plugin-eslint';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { resolve } from 'path';
 import mkcert from 'vite-plugin-mkcert';
+import path from "node:path";
 
 export default defineConfig({
     server: {
@@ -28,7 +29,11 @@ export default defineConfig({
         }
     },
     plugins: [
-        mkcert(),
+        mkcert({
+            keyPath: 'key.pem',
+            certFileName: 'cert.pem',
+            savePath: path.resolve(process.cwd(), '.mkcert')
+        }),
         eslintPlugin(),
         viteStaticCopy({
             targets: [

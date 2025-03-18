@@ -14,11 +14,15 @@ Can also serve as an example for developers wanting to build onboarding flows on
 
 1. Modify your hosts file to add a 127.0.0.1 entry for localdev.dimo.org . This should exist in the equivalent app configured in dimo dev console. 
 
-2. Start the backend in `api` folder. You'll need some settings.yaml, there is a sample. 
-For certain features you'll need the zerodev etc url's and key. `$ go run ./cmd/fleet-onboard-app`
+2. Start the web app in the `web` folder. Install dependencies `$ npm i`, then start the vite server `$ npm run dev`.
+   To mimmic prod deployment, run `$ npm run buld`, and then you can copy `dist` folder to the `api` folder and serve everything from Go server as in prod.
+   You must run the dev server first because this is what will generate the certifates in the .mkcert folder. We develop locally with https for passkeys & stuff to work.
 
-3. Start the web app in the `web` folder. Install dependencies `$ npm i`, then start the vite server `$ npm run dev`.
-To mimmic prod deployment, run `$ npm run buld`, and then you can copy `dist` folder to the `api` folder and serve everything from Go server as in prod. 
+3. Start the backend in `api` folder. You'll need some settings.yaml, there is a sample. 
+   For certain features you'll need the zerodev etc url's and key. `$ go run ./cmd/fleet-onboard-app`
+   Backend will pull the https tls certs from the web folder /mkcert
+
+
 
 ### Signing
 For signing with a users Wallet to work, the Passkey needs to be brought up in this same web app, which means it will depend on the Relying Party ID to match the users

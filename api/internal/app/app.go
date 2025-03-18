@@ -34,7 +34,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	}))
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3008", // localhost development
+		AllowOrigins:     "https://localdev.dimo.org:3008", // localhost development
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true,
@@ -74,6 +74,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	app.Post("/v1/user/devices/:userDeviceId/integrations/:integrationId", jwtAuth, vehiclesCtrl.PostDevicesAPIRegisterIntegration)
 
 	app.Get("/v1/settings", jwtAuth, settingsCtrl.GetSettings)
+	app.Get("/v1/public/settings", settingsCtrl.GetPublicSettings)
 
 	return app
 }

@@ -32,10 +32,12 @@ func main() {
 	group, gCtx := errgroup.WithContext(ctx)
 	webAPI := app.App(&settings, &logger)
 
-	logger.Info().Str("port", strconv.Itoa(settings.MonitoringPort)).Msgf("Starting monitoring server %d", settings.MonitoringPort)
-	runFiber(gCtx, monApp, ":"+strconv.Itoa(settings.MonitoringPort), group)
+	if settings.IsProduction() {
+		logger.Info().Str("port", strconv.Itoa(settings.MonitoringPort)).Msgf("Starting monitoring server %d", settings.MonitoringPort)
+		runFiber(gCtx, monApp, ":"+strconv.Itoa(settings.MonitoringPort), group, false)
+	}
 	logger.Info().Str("port", strconv.Itoa(settings.APIPort)).Msgf("Starting web server %d", settings.APIPort)
-	runFiber(gCtx, webAPI, ":"+strconv.Itoa(settings.APIPort), group)
+	runFiber(gCtx, webAPI, ":"+strconv.Itoa(settings.APIPort), group, !settings.IsProduction())
 
 	if err := group.Wait(); err != nil {
 		logger.Fatal().Err(err).Msg("Server failed.")
@@ -43,10 +45,16 @@ func main() {
 	logger.Info().Msg("Server stopped.")
 }
 
-func runFiber(ctx context.Context, fiberApp *fiber.App, addr string, group *errgroup.Group) {
+func runFiber(ctx context.Context, fiberApp *fiber.App, addr string, group *errgroup.Group, useTLS bool) {
 	group.Go(func() error {
-		if err := fiberApp.Listen(addr); err != nil {
-			return fmt.Errorf("failed to start server: %w", err)
+		if useTLS {
+			if err := fiberApp.ListenTLS("localdev.dimo.org"+addr, "../web/.mkcert/cert.pem", "../web/.mkcert/dev.pem"); err != nil {
+				return fmt.Errorf("failed to start server: %w", err)
+			}
+		} else {
+			if err := fiberApp.Listen(addr); err != nil {
+				return fmt.Errorf("failed to start server: %w", err)
+			}
 		}
 		return nil
 	})

@@ -25,6 +25,7 @@ env:
   VEHICLE_NFT_ADDRESS: '0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF'
   CHAIN_ID: 137
   DEVICES_API_URL: https://devices-api.dimo.zone
+  CLIENT_ID: 0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB
 service:
   type: ClusterIP
   ports:

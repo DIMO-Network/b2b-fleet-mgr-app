@@ -12,6 +12,7 @@ type Settings struct {
 	// used to mark the VIN as pre-approved / confirmed, in future could be used to create the vin in data provider storage side
 	CompassPreSharedKey string `yaml:"COMPASS_PRE_SHARED_KEY"`
 	JwtKeySetURL        string `yaml:"JWT_KEY_SET_URL"`
+	ClientID            string `yaml:"CLIENT_ID"`
 }
 
 func (s *Settings) IsProduction() bool {

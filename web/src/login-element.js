@@ -1,5 +1,6 @@
 import {html, LitElement, css} from 'lit'
 import {isLocalhost} from "./utils.js";
+import {Settings} from "./settings.js";
 
 export class LoginElement extends LitElement {
     static properties = {
@@ -12,19 +13,19 @@ export class LoginElement extends LitElement {
     constructor() {
         super();
         this.loginUrl = '';
-        this.clientId = localStorage.getItem('clientId');
-        if (this.clientId == null) {
-            this.clientId = '';
-        }
-
-        if (this.clientId.length === 42) {
-            this.setupLoginUrl();
-        }
+        this.settings = new Settings();
+        this.clientId = '';
     }
 
     async connectedCallback() {
         super.connectedCallback();
 
+        const settings = await this.settings.fetchPublicSettings();
+        this.clientId = settings.clientId
+
+        if (this.clientId.length === 42) {
+            this.setupLoginUrl();
+        }
     }
 
     static styles = css`
@@ -35,10 +36,6 @@ export class LoginElement extends LitElement {
         return html`
             <div class="grid place-items-center" ?hidden=${this.loginUrl === ""}>
                 <a id="loginLink" href="${this.loginUrl}">Login with DIMO!</a>
-                <div style="margin-top: 5em">
-                    <p>ClientID: ${this.clientId}</p>
-                    <button type="button" @click=${this._resetClientId}>Reset my Client Id</button>
-                </div>
             </div>
             <div class="grid place-items-center" ?hidden=${this.loginUrl !== ""}>
                 <h3>It appears there is no ClientID configured</h3>
@@ -50,7 +47,6 @@ export class LoginElement extends LitElement {
     setupLoginUrl() {
         let redirectUrl = "";
         // Check if the hostname is "localhost" or "127.0.0.1"
-        const hostname = window.location.hostname;
         if (isLocalhost()) {
             redirectUrl = "https://localdev.dimo.org:3008/login.html";
         } else {

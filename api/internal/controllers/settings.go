@@ -38,9 +38,20 @@ func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
 	return c.JSON(payload)
 }
 
+func (v *SettingsController) GetPublicSettings(c *fiber.Ctx) error {
+	payload := PublicSettingsResponse{
+		ClientID: v.settings.ClientID,
+	}
+	return c.JSON(payload)
+}
+
 type SettingsResponse struct {
 	DevicesAPIURL string `json:"devicesApiUrl"`
 	PaymasterURL  string `json:"paymasterUrl"`
 	RPCURL        string `json:"rpcUrl"`
 	BundlerURL    string `json:"bundlerUrl"`
+}
+
+type PublicSettingsResponse struct {
+	ClientID string `json:"clientId"`
 }

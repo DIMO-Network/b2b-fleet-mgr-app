@@ -3,7 +3,7 @@ import {isLocalhost} from "./utils.js";
 export class Settings {
     constructor() {
         if (isLocalhost()) {
-            this.apiUrl = "http://localhost:3007";
+            this.apiUrl = "https://localdev.dimo.org:3007";
         } else {
             this.apiUrl = "" // assumption is go app runs under in same place but could move to /api
         }
@@ -14,7 +14,17 @@ export class Settings {
         this.token = localStorage.getItem("token");
     }
 
-    // Fetch settings from API
+    /**
+     * @typedef {Object} SettingsResponse
+     * @property {string} devicesApiUrl - The URL of the devices API.
+     * @property {string} paymasterUrl - The URL of the paymaster service.
+     * @property {string} rpcUrl - The RPC URL.
+     * @property {string} bundlerUrl - The URL of the bundler service.
+     */
+    /**
+     * Grabs static app settings from backend
+     * @returns {Promise<SettingsResponse|null>}
+     */
     async fetchSettings() {
         try {
             const response = await fetch(this.apiUrl + "/v1/settings", {
@@ -35,6 +45,33 @@ export class Settings {
         }
     }
 
+    /**
+     * @typedef {Object} PublicSettingsResponse
+     * @property {string} clientId - The client ID.
+     */
+    /**
+     * Gets the publicly accesible settings
+     * @returns {Promise<PublicSettingsResponse|null>}
+     */
+    async fetchPublicSettings() {
+        try {
+            const response = await fetch(this.apiUrl + "/v1/public/settings", {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                },
+            });
+            if (!response.ok) throw new Error("Failed to fetch public settings");
+
+            this.settings = await response.json();
+            this.saveSettings(); // Persist to localStorage
+            return this.settings;
+        } catch (error) {
+            console.error("Error fetching public settings:", error);
+            return null;
+        }
+    }
+
     async fetchAccountInfo(email) {
         try {
             const response = await fetch(`https://accounts.dimo.org/api/account/${email}`, {
@@ -43,7 +80,12 @@ export class Settings {
                     "Accept": "application/json",
                 }
             });
-            if (!response.ok) throw new Error("Failed to fetch account info");
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: "Failed to fetch account info"
+                }
+            }
 
             const accountInfo = await response.json();
             this.saveAccountInfo(accountInfo);

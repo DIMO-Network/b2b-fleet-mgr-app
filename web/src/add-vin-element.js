@@ -9,6 +9,7 @@ import { KERNEL_V3_1, getEntryPoint } from '@zerodev/sdk/constants'
 import { createPublicClient, http} from 'viem';
 import { polygonAmoy } from 'viem/chains';
 import {createKernelAccount} from '@zerodev/sdk';
+import {isLocalhost} from "./utils.js";
 
 export class AddVinElement extends LitElement {
     static properties = {
@@ -117,7 +118,7 @@ export class AddVinElement extends LitElement {
             this.processingMessage = "added to compass OK";
         }
 
-        if (this.settings.isLocalhost()) {
+        if (isLocalhost()) {
             // locally we're not gonna be doing minting since no passkey, so just return here
             this.processing = false;
             this.vin = ""; // todo test this actually updates the form reactively.
@@ -632,7 +633,7 @@ export class AddVinElement extends LitElement {
         );
         // const me = await httpClient.getWhoami({organizationId: this.settings.getTurnkeySubOrgId()});
         // console.log("whoami:", me);
-
+        // todo: check this settings sub org id etc is correct,
         const wallets = await httpClient.getWallets({organizationId: this.settings.getTurnkeySubOrgId()})
         console.log("sub org wallets: ");
         wallets.wallets.forEach(wallet => {
