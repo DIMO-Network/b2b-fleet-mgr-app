@@ -63,16 +63,21 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	})
 
 	// just using regular auth, which works with the LIWD JWT
+	// ideally this thing would be moved to the oracle
 	app.Post("/v1/vehicles", jwtAuth, vehiclesCtrl.AddVehicles) // todo future: check that your wallet address has access to compass etc
-	app.Get("/v1/compass/device-by-vin/:vin", jwtAuth, vehiclesCtrl.GetDevicesAPICompassVINLookup)
+	// devices-api proxy calls
 	app.Get("/v1/user/devices/me", jwtAuth, vehiclesCtrl.GetDevicesAPIMe)
+	app.Get("/v1/compass/device-by-vin/:vin", jwtAuth, vehiclesCtrl.GetDevicesAPICompassVINLookup)
+	// minting via devices-api, vehicle NFT
 	app.Get("/v1/user/devices/:userDeviceId/commands/mint", jwtAuth, vehiclesCtrl.GetDevicesAPIMint)
 	app.Post("/v1/user/devices/:userDeviceId/commands/mint", jwtAuth, vehiclesCtrl.PostDevicesAPIMint)
+	// synthetic device NFT minting, devices-api
 	app.Get("/v1/user/devices/:userDeviceId/integrations/:integrationId/commands/mint", jwtAuth, vehiclesCtrl.GetDevicesAPISyntheticMint)
 	app.Post("/v1/user/devices/:userDeviceId/integrations/:integrationId/commands/mint", jwtAuth, vehiclesCtrl.PostDevicesAPISyntheticMint)
+	// this just creates the user_device in the table in devices-api
 	app.Post("/v1/user/devices/fromvin", jwtAuth, vehiclesCtrl.PostDevicesAPIFromVin)
 	app.Post("/v1/user/devices/:userDeviceId/integrations/:integrationId", jwtAuth, vehiclesCtrl.PostDevicesAPIRegisterIntegration)
-
+	// settings the app needs to operate, pulled from config / env vars
 	app.Get("/v1/settings", jwtAuth, settingsCtrl.GetSettings)
 	app.Get("/v1/public/settings", settingsCtrl.GetPublicSettings)
 
