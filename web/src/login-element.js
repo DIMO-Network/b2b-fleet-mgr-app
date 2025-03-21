@@ -12,6 +12,7 @@ export class LoginElement extends LitElement {
 
     constructor() {
         super();
+        this.loginBaseUrl = '';
         this.loginUrl = '';
         this.settings = new Settings();
         this.clientId = '';
@@ -22,6 +23,7 @@ export class LoginElement extends LitElement {
 
         const settings = await this.settings.fetchPublicSettings();
         this.clientId = settings.clientId
+        this.loginBaseUrl = settings.loginUrl
 
         if (this.clientId.length === 42) {
             this.setupLoginUrl();
@@ -47,13 +49,8 @@ export class LoginElement extends LitElement {
     setupLoginUrl() {
         let redirectUrl = "";
         // Check if the hostname is "localhost" or "127.0.0.1"
-        if (isLocalhost()) {
-            redirectUrl = "https://localdev.dimo.org:3008/login.html";
-        } else {
-            redirectUrl = "https://fleet-onboard.dimo.org/login.html";
-        }
-
-        this.loginUrl = `https://login.dimo.org/?clientId=${this.clientId}&redirectUri=${redirectUrl}&entryState=EMAIL_INPUT`;
+        redirectUrl = location.origin + "/login.html";
+        this.loginUrl = `${this.loginBaseUrl}?clientId=${this.clientId}&redirectUri=${redirectUrl}&entryState=EMAIL_INPUT`;
     }
 }
 window.customElements.define('login-element', LoginElement);

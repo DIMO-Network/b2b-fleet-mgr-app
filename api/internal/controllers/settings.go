@@ -41,6 +41,7 @@ func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
 func (v *SettingsController) GetPublicSettings(c *fiber.Ctx) error {
 	payload := PublicSettingsResponse{
 		ClientID: v.settings.ClientID,
+		LoginURL: v.settings.LoginURL,
 	}
 	return c.JSON(payload)
 }
@@ -54,4 +55,5 @@ type SettingsResponse struct {
 
 type PublicSettingsResponse struct {
 	ClientID string `json:"clientId"`
+	LoginURL string `json:"loginUrl"`
 }

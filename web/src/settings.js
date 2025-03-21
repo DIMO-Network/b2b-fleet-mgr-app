@@ -49,6 +49,7 @@ export class Settings {
     /**
      * @typedef {Object} PublicSettingsResponse
      * @property {string} clientId - The client ID.
+     * @property {string} loginUrl - Url for login.
      */
     /**
      * Gets the publicly accesible settings

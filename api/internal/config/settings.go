@@ -13,6 +13,7 @@ type Settings struct {
 	CompassPreSharedKey string `yaml:"COMPASS_PRE_SHARED_KEY"`
 	JwtKeySetURL        string `yaml:"JWT_KEY_SET_URL"`
 	ClientID            string `yaml:"CLIENT_ID"`
+	LoginURL            string `yaml:"LOGIN_URL"`
 }
 
 func (s *Settings) IsProduction() bool {
