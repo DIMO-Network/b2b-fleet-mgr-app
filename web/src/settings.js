@@ -158,6 +158,9 @@ export class Settings {
     getAppClientId() {
         return localStorage.getItem("clientId");
     }
+    getEnvironment() {
+        return this.getSetting("environment");
+    }
 
     /**
      * gets the wallet address returned from LIWD, which happens to be the ZeroDev org smart contract address

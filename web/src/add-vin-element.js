@@ -537,7 +537,7 @@ export class AddVinElement extends LitElement {
             useWalletSession: true, // doesn't seem to make difference, hoping this would reduce asking to sign every stamper call
             // domain: "dimo.org",
             // redirectUri: "https://fleet-onboard.dimo.org/login.html",
-            // environment: "dev", // same error if set env to dev, no difference
+            environment: this.settings.getEnvironment(),
         })
         const kernelSigner = new KernelSigner(kernelConfig);
 

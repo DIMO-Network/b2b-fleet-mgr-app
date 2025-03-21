@@ -34,6 +34,7 @@ func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
 		PaymasterURL:   v.settings.PaymasterURL,
 		RPCURL:         v.settings.RPCURL,
 		BundlerURL:     v.settings.BundlerURL,
+		Environment:    v.settings.Environment,
 	}
 
 	return c.JSON(payload)
@@ -53,6 +54,7 @@ type SettingsResponse struct {
 	PaymasterURL   string `json:"paymasterUrl"`
 	RPCURL         string `json:"rpcUrl"`
 	BundlerURL     string `json:"bundlerUrl"`
+	Environment    string `json:"environment"`
 }
 
 type PublicSettingsResponse struct {
