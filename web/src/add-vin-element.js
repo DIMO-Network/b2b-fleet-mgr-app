@@ -622,6 +622,7 @@ export class AddVinElement extends LitElement {
 
         const userWallet = account.accounts[0].address;
         console.log("user wallet:", userWallet);
+        this.walletAddress = userWallet
         return userWallet;
     }
 
@@ -682,7 +683,7 @@ export class AddVinElement extends LitElement {
         }
     }
 
-    buildPermissions() {
+    async buildPermissions() {
         const expiration = BigInt(2933125200); // 40 years
         const perms = sacdPermissionValue({
             NONLOCATION_TELEMETRY: true,
@@ -698,7 +699,7 @@ export class AddVinElement extends LitElement {
         const expirationStr = expiration.toString();
 
         const sacdInput = {
-            driverID: this.settings.getUserWalletAddress(), // current user's wallet address
+            driverID: this.walletAddress, // current user's wallet address
             appID: this.settings.getAppClientId(), // assuming clientId
             // appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api, doesn't seem this is required
             expiration: Number(expirationStr),
