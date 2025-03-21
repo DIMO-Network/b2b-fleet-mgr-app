@@ -14,7 +14,7 @@ podAnnotations: {}
 podSecurityContext: {}
 securityContext: {}
 env:
-  ENVIRONMENT: prod
+  ENVIRONMENT: dev
   API_PORT: '8080'
   MONITORING_PORT: 8888
   LOG_LEVEL: info
