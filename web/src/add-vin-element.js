@@ -620,7 +620,7 @@ export class AddVinElement extends LitElement {
             walletId: wallets.wallets[0].walletId,
         });
 
-        const userWallet = `0x${account.accounts[0].address}`;
+        const userWallet = account.accounts[0].address;
         console.log("user wallet:", userWallet);
         return userWallet;
     }
