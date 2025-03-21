@@ -1,13 +1,13 @@
-name: buildpushprod
+name: buildpushdev
 on:
   push:
-    tags:
-      - v*
+    branches:
+      - main
 
 jobs:
   build_prod:
     # The type of runner that the job will run on
-    name: buildpushprod
+    name: buildpushdev
     runs-on: [self-hosted, linux]
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -42,7 +42,7 @@ jobs:
       - name: Update Image Version in the related HelmChart values.yaml
         uses: fjogeleit/yaml-update-action@v0.15.0
         with:
-          valueFile: 'charts/fleet-onboard-app/values-prod.yaml'
+          valueFile: 'charts/fleet-onboard-app/values.yaml'
           propertyPath: 'image.tag'
           value: ${{ steps.slug.outputs.BUILD_TAG }}
           branch: main
