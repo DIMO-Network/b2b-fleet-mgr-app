@@ -1,0 +1,83 @@
+replicaCount: 2
+image:
+  repository: dimozone/fleet-onboard-app
+  pullPolicy: IfNotPresent
+  tag: 42a5fc9
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ''
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+env:
+  ENVIRONMENT: prod
+  API_PORT: '8080'
+  MONITORING_PORT: 8888
+  LOG_LEVEL: info
+  SERVICE_NAME: fleet-onboard-app
+  JWT_KEY_SET_URL: https://auth.dev.dimo.zone/keys
+  DIMO_IDENTITY_API: https://identity-api.dev.dimo.zone
+  POLYGON_URL: https://polygonscan.com
+  VEHICLE_NFT_ADDRESS: '0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF'
+  CHAIN_ID: 137
+  DEVICES_API_URL: https://devices-api.dev.dimo.zone
+  CLIENT_ID: 0x151e4c2899a3b232613872372e1e872F99CbA09A
+service:
+  type: ClusterIP
+  ports:
+    mon-http:
+      port: 8888
+      targetPort: mon-http
+      protocol: TCP
+    http:
+      port: 8080
+      targetPort: http
+      protocol: TCP
+ports:
+  - name: mon-http
+    containerPort: 8888
+    protocol: TCP
+  - name: http
+    containerPort: 8080
+    protocol: TCP
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/auth-tls-secret: ingress/cf-origin-ca
+    nginx.ingress.kubernetes.io/auth-tls-verify-client: 'on'
+    nginx.ingress.kubernetes.io/enable-cors: 'true'
+    nginx.ingress.kubernetes.io/cors-allow-origin: https://fleet-onboard.dev.dimo.org
+    external-dns.alpha.kubernetes.io/hostname: fleet-onboard.dev.dimo.org
+  hosts:
+    - host: fleet-onboard.dev.dimo.org
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+nodeSelector: {}
+tolerations: []
+affinity: {}
+podDisruptionBudget:
+  minAvailable: 1
+serviceMonitor:
+  enabled: true
+  path: /metrics
+  port: mon-http
+  interval: 30s

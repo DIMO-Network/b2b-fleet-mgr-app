@@ -19,7 +19,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	// all the fiber logic here, routes, authorization
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			return ErrorHandler(c, err, logger, settings.IsProduction())
+			return ErrorHandler(c, err, logger)
 		},
 		DisableStartupMessage: true,
 		ReadBufferSize:        16000,
@@ -108,7 +108,7 @@ func loadStaticIndex(ctx *fiber.Ctx) error {
 }
 
 // ErrorHandler custom handler to log recovered errors using our logger and return json instead of string
-func ErrorHandler(c *fiber.Ctx, err error, logger *zerolog.Logger, isProduction bool) error {
+func ErrorHandler(c *fiber.Ctx, err error, logger *zerolog.Logger) error {
 	code := fiber.StatusInternalServerError // Default 500 statuscode
 
 	var e *fiber.Error
