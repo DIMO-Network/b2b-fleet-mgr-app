@@ -15,6 +15,7 @@ podSecurityContext: {}
 securityContext: {}
 env:
   ENVIRONMENT: dev
+  USE_DEV_CERTS: false
   API_PORT: '8080'
   MONITORING_PORT: 8888
   LOG_LEVEL: info

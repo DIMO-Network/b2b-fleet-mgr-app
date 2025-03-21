@@ -2,6 +2,7 @@ package config
 
 type Settings struct {
 	Environment    string `yaml:"ENVIRONMENT"`
+	UseDevCerts    bool   `yaml:"USE_DEV_CERTS"`
 	CompassAPIKey  string `yaml:"COMPASS_API_KEY"`
 	APIPort        int    `yaml:"API_PORT"`
 	MonitoringPort int    `yaml:"MONITORING_PORT"`

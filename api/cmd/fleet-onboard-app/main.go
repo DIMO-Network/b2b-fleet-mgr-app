@@ -32,12 +32,11 @@ func main() {
 	group, gCtx := errgroup.WithContext(ctx)
 	webAPI := app.App(&settings, &logger)
 
-	if settings.IsProduction() {
-		logger.Info().Str("port", strconv.Itoa(settings.MonitoringPort)).Msgf("Starting monitoring server %d", settings.MonitoringPort)
-		runFiber(gCtx, monApp, ":"+strconv.Itoa(settings.MonitoringPort), group, false)
-	}
+	logger.Info().Str("port", strconv.Itoa(settings.MonitoringPort)).Msgf("Starting monitoring server %d", settings.MonitoringPort)
+	runFiber(gCtx, monApp, ":"+strconv.Itoa(settings.MonitoringPort), group, false)
+
 	logger.Info().Str("port", strconv.Itoa(settings.APIPort)).Msgf("Starting web server %d", settings.APIPort)
-	runFiber(gCtx, webAPI, ":"+strconv.Itoa(settings.APIPort), group, !settings.IsProduction())
+	runFiber(gCtx, webAPI, ":"+strconv.Itoa(settings.APIPort), group, settings.UseDevCerts)
 
 	if err := group.Wait(); err != nil {
 		logger.Fatal().Err(err).Msg("Server failed.")
