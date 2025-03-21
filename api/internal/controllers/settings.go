@@ -29,10 +29,11 @@ func NewSettingsController(settings *config.Settings, logger *zerolog.Logger) *S
 func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
 
 	payload := SettingsResponse{
-		DevicesAPIURL: v.settings.DevicesAPIURL,
-		PaymasterURL:  v.settings.PaymasterURL,
-		RPCURL:        v.settings.RPCURL,
-		BundlerURL:    v.settings.BundlerURL,
+		DevicesAPIURL:  v.settings.DevicesAPIURL,
+		AccountsAPIURL: v.settings.AccountsAPIURL,
+		PaymasterURL:   v.settings.PaymasterURL,
+		RPCURL:         v.settings.RPCURL,
+		BundlerURL:     v.settings.BundlerURL,
 	}
 
 	return c.JSON(payload)
@@ -47,10 +48,11 @@ func (v *SettingsController) GetPublicSettings(c *fiber.Ctx) error {
 }
 
 type SettingsResponse struct {
-	DevicesAPIURL string `json:"devicesApiUrl"`
-	PaymasterURL  string `json:"paymasterUrl"`
-	RPCURL        string `json:"rpcUrl"`
-	BundlerURL    string `json:"bundlerUrl"`
+	DevicesAPIURL  string `json:"devicesApiUrl"`
+	AccountsAPIURL string `json:"accountsApiUrl"`
+	PaymasterURL   string `json:"paymasterUrl"`
+	RPCURL         string `json:"rpcUrl"`
+	BundlerURL     string `json:"bundlerUrl"`
 }
 
 type PublicSettingsResponse struct {

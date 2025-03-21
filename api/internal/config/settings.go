@@ -14,6 +14,7 @@ type Settings struct {
 	JwtKeySetURL        string `yaml:"JWT_KEY_SET_URL"`
 	ClientID            string `yaml:"CLIENT_ID"`
 	LoginURL            string `yaml:"LOGIN_URL"`
+	AccountsAPIURL      string `yaml:"ACCOUNTS_API_URL"`
 }
 
 func (s *Settings) IsProduction() bool {

@@ -75,8 +75,9 @@ export class Settings {
     }
 
     async fetchAccountInfo(email) {
+        const apiUrl = this.getAccountsApiUrl()
         try {
-            const response = await fetch(`https://accounts.dimo.org/api/account/${email}`, {
+            const response = await fetch(`${apiUrl}/api/account/${email}`, {
                 method: "GET",
                 headers: {
                     "Accept": "application/json",
@@ -140,6 +141,10 @@ export class Settings {
 
     getDevicesApiUrl() {
         return this.getSetting("devicesApiUrl");
+    }
+
+    getAccountsApiUrl() {
+        return this.getSetting("accountsApiUrl");
     }
     getRpcUrl() {
         return this.getSetting("rpcUrl");

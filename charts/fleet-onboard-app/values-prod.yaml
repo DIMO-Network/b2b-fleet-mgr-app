@@ -27,6 +27,7 @@ env:
   DEVICES_API_URL: https://devices-api.dimo.zone
   CLIENT_ID: 4.673075934089283e+47
   LOGIN_URL: https://login.dimo.org
+  ACCOUNTS_API_URL: https://accounts.dimo.org
 service:
   type: ClusterIP
   ports:
