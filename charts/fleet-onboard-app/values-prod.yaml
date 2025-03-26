@@ -29,6 +29,7 @@ env:
   CLIENT_ID: '0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB'
   LOGIN_URL: https://login.dimo.org
   ACCOUNTS_API_URL: https://accounts.dimo.org
+  ORACLE_API_URL: https://ingest-compass-iot.dimo.zone
 service:
   type: ClusterIP
   ports:

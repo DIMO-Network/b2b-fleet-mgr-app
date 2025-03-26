@@ -80,8 +80,8 @@ func (v *VehiclesController) PostDevicesAPIRegisterIntegration(c *fiber.Ctx) err
 	return v.proxyRequest(c, targetURL, c.Body(), false)
 }
 
-func (v *VehiclesController) GetDevicesAPIMe(c *fiber.Ctx) error {
-	targetURL := fmt.Sprintf("%s/v1/user/devices/me", v.settings.DevicesAPIURL)
+func (v *VehiclesController) GetVehicles(c *fiber.Ctx) error {
+	targetURL := fmt.Sprintf("%s/v1/vehicles", v.settings.OracleAPIURL)
 
 	return v.proxyRequest(c, targetURL, nil, false)
 }

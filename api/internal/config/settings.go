@@ -7,6 +7,7 @@ type Settings struct {
 	APIPort        int    `yaml:"API_PORT"`
 	MonitoringPort int    `yaml:"MONITORING_PORT"`
 	DevicesAPIURL  string `yaml:"DEVICES_API_URL"`
+	OracleAPIURL   string `yaml:"ORACLE_API_URL"`
 	PaymasterURL   string `yaml:"PAYMASTER_URL"`
 	RPCURL         string `yaml:"RPC_URL"`
 	BundlerURL     string `yaml:"BUNDLER_URL"`
