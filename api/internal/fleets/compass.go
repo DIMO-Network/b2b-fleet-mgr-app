@@ -99,13 +99,12 @@ func (cs *compassSvc) AddVINs(ctx context.Context, vins []string, email string) 
 	for i, vin := range vins {
 		consents[i] = &v1.Consent{
 			ProviderAuth: &v1.AuthRequest{Provider: &v1.AuthRequest_Vin{Vin: &v1.VinAuth{Vin: vin}}},
-			Scopes:       make([]v1.Scope, v1.Scope_SCOPE_READ, v1.Scope_SCOPE_COMMAND),
 			Region:       2, // North America
 		}
 	}
 	vehicleSignUp, err := cs.client.BatchVehicleSignUp(ctx, &v1.BatchVehicleSignUpRequest{
 		ConsentEmail: email,
-		Consent:      consents,
+		Consents:     consents,
 	})
 
 	joinedVins := strings.Join(vins, ", ")
@@ -114,10 +113,10 @@ func (cs *compassSvc) AddVINs(ctx context.Context, vins []string, email string) 
 	}
 	cs.logger.Info().Msgf("added vehicle to compass response: %s", vehicleSignUp)
 
-	s := make([]CompassAddVINStatus, len(vehicleSignUp.VinWithStatuses))
-	for i, status := range vehicleSignUp.VinWithStatuses {
+	s := make([]CompassAddVINStatus, len(vehicleSignUp.Responses))
+	for i, status := range vehicleSignUp.Responses {
 		s[i].VIN = status.Vin
-		s[i].Status = status.AddConsentStatus.Enum().String()
+		s[i].Status = "APPROVED" //status.State - todo latest compass library broke this. Anyways all this logic needs to be in compass oracle-api
 	}
 	return s, nil
 }

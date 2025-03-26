@@ -3,14 +3,15 @@ package controllers
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/fleets"
 	"github.com/friendsofgo/errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
 	"github.com/tidwall/sjson"
-	"io"
-	"net/http"
 )
 
 type VehiclesController struct {
