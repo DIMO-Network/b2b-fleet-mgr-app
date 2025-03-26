@@ -32,14 +32,25 @@
 
     // Use URLSearchParams to parse the query string
     const params = new URLSearchParams(queryString);
-
+    let noEmail = false;
     // Loop through each query parameter and log it
     console.log('Query Parameters:');
     params.forEach((value, key) => {
         console.log(`${key}: ${value}`);
+        // handle logout case from LIWD
+        if(key === 'logout' && value === true) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            window.location.href = "/";
+        }
+
         // only store stuff we care about
         if (key === 'email' || key === 'token') {
             localStorage.setItem(key, value);
+            if (key === 'email' && value === undefined) {
+                console.log("No email found");
+                noEmail = true;
+            }
         }
     });
 
@@ -48,8 +59,7 @@
         const emailForm = document.getElementById('emailForm');
         emailForm.style.display = 'none';
 
-        const email = localStorage.getItem("email");
-        if (email == null || email === '' || email === undefined) {
+        if (noEmail === true) {
             emailForm.style.display = 'block';
         } else {
             window.location.href = "/app.html";
