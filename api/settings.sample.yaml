@@ -1,12 +1,17 @@
 ENVIRONMENT: dev
 API_PORT: 3007
 COMPASS_API_KEY:
+COMPASS_PRE_SHARED_KEY: <used for lookups>
 MONITORING_PORT: 3010
+USE_DEV_CERTS: false
 
-DEVICES_API_URL: https://devices-api.dimo.zone
 PAYMASTER_URL: https://rpc.zerodev.app/api/v2/paymaster/your-account-uuid
 RPC_URL: https://polygon.gateway.tenderly.co/your-account
 BUNDLER_URL: https://rpc.zerodev.app/api/v2/bundler/your-account-uuid
-COMPASS_PRE_SHARED_KEY: used for lookups
 JWT_KEY_SET_URL: https://auth.dimo.zone/keys
 CLIENT_ID: 0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB
+
+LOGIN_URL: https://login.dev.dimo.org
+DEVICES_API_URL: https://devices-api.dev.dimo.zone
+ACCOUNTS_API_URL: https://accounts.dev.dimo.org
+ORACLE_API_URL: https://ingest-compass-iot.dev.dimo.zone
