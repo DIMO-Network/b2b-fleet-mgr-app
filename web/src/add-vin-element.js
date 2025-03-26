@@ -44,6 +44,9 @@ export class AddVinElement extends LitElement {
     async connectedCallback() {
         super.connectedCallback(); // Always call super.connectedCallback()
         await this.settings.fetchSettings(); // Fetch settings on load
+        if (this.email === undefined || this.email === "") {
+            this.returnFailure("email was not set, please make sure you allow sharing email on Login");
+        }
         await this.settings.fetchAccountInfo(this.email); // load account info
 
         const r = this.setupKernelSigner();
