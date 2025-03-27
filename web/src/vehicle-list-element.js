@@ -25,11 +25,12 @@ export class VehicleListElement extends LitElement {
     async connectedCallback() {
         super.connectedCallback();
         // call func to load items
-        const userDevicesResp = await this.getUserDevicesMe();
-        if(!userDevicesResp.success) {
-            this.alertText = "failed to get vehicles: " + userDevicesResp.error;
+        const userVehiclesResponse = await this.getUserVehicles();
+        if(!userVehiclesResponse.success) {
+            this.alertText = "failed to get vehicles: " + userVehiclesResponse.error;
         }
-        this.items = userDevicesResp.data.userDevices;
+        console.log(userVehiclesResponse)
+        this.items = userVehiclesResponse.data.vehicles;
     }
 
     render() {
@@ -39,7 +40,6 @@ export class VehicleListElement extends LitElement {
                 <tr>
                     <th>VIN</th>
                     <th>Make Model Year</th>
-                    <th>Web2 Status</th>
                     <th>Token ID</th>
                     <th>Synthetic </br>Device ID</th>
                     <th></th>
@@ -47,18 +47,17 @@ export class VehicleListElement extends LitElement {
                 ${repeat(this.items, (item) => item.id, (item, index) => html`
           <tr>
               <td>${item.vin}</td>
-              <td>${item.deviceDefinition.name}</td>
-              <td>${item.integrations.length > 0 ? item.integrations[0].status : 'no integration'}</td>
-              <td>${item.nft?.tokenId}</td>
-              <td>${item.integrations.length > 0 ? item.integrations[0].syntheticDevice?.tokenId : ''}</td>
+              <td>${item.definition.make} ${item.definition.model} ${item.definition.year}</td>
+              <td>${item.tokenId}</td>
+              <td>${item.syntheticDevice?.tokenId || ''}</td>
               <td><button>delete</button></td>
           </tr>`)}
             </table>
         `
     }
 
-    async getUserDevicesMe() {
-        const url = this.settings.getBackendUrl() + "/v1/user/devices/me";
+    async getUserVehicles() {
+        const url = this.settings.getBackendUrl() + "/v1/vehicles";
         try {
             const response = await fetch(url, {
                 method: "GET",
