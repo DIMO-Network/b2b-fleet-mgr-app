@@ -1,13 +1,42 @@
 import {html, LitElement} from 'lit'
 import {repeat} from 'lit/directives/repeat.js';
 import {ApiService} from "@services/api-service.ts";
+import {customElement} from "lit/decorators.js";
 
+interface DeviceDefinition {
+    id: string;
+    make: string;
+    model: string;
+    year: number;
+}
+
+interface SynteticDevice {
+    id: string;
+    tokenId: number;
+    mintedAt: string;
+}
+
+interface Vehicle {
+    vin: string;
+    id: string;
+    tokenId: number;
+    mintedAt: string;
+    owner: `0x${string}`
+    definition: DeviceDefinition;
+    syntheticDevice: SynteticDevice;
+}
+
+interface VehiclesResponse {
+    vehicles: Vehicle[];
+}
+
+@customElement('vehicle-list-element')
 export class VehicleListElement extends LitElement {
     static properties = {
         items: {type: Array},
         alertText: {type: String },
     }
-    private items: any[];
+    private items: Vehicle[];
     private alertText: string;
     private api: ApiService;
 
@@ -31,8 +60,8 @@ export class VehicleListElement extends LitElement {
         if(!userVehiclesResponse.success) {
             this.alertText = "failed to get vehicles: " + userVehiclesResponse.error;
         }
-        console.log(userVehiclesResponse)
-        this.items = userVehiclesResponse.data.vehicles;
+        console.debug('user vehicles', userVehiclesResponse)
+        this.items = userVehiclesResponse.data?.vehicles || [];
     }
 
     render() {
@@ -63,7 +92,6 @@ export class VehicleListElement extends LitElement {
 
     async getUserVehicles() {
         const url = "/v1/vehicles";
-        return await this.api.callApi<any>('GET', url, null, true);
+        return await this.api.callApi<VehiclesResponse>('GET', url, null, true);
     }
 }
-window.customElements.define('vehicle-list-element', VehicleListElement);
