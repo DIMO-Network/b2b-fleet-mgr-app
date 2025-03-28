@@ -4,6 +4,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { resolve } from 'path';
 import mkcert from 'vite-plugin-mkcert';
 import path from "node:path";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
     server: {
@@ -34,6 +35,7 @@ export default defineConfig({
             certFileName: 'cert.pem',
             savePath: path.resolve(process.cwd(), '.mkcert')
         }),
+        tsconfigPaths(),
         eslintPlugin(),
         viteStaticCopy({
             targets: [
