@@ -86,6 +86,12 @@ func (v *VehiclesController) GetVehicles(c *fiber.Ctx) error {
 	return v.proxyRequest(c, targetURL, nil, false)
 }
 
+func (v *VehiclesController) RegisterVehicle(c *fiber.Ctx) error {
+	targetURL := fmt.Sprintf("%s/v1/vehicle/register", v.settings.OracleAPIURL)
+
+	return v.proxyRequest(c, targetURL, c.Body(), false)
+}
+
 func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL string, requestBody []byte, useCompassPSK bool) error {
 	// Perform GET request to the target URL
 	req, err := http.NewRequest("GET", targetURL, nil)

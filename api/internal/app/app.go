@@ -67,6 +67,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	app.Post("/v1/vehicles", jwtAuth, vehiclesCtrl.AddVehicles) // todo future: check that your wallet address has access to compass etc
 	// devices-api proxy calls
 	app.Get("/v1/vehicles", jwtAuth, vehiclesCtrl.GetVehicles)
+	app.Post("/v1/vehicle/register", jwtAuth, vehiclesCtrl.RegisterVehicle)
 	app.Get("/v1/compass/device-by-vin/:vin", jwtAuth, vehiclesCtrl.GetDevicesAPICompassVINLookup)
 	// minting via devices-api, vehicle NFT
 	app.Get("/v1/user/devices/:userDeviceId/commands/mint", jwtAuth, vehiclesCtrl.GetDevicesAPIMint)

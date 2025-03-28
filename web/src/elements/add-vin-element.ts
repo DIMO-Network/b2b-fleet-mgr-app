@@ -198,7 +198,7 @@ export class AddVinElement extends LitElement {
             this.processingMessage = "Vehicle NFT mint accepted, waiting for transaction....";
 
             // before continuing, check that mint went through
-            await this.checkIsMinted();
+            await this.checkIsVehicleMinted();
             this.processingMessage = "vehicle mint completed";
         }
         // 3. Mint the synthetic device
@@ -222,9 +222,11 @@ export class AddVinElement extends LitElement {
             if (!postSyntheticMintResp.success) {
                 return this.returnFailure("failed to post synthetic device: " + postSyntheticMintResp.error);
             }
+            await this.checkIsSyntheticMinted();
             this.processingMessage = "synthetic device minted OK";
         }
-        // todo: we don't have the tokenid yet, i think we need to do polling somwewhere to get the tokenid to be able to call below
+
+        await this.registerInOracle();
 
         // reset form
         this.processing = false;
@@ -237,7 +239,21 @@ export class AddVinElement extends LitElement {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    async checkIsMinted() {
+    async registerInOracle() {
+        if (this.vin) {
+            const lookup = await this.getDeviceAPILookup(this.vin);
+            if (lookup.success && lookup.data) {
+                const {vin, vehicleTokenId} = lookup.data;
+
+                const url = "/v1/vehicle/register";
+                const body = {vin, token_id: vehicleTokenId};
+                await this.api.callApi<any>('POST', url, body, true);
+            }
+        }
+
+    }
+
+    async checkIsVehicleMinted() {
         let isMinted = false;
         let count = 0;
         while(!isMinted && this.vin) {
@@ -245,7 +261,27 @@ export class AddVinElement extends LitElement {
             count++;
             if (!lookup.success || (lookup.success && lookup.data?.vehicleTokenId === 0)) {
                 await this.delay(10_000);
-                this.processingMessage = "waiting for vehicle mint." + count.toString();
+                this.processingMessage = "waiting for vehicle mint." + count;
+
+                if (!lookup.success) {
+                    this.processingMessage = "check request failed but will try again: " + lookup.error;
+                }
+            } else {
+                isMinted = true;
+            }
+        }
+        return true;
+    }
+
+    async checkIsSyntheticMinted() {
+        let isMinted = false;
+        let count = 0;
+        while(!isMinted && this.vin) {
+            const lookup = await this.getDeviceAPILookup(this.vin);
+            count++;
+            if (!lookup.success || (lookup.success && lookup.data?.syntheticDeviceTokenId === 0)) {
+                await this.delay(10_000);
+                this.processingMessage = "waiting for synthetic mint." + count;
 
                 if (!lookup.success) {
                     this.processingMessage = "check request failed but will try again: " + lookup.error;
