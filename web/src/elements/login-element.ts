@@ -25,8 +25,8 @@ export class LoginElement extends LitElement {
         super.connectedCallback();
 
         const settings = await this.settings.fetchPublicSettings();
-        this.clientId = settings.clientId
-        this.loginBaseUrl = settings.loginUrl
+        this.clientId = settings?.clientId || ""
+        this.loginBaseUrl = settings?.loginUrl || ""
 
         if (this.clientId.length === 42) {
             this.setupLoginUrl();
