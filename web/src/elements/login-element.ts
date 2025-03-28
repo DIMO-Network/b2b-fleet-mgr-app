@@ -1,6 +1,5 @@
 import {html, LitElement, css} from 'lit'
-import {isLocalhost} from "./utils.js";
-import {Settings} from "./settings.js";
+import {Settings} from "@services/settings.ts";
 
 export class LoginElement extends LitElement {
     static properties = {
@@ -9,6 +8,10 @@ export class LoginElement extends LitElement {
         alertText: {type: String},
         loginUrl: {type: String},
     }
+    private loginBaseUrl: string;
+    private loginUrl: string;
+    private settings: Settings;
+    private clientId: string;
 
     constructor() {
         super();

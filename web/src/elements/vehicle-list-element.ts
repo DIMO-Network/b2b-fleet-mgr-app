@@ -1,18 +1,49 @@
-import {html, LitElement, css} from 'lit'
+import {html, LitElement} from 'lit'
 import {repeat} from 'lit/directives/repeat.js';
-import {Settings} from "./settings.js";
+import {ApiService} from "@services/api-service.ts";
+import {customElement} from "lit/decorators.js";
 
+interface DeviceDefinition {
+    id: string;
+    make: string;
+    model: string;
+    year: number;
+}
+
+interface SynteticDevice {
+    id: string;
+    tokenId: number;
+    mintedAt: string;
+}
+
+interface Vehicle {
+    vin: string;
+    id: string;
+    tokenId: number;
+    mintedAt: string;
+    owner: `0x${string}`
+    definition: DeviceDefinition;
+    syntheticDevice: SynteticDevice;
+}
+
+interface VehiclesResponse {
+    vehicles: Vehicle[];
+}
+
+@customElement('vehicle-list-element')
 export class VehicleListElement extends LitElement {
     static properties = {
         items: {type: Array},
         alertText: {type: String },
     }
+    private items: Vehicle[];
+    private alertText: string;
+    private api: ApiService;
 
     constructor() {
         super();
         this.items = [];
-        this.settings = new Settings(); // what is best way to do a singleton?
-        this.token = localStorage.getItem("token");
+        this.api = ApiService.getInstance()
         this.alertText = "";
     }
 
@@ -29,13 +60,16 @@ export class VehicleListElement extends LitElement {
         if(!userVehiclesResponse.success) {
             this.alertText = "failed to get vehicles: " + userVehiclesResponse.error;
         }
-        console.log(userVehiclesResponse)
-        this.items = userVehiclesResponse.data.vehicles;
+        console.debug('user vehicles', userVehiclesResponse)
+        this.items = userVehiclesResponse.data?.vehicles || [];
     }
 
     render() {
         return html`
             <h2>My Vehicles</h2>
+            <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
+                ${this.alertText}
+            </div>
             <table style="font-size: 80%">
                 <tr>
                     <th>VIN</th>
@@ -44,7 +78,7 @@ export class VehicleListElement extends LitElement {
                     <th>Synthetic </br>Device ID</th>
                     <th></th>
                 </tr>
-                ${repeat(this.items, (item) => item.id, (item, index) => html`
+                ${repeat(this.items, (item) => item.id, (item) => html`
           <tr>
               <td>${item.vin}</td>
               <td>${item.definition.make} ${item.definition.model} ${item.definition.year}</td>
@@ -57,36 +91,7 @@ export class VehicleListElement extends LitElement {
     }
 
     async getUserVehicles() {
-        const url = this.settings.getBackendUrl() + "/v1/vehicles";
-        try {
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${this.token}`
-                },
-            });
-            const result = await response.json();
-
-            if (!response.ok) {
-                return {
-                    success: false,
-                    error: result.message || result,
-                    status: response.status,
-                };
-            }
-            return {
-                success: true,
-                data: result,
-            };
-        } catch (error) {
-            console.error("Error in get compass lookup:", error);
-            return {
-                success: false,
-                error: error.message || "An unexpected error occurred",
-            };
-        }
+        const url = "/v1/vehicles";
+        return await this.api.callApi<VehiclesResponse>('GET', url, null, true);
     }
 }
-window.customElements.define('vehicle-list-element', VehicleListElement);
