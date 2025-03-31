@@ -2,7 +2,7 @@ replicaCount: 2
 image:
   repository: dimozone/fleet-onboard-app
   pullPolicy: IfNotPresent
-  tag: fd4e452
+  tag: a72113e
 imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
@@ -20,19 +20,19 @@ env:
   MONITORING_PORT: 8888
   LOG_LEVEL: info
   SERVICE_NAME: fleet-onboard-app
-  JWT_KEY_SET_URL: "https://auth.dev.dimo.zone/keys"
-  DIMO_IDENTITY_API: "https://identity-api.dev.dimo.zone"
-  POLYGON_URL: "https://amoy.polygonscan.com"
+  JWT_KEY_SET_URL: https://auth.dev.dimo.zone/keys
+  DIMO_IDENTITY_API: https://identity-api.dev.dimo.zone
+  POLYGON_URL: https://amoy.polygonscan.com
   VEHICLE_NFT_ADDRESS: '0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF'
   CHAIN_ID: 137
-  DEVICES_API_URL: "https://devices-api.dev.dimo.zone"
+  DEVICES_API_URL: https://devices-api.dev.dimo.zone
   CLIENT_ID: '0x151e4c2899a3b232613872372e1e872F99CbA09A'
-  LOGIN_URL: "https://login.dev.dimo.org"
-  ACCOUNTS_API_URL: "https://accounts.dev.dimo.org"
-  ORACLE_API_URL: "https://ingest-compass-iot.dev.dimo.zone"
-  TURNKEY_ORG_ID: "59ff5478-26f5-4ba6-8a32-48b0cf8279a8"
-  TURNKEY_API_URL: "https://api.turnkey.com"
-  TURNKEY_RP_ID: "dimo.org"
+  LOGIN_URL: https://login.dev.dimo.org
+  ACCOUNTS_API_URL: https://accounts.dev.dimo.org
+  ORACLE_API_URL: https://ingest-compass-iot.dev.dimo.zone
+  TURNKEY_ORG_ID: 59ff5478-26f5-4ba6-8a32-48b0cf8279a8
+  TURNKEY_API_URL: https://api.turnkey.com
+  TURNKEY_RP_ID: dimo.org
 service:
   type: ClusterIP
   ports:
