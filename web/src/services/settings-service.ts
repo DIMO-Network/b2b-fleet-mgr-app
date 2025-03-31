@@ -1,20 +1,23 @@
 import {ApiService} from "@services/api-service.ts";
 
-interface PublicSettings {
+export interface PublicSettings {
     "clientId": `0x${string}`,
     "loginUrl": string
 }
 
-interface PrivateSettings {
+export interface PrivateSettings {
     devicesApiUrl: string,
     accountsApiUrl: string,
     paymasterUrl: string,
     rpcUrl: string,
     bundlerUrl: string,
     environment: "prod" | "dev",
+    turnkeyOrgId: string,
+    turnkeyApiUrl: string,
+    turnkeyRpId: string,
 }
 
-interface AccountInfo {
+export interface AccountInfo {
     "subOrganizationId": string,
     "isDeployed": boolean,
     "hasPasskey": boolean,
@@ -26,16 +29,21 @@ const PRIVATE_SETTINGS_KEY = "appPrivateSettings";
 const PUBLIC_SETTINGS_KEY = "appPublicSettings";
 const ACCOUNT_INFO_KEY = "accountInfo";
 
-export class Settings {
+export class SettingsService {
+    static instance = new SettingsService();
+
     // TODO: Make those private later
     publicSettings?: PublicSettings;
     privateSettings?: PrivateSettings;
     accountInfo?: AccountInfo;
 
     private apiService = ApiService.getInstance();
-    
+
+    static getInstance() {
+        return SettingsService.instance;
+    }
+
     constructor() {
-        // load config stuff from localstorage in case it exists already
         this.publicSettings = this.loadPublicSettings();
         this.privateSettings = this.loadPrivateSettings();
         this.accountInfo = this.loadAccountInfo();

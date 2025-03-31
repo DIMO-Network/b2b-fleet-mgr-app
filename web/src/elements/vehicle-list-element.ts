@@ -43,7 +43,7 @@ export class VehicleListElement extends LitElement {
     constructor() {
         super();
         this.items = [];
-        this.api = ApiService.getInstance()
+        this.api = ApiService.getInstance();
         this.alertText = "";
     }
 

@@ -1,16 +1,9 @@
 import {html, LitElement} from 'lit'
-import {Settings} from "@services/settings.ts";
-import {KernelSigner, newKernelConfig, sacdPermissionValue} from '@dimo-network/transactions';
-import {WebauthnStamper} from '@turnkey/webauthn-stamper';
-import { TurnkeyClient } from '@turnkey/http';
-import { createAccount } from '@turnkey/viem';
-import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator'
-import { KERNEL_V3_1, getEntryPoint } from '@zerodev/sdk/constants'
-import { createPublicClient, http} from 'viem';
-import { polygonAmoy } from 'viem/chains';
-import {createKernelAccount} from '@zerodev/sdk';
+import {SettingsService} from "@services/settings-service";
+import {KernelSigner, sacdPermissionValue} from '@dimo-network/transactions';
 import {customElement, property} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
+import {SigningService} from "@services/signing-service.ts";
 
 
 interface CompassAddVINStatus {
@@ -46,22 +39,23 @@ export class AddVinElement extends LitElement {
     @property({attribute: false})
     private alertText: string;
 
-    private settings: Settings;
+    private settings: SettingsService;
     private api: ApiService;
 
     // @ts-ignore
     private kernelSigner: KernelSigner | undefined;
-    private stamper: WebauthnStamper | undefined;
     private walletAddress: string | undefined;
+    private signingService: SigningService;
     constructor() {
         super();
         this.vin = "";
         this.processing = false;
         this.processingMessage = "";
         this.email = localStorage.getItem("email");
-        this.settings = new Settings(); // TODO change to singleton or context
+        this.settings = SettingsService.getInstance();
         this.api = ApiService.getInstance();
         this.alertText = "";
+        this.signingService = SigningService.getInstance();
     }
 
     // Disable shadow DOM to allow inherit css
@@ -70,16 +64,13 @@ export class AddVinElement extends LitElement {
         return this;
     }
 
-    // page lifecycle event
     async connectedCallback() {
-        super.connectedCallback(); // Always call super.connectedCallback()
-        await this.settings.fetchPrivateSettings(); // Fetch settings on load
+        super.connectedCallback();
+        await this.settings.fetchPrivateSettings();
         if (this.email === undefined || this.email === "") {
             this.returnFailure("email was not set, please make sure you allow sharing email on Login");
         }
         await this.settings.fetchAccountInfo(this.email!); // load account info
-
-        this.setupKernelSignerAndStamper();
     }
 
     render() {
@@ -175,14 +166,14 @@ export class AddVinElement extends LitElement {
         if (vehicleTokenId === 0) {
             const mintResp = await this.getMintVehicle(userDeviceId, definitionId)
             if (!mintResp.success) {
-                return this.returnFailure("failed to get the message to mint" + mintResp.error);
+                return this.returnFailure("failed to get the message to mint vehicle" + mintResp.error);
             }
             // saw this fix in the mobile app https://github.com/DIMO-Network/dimo-driver/blob/development/src/hooks/custom/useSignCallback.ts#L40
             mintResp.data.domain.chainId = Number(mintResp.data.domain.chainId);
 
-            const signedNftResp = await this.signPayloadWithTurnkeyZerodev(mintResp.data)
+            const signedNftResp = await this.signingService.signTypedData(mintResp.data)
             if (!signedNftResp.success) {
-                return this.returnFailure("failed to get the message to mint" + signedNftResp.error)
+                return this.returnFailure("failed to get signature for the message to mint" + signedNftResp?.error)
             }
             console.log("signed mint vehicle:", signedNftResp.signature);
 
@@ -214,7 +205,7 @@ export class AddVinElement extends LitElement {
             }
             // fix number
             syntheticMintResp.data.domain.chainId = Number(syntheticMintResp.data.domain.chainId);
-            const signedResp = await this.signPayloadWithTurnkeyZerodev(syntheticMintResp.data);
+            const signedResp = await this.signingService.signTypedData(syntheticMintResp.data);
             if (!signedResp.success) {
                 return this.returnFailure("failed to sign synthetic device payload: " + signedResp.error);
             }
@@ -339,29 +330,6 @@ export class AddVinElement extends LitElement {
         return await this.api.callApi<any>('GET', url, null, true);
     }
 
-    setupKernelSignerAndStamper() {
-        const privateSettings = this.settings.privateSettings;
-        const publicSettings = this.settings.publicSettings;
-        if (publicSettings && privateSettings) {
-            // TODO: Make sure this is OK
-            const kernelConfig = newKernelConfig({
-                rpcUrl: privateSettings.rpcUrl,
-                bundlerUrl: privateSettings.bundlerUrl,
-                paymasterUrl: privateSettings.paymasterUrl,
-                clientId: publicSettings.clientId,
-                useWalletSession: true, // doesn't seem to make difference, hoping this would reduce asking to sign every stamper call
-                domain: "dimo.org",
-                redirectUri: "https://fleet-onboard.dimo.org/login.html",
-                environment: privateSettings.environment,
-            })
-
-            this.kernelSigner = new KernelSigner(kernelConfig);
-            this.stamper = new WebauthnStamper({
-                rpId: "dimo.org", // passkeys need to be on the same rpid - must match LIWD. should be: dimo.org, works on subdomain
-            });
-        }
-    }
-
     /**
      * @param {string} userDeviceId
      * @param {`0x${string}`} payloadSignature
@@ -378,88 +346,6 @@ export class AddVinElement extends LitElement {
             // Optionally add imageData here
         }
         return await this.api.callApi<any>('POST', url, body, true);
-    }
-
-    // get the current user's turnkey wallet, not the zerodev org wallet
-    async getUserWalletAddress() {
-        const httpClient = new TurnkeyClient(
-            { baseUrl: "https://api.turnkey.com" },
-            this.stamper!
-        );
-        const wallets = await httpClient.getWallets({organizationId: this.settings.accountInfo?.subOrganizationId!})
-        console.log("sub org wallets: ");
-        wallets.wallets.forEach(wallet => {
-            console.log("wallet:", wallet);
-        })
-
-        const account = await httpClient.getWalletAccounts({
-            organizationId: this.settings.accountInfo?.subOrganizationId!,
-            walletId: wallets.wallets[0].walletId,
-        });
-
-        const userWallet = account.accounts[0].address;
-        console.log("user wallet:", userWallet);
-        this.walletAddress = userWallet
-        return userWallet;
-    }
-
-    /**
-     *
-     * @param mintPayload {Object} challenge payload to be signed, as original object
-     * @returns {Promise<{success: boolean, error: string}|{success: boolean, signature: `0x${string}`}>}
-     */
-    async signPayloadWithTurnkeyZerodev(mintPayload: Object) {
-
-        try{
-            console.log("payload to sign", mintPayload);
-            const userWallerAddr = await this.getUserWalletAddress();
-
-            const httpClient = new TurnkeyClient(
-                { baseUrl: "https://api.turnkey.com" },
-                this.stamper!
-            );
-            const turnkeyAccount = await createAccount({
-                client: httpClient,
-                organizationId: this.settings.accountInfo?.subOrganizationId!, // sub org id
-                signWith: userWallerAddr, // normally the wallet address
-            })
-            const publicClient = createPublicClient({
-                // Use your own RPC provider (e.g. Infura/Alchemy).
-                transport: http(this.settings.privateSettings?.rpcUrl!),
-                chain: polygonAmoy, // TODO: Shouldn't it be different for prod?
-            })
-            const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
-                signer: turnkeyAccount,
-                entryPoint: getEntryPoint("0.7"),
-                kernelVersion: KERNEL_V3_1
-            })
-            const kernelAccount = await createKernelAccount(publicClient, {
-                plugins: {
-                    sudo: ecdsaValidator,
-                },
-                entryPoint: getEntryPoint("0.7"),
-                kernelVersion: KERNEL_V3_1,
-            });
-            // have to use signTypedData
-
-            // @ts-ignore
-            const signature = await kernelAccount.signTypedData(mintPayload)
-
-            console.log(signature)
-
-            return {
-                success: true,
-                signature: signature,
-            }
-        } catch (error: any) {
-            console.error("Error message:", error.message);
-            console.error("Stack trace:", error.stack);
-
-            return {
-                success: false,
-                error: error.message || "An unexpected error occurred",
-            }
-        }
     }
 
     async buildPermissions() {

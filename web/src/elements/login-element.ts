@@ -1,5 +1,5 @@
 import {html, LitElement, css} from 'lit'
-import {Settings} from "@services/settings.ts";
+import {SettingsService} from "@services/settings-service";
 
 export class LoginElement extends LitElement {
     static properties = {
@@ -10,14 +10,14 @@ export class LoginElement extends LitElement {
     }
     private loginBaseUrl: string;
     private loginUrl: string;
-    private settings: Settings;
+    private settings: SettingsService;
     private clientId: string;
 
     constructor() {
         super();
         this.loginBaseUrl = '';
         this.loginUrl = '';
-        this.settings = new Settings();
+        this.settings = SettingsService.getInstance();
         this.clientId = '';
     }
 

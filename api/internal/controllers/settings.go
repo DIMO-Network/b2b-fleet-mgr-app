@@ -35,6 +35,9 @@ func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
 		RPCURL:         v.settings.RPCURL,
 		BundlerURL:     v.settings.BundlerURL,
 		Environment:    v.settings.Environment,
+		TurnkeyOrgID:   v.settings.TurnkeyOrgID,
+		TurnkeyAPIURL:  v.settings.TurnkeyAPIURL,
+		TurnkeyRPID:    v.settings.TurnkeyRPID,
 	}
 
 	return c.JSON(payload)
@@ -55,6 +58,9 @@ type SettingsResponse struct {
 	RPCURL         string `json:"rpcUrl"`
 	BundlerURL     string `json:"bundlerUrl"`
 	Environment    string `json:"environment"`
+	TurnkeyOrgID   string `json:"turnkeyOrgId"`
+	TurnkeyAPIURL  string `json:"turnkeyApiUrl"`
+	TurnkeyRPID    string `json:"turnkeyRpId"`
 }
 
 type PublicSettingsResponse struct {

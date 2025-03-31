@@ -8,9 +8,14 @@ type Settings struct {
 	MonitoringPort int    `yaml:"MONITORING_PORT"`
 	DevicesAPIURL  string `yaml:"DEVICES_API_URL"`
 	OracleAPIURL   string `yaml:"ORACLE_API_URL"`
-	PaymasterURL   string `yaml:"PAYMASTER_URL"`
-	RPCURL         string `yaml:"RPC_URL"`
-	BundlerURL     string `yaml:"BUNDLER_URL"`
+
+	PaymasterURL  string `yaml:"PAYMASTER_URL"`
+	RPCURL        string `yaml:"RPC_URL"`
+	BundlerURL    string `yaml:"BUNDLER_URL"`
+	TurnkeyOrgID  string `yaml:"TURNKEY_ORG_ID"`
+	TurnkeyAPIURL string `yaml:"TURNKEY_API_URL"`
+	TurnkeyRPID   string `yaml:"TURNKEY_RP_ID"`
+
 	// used to mark the VIN as pre-approved / confirmed, in future could be used to create the vin in data provider storage side
 	CompassPreSharedKey string `yaml:"COMPASS_PRE_SHARED_KEY"`
 	JwtKeySetURL        string `yaml:"JWT_KEY_SET_URL"`

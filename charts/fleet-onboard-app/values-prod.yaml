@@ -20,16 +20,19 @@ env:
   MONITORING_PORT: 8888
   LOG_LEVEL: info
   SERVICE_NAME: fleet-onboard-app
-  JWT_KEY_SET_URL: https://auth.dimo.zone/keys
-  DIMO_IDENTITY_API: https://identity-api.dimo.zone
-  POLYGON_URL: https://polygonscan.com
+  JWT_KEY_SET_URL: "https://auth.dimo.zone/keys"
+  DIMO_IDENTITY_API: "https://identity-api.dimo.zone"
+  POLYGON_URL: "https://polygonscan.com"
   VEHICLE_NFT_ADDRESS: '0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF'
   CHAIN_ID: 137
-  DEVICES_API_URL: https://devices-api.dimo.zone
+  DEVICES_API_URL: "https://devices-api.dimo.zone"
   CLIENT_ID: '0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB'
-  LOGIN_URL: https://login.dimo.org
-  ACCOUNTS_API_URL: https://accounts.dimo.org
-  ORACLE_API_URL: https://ingest-compass-iot.dimo.zone
+  LOGIN_URL: "https://login.dimo.org"
+  ACCOUNTS_API_URL: "https://accounts.dimo.org"
+  ORACLE_API_URL: "https://ingest-compass-iot.dimo.zone"
+  TURNKEY_ORG_ID: "c28319a1-73ec-489a-a212-ec8dbd65dd52"
+  TURNKEY_API_URL: "https://api.turnkey.com"
+  TURNKEY_RP_ID: "dimo.org"
 service:
   type: ClusterIP
   ports:
