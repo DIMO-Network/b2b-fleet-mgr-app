@@ -29,12 +29,15 @@ func NewSettingsController(settings *config.Settings, logger *zerolog.Logger) *S
 func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
 
 	payload := SettingsResponse{
-		DevicesAPIURL:  v.settings.DevicesAPIURL,
-		AccountsAPIURL: v.settings.AccountsAPIURL,
-		PaymasterURL:   v.settings.PaymasterURL,
-		RPCURL:         v.settings.RPCURL,
-		BundlerURL:     v.settings.BundlerURL,
+		DevicesAPIURL:  v.settings.DevicesAPIURL.String(),
+		AccountsAPIURL: v.settings.AccountsAPIURL.String(),
+		PaymasterURL:   v.settings.PaymasterURL.String(),
+		RPCURL:         v.settings.RPCURL.String(),
+		BundlerURL:     v.settings.BundlerURL.String(),
 		Environment:    v.settings.Environment,
+		TurnkeyOrgID:   v.settings.TurnkeyOrgID,
+		TurnkeyAPIURL:  v.settings.TurnkeyAPIURL.String(),
+		TurnkeyRPID:    v.settings.TurnkeyRPID,
 	}
 
 	return c.JSON(payload)
@@ -43,7 +46,7 @@ func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
 func (v *SettingsController) GetPublicSettings(c *fiber.Ctx) error {
 	payload := PublicSettingsResponse{
 		ClientID: v.settings.ClientID,
-		LoginURL: v.settings.LoginURL,
+		LoginURL: v.settings.LoginURL.String(),
 	}
 	return c.JSON(payload)
 }
@@ -55,6 +58,9 @@ type SettingsResponse struct {
 	RPCURL         string `json:"rpcUrl"`
 	BundlerURL     string `json:"bundlerUrl"`
 	Environment    string `json:"environment"`
+	TurnkeyOrgID   string `json:"turnkeyOrgId"`
+	TurnkeyAPIURL  string `json:"turnkeyApiUrl"`
+	TurnkeyRPID    string `json:"turnkeyRpId"`
 }
 
 type PublicSettingsResponse struct {
