@@ -3,15 +3,15 @@ package controllers
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"net/http"
-
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/fleets"
 	"github.com/friendsofgo/errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
 	"github.com/tidwall/sjson"
+	"io"
+	"net/http"
+	"net/url"
 )
 
 type VehiclesController struct {
@@ -27,7 +27,7 @@ func NewVehiclesController(settings *config.Settings, logger *zerolog.Logger) *V
 }
 
 func (v *VehiclesController) PostDevicesAPIFromVin(c *fiber.Ctx) error {
-	targetURL := v.settings.DevicesAPIURL + "/v1/user/devices/fromvin"
+	targetURL := v.settings.DevicesAPIURL.JoinPath("/v1/user/devices/fromvin")
 	setBytes, err := sjson.SetBytes(c.Body(), "preApprovedPSK", v.settings.CompassPreSharedKey)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (v *VehiclesController) PostDevicesAPIFromVin(c *fiber.Ctx) error {
 
 func (v *VehiclesController) PostDevicesAPIMint(c *fiber.Ctx) error {
 	udID := c.Params("userDeviceId", "")
-	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/commands/mint", v.settings.DevicesAPIURL, udID)
+	targetURL := v.settings.DevicesAPIURL.JoinPath(fmt.Sprintf("/v1/user/devices/%s/commands/mint", udID))
 
 	return v.proxyRequest(c, targetURL, c.Body(), false)
 }
@@ -45,7 +45,7 @@ func (v *VehiclesController) PostDevicesAPIMint(c *fiber.Ctx) error {
 func (v *VehiclesController) PostDevicesAPISyntheticMint(c *fiber.Ctx) error {
 	udID := c.Params("userDeviceId", "")
 	integrationID := c.Params("integrationId", "")
-	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/integrations/%s/commands/mint", v.settings.DevicesAPIURL, udID, integrationID)
+	targetURL := v.settings.DevicesAPIURL.JoinPath(fmt.Sprintf("/v1/user/devices/%s/integrations/%s/commands/mint", udID, integrationID))
 
 	return v.proxyRequest(c, targetURL, c.Body(), false)
 }
@@ -53,21 +53,21 @@ func (v *VehiclesController) PostDevicesAPISyntheticMint(c *fiber.Ctx) error {
 func (v *VehiclesController) GetDevicesAPISyntheticMint(c *fiber.Ctx) error {
 	udID := c.Params("userDeviceId", "")
 	integrationID := c.Params("integrationId", "")
-	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/integrations/%s/commands/mint", v.settings.DevicesAPIURL, udID, integrationID)
+	targetURL := v.settings.DevicesAPIURL.JoinPath(fmt.Sprintf("/v1/user/devices/%s/integrations/%s/commands/mint", udID, integrationID))
 
 	return v.proxyRequest(c, targetURL, nil, false)
 }
 
 func (v *VehiclesController) GetDevicesAPIMint(c *fiber.Ctx) error {
 	udID := c.Params("userDeviceId", "")
-	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/commands/mint", v.settings.DevicesAPIURL, udID)
+	targetURL := v.settings.DevicesAPIURL.JoinPath(fmt.Sprintf("/v1/user/devices/%s/commands/mint", udID))
 
 	return v.proxyRequest(c, targetURL, nil, false)
 }
 
 func (v *VehiclesController) GetDevicesAPICompassVINLookup(c *fiber.Ctx) error {
 	vin := c.Params("vin", "")
-	targetURL := fmt.Sprintf("%s/v1/compass/device-by-vin/%s", v.settings.DevicesAPIURL, vin)
+	targetURL := v.settings.DevicesAPIURL.JoinPath(fmt.Sprintf("/v1/compass/device-by-vin/%s", vin))
 
 	return v.proxyRequest(c, targetURL, nil, true)
 }
@@ -75,26 +75,26 @@ func (v *VehiclesController) GetDevicesAPICompassVINLookup(c *fiber.Ctx) error {
 func (v *VehiclesController) PostDevicesAPIRegisterIntegration(c *fiber.Ctx) error {
 	udID := c.Params("userDeviceId", "")
 	integrationID := c.Params("integrationId", "")
-	targetURL := fmt.Sprintf("%s/v1/user/devices/%s/integrations/%s", v.settings.DevicesAPIURL, udID, integrationID)
+	targetURL := v.settings.DevicesAPIURL.JoinPath(fmt.Sprintf("/v1/user/devices/%s/integrations/%s", udID, integrationID))
 
 	return v.proxyRequest(c, targetURL, c.Body(), false)
 }
 
 func (v *VehiclesController) GetVehicles(c *fiber.Ctx) error {
-	targetURL := fmt.Sprintf("%s/v1/vehicles", v.settings.OracleAPIURL)
+	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicles")
 
 	return v.proxyRequest(c, targetURL, nil, false)
 }
 
 func (v *VehiclesController) RegisterVehicle(c *fiber.Ctx) error {
-	targetURL := fmt.Sprintf("%s/v1/vehicle/register", v.settings.OracleAPIURL)
+	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/register")
 
 	return v.proxyRequest(c, targetURL, c.Body(), false)
 }
 
-func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL string, requestBody []byte, useCompassPSK bool) error {
+func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte, useCompassPSK bool) error {
 	// Perform GET request to the target URL
-	req, err := http.NewRequest("GET", targetURL, nil)
+	req, err := http.NewRequest("GET", targetURL.String(), nil)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create request",
@@ -106,7 +106,7 @@ func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL string, reques
 
 	if len(requestBody) > 0 {
 		// Create a new POST request
-		req, err = http.NewRequest("POST", targetURL, bytes.NewBuffer(requestBody))
+		req, err = http.NewRequest("POST", targetURL.String(), bytes.NewBuffer(requestBody))
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "Failed to create request",

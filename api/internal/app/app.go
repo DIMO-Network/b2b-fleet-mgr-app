@@ -59,7 +59,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	settingsCtrl := controllers.NewSettingsController(settings, logger)
 
 	jwtAuth := jwtware.New(jwtware.Config{
-		JWKSetURLs: []string{settings.JwtKeySetURL},
+		JWKSetURLs: []string{settings.JwtKeySetURL.String()},
 	})
 
 	// just using regular auth, which works with the LIWD JWT
