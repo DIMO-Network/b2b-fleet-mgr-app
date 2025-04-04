@@ -6,6 +6,8 @@ buf.build/gen/go/googlecloudplatform/bq-schema-api/protocolbuffers/go v1.36.6-20
 buf.build/gen/go/googlecloudplatform/bq-schema-api/protocolbuffers/go v1.36.6-20241126165326-21c7b1fb5fe8.1/go.mod h1:0MJ+l1R8wsDfxOq2NJGH1/ZDAjkFytZ374sNXze8Cjw=
 buf.build/gen/go/nativeconnect/api/grpc/go v1.5.1-20250326030902-33cc49076e7b.2 h1:AS80yCnwFomGLygQoS9NS0Kb5RURDtjD6Z/U3gwXdyQ=
 buf.build/gen/go/nativeconnect/api/grpc/go v1.5.1-20250326030902-33cc49076e7b.2/go.mod h1:Rqmxjwi6du0b+l/XV6vX4ZgbGnKoHe3IycXKK1iYYyw=
+buf.build/gen/go/nativeconnect/api/grpc/go v1.5.1-20250402203623-820341b3401d.2 h1:5+cIKuDeDTj2kYC7yqX2k934quXtP/jc99tqUXuXG4s=
+buf.build/gen/go/nativeconnect/api/grpc/go v1.5.1-20250402203623-820341b3401d.2/go.mod h1:+Kx6ceDi3cUdkifk5y8TZ5YZLBo38jSQfX0/jrzKJ78=
 buf.build/gen/go/nativeconnect/api/protocolbuffers/go v1.36.6-20250326030902-33cc49076e7b.1 h1:7J8TIiVLXduZDnSHP/jzRr6lB1BMRrbNR+P6bP4G/cc=
 buf.build/gen/go/nativeconnect/api/protocolbuffers/go v1.36.6-20250326030902-33cc49076e7b.1/go.mod h1:kOlj+8mh0kU41bQPF/IF7FPld813yUyqLHS80fwyCKQ=
 github.com/DIMO-Network/shared v0.12.9 h1:I41R/d84WedhQERdT7Iu7Bq8OnmLLQormfQb9g+vl1M=
