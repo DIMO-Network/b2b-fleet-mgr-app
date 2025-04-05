@@ -3,7 +3,7 @@ module github.com/DIMO-Network/b2b-fleet-mgr-app
 go 1.23.5
 
 require (
-	buf.build/gen/go/nativeconnect/api/grpc/go v1.5.1-20250326030902-33cc49076e7b.2
+	buf.build/gen/go/nativeconnect/api/grpc/go v1.5.1-20250402203623-820341b3401d.2
 	buf.build/gen/go/nativeconnect/api/protocolbuffers/go v1.36.6-20250326030902-33cc49076e7b.1
 	github.com/DIMO-Network/shared v0.12.9
 	github.com/friendsofgo/errors v0.9.2

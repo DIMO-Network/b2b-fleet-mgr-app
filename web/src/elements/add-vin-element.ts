@@ -4,6 +4,7 @@ import {KernelSigner, sacdPermissionValue} from '@dimo-network/transactions';
 import {customElement, property} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import {SigningService} from "@services/signing-service.ts";
+import {repeat} from "lit/directives/repeat.js";
 
 
 interface CompassAddVINStatus {
@@ -19,11 +20,19 @@ interface VehicleLookup {
     syntheticDeviceTokenId: number;
 }
 
+interface OnboardVINStatus {
+    success: boolean;
+    error?: string;
+    vin: string;
+}
 
 @customElement('add-vin-element')
 export class AddVinElement extends LitElement {
     @property({attribute: false})
     private vin: string | null;
+
+    @property({attribute: false})
+    private vinsBulk: string | null;
 
     @property({attribute: false})
     private processing: boolean;
@@ -39,6 +48,9 @@ export class AddVinElement extends LitElement {
     @property({attribute: false})
     private alertText: string;
 
+    @property({attribute: false})
+    private onboardResult: OnboardVINStatus[];
+
     private settings: SettingsService;
     private api: ApiService;
 
@@ -49,6 +61,7 @@ export class AddVinElement extends LitElement {
     constructor() {
         super();
         this.vin = "";
+        this.vinsBulk = "";
         this.processing = false;
         this.processingMessage = "";
         this.email = localStorage.getItem("email");
@@ -56,6 +69,8 @@ export class AddVinElement extends LitElement {
         this.api = ApiService.getInstance();
         this.alertText = "";
         this.signingService = SigningService.getInstance();
+
+        this.onboardResult = []
     }
 
     // Disable shadow DOM to allow inherit css
@@ -68,7 +83,7 @@ export class AddVinElement extends LitElement {
         super.connectedCallback();
         await this.settings.fetchPrivateSettings();
         if (this.email === undefined || this.email === "") {
-            this.returnFailure("email was not set, please make sure you allow sharing email on Login");
+            this.displayFailure("email was not set, please make sure you allow sharing email on Login");
         }
         await this.settings.fetchAccountInfo(this.email!); // load account info
     }
@@ -78,6 +93,12 @@ export class AddVinElement extends LitElement {
             <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
                 ${this.alertText}
             </div>
+            /* todo: bulk upload section, textarea, button below checks which field to get VINs from */
+            <form class="grid">
+                <label>Bulk Upload VINs (newline separated)
+                    <textarea placeholder="VIN1\nVIN2\nVIN3" @input="${(e: InputEvent) => this.vinsBulk = e.data}"></textarea>/
+                </label>
+            </form>
             <form class="grid">
                 <label>VIN
                     <input type="text" placeholder="VIN" maxlength="17"
@@ -94,10 +115,25 @@ export class AddVinElement extends LitElement {
             <div class="alert alert-success" ?hidden=${this.processingMessage === "" || this.alertText.length > 0}>
                 ${this.processingMessage}
             </div>
+            <div class="grid" ?hidden=${this.onboardResult.length === 0}>
+                <table style="font-size: 80%">
+                    <tr>
+                        <th>Result</th>
+                        <th>VIN</th>
+                        <th>Error</th>
+                    </tr>
+                    ${repeat(this.onboardResult, (item) => item.vin, (item) => html`
+                    <tr>
+                        <td>${item.success ? "success" : "failed"}</td>
+                        <td>${item.vin}</td>
+                        <td>${item.error}</td>
+                    </tr>`)}
+                </table>
+            </div>
         `;
     }
 
-    returnFailure(alertText: string) {
+    displayFailure(alertText: string) {
         this.processing = false;
         this.processingMessage = "";
         this.alertText = alertText;
@@ -107,12 +143,42 @@ export class AddVinElement extends LitElement {
         this.alertText = "";
         this.processingMessage = "";
         this.processing = true;
-        console.log("onboarding vin", this.vin);
-        if (this.vin?.length !== 17) {
-            return this.returnFailure("vin is not 17 characters");
+        let vinsArray: string[] = []
+
+        console.log("submitting vin(s)");
+
+        if (this.vinsBulk !== null && this.vinsBulk !== undefined && this.vinsBulk?.length > 0) {
+            vinsArray = this.vinsBulk.split('\n');
+        } else if (this.vin !== null && this.vin !== undefined && this.vin?.length > 0) {
+            vinsArray.push(this.vin);
+        } else {
+            return this.displayFailure("no vin provided");
         }
 
-        const lookupResp = await this.getDeviceAPILookup(this.vin);
+        for (const vin of vinsArray) {
+            console.log("processing vin: " + vin);
+
+            const status = await this.onboardVIN(vin)
+            if (!status.success) {
+                this.displayFailure("failed to onboard vin: " + status.error);
+            } else {
+                this.processingMessage = vin + " add Succeeded!";
+            }
+            this.onboardResult.push(status);
+        }
+
+        this.processing = false;
+    }
+
+    async onboardVIN(vin: string):Promise<OnboardVINStatus>{
+        if (vin?.length !== 17) {
+            this.displayFailure("vin is not 17 characters");
+            return {
+                success: false, error: "vin is not 17 characters", vin: vin
+            }
+        }
+
+        const lookupResp = await this.getDeviceAPILookup(vin);
         let userDeviceId = "";
         let vehicleTokenId = 0;
         let syntheticDeviceTokenId = 0;
@@ -122,20 +188,25 @@ export class AddVinElement extends LitElement {
             vehicleTokenId = lookupResp.data.vehicleTokenId;
             syntheticDeviceTokenId = lookupResp.data.syntheticDeviceTokenId;
             definitionId = lookupResp.data.definitionId;
-            this.processingMessage = "found existing device with vin: " + this.vin
+            this.processingMessage = "found existing device with vin: " + vin
         }
         if (userDeviceId=== "") {
             // todo future, even if userDeviceId is found, check if compass integration exists and is attached to this smartcontract owner
-            const compassResp = await this.addToCompass(this.vin);
+            const vins = [vin]
+            const compassResp = await this.addToCompass(vins);
             if (!compassResp.success) {
-                return this.returnFailure("error when adding vin to compass:" + compassResp.error);
+                return {
+                    success: false, error: "error when adding vin to compass:" + compassResp.error, vin: vin
+                }
             }
             console.log(compassResp);
             // process the result
             // @ts-ignore
-            const vinAddStatus = compassResp.data.find(x=> x.vin === this.vin);
+            const vinAddStatus = compassResp.data.find(x=> x.vin === vin);
             if (vinAddStatus == null || vinAddStatus.status === "FAILED") {
-                return this.returnFailure("failed to add vin to compass: " + vinAddStatus?.status || "failed")
+                return {
+                    success: false, error: "failed to add vin to compass: " + vinAddStatus?.status || "failed", vin: vin
+                }
             }
             this.processingMessage = "added to compass OK";
         }
@@ -143,14 +214,16 @@ export class AddVinElement extends LitElement {
         // if (isLocalhost()) {
         //     // locally we're not gonna be doing minting since no passkey, so just return here
         //     this.processing = false;
-        //     this.vin = ""; // todo test this actually updates the form reactively.
+        //     vin = ""; // todo test this actually updates the form reactively.
         //     return;
         // }
         // 1. create the user device record & register the integration (web2 stuff)
         if(userDeviceId === "") {
-            const fromVinResp = await this.addToUserDevicesAndDecode(this.vin); // this call is idempotent
+            const fromVinResp = await this.addToUserDevicesAndDecode(vin); // this call is idempotent
             if (!fromVinResp.success) {
-                return this.returnFailure("failed to add vin to user devices:" + fromVinResp.error)
+                return {
+                    success: false, error: "failed to add vin to user devices:" + fromVinResp.error, vin: vin
+                }
             }
             definitionId = fromVinResp.data.userDevice.deviceDefinition.definitionId;
             userDeviceId = fromVinResp.data.userDevice.id;
@@ -158,7 +231,9 @@ export class AddVinElement extends LitElement {
 
             const registerResp = await this.registerIntegration(userDeviceId); // this call is idempotent
             if (!registerResp.success) {
-                return this.returnFailure("failed to register devices-api integration to compass: " + registerResp.error);
+                return {
+                    success: false, error: "failed to register integration to compass: " + registerResp.error, vin: vin
+                }
             }
             this.processingMessage = "integration registered";
         }
@@ -166,14 +241,18 @@ export class AddVinElement extends LitElement {
         if (vehicleTokenId === 0) {
             const mintResp = await this.getMintVehicle(userDeviceId, definitionId)
             if (!mintResp.success) {
-                return this.returnFailure("failed to get the message to mint vehicle" + mintResp.error);
+                return {
+                    success: false, error: "failed to get the message to mint vehicle" + mintResp.error, vin: vin
+                }
             }
             // saw this fix in the mobile app https://github.com/DIMO-Network/dimo-driver/blob/development/src/hooks/custom/useSignCallback.ts#L40
             mintResp.data.domain.chainId = Number(mintResp.data.domain.chainId);
 
             const signedNftResp = await this.signingService.signTypedData(mintResp.data)
             if (!signedNftResp.success) {
-                return this.returnFailure("failed to get signature for the message to mint" + signedNftResp?.error)
+                return {
+                    success: false, error: "failed to get signature for the message to mint" + signedNftResp?.error, vin: vin
+                }
             }
             console.log("signed mint vehicle:", signedNftResp.signature);
 
@@ -184,55 +263,63 @@ export class AddVinElement extends LitElement {
 
             const postMintResp = await this.postMintVehicle(userDeviceId, signedNftResp.signature, imageBase64, sacd);
             if (!postMintResp.success) {
-                return this.returnFailure("failed mint vehicle: " + postMintResp.error);
+                return {
+                    success: false, error: "failed mint vehicle: " + postMintResp.error, vin: vin
+                }
             }
             this.processingMessage = "Vehicle NFT mint accepted, waiting for transaction....";
 
             // before continuing, check that mint went through
-            await this.checkIsVehicleMinted();
+            await this.checkIsVehicleMinted(vin);
             this.processingMessage = "vehicle mint completed";
         }
         // 3. Mint the synthetic device
         if(syntheticDeviceTokenId === 0) {
             const registerResp = await this.registerIntegration(userDeviceId); // this call is idempotent
             if (!registerResp.success) {
-                return this.returnFailure("failed to register devices-api integration to compass: " + registerResp.error);
+                return {
+                    success: false, error: "failed to register integration to compass: " + registerResp.error, vin: vin
+                }
             }
 
             const syntheticMintResp = await this.getMintSyntheticDevice(userDeviceId);
             if (!syntheticMintResp.success) {
-                return this.returnFailure("failed to register synthetic device: " + syntheticMintResp.error);
+                return {
+                    success: false, error: "failed to register synthetic device: " + syntheticMintResp.error, vin: vin
+                }
             }
             // fix number
             syntheticMintResp.data.domain.chainId = Number(syntheticMintResp.data.domain.chainId);
             const signedResp = await this.signingService.signTypedData(syntheticMintResp.data);
             if (!signedResp.success) {
-                return this.returnFailure("failed to sign synthetic device payload: " + signedResp.error);
+                return {
+                    success: false, error: "failed to sign synthetic device payload: " + signedResp.error, vin: vin
+                }
             }
             const postSyntheticMintResp = await this.postMintSyntheticDevice(userDeviceId, signedResp.signature);
             if (!postSyntheticMintResp.success) {
-                return this.returnFailure("failed to post synthetic device: " + postSyntheticMintResp.error);
+                return {
+                    success: false, error: "failed to post synthetic device: " + postSyntheticMintResp.error, vin: vin
+                }
             }
-            await this.checkIsSyntheticMinted();
+            await this.checkIsSyntheticMinted(vin);
             this.processingMessage = "synthetic device minted OK";
         }
 
-        await this.registerInOracle();
+        await this.registerInOracle(vin);
 
-        // reset form
-        this.processing = false;
-        this.processingMessage = "VIN add Succeeded!";
-
-        // this.vin = ""; // to reset the input this won't work since it doesn't push up to the input, ie. this is not mvvm.
+        return {
+            success: true, vin: vin
+        }
     }
 
     delay(ms: number) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    async registerInOracle() {
-        if (this.vin) {
-            const lookup = await this.getDeviceAPILookup(this.vin);
+    async registerInOracle(vin :string) {
+        if (vin) {
+            const lookup = await this.getDeviceAPILookup(vin);
             if (lookup.success && lookup.data) {
                 const {vin, vehicleTokenId} = lookup.data;
 
@@ -244,11 +331,11 @@ export class AddVinElement extends LitElement {
 
     }
 
-    async checkIsVehicleMinted() {
+    async checkIsVehicleMinted(vin: string) {
         let isMinted = false;
         let count = 0;
-        while(!isMinted && this.vin) {
-            const lookup = await this.getDeviceAPILookup(this.vin);
+        while(!isMinted && vin) {
+            const lookup = await this.getDeviceAPILookup(vin);
             count++;
             if (!lookup.success || (lookup.success && lookup.data?.vehicleTokenId === 0)) {
                 await this.delay(10_000);
@@ -264,11 +351,11 @@ export class AddVinElement extends LitElement {
         return true;
     }
 
-    async checkIsSyntheticMinted() {
+    async checkIsSyntheticMinted(vin: string) {
         let isMinted = false;
         let count = 0;
-        while(!isMinted && this.vin) {
-            const lookup = await this.getDeviceAPILookup(this.vin);
+        while(!isMinted && vin) {
+            const lookup = await this.getDeviceAPILookup(vin);
             count++;
             if (!lookup.success || (lookup.success && lookup.data?.syntheticDeviceTokenId === 0)) {
                 await this.delay(10_000);
@@ -284,9 +371,9 @@ export class AddVinElement extends LitElement {
         return true;
     }
 
-    async addToCompass(vin: string) {
+    async addToCompass(vins: string[]) {
         const url = "/v1/vehicles";
-        const body = { vins: [vin], email: this.email };
+        const body = { vins: vins, email: this.email };
         return await this.api.callApi<CompassAddVINStatus[]>('POST', url, body, true);
     }
 
