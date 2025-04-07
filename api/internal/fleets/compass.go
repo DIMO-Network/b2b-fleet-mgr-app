@@ -116,7 +116,11 @@ func (cs *compassSvc) AddVINs(ctx context.Context, vins []string, email string) 
 	s := make([]CompassAddVINStatus, len(vehicleSignUp.Responses))
 	for i, status := range vehicleSignUp.Responses {
 		s[i].VIN = status.Vin
-		s[i].Status = "APPROVED" //status.State - todo latest compass library broke this. Anyways all this logic needs to be in compass oracle-api
+		statusStr := ""
+		if status.HasApproved() {
+			statusStr = "APPROVED"
+		}
+		s[i].Status = statusStr //"APPROVED" //status.State - todo latest compass library broke this. Anyways all this logic needs to be in compass oracle-api
 	}
 	return s, nil
 }

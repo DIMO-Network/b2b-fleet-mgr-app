@@ -22,7 +22,7 @@ Can also serve as an example for developers wanting to build onboarding flows on
    For certain features you'll need the zerodev etc url's and key. `$ go run ./cmd/fleet-onboard-app`
    Backend will pull the https tls certs from the web folder /mkcert
 
-
+4. Make sure `USE_DEV_CERTS: true` if you're running locally using the certificates (on the api side)
 
 ### Signing
 For signing with a users Wallet to work, the Passkey needs to be brought up in this same web app, which means it will depend on the Relying Party ID to match the users

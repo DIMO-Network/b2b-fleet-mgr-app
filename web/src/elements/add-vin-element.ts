@@ -1,11 +1,11 @@
 import {html, LitElement} from 'lit'
 import {SettingsService} from "@services/settings-service";
 import {KernelSigner, sacdPermissionValue} from '@dimo-network/transactions';
-import {customElement, property} from "lit/decorators.js";
+import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import {SigningService} from "@services/signing-service.ts";
 import {repeat} from "lit/directives/repeat.js";
-
+import './session-timer';
 
 interface CompassAddVINStatus {
     vin: string;
@@ -20,11 +20,55 @@ interface VehicleLookup {
     syntheticDeviceTokenId: number;
 }
 
+interface VehicleOracleLookup {
+    vehicle: Vehicle;
+}
+
+interface Vehicle {
+    vin: string;
+    id: string;
+    tokenId: number;
+    mintedAt: string;
+    owner: string;
+    definition: Definition;
+    syntheticDevice: SyntheticDevice;
+}
+
+interface Definition {
+    id: string;
+    make: string;
+    model: string;
+    year: number;
+}
+interface SyntheticDevice {
+    id: string;
+    tokenId: number;
+    mintedAt: string;
+}
+
 interface OnboardVINStatus {
     success: boolean;
     error?: string;
     vin: string;
 }
+
+interface DecodedVIN {
+    deviceDefinitionId: string;
+    newTransactionHash?: string;
+}
+
+interface DefinitionIdentity {
+    data: {
+        deviceDefinition: {
+            model: string;
+            year: number;
+            manufacturer: {
+                name: string;
+            };
+        };
+    };
+}
+
 
 @customElement('add-vin-element')
 export class AddVinElement extends LitElement {
@@ -50,6 +94,8 @@ export class AddVinElement extends LitElement {
 
     @property({attribute: false})
     private onboardResult: OnboardVINStatus[];
+
+    @state() sessionExpiresIn: number = 0;
 
     private settings: SettingsService;
     private api: ApiService;
@@ -93,10 +139,9 @@ export class AddVinElement extends LitElement {
             <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
                 ${this.alertText}
             </div>
-            /* todo: bulk upload section, textarea, button below checks which field to get VINs from */
             <form class="grid">
                 <label>Bulk Upload VINs (newline separated)
-                    <textarea placeholder="VIN1\nVIN2\nVIN3" @input="${(e: InputEvent) => this.vinsBulk = e.data}"></textarea>/
+                    <textarea style="display: block; height: 10em" placeholder="VIN1\nVIN2\nVIN3" @input="${(e: InputEvent) => this.vinsBulk = e.data}"></textarea>
                 </label>
             </form>
             <form class="grid">
@@ -115,15 +160,18 @@ export class AddVinElement extends LitElement {
             <div class="alert alert-success" ?hidden=${this.processingMessage === "" || this.alertText.length > 0}>
                 ${this.processingMessage}
             </div>
+            <session-timer .expirationTime=${this.sessionExpiresIn}></session-timer>
             <div class="grid" ?hidden=${this.onboardResult.length === 0}>
                 <table style="font-size: 80%">
                     <tr>
+                        <th>#</th>
                         <th>Result</th>
                         <th>VIN</th>
                         <th>Error</th>
                     </tr>
-                    ${repeat(this.onboardResult, (item) => item.vin, (item) => html`
+                    ${repeat(this.onboardResult, (item) => item.vin, (item, index) => html`
                     <tr>
+                        <td>${index + 1}</td>
                         <td>${item.success ? "success" : "failed"}</td>
                         <td>${item.vin}</td>
                         <td>${item.error}</td>
@@ -158,13 +206,21 @@ export class AddVinElement extends LitElement {
         for (const vin of vinsArray) {
             console.log("processing vin: " + vin);
 
-            const status = await this.onboardVIN(vin)
-            if (!status.success) {
-                this.displayFailure("failed to onboard vin: " + status.error);
-            } else {
-                this.processingMessage = vin + " add Succeeded!";
+            try {
+                const status = await this.onboardVIN(vin)
+                if (!status.success) {
+                    this.displayFailure("failed to onboard vin: " + status.error);
+                } else {
+                    this.processingMessage = vin + " add Succeeded!";
+                }
+                this.onboardResult.push(status);
+            } catch (e) {
+                this.displayFailure(vin +" - failed to onboard vin: " + e);
+                this.onboardResult.push({
+                    success: false, error: String(e), vin: vin
+                })
+                break;
             }
-            this.onboardResult.push(status);
         }
 
         this.processing = false;
@@ -177,18 +233,40 @@ export class AddVinElement extends LitElement {
                 success: false, error: "vin is not 17 characters", vin: vin
             }
         }
-
-        const lookupResp = await this.getDeviceAPILookup(vin);
         let userDeviceId = "";
         let vehicleTokenId = 0;
         let syntheticDeviceTokenId = 0;
         let definitionId = "";
+
+        const oracleLookupResp = await this.getVehicleOracleLookup(vin);
+        if (oracleLookupResp.success && oracleLookupResp.data) {
+            // skip if already done
+            if (oracleLookupResp.data.vehicle.tokenId !== 0 && oracleLookupResp.data.vehicle.syntheticDevice.tokenId !== 0) {
+                this.processingMessage = vin + "already onboarded";
+                return {
+                    success: true, vin: vin
+                }
+            }
+            vehicleTokenId = oracleLookupResp.data.vehicle.tokenId;
+            definitionId = oracleLookupResp.data.vehicle.definition.id;
+            this.processingMessage = "found existing device with vin: " + vin
+        } else {
+            // check if vin decodes to a new definition, which we need to wait to get inserted into identity-api
+            const decodeVin = await this.decodeVin(vin);
+            this.processingMessage = "decoded vin: " + vin + " - " + decodeVin.data?.deviceDefinitionId;
+            if(decodeVin.success && decodeVin.data && decodeVin.data.newTransactionHash !== undefined) {
+                if(decodeVin.data?.newTransactionHash?.length > 0) {
+                    await this.checkIsDefinitionInserted(decodeVin.data.deviceDefinitionId);
+                }
+            }
+        }
+        // get the userDeviceId if any
+        const lookupResp = await this.getDeviceAPILookup(vin);
         if (lookupResp.success && lookupResp.data) {
             userDeviceId = lookupResp.data.userDeviceId;
-            vehicleTokenId = lookupResp.data.vehicleTokenId;
-            syntheticDeviceTokenId = lookupResp.data.syntheticDeviceTokenId;
-            definitionId = lookupResp.data.definitionId;
-            this.processingMessage = "found existing device with vin: " + vin
+            if(vehicleTokenId === 0) {
+                vehicleTokenId = lookupResp.data.vehicleTokenId;
+            }
         }
         if (userDeviceId=== "") {
             // todo future, even if userDeviceId is found, check if compass integration exists and is attached to this smartcontract owner
@@ -256,6 +334,13 @@ export class AddVinElement extends LitElement {
             }
             console.log("signed mint vehicle:", signedNftResp.signature);
 
+            // display the session expired at countdown
+            if (this.sessionExpiresIn === 0) {
+                const expiresAt = this.signingService.getSession()?.session?.expiresAt ?? 0;
+                console.log("passkey session expires at epoch: " + expiresAt);
+                this.sessionExpiresIn = expiresAt;
+
+            }
             //const sdkSignResult = await this.signPayloadWithSDK(mintResp.data);
 
             const imageBase64 = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAIRlWElmTU0AKgAAAAgABQESAAMAAAABAAEAAAEaAAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAIAAIdpAAQAAAABAAAAWgAAAAAAAABIAAAAAQAAAEgAAAABAAOgAQADAAAAAQABAACgAgAEAAAAAQAAABigAwAEAAAAAQAAABgAAAAAEQ8YrgAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDYuMC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KGV7hBwAAAe5JREFUSA3tlE9LlVEQh9XK/oKEFLgQFKqNmyDEArFMwoXgxm/gxzC3gkQrI9rkIsFFgUWRFSEVtGtTKxW/gBCWYKRo9ud53pzj4fJeLy6ijT94fIeZc+bMmTnXuroD/e8O1O9RQAMxqabfBH5WC9byH6q1YCd+uNa6shtY9S84DTd2bD5JVn4U5uETeMg2lKrygCOs+gHH4AOswVdoBBMr92xCF4zCfXC9+2KN37Ax//Y6b8sjfFNFpPqfdkKrMFSyxCJSvnyQZwjchqVskwvdkOON1EX4AjfhGlyAExBKuVvwPIFFeAHnQXl1lSfXVnFIJ/ZTeA8fwbnMQhsk3cF6DseTZ9dIV911JcthV8piH8M9A3GFk9ivYAOuwEt4AwPgW7daD8oxucPuhjl4Db2wDO4tbhgHWHlM/Rn2W5iEB+Br2QIPyjF5K8yAe3wYtuos+KIsunjDfq1+BBzWQ7gFyoG9A+OnIIpwDt/gOtyFCVBN4BxXYAyK4flVHTAMPXAZrNbBr8MkNIM+5c1XYRAugW1StvYzjMMCpAPsbWyexvb5fYcNuAp7yYGeA9ti5f2g8pyFw19xyKQOOORAjefoC/VhRGJ98YQjnr72VnLFQ8h9YddcX5nMjfoiqf/0YrDGyrTf9WU5Dnz/sAN/ACNpW1chdOTAAAAAAElFTkSuQmCC"
@@ -285,7 +370,7 @@ export class AddVinElement extends LitElement {
             const syntheticMintResp = await this.getMintSyntheticDevice(userDeviceId);
             if (!syntheticMintResp.success) {
                 return {
-                    success: false, error: "failed to register synthetic device: " + syntheticMintResp.error, vin: vin
+                    success: false, error: "failed to get payload to sign for synthetic device: " + syntheticMintResp.error, vin: vin
                 }
             }
             // fix number
@@ -351,6 +436,26 @@ export class AddVinElement extends LitElement {
         return true;
     }
 
+    async checkIsDefinitionInserted(definitionId: string) {
+        let isMinted = false;
+        let count = 0;
+        while(!isMinted && definitionId) {
+            const lookup = await this.getDeviceDefinition(definitionId);
+            count++;
+            if (!lookup.success || (lookup.success && lookup.data?.data?.deviceDefinition?.model !== "")) {
+                await this.delay(10_000);
+                this.processingMessage = definitionId + " -waiting for definition mint." + count;
+
+                if (!lookup.success) {
+                    this.processingMessage = "check request failed but will try again: " + lookup.error;
+                }
+            } else {
+                isMinted = true;
+            }
+        }
+        return true;
+    }
+
     async checkIsSyntheticMinted(vin: string) {
         let isMinted = false;
         let count = 0;
@@ -380,6 +485,23 @@ export class AddVinElement extends LitElement {
     async getDeviceAPILookup(vin: string) {
         const url = "/v1/compass/device-by-vin/" + vin;
         return await this.api.callApi<VehicleLookup>('GET', url, null, true);
+    }
+
+    async getDeviceDefinition(definitionID: string) {
+        // identity-api call
+        const url = "/v1/definition/" + definitionID;
+        return await this.api.callApi<DefinitionIdentity>('GET', url, null, true);
+    }
+
+    async getVehicleOracleLookup(vin: string) {
+        const url = "/v1/vehicle/" + vin;
+        return await this.api.callApi<VehicleOracleLookup>('GET', url, null, true);
+    }
+
+    async decodeVin(vin: string) {
+        const url = "/v1/vin/decode";
+        const body = { vin: vin };
+        return await this.api.callApi<DecodedVIN>('POST', url, body, true);
     }
 
     async addToUserDevicesAndDecode(vin: string) {

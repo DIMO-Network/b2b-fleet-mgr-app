@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/fleets"
+	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/service"
 	"github.com/friendsofgo/errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
@@ -15,14 +16,16 @@ import (
 )
 
 type VehiclesController struct {
-	settings *config.Settings
-	logger   *zerolog.Logger
+	settings    *config.Settings
+	logger      *zerolog.Logger
+	identityAPI service.IdentityAPI
 }
 
 func NewVehiclesController(settings *config.Settings, logger *zerolog.Logger) *VehiclesController {
 	return &VehiclesController{
-		settings: settings,
-		logger:   logger,
+		settings:    settings,
+		logger:      logger,
+		identityAPI: service.NewIdentityAPIService(*logger, settings.IdentityAPIURL.String()),
 	}
 }
 
@@ -38,16 +41,16 @@ func (v *VehiclesController) PostDevicesAPIFromVin(c *fiber.Ctx) error {
 func (v *VehiclesController) PostDevicesAPIMint(c *fiber.Ctx) error {
 	udID := c.Params("userDeviceId", "")
 	targetURL := v.settings.DevicesAPIURL.JoinPath(fmt.Sprintf("/v1/user/devices/%s/commands/mint", udID))
-
-	return v.proxyRequest(c, targetURL, c.Body(), false)
+	b := c.Body()
+	return v.proxyRequest(c, targetURL, b, false)
 }
 
 func (v *VehiclesController) PostDevicesAPISyntheticMint(c *fiber.Ctx) error {
 	udID := c.Params("userDeviceId", "")
 	integrationID := c.Params("integrationId", "")
 	targetURL := v.settings.DevicesAPIURL.JoinPath(fmt.Sprintf("/v1/user/devices/%s/integrations/%s/commands/mint", udID, integrationID))
-
-	return v.proxyRequest(c, targetURL, c.Body(), false)
+	b := c.Body()
+	return v.proxyRequest(c, targetURL, b, false)
 }
 
 func (v *VehiclesController) GetDevicesAPISyntheticMint(c *fiber.Ctx) error {
@@ -76,8 +79,15 @@ func (v *VehiclesController) PostDevicesAPIRegisterIntegration(c *fiber.Ctx) err
 	udID := c.Params("userDeviceId", "")
 	integrationID := c.Params("integrationId", "")
 	targetURL := v.settings.DevicesAPIURL.JoinPath(fmt.Sprintf("/v1/user/devices/%s/integrations/%s", udID, integrationID))
+	b := c.Body()
+	return v.proxyRequest(c, targetURL, b, false)
+}
 
-	return v.proxyRequest(c, targetURL, c.Body(), false)
+func (v *VehiclesController) GetVehicleFromOracle(c *fiber.Ctx) error {
+	vin := c.Params("vin", "")
+	targetURL := v.settings.OracleAPIURL.JoinPath(fmt.Sprintf("/v1/vehicle/%s", vin))
+
+	return v.proxyRequest(c, targetURL, nil, false)
 }
 
 func (v *VehiclesController) GetVehicles(c *fiber.Ctx) error {
@@ -88,8 +98,8 @@ func (v *VehiclesController) GetVehicles(c *fiber.Ctx) error {
 
 func (v *VehiclesController) RegisterVehicle(c *fiber.Ctx) error {
 	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/register")
-
-	return v.proxyRequest(c, targetURL, c.Body(), false)
+	b := c.Body()
+	return v.proxyRequest(c, targetURL, b, false)
 }
 
 func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte, useCompassPSK bool) error {
@@ -134,6 +144,7 @@ func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL *url.URL, requ
 		})
 	}
 	defer resp.Body.Close()
+	defer client.CloseIdleConnections() // not sure if this was causing random issues
 
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
@@ -142,7 +153,7 @@ func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL *url.URL, requ
 			"error": "Failed to read response",
 		})
 	}
-	v.logger.Info().Str("response", string(body)).Msgf("Proxied request to %s", targetURL)
+	v.logger.Info().Msgf("Proxied request to %s", targetURL)
 
 	// Set headers to match the original response
 	for k, val := range resp.Header {
@@ -152,7 +163,7 @@ func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL *url.URL, requ
 	}
 	c.Status(resp.StatusCode)
 
-	// Send the exact same JSON response
+	// return the exact same JSON response
 	return c.Send(body)
 }
 
@@ -209,7 +220,38 @@ func (v *VehiclesController) AddVehicles(c *fiber.Ctx) error {
 	return c.JSON(statuses)
 }
 
+func (v *VehiclesController) DecodeVIN(c *fiber.Ctx) error {
+	payload := DecodeVINRequest{}
+	err := c.BodyParser(&payload)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, errors.Wrap(err, "Invalid request body").Error())
+	}
+	targetURL := v.settings.DeviceDefinitionsAPIURL.JoinPath("/device-definitions/decode-vin")
+	b := []byte(`{"vin": "` + payload.VIN + `", "countryCode": "USA"}`)
+
+	return v.proxyRequest(c, targetURL, b, false)
+}
+
+func (v *VehiclesController) GetDefinitionById(c *fiber.Ctx) error {
+	definitionID := c.Params("id", "")
+
+	definition, err := v.identityAPI.GetDefinitionByID(definitionID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, errors.Wrap(err, "Failed to get definition").Error())
+	}
+
+	c.Status(fiber.StatusOK)
+	c.Set("Content-Type", "application/json")
+	// return the exact same JSON response
+	return c.Send(definition)
+
+}
+
 type AddVehicleRequest struct {
 	VINs  []string `json:"vins"`
 	Email string   `json:"email"`
+}
+
+type DecodeVINRequest struct {
+	VIN string `json:"vin"`
 }

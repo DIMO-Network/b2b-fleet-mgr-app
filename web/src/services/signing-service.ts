@@ -221,7 +221,7 @@ export class SigningService {
         localStorage.setItem(SIGNING_SERVICE_SESSION_KEY, JSON.stringify(session));
     }
 
-    private getSession(): SigningServiceSession | null {
+    public getSession(): SigningServiceSession | null {
         const session = localStorage.getItem(SIGNING_SERVICE_SESSION_KEY);
         if (!session) {
             return null;

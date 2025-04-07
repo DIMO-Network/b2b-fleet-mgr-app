@@ -13,5 +13,11 @@ CLIENT_ID: 0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB
 
 LOGIN_URL: https://login.dev.dimo.org
 DEVICES_API_URL: https://devices-api.dev.dimo.zone
+DEVICE_DEFINITIONS_API_URL: https://device-definitions-api.dev.dimo.zone
 ACCOUNTS_API_URL: https://accounts.dev.dimo.org
 ORACLE_API_URL: https://ingest-compass-iot.dev.dimo.zone
+IDENTITY_API_URL: https://identity-api.dev.dimo.zone
+
+TURNKEY_ORG_ID:
+TURNKEY_API_URL:
+TURNKEY_RP_ID: dimo.org

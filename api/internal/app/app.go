@@ -66,9 +66,14 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	// ideally this thing would be moved to the oracle
 	app.Post("/v1/vehicles", jwtAuth, vehiclesCtrl.AddVehicles) // todo future: check that your wallet address has access to compass etc
 	// devices-api proxy calls
-	app.Get("/v1/vehicles", jwtAuth, vehiclesCtrl.GetVehicles)
-	app.Post("/v1/vehicle/register", jwtAuth, vehiclesCtrl.RegisterVehicle)
 	app.Get("/v1/compass/device-by-vin/:vin", jwtAuth, vehiclesCtrl.GetDevicesAPICompassVINLookup)
+	// oracle proxy call
+	app.Get("/v1/vehicles", jwtAuth, vehiclesCtrl.GetVehicles)
+	app.Get("/v1/vehicle/:vin", jwtAuth, vehiclesCtrl.GetVehicleFromOracle)
+	app.Post("/v1/vehicle/register", jwtAuth, vehiclesCtrl.RegisterVehicle)
+	// decode
+	app.Post("/v1/vin/decode", jwtAuth, vehiclesCtrl.DecodeVIN)
+	app.Get("/v1/definition/:id", jwtAuth, vehiclesCtrl.GetDefinitionById)
 	// minting via devices-api, vehicle NFT
 	app.Get("/v1/user/devices/:userDeviceId/commands/mint", jwtAuth, vehiclesCtrl.GetDevicesAPIMint)
 	app.Post("/v1/user/devices/:userDeviceId/commands/mint", jwtAuth, vehiclesCtrl.PostDevicesAPIMint)
