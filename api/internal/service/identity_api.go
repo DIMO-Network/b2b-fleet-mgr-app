@@ -39,7 +39,7 @@ func NewIdentityAPIService(logger zerolog.Logger, identityAPIURL string) Identit
 func (i *identityAPIService) GetDefinitionByID(id string) ([]byte, error) {
 	// GraphQL query
 	graphqlQuery := `{
-	deviceDefinition(id:` + id + `) {
+	deviceDefinition(by: {id: "` + id + `"}) {
 		model,
     	year,
     	manufacturer {

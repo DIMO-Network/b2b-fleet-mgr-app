@@ -73,6 +73,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	app.Post("/v1/vehicle/register", jwtAuth, vehiclesCtrl.RegisterVehicle)
 	// decode
 	app.Post("/v1/vin/decode", jwtAuth, vehiclesCtrl.DecodeVIN)
+	// proxy to identity-api
 	app.Get("/v1/definition/:id", jwtAuth, vehiclesCtrl.GetDefinitionById)
 	// minting via devices-api, vehicle NFT
 	app.Get("/v1/user/devices/:userDeviceId/commands/mint", jwtAuth, vehiclesCtrl.GetDevicesAPIMint)
