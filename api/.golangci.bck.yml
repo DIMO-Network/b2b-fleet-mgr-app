@@ -1,0 +1,19 @@
+run:
+  timeout: 5m
+linters:
+  enable:
+    - prealloc
+    - revive
+    - goimports
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+
+issues:
+  fix: true
+
+linters-settings: {}

@@ -3,6 +3,10 @@ package controllers
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/fleets"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/service"
@@ -10,9 +14,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
 	"github.com/tidwall/sjson"
-	"io"
-	"net/http"
-	"net/url"
 )
 
 type VehiclesController struct {
@@ -232,7 +233,7 @@ func (v *VehiclesController) DecodeVIN(c *fiber.Ctx) error {
 	return v.proxyRequest(c, targetURL, b, false)
 }
 
-func (v *VehiclesController) GetDefinitionById(c *fiber.Ctx) error {
+func (v *VehiclesController) GetDefinitionByID(c *fiber.Ctx) error {
 	definitionID := c.Params("id", "")
 
 	definition, err := v.identityAPI.GetDefinitionByID(definitionID)
