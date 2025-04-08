@@ -21,7 +21,8 @@ env:
   LOG_LEVEL: info
   SERVICE_NAME: fleet-onboard-app
   JWT_KEY_SET_URL: https://auth.dev.dimo.zone/keys
-  DIMO_IDENTITY_API: https://identity-api.dev.dimo.zone
+  IDENTITY_API_URL: https://identity-api.dev.dimo.zone/query
+  DEVICE_DEFINITIONS_API_URL: https://device-definitions-api.dev.dimo.zone
   POLYGON_URL: https://amoy.polygonscan.com
   VEHICLE_NFT_ADDRESS: '0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF'
   CHAIN_ID: 137
