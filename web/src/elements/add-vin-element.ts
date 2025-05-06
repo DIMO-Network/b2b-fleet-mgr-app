@@ -301,6 +301,32 @@ export class AddVinElement extends LitElement {
             return false;
         }
 
+        let success = true
+        for (const _ of range(20)) {
+            success = true
+            const query = qs.stringify({vins: mintingData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
+            const status = await this.api.callApi<VinsVerificationResult>('GET', `/v1/vehicle/mint/status?${query}`, null, true);
+
+            if (!status.success || !status.data) {
+                return false;
+            }
+
+            for (const s of status.data.statuses) {
+                if (s.status !== 'Success') {
+                    success = false;
+                    break;
+                }
+            }
+
+            if (success) {
+                break;
+            }
+
+            await this.delay(5000);
+        }
+
+        return success;
+
         return true;
     }
 
