@@ -17,31 +17,31 @@ interface VehicleLookup {
     syntheticDeviceTokenId: number;
 }
 
-interface VehicleOracleLookup {
-    vehicle: Vehicle;
-}
+// interface VehicleOracleLookup {
+//     vehicle: Vehicle;
+// }
 
-interface Vehicle {
-    vin: string;
-    id: string;
-    tokenId: number;
-    mintedAt: string;
-    owner: string;
-    definition: Definition;
-    syntheticDevice: SyntheticDevice;
-}
+// interface Vehicle {
+//     vin: string;
+//     id: string;
+//     tokenId: number;
+//     mintedAt: string;
+//     owner: string;
+//     definition: Definition;
+//     syntheticDevice: SyntheticDevice;
+// }
 
-interface Definition {
-    id: string;
-    make: string;
-    model: string;
-    year: number;
-}
-interface SyntheticDevice {
-    id: string;
-    tokenId: number;
-    mintedAt: string;
-}
+// interface Definition {
+//     id: string;
+//     make: string;
+//     model: string;
+//     year: number;
+// }
+// interface SyntheticDevice {
+//     id: string;
+//     tokenId: number;
+//     mintedAt: string;
+// }
 
 interface OnboardVINStatus {
     success: boolean;
