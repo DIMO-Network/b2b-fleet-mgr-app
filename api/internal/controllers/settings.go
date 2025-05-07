@@ -27,9 +27,7 @@ func NewSettingsController(settings *config.Settings, logger *zerolog.Logger) *S
 // @Security     BearerAuth
 // @Router /v1/settings [get]
 func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
-
 	payload := SettingsResponse{
-		DevicesAPIURL:  v.settings.DevicesAPIURL.String(),
 		AccountsAPIURL: v.settings.AccountsAPIURL.String(),
 		PaymasterURL:   v.settings.PaymasterURL.String(),
 		RPCURL:         v.settings.RPCURL.String(),
@@ -52,7 +50,6 @@ func (v *SettingsController) GetPublicSettings(c *fiber.Ctx) error {
 }
 
 type SettingsResponse struct {
-	DevicesAPIURL  string `json:"devicesApiUrl"`
 	AccountsAPIURL string `json:"accountsApiUrl"`
 	PaymasterURL   string `json:"paymasterUrl"`
 	RPCURL         string `json:"rpcUrl"`

@@ -6,7 +6,6 @@ export interface PublicSettings {
 }
 
 export interface PrivateSettings {
-    devicesApiUrl: string,
     accountsApiUrl: string,
     paymasterUrl: string,
     rpcUrl: string,
