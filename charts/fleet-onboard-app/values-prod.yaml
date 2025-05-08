@@ -2,7 +2,7 @@ replicaCount: 2
 image:
   repository: dimozone/fleet-onboard-app
   pullPolicy: IfNotPresent
-  tag: 762d743
+  tag: 03b8e15
 imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
@@ -20,19 +20,19 @@ env:
   MONITORING_PORT: 8888
   LOG_LEVEL: info
   SERVICE_NAME: fleet-onboard-app
-  JWT_KEY_SET_URL: "https://auth.dimo.zone/keys"
-  IDENTITY_API_URL: "https://identity-api.dimo.zone/query"
-  DEVICE_DEFINITIONS_API_URL: "https://device-definitions-api.dimo.zone"
-  POLYGON_URL: "https://polygonscan.com"
+  JWT_KEY_SET_URL: https://auth.dimo.zone/keys
+  IDENTITY_API_URL: https://identity-api.dimo.zone/query
+  DEVICE_DEFINITIONS_API_URL: https://device-definitions-api.dimo.zone
+  POLYGON_URL: https://polygonscan.com
   VEHICLE_NFT_ADDRESS: '0xbA5738a18d83D41847dfFbDC6101d37C69c9B0cF'
   CHAIN_ID: 137
   CLIENT_ID: '0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB'
-  LOGIN_URL: "https://login.dimo.org"
-  ACCOUNTS_API_URL: "https://accounts.dimo.org"
-  ORACLE_API_URL: "https://motorq-oracle.dimo.zone"
-  TURNKEY_ORG_ID: "c28319a1-73ec-489a-a212-ec8dbd65dd52"
-  TURNKEY_API_URL: "https://api.turnkey.com"
-  TURNKEY_RP_ID: "dimo.org"
+  LOGIN_URL: https://login.dimo.org
+  ACCOUNTS_API_URL: https://accounts.dimo.org
+  ORACLE_API_URL: https://motorq-oracle.dimo.zone
+  TURNKEY_ORG_ID: c28319a1-73ec-489a-a212-ec8dbd65dd52
+  TURNKEY_API_URL: https://api.turnkey.com
+  TURNKEY_RP_ID: dimo.org
 service:
   type: ClusterIP
   ports:
