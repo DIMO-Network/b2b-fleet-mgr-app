@@ -43,20 +43,14 @@ interface VehicleLookup {
 //     mintedAt: string;
 // }
 
-interface OnboardVINStatus {
-    success: boolean;
-    error?: string;
-    vin: string;
-}
-
-interface VinVerificationStatus {
+interface VinOnboardingStatus {
     vin: string;
     status: string;
     details: string;
 }
 
-interface VinsVerificationResult {
-    statuses: VinVerificationStatus[];
+interface VinsOnboardingResult {
+    statuses: VinOnboardingStatus[];
 }
 
 interface VinMintData {
@@ -93,7 +87,7 @@ export class AddVinElement extends LitElement {
     private alertText: string;
 
     @property({attribute: false})
-    private onboardResult: OnboardVINStatus[];
+    private onboardResult: VinOnboardingStatus[];
 
     @state() sessionExpiresIn: number = 0;
 
@@ -167,14 +161,14 @@ export class AddVinElement extends LitElement {
                         <th>#</th>
                         <th>Result</th>
                         <th>VIN</th>
-                        <th>Error</th>
+                        <th>Details</th>
                     </tr>
                     ${repeat(this.onboardResult, (item) => item.vin, (item, index) => html`
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${item.success ? "success" : "failed"}</td>
+                        <td>${item.status}</td>
                         <td>${item.vin}</td>
-                        <td>${item.error}</td>
+                        <td>${item.details}</td>
                     </tr>`)}
                 </table>
             </div>
@@ -185,6 +179,25 @@ export class AddVinElement extends LitElement {
         this.processing = false;
         this.processingMessage = "";
         this.alertText = alertText;
+    }
+
+    updateResult(result : VinsOnboardingResult) {
+        const statusesByVin: Record<string, VinOnboardingStatus> = {}
+        for (const item of result.statuses) {
+            statusesByVin[item.vin] = item
+        }
+
+        const newResult: VinOnboardingStatus[] = [];
+
+        for (const item of this.onboardResult) {
+            newResult.push({
+                vin: item.vin,
+                status: statusesByVin[item.vin]?.status || "Unknown",
+                details: statusesByVin[item.vin]?.details || "Unknown"
+            })
+        }
+
+        this.onboardResult = newResult
     }
 
     async _submitVIN(_event: MouseEvent) {
@@ -203,25 +216,16 @@ export class AddVinElement extends LitElement {
             return this.displayFailure("no vin provided");
         }
 
-        for (const vin of vinsArray) {
-            console.log("processing vin: " + vin);
+        try {
+            const status = await this.onboardVINs(vinsArray)
+            if (!status) {
 
-            try {
-                const status = await this.onboardVIN(vin)
-                if (!status.success) {
-                    this.displayFailure("failed to onboard vin: " + status.error);
-                } else {
-                    this.processingMessage = vin + " add Succeeded!";
-                }
-                this.onboardResult.push(status);
-            } catch (e) {
-                this.displayFailure(vin +" - failed to onboard vin: " + e);
-                this.onboardResult.push({
-                    success: false, error: String(e), vin: vin
-                })
-                break;
             }
+
+        } catch (e) {
+            this.displayFailure("failed to onboard vins: " + e);
         }
+
 
         this.processing = false;
     }
@@ -237,10 +241,10 @@ export class AddVinElement extends LitElement {
         }
 
         let success = true
-        for (const _ of range(10)) {
+        for (const attempt of range(10)) {
             success = true
             const query = qs.stringify({vins: vins.join(',')}, {arrayFormat: 'comma'});
-            const status = await this.api.callApi<VinsVerificationResult>('GET', `/v1/vehicle/verify?${query}`, null, true);
+            const status = await this.api.callApi<VinsOnboardingResult>('GET', `/v1/vehicle/verify?${query}`, null, true);
 
             if (!status.success || !status.data) {
                 return false;
@@ -253,11 +257,15 @@ export class AddVinElement extends LitElement {
                 }
             }
 
+            this.updateResult(status.data)
+
             if (success) {
                 break;
             }
 
-            await this.delay(5000);
+            if (attempt < 9) {
+                await this.delay(5000);
+            }
         }
 
         return success;
@@ -302,10 +310,10 @@ export class AddVinElement extends LitElement {
         }
 
         let success = true
-        for (const _ of range(20)) {
+        for (const attempt of range(30)) {
             success = true
             const query = qs.stringify({vins: mintingData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
-            const status = await this.api.callApi<VinsVerificationResult>('GET', `/v1/vehicle/mint/status?${query}`, null, true);
+            const status = await this.api.callApi<VinsOnboardingResult>('GET', `/v1/vehicle/mint/status?${query}`, null, true);
 
             if (!status.success || !status.data) {
                 return false;
@@ -318,43 +326,58 @@ export class AddVinElement extends LitElement {
                 }
             }
 
+            this.updateResult(status.data)
+
             if (success) {
                 break;
             }
 
-            await this.delay(5000);
+            if (attempt < 19) {
+                await this.delay(5000);
+            }
         }
 
         return success;
-
-        return true;
     }
 
-    async onboardVIN(vin: string):Promise<OnboardVINStatus>{
-        if (vin?.length !== 17) {
-            this.displayFailure("vin is not 17 characters");
-            return {
-                success: false, error: "vin is not 17 characters", vin: vin
-            }
+    async onboardVINs(vins: string[]): Promise<boolean> {
+        let allVinsValid = true;
+        for (const vin of vins) {
+            const validVin = vin?.length === 17
+            allVinsValid = allVinsValid && validVin
+            this.onboardResult.push({
+                vin: vin,
+                status: "Unknown",
+                details: validVin ? "Valid VIN" : "Invalid VIN"
+            })
         }
 
-        const verified = await this.verifyVehicles([vin]);
+        if (!allVinsValid) {
+            this.displayFailure("Some of the VINs are not valid");
+            return false;
+        }
+
+        const verified = await this.verifyVehicles(vins);
         if (!verified) {
-            this.displayFailure("failed to verify vin");
-            return {
-                success: false, error: "failed to verify vin", vin: vin
-            }
+            this.displayFailure("Failed to verify at least one VIN");
+            return false
         }
 
-        const mintData = await this.getMintingData([vin]);
+        const mintData = await this.getMintingData(vins);
+        if (mintData.length === 0) {
+            this.displayFailure("Failed to fetch minting data");
+            return false
+        }
+
         const signedMintData = await this.signMintingData(mintData);
-        await this.submitMintingData(signedMintData);
+        const minted = await this.submitMintingData(signedMintData);
 
-        // await this.registerInOracle(vin);
-
-        return {
-            success: true, vin: vin
+        if (!minted) {
+            this.displayFailure("Failed to onboard at least one VIN");
+            return false;
         }
+
+        return true
     }
 
     delay(ms: number) {
