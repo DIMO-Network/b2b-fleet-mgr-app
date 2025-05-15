@@ -1,6 +1,5 @@
 import {html, LitElement} from 'lit'
 import {SettingsService} from "@services/settings-service";
-import {KernelSigner, sacdPermissionValue} from '@dimo-network/transactions';
 import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import {SigningService} from "@services/signing-service.ts";
@@ -63,12 +62,69 @@ interface VinsMintDataResult {
     vinMintingData: VinMintData[];
 }
 
+enum Permission {
+    NONLOCATION_TELEMETRY= 1,
+    COMMANDS,
+    CURRENT_LOCATION,
+    ALLTIME_LOCATION,
+    CREDENTIALS,
+    STREAMS,
+    RAW_DATA,
+    APPROXIMATE_LOCATION,
+    MAX
+}
+
+type Permissions = Record<Permission, boolean>
+
+interface SacdInput {
+    grantee: `0x${string}`;
+    permissions: BigInt;
+    expiration: BigInt;
+    source: string
+}
+
+const PERMISSIONS_MAP: Record<number, string> = {
+    [Permission.APPROXIMATE_LOCATION]: "APPROXIMATE_LOCATION",
+    [Permission.RAW_DATA]: "RAW_DATA",
+    [Permission.STREAMS]: "STREAMS",
+    [Permission.CREDENTIALS]: "CREDENTIALS",
+    [Permission.ALLTIME_LOCATION]: "ALLTIME_LOCATION",
+    [Permission.CURRENT_LOCATION]: "CURRENT_LOCATION",
+    [Permission.COMMANDS]: "COMMANDS",
+    [Permission.NONLOCATION_TELEMETRY]: "NONLOCATION_TELEMETRY",
+}
+
+const sacdPermissionValue = (sacdPerms: Permissions): bigint => {
+    const permissionMap = [
+        sacdPerms[Permission.APPROXIMATE_LOCATION],
+        sacdPerms[Permission.RAW_DATA],
+        sacdPerms[Permission.STREAMS],
+        sacdPerms[Permission.CREDENTIALS],
+        sacdPerms[Permission.ALLTIME_LOCATION],
+        sacdPerms[Permission.CURRENT_LOCATION],
+        sacdPerms[Permission.COMMANDS],
+        sacdPerms[Permission.NONLOCATION_TELEMETRY],
+    ];
+
+    const permissionString = permissionMap.map((perm) => (perm ? "11" : "00")).join("") + "00";
+
+    return BigInt(`0b${permissionString}`);
+};
+
+const defaultPermissions = {
+    [Permission.NONLOCATION_TELEMETRY]: true,
+    [Permission.COMMANDS]: false,
+    [Permission.CURRENT_LOCATION]: true,
+    [Permission.ALLTIME_LOCATION]: true,
+    [Permission.CREDENTIALS]: true,
+    [Permission.STREAMS]: true,
+    [Permission.RAW_DATA]: false,
+    [Permission.APPROXIMATE_LOCATION]: false,
+    [Permission.MAX]: false,
+}
 
 @customElement('add-vin-element')
 export class AddVinElement extends LitElement {
-    @property({attribute: false})
-    private vin: string | null;
-
     @property({attribute: false})
     private vinsBulk: string | null;
 
@@ -89,18 +145,24 @@ export class AddVinElement extends LitElement {
     @property({attribute: false})
     private onboardResult: VinOnboardingStatus[];
 
+    @property({attribute: false})
+    private enableSacd: boolean;
+
+    @property({attribute: false})
+    private sacdGrantee: string | null;
+
+    @property({attribute: false})
+    private sacdPermissions: Permissions;
+
     @state() sessionExpiresIn: number = 0;
 
     private settings: SettingsService;
     private api: ApiService;
 
     // @ts-ignore
-    private kernelSigner: KernelSigner | undefined;
-    private walletAddress: string | undefined;
     private signingService: SigningService;
     constructor() {
         super();
-        this.vin = "";
         this.vinsBulk = "";
         this.processing = false;
         this.processingMessage = "";
@@ -109,6 +171,10 @@ export class AddVinElement extends LitElement {
         this.api = ApiService.getInstance();
         this.alertText = "";
         this.signingService = SigningService.getInstance();
+
+        this.enableSacd = false;
+        this.sacdGrantee = "";
+        this.sacdPermissions = defaultPermissions;
 
         this.onboardResult = []
     }
@@ -126,6 +192,19 @@ export class AddVinElement extends LitElement {
             this.displayFailure("email was not set, please make sure you allow sharing email on Login");
         }
         await this.settings.fetchAccountInfo(this.email!); // load account info
+
+        this.enableSacd = this.settings.sharingInfo?.enabled || false;
+        this.sacdGrantee = this.settings.sharingInfo?.grantee || "";
+        this.sacdPermissions = this.settings.sharingInfo?.permissions as Permissions || defaultPermissions;
+    }
+
+    togglePermission(permission: number) {
+        const value = this.sacdPermissions?.[permission as Permission]
+        this.sacdPermissions![permission as Permission] = !value || false;
+    }
+
+    toggleEnableSacd() {
+        this.enableSacd = !this.enableSacd;
     }
 
     render() {
@@ -133,28 +212,50 @@ export class AddVinElement extends LitElement {
             <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
                 ${this.alertText}
             </div>
+            <div>
+                <form class="grid">
+                    <label>Bulk Upload VINs (newline separated)
+                        <textarea class="" style="display: block; height: 10em; width: 100%" placeholder="VIN1\nVIN2\nVIN3" @input="${(e: InputEvent) => this.vinsBulk = (e.target as HTMLInputElement).value}"></textarea>
+                    </label>
+                </form>
+            </div>
             <form class="grid">
-                <label>Bulk Upload VINs (newline separated)
-                    <textarea style="display: block; height: 10em" placeholder="VIN1\nVIN2\nVIN3" @input="${(e: InputEvent) => this.vinsBulk = e.data}"></textarea>
+                <label>
+                    <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}> Share onboarded vehicles
                 </label>
             </form>
-            <form class="grid">
-                <label>VIN
-                    <input type="text" placeholder="VIN" maxlength="17"
-                           value=${this.vin} @input="${(e: InputEvent) => this.vin = e.data}">
-                </label>
-                <label>Consent Email
-                    <input type="text" placeholder="me@company.com" maxlength="60"
-                           value="${this.email}" @input="${(e: InputEvent) => this.email = e.data}">
-                </label>
-                <button type="button" @click=${this._submitVIN} ?disabled=${this.processing} class=${this.processing ? 'processing' : ''} >
-                    Onboard VIN
-                </button>
-            </form>
+            <div ?hidden=${!this.enableSacd}>
+                <form class="grid" >
+                    <fieldset>
+                        <label>Grantee 0x address
+                            <input type="text" placeholder="0x" maxlength="42"
+                                   value=${this.sacdGrantee} @input="${(e: InputEvent) => this.sacdGrantee = (e.target as HTMLInputElement).value}">
+                        </label>
+                    </fieldset>
+
+                    <fieldset>
+                        ${repeat(range(1, Permission.MAX), (item) => item, (item) => html`
+                        <label>
+                            <input type="checkbox" .checked="${this.sacdPermissions?.[item as Permission]}" @click=${() => this.togglePermission(item)}> ${PERMISSIONS_MAP[item]}
+                        </label>
+                    `)}
+                    </fieldset>
+                </form>
+            </div>
+            <div>
+                <form class="grid">
+                    <button type="button" @click=${this._submitVINs} ?disabled=${this.processing} class=${this.processing ? 'processing' : ''} >
+                        Onboard VINs
+                    </button>
+                </form>
+            </div>
+            
             <div class="alert alert-success" ?hidden=${this.processingMessage === "" || this.alertText.length > 0}>
                 ${this.processingMessage}
             </div>
-            <session-timer .expirationTime=${this.sessionExpiresIn}></session-timer>
+            
+            <session-timer .expirationTime=${this.signingService.getSession()?.session.expiresAt}></session-timer>
+            
             <div class="grid" ?hidden=${this.onboardResult.length === 0}>
                 <table style="font-size: 80%">
                     <tr>
@@ -200,7 +301,7 @@ export class AddVinElement extends LitElement {
         this.onboardResult = newResult
     }
 
-    async _submitVIN(_event: MouseEvent) {
+    async _submitVINs(_event: MouseEvent) {
         this.alertText = "";
         this.processingMessage = "";
         this.processing = true;
@@ -210,18 +311,47 @@ export class AddVinElement extends LitElement {
 
         if (this.vinsBulk !== null && this.vinsBulk !== undefined && this.vinsBulk?.length > 0) {
             vinsArray = this.vinsBulk.split('\n');
-        } else if (this.vin !== null && this.vin !== undefined && this.vin?.length > 0) {
-            vinsArray.push(this.vin);
         } else {
             return this.displayFailure("no vin provided");
         }
 
         try {
-            const status = await this.onboardVINs(vinsArray)
+            let sacdInput: SacdInput | null;
+            if (!this.enableSacd) {
+                sacdInput = null;
+
+                this.settings.sharingInfo = {
+                    enabled: false
+                }
+
+                this.settings.saveSharingInfo();
+            } else {
+                const expiration = new Date();
+                expiration.setFullYear(expiration.getFullYear() + 40)
+                const expirationTimestamp = Math.round(expiration.getTime() / 1000)
+                sacdInput = {
+                    grantee: this.sacdGrantee as `0x${string}`,
+                    permissions: sacdPermissionValue(this.sacdPermissions!),
+                    expiration: BigInt(expirationTimestamp),
+                    source: ''
+                }
+
+                this.settings.sharingInfo = {
+                    enabled: true,
+                    grantee: this.sacdGrantee!,
+                    permissions: this.sacdPermissions,
+                }
+
+                this.settings.saveSharingInfo()
+
+                console.debug('SACD', sacdInput)
+            }
+
+
+            const status = await this.onboardVINs(vinsArray, sacdInput)
             if (!status) {
 
             }
-
         } catch (e) {
             this.displayFailure("failed to onboard vins: " + e);
         }
@@ -299,9 +429,13 @@ export class AddVinElement extends LitElement {
         return result;
     }
 
-    async submitMintingData(mintingData: VinMintData[]) {
-        const payload = {
-            vinMintingData: mintingData
+    async submitMintingData(mintingData: VinMintData[], sacd: SacdInput | null) {
+        const payload: {vinMintingData: VinMintData[], sacd?: SacdInput} = {
+            vinMintingData: mintingData,
+        }
+
+        if (sacd !== null) {
+            payload.sacd = sacd
         }
 
         const mintResponse = await this.api.callApi('POST', '/v1/vehicle/mint', payload, true);
@@ -340,7 +474,7 @@ export class AddVinElement extends LitElement {
         return success;
     }
 
-    async onboardVINs(vins: string[]): Promise<boolean> {
+    async onboardVINs(vins: string[], sacd: SacdInput | null): Promise<boolean> {
         let allVinsValid = true;
         for (const vin of vins) {
             const validVin = vin?.length === 17
@@ -370,7 +504,7 @@ export class AddVinElement extends LitElement {
         }
 
         const signedMintData = await this.signMintingData(mintData);
-        const minted = await this.submitMintingData(signedMintData);
+        const minted = await this.submitMintingData(signedMintData, sacd);
 
         if (!minted) {
             this.displayFailure("Failed to onboard at least one VIN");
@@ -401,68 +535,5 @@ export class AddVinElement extends LitElement {
     async getDeviceAPILookup(vin: string) {
         const url = "/v1/compass/device-by-vin/" + vin;
         return await this.api.callApi<VehicleLookup>('GET', url, null, true);
-    }
-
-    async buildPermissions() {
-        const expiration = BigInt(2933125200); // 40 years
-        const perms = sacdPermissionValue({
-            NONLOCATION_TELEMETRY: true,
-            COMMANDS: true,
-            CURRENT_LOCATION: true,
-            ALLTIME_LOCATION: true,
-            CREDENTIALS: true,
-            STREAMS: true,
-            RAW_DATA: true,
-            APPROXIMATE_LOCATION: true,
-        });
-        const permsStr = perms.toString(); // bigint so can't be json.stringify
-        const expirationStr = expiration.toString();
-
-        const sacdInput = {
-            driverID: this.walletAddress, // current user's wallet address
-            appID: this.settings.publicSettings?.clientId!, // assuming clientId
-            // appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api, doesn't seem this is required
-            expiration: Number(expirationStr),
-            permissions: Number(permsStr),
-            grantee: this.settings.getOrgSmartContractAddress(), // this is the kernel account address, that owns the NFT
-            attachments: [],
-            grantor: this.settings.getOrgSmartContractAddress(), // seems this is fine
-            // todo set source, or i think we'd just use SDK signAndUploadSACDAgreement once it works
-        }
-        return sacdInput;
-    }
-
-    // todo future would be to be able to use this instead of devices-api, but it is not ready yet
-    async uploadSACDPermissions() {
-        // todo move this permissions stuff elsewhere
-        // @ts-ignore
-        const perms = sacdPermissionValue({
-            NONLOCATION_TELEMETRY: true,
-            COMMANDS: true,
-            CURRENT_LOCATION: true,
-            ALLTIME_LOCATION: true,
-            CREDENTIALS: true,
-            STREAMS: true,
-            RAW_DATA: true,
-            APPROXIMATE_LOCATION: true,
-        });
-        // @ts-ignore
-        const expiration = BigInt(2933125200); // 40 years
-
-        // const ipfsRes = await this.kernelSigner.signAndUploadSACDAgreement({
-        //     driverID: this.settings.getOrgWalletAddress(), // current user wallet addres??
-        //     appID: this.settings.getAppClientId(), // assuming clientId
-        //     appName: "DIMO Fleet Onboard", // todo from app prompt call identity-api
-        //     expiration: expiration,
-        //     permissions: perms,
-        // todo this is wrong, should be the wallet address i think
-        //     grantee: this.settings.getOrgWalletAddress(), // granting the organization the perms
-        //     attachments: [],
-        //     grantor: this.settings.getOrgWalletAddress, // current user...
-        // });
-        // if (!ipfsRes.success) {
-        //     throw new Error(`Failed to upload SACD agreement`);
-        // }
-        // console.log("ipfs sacd CID: " + ipfsRes.cid);
     }
 }

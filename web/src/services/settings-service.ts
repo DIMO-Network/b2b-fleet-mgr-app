@@ -17,16 +17,23 @@ export interface PrivateSettings {
 }
 
 export interface AccountInfo {
-    "subOrganizationId": string,
-    "isDeployed": boolean,
-    "hasPasskey": boolean,
-    "emailVerified": boolean,
-    "authenticators": any[] // do we need more details here?
+    subOrganizationId: string,
+    isDeployed: boolean,
+    hasPasskey: boolean,
+    emailVerified: boolean,
+    authenticators: any[] // do we need more details here?
+}
+
+export interface SharingInfo {
+    enabled: boolean,
+    grantee?: string,
+    permissions?: Record<number, boolean>
 }
 
 const PRIVATE_SETTINGS_KEY = "appPrivateSettings";
 const PUBLIC_SETTINGS_KEY = "appPublicSettings";
 const ACCOUNT_INFO_KEY = "accountInfo";
+const SHARING_INFO_KEY = "sharingInfo";
 
 export class SettingsService {
     static instance = new SettingsService();
@@ -35,6 +42,7 @@ export class SettingsService {
     publicSettings?: PublicSettings;
     privateSettings?: PrivateSettings;
     accountInfo?: AccountInfo;
+    sharingInfo?: SharingInfo;
 
     private apiService = ApiService.getInstance();
 
@@ -46,6 +54,7 @@ export class SettingsService {
         this.publicSettings = this.loadPublicSettings();
         this.privateSettings = this.loadPrivateSettings();
         this.accountInfo = this.loadAccountInfo();
+        this.sharingInfo = this.loadSharingInfo();
     }
 
     async fetchPrivateSettings() {
@@ -98,34 +107,28 @@ export class SettingsService {
         localStorage.setItem(ACCOUNT_INFO_KEY, JSON.stringify(this.accountInfo));
     }
 
-    loadPublicSettings(): PublicSettings | undefined {
-        const ls = localStorage.getItem(PUBLIC_SETTINGS_KEY);
+    saveSharingInfo() {
+        localStorage.setItem(SHARING_INFO_KEY, JSON.stringify(this.sharingInfo));
+    }
+
+    loadFromLocalStorage(key: string) {
+        const ls = localStorage.getItem(key);
         return ls ? JSON.parse(ls) : undefined;
+    }
+
+    loadPublicSettings(): PublicSettings | undefined {
+        return this.loadFromLocalStorage(PUBLIC_SETTINGS_KEY)
     }
 
     loadPrivateSettings(): PrivateSettings | undefined {
-        const ls = localStorage.getItem(PRIVATE_SETTINGS_KEY);
-        return ls ? JSON.parse(ls) : undefined;
+        return this.loadFromLocalStorage(PRIVATE_SETTINGS_KEY)
     }
 
     loadAccountInfo(): AccountInfo | undefined {
-        const ls = localStorage.getItem(ACCOUNT_INFO_KEY);
-        return ls ? JSON.parse(ls) : undefined;
+        return this.loadFromLocalStorage(ACCOUNT_INFO_KEY)
     }
 
-    /**
-     * gets the wallet address returned from LIWD, which happens to be the ZeroDev org smart contract address
-     * @returns {string} 0x Organization smart contract address from ZeroDev/Turnkey. Not be confused with the user's wallet address
-     */
-    getOrgSmartContractAddress(){
-        return localStorage.getItem("walletAddress");
-    }
-
-    /**
-     * this does not change
-     * @returns {string}
-     */
-    getCompassIntegrationId() {
-        return "2szgr5WqMQtK2ZFM8F8qW8WUfJa";
+    loadSharingInfo(): SharingInfo | undefined {
+        return this.loadFromLocalStorage(SHARING_INFO_KEY)
     }
 }
