@@ -1,4 +1,4 @@
-import { html, LitElement } from 'lit';
+import {html, LitElement, PropertyValues} from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
 @customElement('session-timer')
@@ -20,6 +20,15 @@ export class SessionTimer extends LitElement {
     disconnectedCallback() {
         super.disconnectedCallback();
         this.stopTimer();
+    }
+
+    protected update(_changedProperties: PropertyValues) {
+        super.update(_changedProperties);
+
+        console.log(_changedProperties)
+
+        this.calculateRemainingTime();
+        this.startTimer();
     }
 
     /**
