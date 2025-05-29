@@ -76,6 +76,25 @@ func (v *VehiclesController) SubmitVehiclesMintData(c *fiber.Ctx) error {
 	return v.proxyRequest(c, targetURL, c.Body())
 }
 
+func (v *VehiclesController) GetDisconnectData(c *fiber.Ctx) error {
+	vins := c.Query("vins", "")
+	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/disconnect")
+	targetURL.RawQuery = fmt.Sprintf("vins=%s", vins)
+	return v.proxyRequest(c, targetURL, nil)
+}
+
+func (v *VehiclesController) SubmitDisconnectData(c *fiber.Ctx) error {
+	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/disconnect")
+	return v.proxyRequest(c, targetURL, c.Body())
+}
+
+func (v *VehiclesController) GetDisconnectStatus(c *fiber.Ctx) error {
+	vins := c.Query("vins", "")
+	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/disconnect/status")
+	targetURL.RawQuery = fmt.Sprintf("vins=%s", vins)
+	return v.proxyRequest(c, targetURL, nil)
+}
+
 func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte) error {
 	// Perform GET request to the target URL
 	req, err := http.NewRequest("GET", targetURL.String(), nil)

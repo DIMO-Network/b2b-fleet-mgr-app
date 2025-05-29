@@ -7,6 +7,7 @@ import {repeat} from "lit/directives/repeat.js";
 import './session-timer';
 import qs from 'qs';
 import {range} from "lodash";
+import {delay} from "@utils/utils";
 
 interface VehicleLookup {
     vin: string;
@@ -394,7 +395,7 @@ export class AddVinElement extends LitElement {
             }
 
             if (attempt < 9) {
-                await this.delay(5000);
+                await delay(5000);
             }
         }
 
@@ -467,7 +468,7 @@ export class AddVinElement extends LitElement {
             }
 
             if (attempt < 19) {
-                await this.delay(5000);
+                await delay(5000);
             }
         }
 
@@ -512,10 +513,6 @@ export class AddVinElement extends LitElement {
         }
 
         return true
-    }
-
-    delay(ms: number) {
-        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     async registerInOracle(vin :string) {

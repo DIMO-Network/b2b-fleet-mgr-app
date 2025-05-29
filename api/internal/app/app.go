@@ -69,9 +69,14 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	app.Get("/v1/vehicle/verify", jwtAuth, vehiclesCtrl.GetVehiclesVerificationStatus)
 	app.Post("/v1/vehicle/verify", jwtAuth, vehiclesCtrl.SubmitVehiclesVerification)
+
 	app.Get("/v1/vehicle/mint", jwtAuth, vehiclesCtrl.GetVehiclesMintData)
 	app.Get("/v1/vehicle/mint/status", jwtAuth, vehiclesCtrl.GetVehiclesMintStatus)
 	app.Post("/v1/vehicle/mint", jwtAuth, vehiclesCtrl.SubmitVehiclesMintData)
+
+	app.Get("/v1/vehicle/disconnect", jwtAuth, vehiclesCtrl.GetDisconnectData)
+	app.Post("/v1/vehicle/disconnect", jwtAuth, vehiclesCtrl.SubmitDisconnectData)
+	app.Get("/v1/vehicle/disconnect/status", jwtAuth, vehiclesCtrl.GetDisconnectStatus)
 
 	app.Get("/v1/vehicle/:vin", jwtAuth, vehiclesCtrl.GetVehicleFromOracle)
 	app.Post("/v1/vehicle/register", jwtAuth, vehiclesCtrl.RegisterVehicle)
