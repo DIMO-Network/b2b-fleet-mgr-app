@@ -2,29 +2,8 @@ import {html, LitElement} from 'lit'
 import {repeat} from 'lit/directives/repeat.js';
 import {ApiService} from "@services/api-service.ts";
 import {customElement} from "lit/decorators.js";
+import {Vehicle} from "@datatypes//vehicle.ts";
 
-interface DeviceDefinition {
-    id: string;
-    make: string;
-    model: string;
-    year: number;
-}
-
-interface SynteticDevice {
-    id: string;
-    tokenId: number;
-    mintedAt: string;
-}
-
-interface Vehicle {
-    vin: string;
-    id: string;
-    tokenId: number;
-    mintedAt: string;
-    owner: `0x${string}`
-    definition: DeviceDefinition;
-    syntheticDevice: SynteticDevice;
-}
 
 interface VehiclesResponse {
     vehicles: Vehicle[];
@@ -79,13 +58,7 @@ export class VehicleListElement extends LitElement {
                     <th></th>
                 </tr>
                 ${repeat(this.items, (item) => item.id, (item) => html`
-          <tr>
-              <td>${item.vin}</td>
-              <td>${item.definition.make} ${item.definition.model} ${item.definition.year}</td>
-              <td>${item.tokenId}</td>
-              <td>${item.syntheticDevice?.tokenId || ''}</td>
-              <td><button>delete</button></td>
-          </tr>`)}
+          <vehicle-list-item-element .item="${item}">`)}
             </table>
         `
     }
@@ -93,5 +66,18 @@ export class VehicleListElement extends LitElement {
     async getUserVehicles() {
         const url = "/v1/vehicles";
         return await this.api.callApi<VehiclesResponse>('GET', url, null, true);
+    }
+
+    async disconnectVehicle(vin: string) {
+        const url = "/v1/vehicle/disconnect";
+        const body = {vin};
+
+        return await this.api.callApi<any>('POST', url, body, true);
+    }
+
+    async deleteVehicle(vin: string) {
+        const url = "/v1/vehicle/delete";
+        const body = {vin};
+        return await this.api.callApi<any>('POST', url, body, true);
     }
 }

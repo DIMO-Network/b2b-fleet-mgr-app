@@ -26,3 +26,7 @@ export function formatEthereumSignature(signResult) {
     const vHex = (parseInt(v, 16) + 27).toString(16).padStart(2, '0');
     return `0x${r}${s}${vHex}`;
 }
+
+export function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}

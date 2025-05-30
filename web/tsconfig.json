@@ -28,7 +28,8 @@
       "@elements/*": ["./elements/*"],
       "@services/*": ["./services/*"],
       "@styles/*": ["./styles/*"],
-      "@utils/*": ["./utils/*"]
+      "@utils/*": ["./utils/*"],
+      "@datatypes/*": ["./types/*"]
     },
 
     "plugins": [{ "name": "typescript-plugin-css-modules" }],

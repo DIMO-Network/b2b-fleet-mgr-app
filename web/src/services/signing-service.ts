@@ -40,6 +40,73 @@ export class SigningService {
         return SigningService.instance;
     }
 
+    public async signUserOperation(payload: any) {
+        const settings = this.settings.privateSettings;
+        const accountInfo = this.settings.accountInfo;
+
+        if (!settings || !accountInfo) {
+            return {
+                success: false,
+                error: "Signing service not configured"
+            }
+        }
+
+        const {turnkeyApiUrl, turnkeyOrgId, turnkeyRpId} = settings;
+        const {subOrganizationId} = accountInfo;
+
+        const turnkeyClient = await this.getTurnkeyClient(turnkeyApiUrl, turnkeyRpId, turnkeyOrgId, subOrganizationId);
+
+        if (!turnkeyClient) {
+            return {
+                success: false,
+                error: "Failed to get turnkey client"
+            }
+        }
+
+        const wallet = await this.getTurnkeyWallet(turnkeyClient, subOrganizationId);
+
+        try {
+            const turnkeyAccount = await createAccount({
+                client: turnkeyClient,
+                organizationId: accountInfo.subOrganizationId,
+                signWith: wallet,
+            });
+
+            const publicClient = createPublicClient({
+                transport: http(settings.rpcUrl),
+                chain: settings.environment === 'prod' ? polygon : polygonAmoy,
+            });
+
+            const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
+                signer: turnkeyAccount,
+                entryPoint: getEntryPoint("0.7"),
+                kernelVersion: KERNEL_V3_1
+            });
+
+            const kernelAccount = await createKernelAccount(publicClient, {
+                plugins: {
+                    sudo: ecdsaValidator,
+                },
+                entryPoint: getEntryPoint("0.7"),
+                kernelVersion: KERNEL_V3_1,
+            });
+            const signature = await kernelAccount?.signUserOperation(payload);
+            return {
+                success: true,
+                signature: signature,
+            }
+        } catch (error: any) {
+            console.error("Error message:", error.message);
+            console.error("Stack trace:", error.stack);
+
+            return {
+                success: false,
+                error: error.message || "An unexpected error occurred",
+            }
+        }
+    }
+
+
     public async signTypedData(payload: any) {
         const settings = this.settings.privateSettings;
         const accountInfo = this.settings.accountInfo;
