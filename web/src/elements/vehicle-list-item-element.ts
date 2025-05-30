@@ -87,6 +87,10 @@ export class VehicleListItemElement extends LitElement {
 
         const disconnectStatus = await this.submitDisconnectData(signedDisconnectData)
 
+        if (!disconnectStatus) {
+            console.error("Disconnection failed")
+        }
+
         this.disconnectInProgress = false
 
         return;
