@@ -12,7 +12,7 @@ export class ApiService {
     private readonly baseUrl: string;
     private static readonly DEFAULT_LOCAL_DEV_URL = "https://localdev.dimo.org:3007";
 
-    private constructor() {
+    public constructor() {
         this.baseUrl = this.getBaseUrl();
     }
 
