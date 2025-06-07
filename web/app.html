@@ -11,15 +11,11 @@
     <script type="module" src="./src/index.ts"></script>
 </head>
 <body>
-<div class="header">
-    <h1 class="title">Fleet Onboarding App</h1>
-    <button class="logout-btn">Logout</button>
-</div>
-<add-vin-element></add-vin-element>
 
-<vehicle-list-element></vehicle-list-element>
+<app-root></app-root>
 
 <script>
+    // todo move this to app-root.ts
     function handleLogout() {
         // List the keys you want to remove
         const keysToRemove = ['token', 'email', 'appSettings', 'accountInfo', 'signerPublicKey', 'signerApiKey'];

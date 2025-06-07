@@ -6,7 +6,7 @@ This uses Login with DIMO, using the redirect flow (no react component). Users s
 
 We use the transactions-sdk for signing payloads. 
 
-B2B fleet users can use this to onboard their vehicles. Currently this is targeted mostly at fleets with Stellantis vehicles using the Compass Oracle.
+B2B fleet users can use this to onboard their vehicles. Currently this is targeted mostly at fleets with Stellantis vehicles using the Motorq Oracle.
 
 Can also serve as an example for developers wanting to build onboarding flows on DIMO, eg. Oracle onboarding vehicles flow. 
 
@@ -16,7 +16,7 @@ Can also serve as an example for developers wanting to build onboarding flows on
 
 2. Start the web app in the `web` folder. Install dependencies `$ npm i`, then start the vite server `$ npm run dev`.
    To mimmic prod deployment, run `$ npm run buld`, and then you can copy `dist` folder to the `api` folder and serve everything from Go server as in prod.
-   You must run the dev server first because this is what will generate the certifates in the .mkcert folder. We develop locally with https for passkeys & stuff to work.
+   You must run the dev server first because this is what will generate the certificates in the .mkcert folder. We develop locally with https for passkeys & stuff to work.
 
 3. Start the backend in `api` folder. You'll need some settings.yaml, there is a sample. 
    For certain features you'll need the zerodev etc url's and key. `$ go run ./cmd/fleet-onboard-app`
