@@ -30,6 +30,7 @@ env:
   LOGIN_URL: https://login.dev.dimo.org
   ACCOUNTS_API_URL: https://accounts.dev.dimo.org
   MOTORQ_ORACLE_API_URL: https://motorq-oracle.dev.dimo.zone
+  STAEX_ORACLE_API_URL: 'https://dimo.tc.staex.io'
   TURNKEY_ORG_ID: 59ff5478-26f5-4ba6-8a32-48b0cf8279a8
   TURNKEY_API_URL: https://api.turnkey.com
   TURNKEY_RP_ID: dimo.org

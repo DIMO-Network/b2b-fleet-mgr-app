@@ -27,6 +27,7 @@ func NewSettingsController(settings *config.Settings, logger *zerolog.Logger) *S
 // @Security     BearerAuth
 // @Router /v1/settings [get]
 func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
+	// todo how much of this is still used by frontend?
 	payload := SettingsResponse{
 		AccountsAPIURL: v.settings.AccountsAPIURL.String(),
 		PaymasterURL:   v.settings.PaymasterURL.String(),
@@ -43,7 +44,7 @@ func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
 
 func (v *SettingsController) GetPublicSettings(c *fiber.Ctx) error {
 	payload := PublicSettingsResponse{
-		ClientID: v.settings.ClientID,
+		ClientID: v.settings.ClientID, // this is not the oracle's client ID but the frontend web app client id
 		LoginURL: v.settings.LoginURL.String(),
 	}
 	return c.JSON(payload)

@@ -62,31 +62,28 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 		JWKSetURLs: []string{settings.JwtKeySetURL.String()},
 	})
 
-	// just using regular auth, which works with the LIWD JWT
-
 	// oracle group with route parameter.
-	// todo way to expose the oracleID to all underlying calls
-	// todo do we keep the /v1 , thinking doesn't make sense in the context since this is a tightly coupled bff
-	oracleApp := app.Group("/oracle/:oracleID", jwtAuth)
-	oracleApp.Get("/v1/vehicles", jwtAuth, vehiclesCtrl.GetVehicles)
+	oracleApp := app.Group("/oracle/:oracleID", jwtAuth, oracleIDMiddleware())
+	oracleApp.Get("/permissions", vehiclesCtrl.GetOraclePermissions)
+	oracleApp.Get("/vehicles", vehiclesCtrl.GetVehicles)
 
-	oracleApp.Get("/v1/vehicle/verify", jwtAuth, vehiclesCtrl.GetVehiclesVerificationStatus)
-	oracleApp.Post("/v1/vehicle/verify", jwtAuth, vehiclesCtrl.SubmitVehiclesVerification)
+	oracleApp.Get("/vehicle/verify", vehiclesCtrl.GetVehiclesVerificationStatus)
+	oracleApp.Post("/vehicle/verify", vehiclesCtrl.SubmitVehiclesVerification)
 
-	oracleApp.Get("/v1/vehicle/mint", jwtAuth, vehiclesCtrl.GetVehiclesMintData)
-	oracleApp.Get("/v1/vehicle/mint/status", jwtAuth, vehiclesCtrl.GetVehiclesMintStatus)
-	oracleApp.Post("/v1/vehicle/mint", jwtAuth, vehiclesCtrl.SubmitVehiclesMintData)
+	oracleApp.Get("/vehicle/mint", vehiclesCtrl.GetVehiclesMintData)
+	oracleApp.Get("/vehicle/mint/status", vehiclesCtrl.GetVehiclesMintStatus)
+	oracleApp.Post("/vehicle/mint", vehiclesCtrl.SubmitVehiclesMintData)
 
-	oracleApp.Get("/v1/vehicle/disconnect", jwtAuth, vehiclesCtrl.GetDisconnectData)
-	oracleApp.Post("/v1/vehicle/disconnect", jwtAuth, vehiclesCtrl.SubmitDisconnectData)
-	oracleApp.Get("/v1/vehicle/disconnect/status", jwtAuth, vehiclesCtrl.GetDisconnectStatus)
+	oracleApp.Get("/vehicle/disconnect", vehiclesCtrl.GetDisconnectData)
+	oracleApp.Post("/vehicle/disconnect", vehiclesCtrl.SubmitDisconnectData)
+	oracleApp.Get("/vehicle/disconnect/status", vehiclesCtrl.GetDisconnectStatus)
 
-	oracleApp.Get("/v1/vehicle/:vin", jwtAuth, vehiclesCtrl.GetVehicleFromOracle)
-	oracleApp.Post("/v1/vehicle/register", jwtAuth, vehiclesCtrl.RegisterVehicle)
+	oracleApp.Get("/vehicle/:vin", vehiclesCtrl.GetVehicleFromOracle)
+	oracleApp.Post("/vehicle/register", vehiclesCtrl.RegisterVehicle)
 
 	// settings the app needs to operate, pulled from config / env vars
-	app.Get("/v1/settings", jwtAuth, settingsCtrl.GetSettings)
-	app.Get("/v1/public/settings", settingsCtrl.GetPublicSettings)
+	app.Get("/settings", jwtAuth, settingsCtrl.GetSettings)
+	app.Get("/public/settings", settingsCtrl.GetPublicSettings)
 
 	return app
 }
@@ -147,4 +144,18 @@ func ErrorHandler(c *fiber.Ctx, err error, logger *zerolog.Logger) error {
 type ErrorRes struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
+}
+
+// Create a middleware to capture the oracleID parameter
+func oracleIDMiddleware() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// Get the oracleID from the params
+		oracleID := c.Params("oracleID")
+
+		// Store it in the locals for use in subsequent handlers
+		c.Locals("oracleID", oracleID)
+
+		// Continue to the next middleware/handler
+		return c.Next()
+	}
 }
