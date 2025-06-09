@@ -6,6 +6,12 @@ export class OracleSelector extends LitElement {
     @property()
     selectedOption = 'motorq';
 
+    // Disable shadow DOM to allow inherit css
+    createRenderRoot() {
+        // there is another function to do this.
+        return this;
+    }
+
     private handleChange(e: Event) {
         const select = e.target as HTMLSelectElement;
         this.selectedOption = select.value;
@@ -19,10 +25,13 @@ export class OracleSelector extends LitElement {
 
     render() {
         return html`
-      <select @change=${this.handleChange}>
-        <option value="motorq">MotorQ</option>
-        <option value="staex">Staex</option>
-      </select>
+            <div>
+            <label for="oracle-select">Select Connection Oracle:</label>
+                <select id="oracle-select" @change=${this.handleChange}>
+                    <option value="motorq">MotorQ</option>
+                    <option value="staex">Staex</option>
+                </select>
+            </div>
     `;
     }
 }

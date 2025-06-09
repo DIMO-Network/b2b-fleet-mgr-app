@@ -2,7 +2,7 @@
   display: flex;
   justify-content: space-between; /* Places h1 and button at opposite ends */
   align-items: center;           /* Vertically centers the items */
-  padding: 1rem;
+  padding: 1rem 0 0 0;
   /*background-color: #f0f0f0;     !* Optional background for visibility *!*/
 }
 .logout-btn {

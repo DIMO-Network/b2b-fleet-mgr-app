@@ -11,6 +11,7 @@ export class ApiService {
     private static instance: ApiService;
     private readonly baseUrl: string;
     private static readonly DEFAULT_LOCAL_DEV_URL = "https://localdev.dimo.org:3007";
+    private oracle: string = "motorq"; // default
 
     public constructor() {
         this.baseUrl = this.getBaseUrl();
@@ -24,7 +25,8 @@ export class ApiService {
     }
 
     private getBaseUrl(): string {
-        return isLocalhost() ? ApiService.DEFAULT_LOCAL_DEV_URL : "";
+        let base =  isLocalhost() ? ApiService.DEFAULT_LOCAL_DEV_URL : "";
+        return `${base}/oracle/${this.oracle}`;
     }
 
     private constructUrl(endpoint: string): string {
@@ -88,5 +90,9 @@ export class ApiService {
                 error: error.message || "An unexpected error occurred",
             };
         }
+    }
+
+    setOracle(selectedValue: string) {
+        this.oracle = selectedValue;
     }
 }

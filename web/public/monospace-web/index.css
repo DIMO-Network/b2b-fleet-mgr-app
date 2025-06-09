@@ -292,7 +292,7 @@ li::marker {
     height: var(--line-height);
 }
 
-input, button, textarea {
+input, button, textarea, select {
   border: var(--border-thickness) solid var(--text-color);
   padding: 
     calc(var(--line-height) / 2 - var(--border-thickness))
