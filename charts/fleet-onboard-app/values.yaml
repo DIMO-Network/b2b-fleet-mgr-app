@@ -29,7 +29,7 @@ env:
   CLIENT_ID: '0x151e4c2899a3b232613872372e1e872F99CbA09A'
   LOGIN_URL: https://login.dev.dimo.org
   ACCOUNTS_API_URL: https://accounts.dev.dimo.org
-  ORACLE_API_URL: https://motorq-oracle.dev.dimo.zone
+  MOTORQ_ORACLE_API_URL: https://motorq-oracle.dev.dimo.zone
   TURNKEY_ORG_ID: 59ff5478-26f5-4ba6-8a32-48b0cf8279a8
   TURNKEY_API_URL: https://api.turnkey.com
   TURNKEY_RP_ID: dimo.org

@@ -3,13 +3,14 @@ package config
 import "net/url"
 
 type Settings struct {
-	Environment    string  `yaml:"ENVIRONMENT"`
-	UseDevCerts    bool    `yaml:"USE_DEV_CERTS"`
-	CompassAPIKey  string  `yaml:"COMPASS_API_KEY"`
-	APIPort        int     `yaml:"API_PORT"`
-	MonitoringPort int     `yaml:"MONITORING_PORT"`
-	OracleAPIURL   url.URL `yaml:"ORACLE_API_URL"`
-	IdentityAPIURL url.URL `yaml:"IDENTITY_API_URL"`
+	Environment        string  `yaml:"ENVIRONMENT"`
+	UseDevCerts        bool    `yaml:"USE_DEV_CERTS"`
+	CompassAPIKey      string  `yaml:"COMPASS_API_KEY"`
+	APIPort            int     `yaml:"API_PORT"`
+	MonitoringPort     int     `yaml:"MONITORING_PORT"`
+	MotorqOracleAPIURL url.URL `yaml:"MOTORQ_ORACLE_API_URL"`
+	StaexOracleAPIURL  url.URL `yaml:"STAEX_ORACLE_API_URL"`
+	IdentityAPIURL     url.URL `yaml:"IDENTITY_API_URL"`
 
 	PaymasterURL  url.URL `yaml:"PAYMASTER_URL"`
 	RPCURL        url.URL `yaml:"RPC_URL"`
