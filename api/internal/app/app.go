@@ -82,7 +82,8 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Post("/vehicle/register", vehiclesCtrl.RegisterVehicle)
 
 	// settings the app needs to operate, pulled from config / env vars
-	app.Get("/settings", jwtAuth, settingsCtrl.GetSettings)
+	oracleApp.Get("/settings", jwtAuth, settingsCtrl.GetSettings) // todo some of these are oracle specific
+	// these are general to the app, not oracle specific
 	app.Get("/public/settings", settingsCtrl.GetPublicSettings)
 
 	return app

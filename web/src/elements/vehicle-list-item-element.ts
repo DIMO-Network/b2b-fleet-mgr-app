@@ -98,7 +98,7 @@ export class VehicleListItemElement extends LitElement {
 
     async getDisconnectData(vins: string[]) {
         const query = qs.stringify({vins: vins.join(',')}, {arrayFormat: 'comma'});
-        const disconnectData = await this.api.callApi<VinsDisconnectDataResult>('GET', `/v1/vehicle/disconnect?${query}`, null, true);
+        const disconnectData = await this.api.callApi<VinsDisconnectDataResult>('GET', `/vehicle/disconnect?${query}`, null, true);
         if (!disconnectData.success || !disconnectData.data) {
             return [];
         }
@@ -129,7 +129,7 @@ export class VehicleListItemElement extends LitElement {
             vinDisconnectData: disconnectData,
         }
 
-        const mintResponse = await this.api.callApi('POST', '/v1/vehicle/disconnect', payload, true);
+        const mintResponse = await this.api.callApi('POST', '/vehicle/disconnect', payload, true);
         if (!mintResponse.success || !mintResponse.data) {
             return false;
         }
@@ -138,7 +138,7 @@ export class VehicleListItemElement extends LitElement {
         for (const attempt of range(30)) {
             success = true
             const query = qs.stringify({vins: disconnectData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
-            const status = await this.api.callApi<VinsDisconnectResult>('GET', `/v1/vehicle/disconnect/status?${query}`, null, true);
+            const status = await this.api.callApi<VinsDisconnectResult>('GET', `/vehicle/disconnect/status?${query}`, null, true);
 
             if (!status.success || !status.data) {
                 return false;
