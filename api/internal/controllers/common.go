@@ -1,20 +1,19 @@
 package controllers
 
 import (
-	"fmt"
 	"net/url"
 
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetOracleURL(c *fiber.Ctx, s *config.Settings) (*url.URL, error) {
+func GetOracleURL(c *fiber.Ctx, s *config.Settings) *url.URL {
 	oracleID := c.Locals("oracleID").(string)
-	switch oracleID {
-	case "motorq":
-		return &s.MotorqOracleAPIURL, nil
-	case "staex":
-		return &s.StaexOracleAPIURL, nil
+	o := s.GetOracles()
+	for _, oracle := range o {
+		if oracle.OracleID == oracleID {
+			return &oracle.URL
+		}
 	}
-	return nil, fmt.Errorf("unknown oracle id in path")
+	return nil
 }

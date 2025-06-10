@@ -61,9 +61,13 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	jwtAuth := jwtware.New(jwtware.Config{
 		JWKSetURLs: []string{settings.JwtKeySetURL.String()},
 	})
+	knownOracles := settings.GetOracles()
+
+	// these are general to the app, not oracle specific
+	app.Get("/public/settings", settingsCtrl.GetPublicSettings)
 
 	// oracle group with route parameter.
-	oracleApp := app.Group("/oracle/:oracleID", jwtAuth, oracleIDMiddleware())
+	oracleApp := app.Group("/oracle/:oracleID", jwtAuth, oracleIDMiddleware(knownOracles))
 	oracleApp.Get("/permissions", vehiclesCtrl.GetOraclePermissions)
 	oracleApp.Get("/vehicles", vehiclesCtrl.GetVehicles)
 
@@ -83,8 +87,6 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	// settings the app needs to operate, pulled from config / env vars
 	oracleApp.Get("/settings", jwtAuth, settingsCtrl.GetSettings) // todo some of these are oracle specific
-	// these are general to the app, not oracle specific
-	app.Get("/public/settings", settingsCtrl.GetPublicSettings)
 
 	return app
 }
@@ -148,11 +150,22 @@ type ErrorRes struct {
 }
 
 // Create a middleware to capture the oracleID parameter
-func oracleIDMiddleware() fiber.Handler {
+func oracleIDMiddleware(oracles []config.Oracle) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Get the oracleID from the params
 		oracleID := c.Params("oracleID")
-
+		found := false
+		for _, oracle := range oracles {
+			if oracle.OracleID == oracleID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid oracleID" + oracleID,
+			})
+		}
 		// Store it in the locals for use in subsequent handlers
 		c.Locals("oracleID", oracleID)
 

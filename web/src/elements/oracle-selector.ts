@@ -1,15 +1,35 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import {Oracle, SettingsService} from "@services/settings-service.ts";
+import {repeat} from "lit/directives/repeat.js";
 
 @customElement('oracle-selector')
 export class OracleSelector extends LitElement {
     @property()
     selectedOption = 'motorq';
 
+    @property()
+    options: Oracle[] = []
+
+    private settings: SettingsService;
+
     // Disable shadow DOM to allow inherit css
     createRenderRoot() {
         // there is another function to do this.
         return this;
+    }
+
+    constructor() {
+        super();
+        this.settings = SettingsService.getInstance()
+    }
+
+    async connectedCallback() {
+        super.connectedCallback();
+
+        this.settings.fetchPublicSettings().then(settings => {
+            this.options = settings?.oracles || []
+        })
     }
 
     private handleChange(e: Event) {
@@ -28,8 +48,11 @@ export class OracleSelector extends LitElement {
             <div>
             <label for="oracle-select">Select Connection Oracle:</label>
                 <select id="oracle-select" @change=${this.handleChange}>
-                    <option value="motorq">MotorQ</option>
-                    <option value="staex">Staex</option>
+                    ${repeat(this.options, (option) => option.oracleId, (option) => html`
+                        <option value=${option.oracleId} ?selected=${option.oracleId === this.selectedOption}>
+                            ${option.name}
+                        </option>
+                    `)}
                 </select>
             </div>
     `;

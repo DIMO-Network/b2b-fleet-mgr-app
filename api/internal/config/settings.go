@@ -30,3 +30,24 @@ type Settings struct {
 func (s *Settings) IsProduction() bool {
 	return s.Environment == "prod" // this string is set in the helm chart values-prod.yaml
 }
+
+func (s *Settings) GetOracles() []Oracle {
+	return []Oracle{
+		{
+			Name:     "MotorQ",
+			OracleID: "motorq",
+			URL:      s.MotorqOracleAPIURL,
+		},
+		{
+			Name:     "Staex",
+			OracleID: "staex",
+			URL:      s.StaexOracleAPIURL,
+		},
+	}
+}
+
+type Oracle struct {
+	Name     string  `json:"name"`
+	OracleID string  `json:"oracleId"`
+	URL      url.URL `json:"-"`
+}

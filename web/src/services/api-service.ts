@@ -25,12 +25,15 @@ export class ApiService {
     }
 
     private getBaseUrl(): string {
-        let base =  isLocalhost() ? ApiService.DEFAULT_LOCAL_DEV_URL : "";
-        return `${base}/oracle/${this.oracle}`;
+        return isLocalhost() ? ApiService.DEFAULT_LOCAL_DEV_URL : "";
     }
 
-    private constructUrl(endpoint: string): string {
-        return endpoint.startsWith('/') ? `${this.baseUrl}${endpoint}` : endpoint;
+    private constructUrl(endpoint: string, oracle: boolean): string {
+        let base = this.baseUrl;
+        if (oracle) {
+            base = `${base}/oracle/${this.oracle}`;
+        }
+        return endpoint.startsWith('/') ? `${base}${endpoint}` : endpoint;
     }
 
     private getAuthorizationHeader(auth: boolean): Record<string, string> {
@@ -53,7 +56,8 @@ export class ApiService {
         method: 'GET' | 'POST',
         endpoint: string,
         requestBody: Record<string, any> | null = null,
-        auth: boolean = false
+        auth: boolean = false,
+        oracle: boolean = true
     ): Promise<ApiResponse<T>> {
         const body = requestBody ? JSON.stringify(requestBody) : null;
 
@@ -63,7 +67,7 @@ export class ApiService {
             ...this.getAuthorizationHeader(auth),
         };
 
-        const finalUrl = this.constructUrl(endpoint);
+        const finalUrl = this.constructUrl(endpoint, oracle);
 
         try {
             const response = await fetch(finalUrl, {method, headers, body});

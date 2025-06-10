@@ -3,6 +3,12 @@ import {ApiService} from "@services/api-service.ts";
 export interface PublicSettings {
     "clientId": `0x${string}`,
     "loginUrl": string
+    "oracles": Oracle[]
+}
+
+export interface Oracle {
+    oracleId: string,
+    name: string,
 }
 
 export interface PrivateSettings {
@@ -70,7 +76,7 @@ export class SettingsService {
     }
 
     async fetchPublicSettings() {
-        const response = await this.apiService.callApi<PublicSettings>("GET", "/public/settings", null, true);
+        const response = await this.apiService.callApi<PublicSettings>("GET", "/public/settings", null, true, false);
 
         if (response.success) {
             this.publicSettings = response.data!;
