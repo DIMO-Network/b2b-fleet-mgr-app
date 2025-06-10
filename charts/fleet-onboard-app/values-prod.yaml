@@ -29,7 +29,8 @@ env:
   CLIENT_ID: '0x51dacC165f1306Abfbf0a6312ec96E13AAA826DB'
   LOGIN_URL: https://login.dimo.org
   ACCOUNTS_API_URL: https://accounts.dimo.org
-  ORACLE_API_URL: https://motorq-oracle.dimo.zone
+  MOTORQ_ORACLE_API_URL: 'https://motorq-oracle.dimo.zone'
+  STAEX_ORACLE_API_URL: 'https://dimo.tc.staex.io'
   TURNKEY_ORG_ID: c28319a1-73ec-489a-a212-ec8dbd65dd52
   TURNKEY_API_URL: https://api.turnkey.com
   TURNKEY_RP_ID: dimo.org

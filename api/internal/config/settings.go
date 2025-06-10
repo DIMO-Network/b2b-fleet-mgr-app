@@ -3,13 +3,14 @@ package config
 import "net/url"
 
 type Settings struct {
-	Environment    string  `yaml:"ENVIRONMENT"`
-	UseDevCerts    bool    `yaml:"USE_DEV_CERTS"`
-	CompassAPIKey  string  `yaml:"COMPASS_API_KEY"`
-	APIPort        int     `yaml:"API_PORT"`
-	MonitoringPort int     `yaml:"MONITORING_PORT"`
-	OracleAPIURL   url.URL `yaml:"ORACLE_API_URL"`
-	IdentityAPIURL url.URL `yaml:"IDENTITY_API_URL"`
+	Environment        string  `yaml:"ENVIRONMENT"`
+	UseDevCerts        bool    `yaml:"USE_DEV_CERTS"`
+	CompassAPIKey      string  `yaml:"COMPASS_API_KEY"`
+	APIPort            int     `yaml:"API_PORT"`
+	MonitoringPort     int     `yaml:"MONITORING_PORT"`
+	MotorqOracleAPIURL url.URL `yaml:"MOTORQ_ORACLE_API_URL"`
+	StaexOracleAPIURL  url.URL `yaml:"STAEX_ORACLE_API_URL"`
+	IdentityAPIURL     url.URL `yaml:"IDENTITY_API_URL"`
 
 	PaymasterURL  url.URL `yaml:"PAYMASTER_URL"`
 	RPCURL        url.URL `yaml:"RPC_URL"`
@@ -28,4 +29,25 @@ type Settings struct {
 
 func (s *Settings) IsProduction() bool {
 	return s.Environment == "prod" // this string is set in the helm chart values-prod.yaml
+}
+
+func (s *Settings) GetOracles() []Oracle {
+	return []Oracle{
+		{
+			Name:     "MotorQ",
+			OracleID: "motorq",
+			URL:      s.MotorqOracleAPIURL,
+		},
+		{
+			Name:     "Staex",
+			OracleID: "staex",
+			URL:      s.StaexOracleAPIURL,
+		},
+	}
+}
+
+type Oracle struct {
+	Name     string  `json:"name"`
+	OracleID string  `json:"oracleId"`
+	URL      url.URL `json:"-"`
 }

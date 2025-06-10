@@ -64,19 +64,19 @@ export class VehicleListElement extends LitElement {
     }
 
     async getUserVehicles() {
-        const url = "/v1/vehicles";
+        const url = "/vehicles";
         return await this.api.callApi<VehiclesResponse>('GET', url, null, true);
     }
 
     async disconnectVehicle(vin: string) {
-        const url = "/v1/vehicle/disconnect";
+        const url = "/vehicle/disconnect";
         const body = {vin};
 
         return await this.api.callApi<any>('POST', url, body, true);
     }
 
     async deleteVehicle(vin: string) {
-        const url = "/v1/vehicle/delete";
+        const url = "/vehicle/delete";
         const body = {vin};
         return await this.api.callApi<any>('POST', url, body, true);
     }

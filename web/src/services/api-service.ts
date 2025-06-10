@@ -11,8 +11,9 @@ export class ApiService {
     private static instance: ApiService;
     private readonly baseUrl: string;
     private static readonly DEFAULT_LOCAL_DEV_URL = "https://localdev.dimo.org:3007";
+    private oracle: string = "motorq"; // default
 
-    private constructor() {
+    public constructor() {
         this.baseUrl = this.getBaseUrl();
     }
 
@@ -27,8 +28,12 @@ export class ApiService {
         return isLocalhost() ? ApiService.DEFAULT_LOCAL_DEV_URL : "";
     }
 
-    private constructUrl(endpoint: string): string {
-        return endpoint.startsWith('/') ? `${this.baseUrl}${endpoint}` : endpoint;
+    private constructUrl(endpoint: string, oracle: boolean): string {
+        let base = this.baseUrl;
+        if (oracle) {
+            base = `${base}/oracle/${this.oracle}`;
+        }
+        return endpoint.startsWith('/') ? `${base}${endpoint}` : endpoint;
     }
 
     private getAuthorizationHeader(auth: boolean): Record<string, string> {
@@ -51,7 +56,8 @@ export class ApiService {
         method: 'GET' | 'POST',
         endpoint: string,
         requestBody: Record<string, any> | null = null,
-        auth: boolean = false
+        auth: boolean = false,
+        oracle: boolean = true
     ): Promise<ApiResponse<T>> {
         const body = requestBody ? JSON.stringify(requestBody) : null;
 
@@ -61,7 +67,7 @@ export class ApiService {
             ...this.getAuthorizationHeader(auth),
         };
 
-        const finalUrl = this.constructUrl(endpoint);
+        const finalUrl = this.constructUrl(endpoint, oracle);
 
         try {
             const response = await fetch(finalUrl, {method, headers, body});
@@ -88,5 +94,9 @@ export class ApiService {
                 error: error.message || "An unexpected error occurred",
             };
         }
+    }
+
+    setOracle(selectedValue: string) {
+        this.oracle = selectedValue;
     }
 }

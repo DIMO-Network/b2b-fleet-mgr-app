@@ -3,13 +3,14 @@ package controllers
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
-	"io"
-	"net/http"
-	"net/url"
 )
 
 type VehiclesController struct {
@@ -26,71 +27,96 @@ func NewVehiclesController(settings *config.Settings, logger *zerolog.Logger) *V
 	}
 }
 
+func (v *VehiclesController) GetOraclePermissions(c *fiber.Ctx) error {
+	u := GetOracleURL(c, v.settings)
+	targetURL := u.JoinPath("/v1/permissions")
+	return v.proxyRequest(c, targetURL, nil)
+}
+
 func (v *VehiclesController) GetVehicleFromOracle(c *fiber.Ctx) error {
 	vin := c.Params("vin", "")
-	targetURL := v.settings.OracleAPIURL.JoinPath(fmt.Sprintf("/v1/vehicle/%s", vin))
+	u := GetOracleURL(c, v.settings)
+	targetURL := u.JoinPath(fmt.Sprintf("/v1/vehicle/%s", vin))
 
 	return v.proxyRequest(c, targetURL, nil)
 }
 
 func (v *VehiclesController) GetVehicles(c *fiber.Ctx) error {
-	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicles")
+	u := GetOracleURL(c, v.settings)
+	targetURL := u.JoinPath("/v1/vehicles")
 
 	return v.proxyRequest(c, targetURL, nil)
 }
 
 func (v *VehiclesController) RegisterVehicle(c *fiber.Ctx) error {
-	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/register")
+	u := GetOracleURL(c, v.settings)
+	targetURL := u.JoinPath("/v1/vehicle/register")
 	b := c.Body()
 	return v.proxyRequest(c, targetURL, b)
 }
 
 func (v *VehiclesController) GetVehiclesVerificationStatus(c *fiber.Ctx) error {
 	vins := c.Query("vins", "")
-	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/verify")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/verify")
 	targetURL.RawQuery = fmt.Sprintf("vins=%s", vins)
 	return v.proxyRequest(c, targetURL, nil)
 }
 
 func (v *VehiclesController) SubmitVehiclesVerification(c *fiber.Ctx) error {
-	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/verify")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/verify")
 	return v.proxyRequest(c, targetURL, c.Body())
 }
 
 func (v *VehiclesController) GetVehiclesMintData(c *fiber.Ctx) error {
 	vins := c.Query("vins", "")
-	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/mint")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/mint")
 	targetURL.RawQuery = fmt.Sprintf("vins=%s", vins)
 	return v.proxyRequest(c, targetURL, nil)
 }
 
 func (v *VehiclesController) GetVehiclesMintStatus(c *fiber.Ctx) error {
 	vins := c.Query("vins", "")
-	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/mint/status")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/mint/status")
 	targetURL.RawQuery = fmt.Sprintf("vins=%s", vins)
 	return v.proxyRequest(c, targetURL, nil)
 }
 
 func (v *VehiclesController) SubmitVehiclesMintData(c *fiber.Ctx) error {
-	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/mint")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/mint")
 	return v.proxyRequest(c, targetURL, c.Body())
 }
 
 func (v *VehiclesController) GetDisconnectData(c *fiber.Ctx) error {
 	vins := c.Query("vins", "")
-	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/disconnect")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/disconnect")
 	targetURL.RawQuery = fmt.Sprintf("vins=%s", vins)
 	return v.proxyRequest(c, targetURL, nil)
 }
 
 func (v *VehiclesController) SubmitDisconnectData(c *fiber.Ctx) error {
-	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/disconnect")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/disconnect")
 	return v.proxyRequest(c, targetURL, c.Body())
 }
 
 func (v *VehiclesController) GetDisconnectStatus(c *fiber.Ctx) error {
 	vins := c.Query("vins", "")
-	targetURL := v.settings.OracleAPIURL.JoinPath("/v1/vehicle/disconnect/status")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/disconnect/status")
 	targetURL.RawQuery = fmt.Sprintf("vins=%s", vins)
 	return v.proxyRequest(c, targetURL, nil)
 }
