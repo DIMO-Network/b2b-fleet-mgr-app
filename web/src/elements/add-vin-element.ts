@@ -228,7 +228,7 @@ export class AddVinElement extends LitElement {
             <div ?hidden=${!this.enableSacd}>
                 <form class="grid" >
                     <fieldset>
-                        <label>Grantee 0x address
+                        <label>Grantee 0x Client ID
                             <input type="text" placeholder="0x" maxlength="42"
                                    value=${this.sacdGrantee} @input="${(e: InputEvent) => this.sacdGrantee = (e.target as HTMLInputElement).value}">
                         </label>
