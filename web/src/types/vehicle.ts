@@ -19,4 +19,6 @@ export interface Vehicle {
     owner: `0x${string}`
     definition: DeviceDefinition;
     syntheticDevice: SyntheticDevice;
+    connectionStatus: string;
+    disconnectionStatus: string;
 }
