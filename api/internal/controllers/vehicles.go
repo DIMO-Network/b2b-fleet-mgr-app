@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -152,7 +153,13 @@ func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL *url.URL, requ
 	}
 
 	// Perform the request
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true, // WARNING: disables cert verification
+			},
+		},
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		v.logger.Err(err).Msg("Failed to send request to: " + targetURL.String())
