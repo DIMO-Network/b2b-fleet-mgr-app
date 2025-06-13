@@ -34,7 +34,7 @@ export interface SacdInput {
     source: string
 }
 
-export interface VinDisconnectData {
+export interface VinUserOperationData {
     vin: string;
     userOperation: Object;
     hash: string;
@@ -42,17 +42,21 @@ export interface VinDisconnectData {
 }
 
 export interface VinsDisconnectDataResult {
-    vinDisconnectData: VinDisconnectData[];
+    vinDisconnectData: VinUserOperationData[];
 }
 
-export interface VinDisconnectStatus {
+export interface VinsDeleteDataResult {
+    vinDeleteData: VinUserOperationData[];
+}
+
+export interface VinStatus {
     vin: string;
     status: string;
     details: string;
 }
 
-export interface VinsDisconnectResult {
-    statuses: VinDisconnectStatus[];
+export interface VinsStatusResult {
+    statuses: VinStatus[];
 }
 
 export class BaseOnboardingElement extends LitElement {
@@ -273,8 +277,8 @@ export class BaseOnboardingElement extends LitElement {
         return disconnectData.data.vinDisconnectData;
     }
 
-    async signDisconnectData(disconnectData: VinDisconnectData[]) {
-        const result: VinDisconnectData[] = [];
+    async signDisconnectData(disconnectData: VinUserOperationData[]) {
+        const result: VinUserOperationData[] = [];
         for (const d of disconnectData) {
             const signature = await this.signingService.signUserOperation(d.userOperation);
 
@@ -291,8 +295,8 @@ export class BaseOnboardingElement extends LitElement {
         return result;
     }
 
-    async submitDisconnectData(disconnectData: VinDisconnectData[]) {
-        const payload: {vinDisconnectData: VinDisconnectData[]} = {
+    async submitDisconnectData(disconnectData: VinUserOperationData[]) {
+        const payload: {vinDisconnectData: VinUserOperationData[]} = {
             vinDisconnectData: disconnectData,
         }
 
@@ -305,7 +309,7 @@ export class BaseOnboardingElement extends LitElement {
         for (const attempt of range(30)) {
             success = true
             const query = qs.stringify({vins: disconnectData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
-            const status = await this.api.callApi<VinsDisconnectResult>('GET', `/vehicle/disconnect/status?${query}`, null, true);
+            const status = await this.api.callApi<VinsStatusResult>('GET', `/vehicle/disconnect/status?${query}`, null, true);
 
             if (!status.success || !status.data) {
                 return false;
@@ -339,6 +343,87 @@ export class BaseOnboardingElement extends LitElement {
 
         if (!disconnectStatus) {
             console.error("Disconnection failed")
+        }
+
+        return;
+    }
+
+    async getDeleteData(vins: string[]) {
+        const query = qs.stringify({vins: vins.join(',')}, {arrayFormat: 'comma'});
+        const deleteData = await this.api.callApi<VinsDeleteDataResult>('GET', `/vehicle/delete?${query}`, null, true);
+        if (!deleteData.success || !deleteData.data) {
+            return [];
+        }
+
+        return deleteData.data.vinDeleteData;
+    }
+
+    async signDeleteData(deleteData: VinUserOperationData[]) {
+        const result: VinUserOperationData[] = [];
+        for (const d of deleteData) {
+            const signature = await this.signingService.signUserOperation(d.userOperation);
+
+            if (!signature.success || !signature.signature) {
+                continue
+            }
+
+            result.push({
+                ...d,
+                signature: signature.signature
+            })
+        }
+
+        return result;
+    }
+
+    async submitDeleteData(deleteData: VinUserOperationData[]) {
+        const payload: {vinDeleteData: VinUserOperationData[]} = {
+            vinDeleteData: deleteData,
+        }
+
+        const deleteResponse = await this.api.callApi('POST', '/vehicle/delete', payload, true);
+        if (!deleteResponse.success || !deleteResponse.data) {
+            return false;
+        }
+
+        let success = true
+        for (const attempt of range(30)) {
+            success = true
+            const query = qs.stringify({vins: deleteData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
+            const status = await this.api.callApi<VinsStatusResult>('GET', `/vehicle/delete/status?${query}`, null, true);
+
+            if (!status.success || !status.data) {
+                return false;
+            }
+
+            for (const s of status.data.statuses) {
+                if (s.status !== 'Success') {
+                    success = false;
+                    break;
+                }
+            }
+
+            if (success) {
+                break;
+            }
+
+            if (attempt < 19) {
+                await delay(5000);
+            }
+        }
+
+        return success;
+    }
+
+    async deleteVins(vins: string[]) {
+        const deleteData = await this.getDeleteData(vins)
+
+        const signedDeleteData = await this.signDeleteData(deleteData)
+
+        const deleteStatus = await this.submitDeleteData(signedDeleteData)
+
+        if (!deleteStatus) {
+            console.error("Delete failed")
         }
 
         return;

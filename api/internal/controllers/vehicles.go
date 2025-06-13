@@ -122,6 +122,31 @@ func (v *VehiclesController) GetDisconnectStatus(c *fiber.Ctx) error {
 	return v.proxyRequest(c, targetURL, nil)
 }
 
+func (v *VehiclesController) GetDeleteData(c *fiber.Ctx) error {
+	vins := c.Query("vins", "")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/delete")
+	targetURL.RawQuery = fmt.Sprintf("vins=%s", vins)
+	return v.proxyRequest(c, targetURL, nil)
+}
+
+func (v *VehiclesController) SubmitDeleteData(c *fiber.Ctx) error {
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/delete")
+	return v.proxyRequest(c, targetURL, c.Body())
+}
+
+func (v *VehiclesController) GetDeleteStatus(c *fiber.Ctx) error {
+	vins := c.Query("vins", "")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/delete/status")
+	targetURL.RawQuery = fmt.Sprintf("vins=%s", vins)
+	return v.proxyRequest(c, targetURL, nil)
+}
+
 func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte) error {
 	// Perform GET request to the target URL
 	req, err := http.NewRequest("GET", targetURL.String(), nil)

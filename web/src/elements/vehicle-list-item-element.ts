@@ -66,7 +66,12 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   >connect
                   </button>
               </td>
-              <td><button type="button" ?disabled=${this.item.syntheticDevice.tokenId}>delete</button></td>
+              <td>
+                  <button 
+                      type="button" 
+                      ?disabled=${this.item.syntheticDevice.tokenId}
+                      @click=${this.deleteVehicle}
+                  >delete</button></td>
           ` : nothing
     }
 
@@ -106,6 +111,10 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item))
     }
 
+    canDelete(item: Vehicle): boolean {
+        return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item))
+    }
+
     async connectVehicle() {
         if (!this.item) {
             return;
@@ -123,6 +132,16 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true
         await this.disconnectVins([this.item.vin])
+        this.processing = false
+    }
+
+    async deleteVehicle() {
+        if (!this.item) {
+            return;
+        }
+
+        this.processing = true
+        await this.deleteVins([this.item.vin])
         this.processing = false
     }
 }
