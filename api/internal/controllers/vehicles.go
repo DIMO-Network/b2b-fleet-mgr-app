@@ -155,6 +155,7 @@ func (v *VehiclesController) proxyRequest(c *fiber.Ctx, targetURL *url.URL, requ
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		v.logger.Err(err).Msg("Failed to send request to: " + targetURL.String())
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
 			"error": "Failed to send request",
 		})
