@@ -7,7 +7,7 @@ import {ApiService} from "@services/api-service.ts";
 @customElement('app-root')
 export class AppRoot extends LitElement {
     @provide({ context: apiServiceContext })
-    apiService = new ApiService(); // app-level singleton
+    apiService = ApiService.getInstance(); // app-level singleton
 
     // enable inherit css
     createRenderRoot() {

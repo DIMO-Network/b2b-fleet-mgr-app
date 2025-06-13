@@ -13,7 +13,7 @@ export class ApiService {
     private static readonly DEFAULT_LOCAL_DEV_URL = "https://localdev.dimo.org:3007";
     private oracle: string = "motorq"; // default
 
-    public constructor() {
+    private constructor() {
         this.baseUrl = this.getBaseUrl();
     }
 
