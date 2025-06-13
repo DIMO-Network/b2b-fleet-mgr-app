@@ -5,8 +5,8 @@ import {repeat} from "lit/directives/repeat.js";
 
 @customElement('oracle-selector')
 export class OracleSelector extends LitElement {
-    @property()
-    selectedOption = 'motorq';
+    @property({attribute: true})
+    selectedOption: string;
 
     @property()
     options: Oracle[] = []
@@ -21,6 +21,7 @@ export class OracleSelector extends LitElement {
 
     constructor() {
         super();
+        this.selectedOption = "";
         this.settings = SettingsService.getInstance()
     }
 
@@ -34,10 +35,10 @@ export class OracleSelector extends LitElement {
 
     private handleChange(e: Event) {
         const select = e.target as HTMLSelectElement;
-        this.selectedOption = select.value;
+
         // Dispatch a custom event so parent components can listen to changes
         this.dispatchEvent(new CustomEvent('option-changed', {
-            detail: { value: this.selectedOption },
+            detail: { value: select.value },
             bubbles: true,
             composed: true
         }));

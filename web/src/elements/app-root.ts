@@ -9,6 +9,8 @@ interface VehiclesResponse {
     vehicles: Vehicle[];
 }
 
+const ORACLE_STORAGE_KEY = "oracle"
+
 @customElement('app-root')
 export class AppRoot extends LitElement {
     @provide({ context: apiServiceContext })
@@ -17,9 +19,14 @@ export class AppRoot extends LitElement {
     @state()
     private vehicles: Vehicle[]
 
+    @state()
+    private oracle: string;
+
     constructor() {
         super();
         this.vehicles = []
+        this.oracle = this.loadOracle("motorq")
+        this.apiService.setOracle(this.oracle)
     }
 
     // enable inherit css
@@ -34,7 +41,7 @@ export class AppRoot extends LitElement {
                 <h1 class="title">Fleet Onboarding App</h1>
                 <button class="logout-btn">Logout</button>
             </div>
-            <oracle-selector @option-changed=${this.handleOracleChange}></oracle-selector>
+            <oracle-selector .selectedOption=${this.oracle} @option-changed=${this.handleOracleChange}></oracle-selector>
             <add-vin-element></add-vin-element>
             
             <vehicle-list-element .items=${this.vehicles}></vehicle-list-element>
@@ -47,6 +54,7 @@ export class AppRoot extends LitElement {
         console.log('Oracle changed to:', selectedValue);
 
         this.apiService.setOracle(selectedValue);
+        this.saveOracle(selectedValue)
         await this.getUserVehicles()
     }
 
@@ -60,5 +68,14 @@ export class AppRoot extends LitElement {
         const userVehiclesResponse = await this.apiService.callApi<VehiclesResponse>('GET', url, null, true);
         console.debug('user vehicles', userVehiclesResponse)
         this.vehicles = userVehiclesResponse.data?.vehicles || [];
+    }
+
+    private saveOracle(oracle: string) {
+        localStorage.setItem(ORACLE_STORAGE_KEY, oracle)
+    }
+
+    private loadOracle(defaultOracle: string) {
+        const oracle = localStorage.getItem(ORACLE_STORAGE_KEY)
+        return oracle === null ? defaultOracle : oracle;
     }
 }
