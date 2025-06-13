@@ -1,3 +1,7 @@
+body {
+  max-width: calc(min(120ch, round(down, 100%, 1ch)));
+}
+
 .header {
   display: flex;
   justify-content: space-between; /* Places h1 and button at opposite ends */

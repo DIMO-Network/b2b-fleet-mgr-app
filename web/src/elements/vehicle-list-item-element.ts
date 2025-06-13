@@ -1,48 +1,36 @@
-import {html, LitElement, nothing} from 'lit'
-import {ApiService} from "@services/api-service.ts";
-import {customElement, property, state} from "lit/decorators.js";
+import {html, nothing} from 'lit'
+import {customElement, property} from "lit/decorators.js";
 import {Vehicle} from "@datatypes//vehicle.ts";
-import qs from "qs";
-import {delay} from "@utils/utils";
-import {range} from "lodash";
-import {SigningService} from "@services/signing-service.ts";
 
-interface VinDisconnectData {
-    vin: string;
-    userOperation: Object;
-    hash: string;
-    signature?: string;
+import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
+
+enum ConnectionStatus {
+    UNKNOWN,
+    CONNECTING,
+    CONNECTION_FAILED,
+    CONNECTED,
+    DISCONNECTING,
+    DISCONNECTION_FAILED,
+    DISCONNECTED
 }
 
-interface VinsDisconnectDataResult {
-    vinDisconnectData: VinDisconnectData[];
-}
-
-interface VinDisconnectStatus {
-    vin: string;
-    status: string;
-    details: string;
-}
-
-interface VinsDisconnectResult {
-    statuses: VinDisconnectStatus[];
+const ConnectionStatusMap:  Record<ConnectionStatus, string> = {
+    [ConnectionStatus.UNKNOWN]: "Unknown",
+    [ConnectionStatus.CONNECTING]: "Connecting...",
+    [ConnectionStatus.CONNECTION_FAILED]: "Connection failed",
+    [ConnectionStatus.CONNECTED]: "Connected",
+    [ConnectionStatus.DISCONNECTING]: "Disconnecting...",
+    [ConnectionStatus.DISCONNECTION_FAILED]: "Disconnection failed",
+    [ConnectionStatus.DISCONNECTED]: "Disconnected",
 }
 
 @customElement('vehicle-list-item-element')
-export class VehicleListItemElement extends LitElement {
+export class VehicleListItemElement extends BaseOnboardingElement {
     @property({attribute: true})
     public item?: Vehicle
 
-    @state()
-    private disconnectInProgress = false
-
-    private api: ApiService;
-    private signingService: SigningService;
-
     constructor() {
         super();
-        this.api = ApiService.getInstance();
-        this.signingService = SigningService.getInstance();
     }
 
     // Disable shadow DOM to allow inherit css
@@ -61,17 +49,71 @@ export class VehicleListItemElement extends LitElement {
               <td>${this.item.definition.make} ${this.item.definition.model} ${this.item.definition.year}</td>
               <td>${this.item.tokenId}</td>
               <td>${this.item.syntheticDevice?.tokenId || ''}</td>
+              <td>${ConnectionStatusMap[this.getConnectionStatus(this.item)]}</td>
               <td>
-                  <button 
+                  <button ?hidden=${!this.canDisconnect(this.item)}
                       type="button" 
-                      ?disabled=${this.disconnectInProgress || !this.item.syntheticDevice.tokenId}
-                      class=${this.disconnectInProgress ? 'processing' : ''}
+                      ?disabled=${this.processing || !this.item.syntheticDevice.tokenId}
+                      class=${this.processing ? 'processing' : ''}
                       @click=${this.disconnectVehicle}
                   >disconnect
+                  </button>
+                  <button ?hidden=${!this.canConnect(this.item)}
+                          type="button"
+                          ?disabled=${this.processing}
+                          class=${this.processing ? 'processing' : ''}
+                          @click=${this.connectVehicle}
+                  >connect
                   </button>
               </td>
               <td><button type="button" ?disabled=${this.item.syntheticDevice.tokenId}>delete</button></td>
           ` : nothing
+    }
+
+    getConnectionStatus(item: Vehicle): ConnectionStatus {
+        if (["inQueue", "inProgress"].includes(item.disconnectionStatus)) {
+            return ConnectionStatus.DISCONNECTING
+        }
+
+        if (["inQueue", "inProgress"].includes(item.connectionStatus)) {
+            return ConnectionStatus.CONNECTING
+        }
+
+        if (item.disconnectionStatus === "failed") {
+            return ConnectionStatus.DISCONNECTION_FAILED
+        }
+
+        if (item.disconnectionStatus === "succeeded") {
+            return ConnectionStatus.DISCONNECTED
+        }
+
+        if (item.connectionStatus === "failed") {
+            return ConnectionStatus.CONNECTION_FAILED
+        }
+
+        if (item.connectionStatus === "succeeded") {
+            return ConnectionStatus.CONNECTED
+        }
+
+        return ConnectionStatus.UNKNOWN
+    }
+
+    canConnect(item: Vehicle): boolean {
+        return [ConnectionStatus.UNKNOWN, ConnectionStatus.DISCONNECTED, ConnectionStatus.CONNECTION_FAILED].includes(this.getConnectionStatus(item))
+    }
+
+    canDisconnect(item: Vehicle): boolean {
+        return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item))
+    }
+
+    async connectVehicle() {
+        if (!this.item) {
+            return;
+        }
+
+        this.processing = true
+        await this.onboardVINs([this.item.vin], null)
+        this.processing = false
     }
 
     async disconnectVehicle() {
@@ -79,87 +121,8 @@ export class VehicleListItemElement extends LitElement {
             return;
         }
 
-        this.disconnectInProgress = true
-
-        const disconnectData = await this.getDisconnectData([this.item.vin])
-
-        const signedDisconnectData = await this.signDisconnectData(disconnectData)
-
-        const disconnectStatus = await this.submitDisconnectData(signedDisconnectData)
-
-        if (!disconnectStatus) {
-            console.error("Disconnection failed")
-        }
-
-        this.disconnectInProgress = false
-
-        return;
-    }
-
-    async getDisconnectData(vins: string[]) {
-        const query = qs.stringify({vins: vins.join(',')}, {arrayFormat: 'comma'});
-        const disconnectData = await this.api.callApi<VinsDisconnectDataResult>('GET', `/vehicle/disconnect?${query}`, null, true);
-        if (!disconnectData.success || !disconnectData.data) {
-            return [];
-        }
-
-        return disconnectData.data.vinDisconnectData;
-    }
-
-    async signDisconnectData(disconnectData: VinDisconnectData[]) {
-        const result: VinDisconnectData[] = [];
-        for (const d of disconnectData) {
-            const signature = await this.signingService.signUserOperation(d.userOperation);
-
-            if (!signature.success || !signature.signature) {
-                continue
-            }
-
-            result.push({
-                ...d,
-                signature: signature.signature
-            })
-        }
-
-        return result;
-    }
-
-    async submitDisconnectData(disconnectData: VinDisconnectData[]) {
-        const payload: {vinDisconnectData: VinDisconnectData[]} = {
-            vinDisconnectData: disconnectData,
-        }
-
-        const mintResponse = await this.api.callApi('POST', '/vehicle/disconnect', payload, true);
-        if (!mintResponse.success || !mintResponse.data) {
-            return false;
-        }
-
-        let success = true
-        for (const attempt of range(30)) {
-            success = true
-            const query = qs.stringify({vins: disconnectData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
-            const status = await this.api.callApi<VinsDisconnectResult>('GET', `/vehicle/disconnect/status?${query}`, null, true);
-
-            if (!status.success || !status.data) {
-                return false;
-            }
-
-            for (const s of status.data.statuses) {
-                if (s.status !== 'Success') {
-                    success = false;
-                    break;
-                }
-            }
-
-            if (success) {
-                break;
-            }
-
-            if (attempt < 19) {
-                await delay(5000);
-            }
-        }
-
-        return success;
+        this.processing = true
+        await this.disconnectVins([this.item.vin])
+        this.processing = false
     }
 }
