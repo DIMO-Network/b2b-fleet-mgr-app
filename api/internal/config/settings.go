@@ -5,7 +5,6 @@ import "net/url"
 type Settings struct {
 	Environment        string  `yaml:"ENVIRONMENT"`
 	UseDevCerts        bool    `yaml:"USE_DEV_CERTS"`
-	CompassAPIKey      string  `yaml:"COMPASS_API_KEY"`
 	APIPort            int     `yaml:"API_PORT"`
 	MonitoringPort     int     `yaml:"MONITORING_PORT"`
 	MotorqOracleAPIURL url.URL `yaml:"MOTORQ_ORACLE_API_URL"`
@@ -19,12 +18,10 @@ type Settings struct {
 	TurnkeyAPIURL url.URL `yaml:"TURNKEY_API_URL"`
 	TurnkeyRPID   string  `yaml:"TURNKEY_RP_ID"`
 
-	// used to mark the VIN as pre-approved / confirmed, in future could be used to create the vin in data provider storage side
-	CompassPreSharedKey string  `yaml:"COMPASS_PRE_SHARED_KEY"`
-	JwtKeySetURL        url.URL `yaml:"JWT_KEY_SET_URL"`
-	ClientID            string  `yaml:"CLIENT_ID"`
-	LoginURL            url.URL `yaml:"LOGIN_URL"`
-	AccountsAPIURL      url.URL `yaml:"ACCOUNTS_API_URL"`
+	JwtKeySetURL   url.URL `yaml:"JWT_KEY_SET_URL"`
+	ClientID       string  `yaml:"CLIENT_ID"`
+	LoginURL       url.URL `yaml:"LOGIN_URL"`
+	AccountsAPIURL url.URL `yaml:"ACCOUNTS_API_URL"`
 }
 
 func (s *Settings) IsProduction() bool {
