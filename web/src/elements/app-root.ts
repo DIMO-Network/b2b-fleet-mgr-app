@@ -39,7 +39,7 @@ export class AppRoot extends LitElement {
         return html`
             <div class="header">
                 <h1 class="title">Fleet Onboarding App</h1>
-                <button class="logout-btn">Logout</button>
+                <button class="logout-btn" @click=${this.handleLogout} >Logout</button>
             </div>
             <oracle-selector .selectedOption=${this.oracle} @option-changed=${this.handleOracleChange}></oracle-selector>
             <add-vin-element></add-vin-element>
@@ -77,5 +77,18 @@ export class AppRoot extends LitElement {
     private loadOracle(defaultOracle: string) {
         const oracle = localStorage.getItem(ORACLE_STORAGE_KEY)
         return oracle === null ? defaultOracle : oracle;
+    }
+
+    private handleLogout() {
+        const keysToRemove = ['token', 'email', 'appSettings', 'accountInfo', 'signerPublicKey', 'signerApiKey'];
+
+        keysToRemove.forEach(key => {
+            localStorage.removeItem(key);
+        });
+
+        console.log('Selected localStorage keys removed for logout.');
+
+        // Optionally, you can also redirect the user after logout:
+        window.location.href = '/';
     }
 }
