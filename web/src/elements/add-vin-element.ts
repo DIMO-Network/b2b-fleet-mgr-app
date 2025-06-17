@@ -5,6 +5,7 @@ import {repeat} from "lit/directives/repeat.js";
 import './session-timer';
 import {range} from "lodash";
 import {BaseOnboardingElement, SacdInput} from "@elements/base-onboarding-element.ts";
+import {delay} from "@utils/utils.ts";
 
 enum Permission {
     NONLOCATION_TELEMETRY= 1,
@@ -254,7 +255,17 @@ export class AddVinElement extends BaseOnboardingElement {
             this.displayFailure("failed to onboard vins: " + e);
         }
 
+        await delay(5000)
+        this.dispatchItemChanged()
 
         this.processing = false;
+    }
+
+    private dispatchItemChanged() {
+        this.dispatchEvent(new CustomEvent('item-changed', {
+            detail: { value: null },
+            bubbles: true,
+            composed: true
+        }));
     }
 }

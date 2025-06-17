@@ -84,7 +84,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	oracleApp.Get("/vehicle/delete", vehiclesCtrl.GetDeleteData)
 	oracleApp.Post("/vehicle/delete", vehiclesCtrl.SubmitDeleteData)
-	oracleApp.Get("/vehicle/disconnect/delete", vehiclesCtrl.GetDeleteStatus)
+	oracleApp.Get("/vehicle/delete/status", vehiclesCtrl.GetDeleteStatus)
 
 	oracleApp.Get("/vehicle/:vin", vehiclesCtrl.GetVehicleFromOracle)
 	oracleApp.Post("/vehicle/register", vehiclesCtrl.RegisterVehicle)

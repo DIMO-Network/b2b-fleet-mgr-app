@@ -1,8 +1,9 @@
 import {html, nothing} from 'lit'
-import {customElement, property} from "lit/decorators.js";
+import {customElement, property, state} from "lit/decorators.js";
 import {Vehicle} from "@datatypes//vehicle.ts";
 
 import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
+import {delay} from "@utils/utils.ts";
 
 enum ConnectionStatus {
     UNKNOWN,
@@ -29,6 +30,10 @@ export class VehicleListItemElement extends BaseOnboardingElement {
     @property({attribute: true})
     public item?: Vehicle
 
+    @state()
+    private connectionProcessing = false
+    private deletionProcessing = false
+
     constructor() {
         super();
     }
@@ -54,14 +59,14 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   <button ?hidden=${!this.canDisconnect(this.item)}
                       type="button" 
                       ?disabled=${this.processing || !this.item.syntheticDevice.tokenId}
-                      class=${this.processing ? 'processing' : ''}
+                      class=${this.connectionProcessing ? 'processing' : ''}
                       @click=${this.disconnectVehicle}
                   >disconnect
                   </button>
                   <button ?hidden=${!this.canConnect(this.item)}
                           type="button"
                           ?disabled=${this.processing}
-                          class=${this.processing ? 'processing' : ''}
+                          class=${this.connectionProcessing ? 'processing' : ''}
                           @click=${this.connectVehicle}
                   >connect
                   </button>
@@ -69,8 +74,9 @@ export class VehicleListItemElement extends BaseOnboardingElement {
               <td>
                   <button 
                       type="button" 
-                      ?disabled=${this.item.syntheticDevice.tokenId}
+                      ?disabled=${this.item.syntheticDevice.tokenId || this.processing}
                       @click=${this.deleteVehicle}
+                      class=${this.deletionProcessing ? 'processing' : ''}
                   >delete</button></td>
           ` : nothing
     }
@@ -115,14 +121,30 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item))
     }
 
+    private dispatchItemChanged() {
+        this.dispatchEvent(new CustomEvent('item-changed', {
+            detail: { value: this.item },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
     async connectVehicle() {
         if (!this.item) {
             return;
         }
 
+        if (!confirm("Are you sure you want to re-connect the vehicle?")) {
+            return;
+        }
+
         this.processing = true
+        this.connectionProcessing = true
         await this.onboardVINs([this.item.vin], null)
+        await delay(5000)
         this.processing = false
+        this.connectionProcessing = false
+        this.dispatchItemChanged()
     }
 
     async disconnectVehicle() {
@@ -130,9 +152,17 @@ export class VehicleListItemElement extends BaseOnboardingElement {
             return;
         }
 
+        if (!confirm("Are you sure you want to disconnect the vehicle?")) {
+            return;
+        }
+
         this.processing = true
+        this.connectionProcessing = true
         await this.disconnectVins([this.item.vin])
+        await delay(5000)
         this.processing = false
+        this.connectionProcessing = false
+        this.dispatchItemChanged()
     }
 
     async deleteVehicle() {
@@ -140,8 +170,16 @@ export class VehicleListItemElement extends BaseOnboardingElement {
             return;
         }
 
+        if (!confirm("Are you sure you want to delete the vehicle?")) {
+            return;
+        }
+
         this.processing = true
+        this.deletionProcessing = true
         await this.deleteVins([this.item.vin])
+        await delay(5000)
         this.processing = false
+        this.deletionProcessing = false
+        this.dispatchItemChanged()
     }
 }

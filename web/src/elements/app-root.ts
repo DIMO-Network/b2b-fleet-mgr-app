@@ -42,9 +42,9 @@ export class AppRoot extends LitElement {
                 <button class="logout-btn">Logout</button>
             </div>
             <oracle-selector .selectedOption=${this.oracle} @option-changed=${this.handleOracleChange}></oracle-selector>
-            <add-vin-element></add-vin-element>
+            <add-vin-element @item-changed=${this.getUserVehicles}></add-vin-element>
             
-            <vehicle-list-element .items=${this.vehicles}></vehicle-list-element>
+            <vehicle-list-element .items=${this.vehicles} @item-changed=${this.getUserVehicles}></vehicle-list-element>
     `;
     }
 
@@ -67,7 +67,7 @@ export class AppRoot extends LitElement {
         const url = "/vehicles";
         const userVehiclesResponse = await this.apiService.callApi<VehiclesResponse>('GET', url, null, true);
         console.debug('user vehicles', userVehiclesResponse)
-        this.vehicles = userVehiclesResponse.data?.vehicles || [];
+        this.vehicles = userVehiclesResponse.data?.vehicles?.sort((a, b) => a.tokenId - b.tokenId) || [];
     }
 
     private saveOracle(oracle: string) {
