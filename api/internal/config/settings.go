@@ -31,7 +31,7 @@ func (s *Settings) IsProduction() bool {
 func (s *Settings) GetOracles() []Oracle {
 	return []Oracle{
 		{
-			Name:     "MotorQ",
+			Name:     "Stellantis",
 			OracleID: "motorq",
 			URL:      s.MotorqOracleAPIURL,
 		},
