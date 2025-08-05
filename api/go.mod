@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	github.com/DIMO-Network/shared v0.12.9
 	github.com/gofiber/contrib/jwt v1.1.2
-	github.com/gofiber/fiber/v2 v2.52.8
+	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/prometheus/client_golang v1.22.0
 	github.com/rs/zerolog v1.34.0
 	golang.org/x/sync v0.15.0
