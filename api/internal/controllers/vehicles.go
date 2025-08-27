@@ -30,7 +30,7 @@ func NewVehiclesController(settings *config.Settings, logger *zerolog.Logger) *V
 
 func (v *VehiclesController) GetOraclePermissions(c *fiber.Ctx) error {
 	u := GetOracleURL(c, v.settings)
-	targetURL := u.JoinPath("/v1/permissions")
+	targetURL := u.JoinPath("/v1/access")
 	return v.proxyRequest(c, targetURL, nil)
 }
 
