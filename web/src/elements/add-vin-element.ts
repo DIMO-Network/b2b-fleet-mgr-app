@@ -270,9 +270,9 @@ export class AddVinElement extends BaseOnboardingElement {
 
                 console.debug('SACD', sacdInput)
             }
+            type HexString = `0x${string}`;
 
-
-            const status = await this.onboardVINs(vinsArray, sacdInput)
+            const status = await this.onboardVINs(vinsArray, sacdInput, this.ownerAddress as HexString)
             if (!status) {
 
             }

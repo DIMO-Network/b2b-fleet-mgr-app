@@ -74,10 +74,11 @@ func (v *VehiclesController) SubmitVehiclesVerification(c *fiber.Ctx) error {
 
 func (v *VehiclesController) GetVehiclesMintData(c *fiber.Ctx) error {
 	vins := c.Query("vins", "")
+	ownerAddress := c.Query("owner_address", "")
 	u := GetOracleURL(c, v.settings)
 
 	targetURL := u.JoinPath("/v1/vehicle/mint")
-	targetURL.RawQuery = fmt.Sprintf("vins=%s", vins)
+	targetURL.RawQuery = fmt.Sprintf("vins=%s&owner_address=%s", vins, ownerAddress)
 	return v.proxyRequest(c, targetURL, nil)
 }
 
