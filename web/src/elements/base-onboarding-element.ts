@@ -228,7 +228,7 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async onboardVINs(vins: string[], sacd: SacdInput | null, ownerAdress: `0x${string}` | null): Promise<boolean> {
+    async onboardVINs(vins: string[], sacd: SacdInput | null, ownerAddress: `0x${string}` | null): Promise<boolean> {
         let allVinsValid = true;
         for (const vin of vins) {
             const validVin = vin?.length === 17
@@ -251,7 +251,7 @@ export class BaseOnboardingElement extends LitElement {
             return false
         }
 
-        const mintData = await this.getMintingData(vins, ownerAdress);
+        const mintData = await this.getMintingData(vins, ownerAddress);
         if (mintData.length === 0) {
             this.displayFailure("Failed to fetch minting data");
             return false
