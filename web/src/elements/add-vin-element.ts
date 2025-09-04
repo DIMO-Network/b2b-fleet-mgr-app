@@ -81,6 +81,12 @@ export class AddVinElement extends BaseOnboardingElement {
     @property({attribute: false})
     private sacdPermissions: Permissions;
 
+    @property({attribute: false})
+    private enableSetOwner: boolean;
+
+    @property({attribute: false})
+    private ownerAddress: string | null;
+
     @state() sessionExpiresIn: number = 0;
 
     private settings: SettingsService;
@@ -96,6 +102,8 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = false;
         this.sacdGrantee = "";
         this.sacdPermissions = defaultPermissions;
+        this.enableSetOwner = false;
+        this.ownerAddress = "";
     }
 
     // Disable shadow DOM to allow inherit css
@@ -126,6 +134,10 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = !this.enableSacd;
     }
 
+    toggleEnableSetOwner() {
+        this.enableSetOwner = !this.enableSetOwner;
+    }
+
     render() {
         return html`
             <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
@@ -141,6 +153,9 @@ export class AddVinElement extends BaseOnboardingElement {
             <form class="grid">
                 <label>
                     <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}> Share onboarded vehicles
+                </label>
+                <label>
+                    <input type="checkbox" .checked="${this.enableSetOwner}" @click=${this.toggleEnableSetOwner}> Set different owner
                 </label>
             </form>
             <div ?hidden=${!this.enableSacd}>
@@ -158,6 +173,16 @@ export class AddVinElement extends BaseOnboardingElement {
                             <input type="checkbox" .checked="${this.sacdPermissions?.[item as Permission]}" @click=${() => this.togglePermission(item)}> ${PERMISSIONS_MAP[item]}
                         </label>
                     `)}
+                    </fieldset>
+                </form>
+            </div>
+            <div ?hidden=${!this.enableSetOwner}>
+                <form class="grid" >
+                    <fieldset>
+                        <label>Owner 0x Account Address
+                            <input type="text" placeholder="0x" maxlength="42"
+                                   value=${this.ownerAddress} @input="${(e: InputEvent) => this.ownerAddress = (e.target as HTMLInputElement).value}">
+                        </label>
                     </fieldset>
                 </form>
             </div>
@@ -245,9 +270,9 @@ export class AddVinElement extends BaseOnboardingElement {
 
                 console.debug('SACD', sacdInput)
             }
+            type HexString = `0x${string}`;
 
-
-            const status = await this.onboardVINs(vinsArray, sacdInput)
+            const status = await this.onboardVINs(vinsArray, sacdInput, this.ownerAddress as HexString)
             if (!status) {
 
             }

@@ -84,6 +84,7 @@ export class BaseOnboardingElement extends LitElement {
         this.onboardResult = []
     }
 
+
     // this method should be overridden by children
     displayFailure(_alertText: string) {
         this.processing = false;
@@ -150,8 +151,8 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async getMintingData(vins: string[]) {
-        const query = qs.stringify({vins: vins.join(',')}, {arrayFormat: 'comma'});
+    async getMintingData(vins: string[], ownerAddress: `0x${string}` | null) {
+        const query = qs.stringify({vins: vins.join(','), owner_address: ownerAddress}, {arrayFormat: 'comma'});
         const mintData = await this.api.callApi<VinsMintDataResult>('GET', `/vehicle/mint?${query}`, null, true);
         if (!mintData.success || !mintData.data) {
             return [];
@@ -227,7 +228,7 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async onboardVINs(vins: string[], sacd: SacdInput | null): Promise<boolean> {
+    async onboardVINs(vins: string[], sacd: SacdInput | null, ownerAddress: `0x${string}` | null): Promise<boolean> {
         let allVinsValid = true;
         for (const vin of vins) {
             const validVin = vin?.length === 17
@@ -250,7 +251,7 @@ export class BaseOnboardingElement extends LitElement {
             return false
         }
 
-        const mintData = await this.getMintingData(vins);
+        const mintData = await this.getMintingData(vins, ownerAddress);
         if (mintData.length === 0) {
             this.displayFailure("Failed to fetch minting data");
             return false
