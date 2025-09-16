@@ -69,6 +69,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	// oracle group with route parameter.
 	oracleApp := app.Group("/oracle/:oracleID", jwtAuth, oracleIDMiddleware(knownOracles))
 	oracleApp.Get("/permissions", vehiclesCtrl.GetOraclePermissions)
+	oracleApp.Get("/pending-vehicles", vehiclesCtrl.GetPendingVehicles)
 	oracleApp.Get("/vehicles", vehiclesCtrl.GetVehicles)
 
 	oracleApp.Get("/vehicle/verify", vehiclesCtrl.GetVehiclesVerificationStatus)

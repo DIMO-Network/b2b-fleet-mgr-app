@@ -34,6 +34,17 @@ func (v *VehiclesController) GetOraclePermissions(c *fiber.Ctx) error {
 	return v.proxyRequest(c, targetURL, nil)
 }
 
+// GetPendingVehicles calls oracle to get vehicles that have been seen but not onboarded, eg. pending onboard
+func (v *VehiclesController) GetPendingVehicles(c *fiber.Ctx) error {
+	u := GetOracleURL(c, v.settings)
+	targetURL := u.JoinPath("/v1/pending-vehicles")
+
+	// Add the query string from the original request
+	targetURL.RawQuery = string(c.Request().URI().QueryString())
+
+	return v.proxyRequest(c, targetURL, nil)
+}
+
 func (v *VehiclesController) GetVehicleFromOracle(c *fiber.Ctx) error {
 	vin := c.Params("vin", "")
 	u := GetOracleURL(c, v.settings)

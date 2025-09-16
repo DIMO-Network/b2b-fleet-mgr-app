@@ -50,10 +50,10 @@ export class LoginElement extends LitElement {
     }
 
     setupLoginUrl() {
-        let redirectUrl = "";
+        let redirectUri = "";
         // Check if the hostname is "localhost" or "127.0.0.1"
-        redirectUrl = location.origin + "/login.html";
-        this.loginUrl = `${this.loginBaseUrl}?clientId=${this.clientId}&redirectUri=${redirectUrl}&entryState=EMAIL_INPUT&forceEmail=true`;
+        redirectUri = location.origin + "/login.html";
+        this.loginUrl = `${this.loginBaseUrl}?clientId=${this.clientId}&redirectUri=${redirectUri}&entryState=EMAIL_INPUT&forceEmail=true`;
     }
 }
 window.customElements.define('login-element', LoginElement);
