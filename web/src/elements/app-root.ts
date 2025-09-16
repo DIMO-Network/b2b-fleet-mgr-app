@@ -81,10 +81,11 @@ export class AppRoot extends LitElement {
     }
 
     private handleOnboardVehicle(e: CustomEvent) {
+        console.log('received event Onboarding vehicle', e.detail);
         const { vin } = e.detail;
         const addVinElement = this.querySelector('add-vin-element') as any;
-        if (addVinElement && addVinElement.setVin) {
-            addVinElement.setVin(vin);
+        if (addVinElement && addVinElement.onboardSingleVin) {
+            addVinElement.onboardSingleVin(vin);
         }
     }
 

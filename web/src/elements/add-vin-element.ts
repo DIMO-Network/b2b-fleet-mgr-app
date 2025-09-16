@@ -145,7 +145,7 @@ export class AddVinElement extends BaseOnboardingElement {
             </div>
             <div>
                 <form class="grid">
-                    <label>Bulk Upload VINs (newline separated)
+                    <label>- OR - Bulk Upload VINs (newline separated)
                         <textarea class="" style="display: block; height: 10em; width: 100%" placeholder="VIN1\nVIN2\nVIN3" @input="${(e: InputEvent) => this.vinsBulk = (e.target as HTMLInputElement).value}"></textarea>
                     </label>
                 </form>
@@ -236,9 +236,46 @@ export class AddVinElement extends BaseOnboardingElement {
         if (this.vinsBulk !== null && this.vinsBulk !== undefined && this.vinsBulk?.length > 0) {
             vinsArray = this.vinsBulk.split('\n');
         } else {
+            this.processing = false;
             return this.displayFailure("no vin provided");
         }
 
+        try {
+            await this.performOnboarding(vinsArray);
+        } catch (e) {
+            this.displayFailure("failed to onboard vins: " + e);
+        }
+
+        this.processing = false;
+    }
+
+    private dispatchItemChanged() {
+        this.dispatchEvent(new CustomEvent('item-changed', {
+            detail: { value: null },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    public async onboardSingleVin(vin: string) {
+        console.log('onboarding single vin:', vin);
+        this.requestUpdate();
+        
+        // Start the onboarding process
+        this.alertText = "";
+        this.processingMessage = "";
+        this.processing = true;
+
+        try {
+            await this.performOnboarding([vin]);
+        } catch (e) {
+            this.displayFailure("failed to onboard vin: " + e);
+        }
+
+        this.processing = false;
+    }
+
+    private async performOnboarding(vinsArray: string[]) {
         try {
             let sacdInput: SacdInput | null;
             if (!this.enableSacd) {
@@ -274,28 +311,14 @@ export class AddVinElement extends BaseOnboardingElement {
 
             const status = await this.onboardVINs(vinsArray, sacdInput, this.ownerAddress as HexString)
             if (!status) {
-
+                // Handle failure case if needed
             }
         } catch (e) {
             this.displayFailure("failed to onboard vins: " + e);
+            throw e; // Re-throw so caller can handle if needed
         }
 
         await delay(5000)
         this.dispatchItemChanged()
-
-        this.processing = false;
-    }
-
-    private dispatchItemChanged() {
-        this.dispatchEvent(new CustomEvent('item-changed', {
-            detail: { value: null },
-            bubbles: true,
-            composed: true
-        }));
-    }
-
-    public setVin(vin: string) {
-        this.vinsBulk = vin;
-        this.requestUpdate();
     }
 }

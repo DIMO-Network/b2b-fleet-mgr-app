@@ -31,6 +31,9 @@ export class PendingVehiclesElement extends LitElement {
     @property({attribute: true})
     private totalItems: number;
 
+    @property({attribute: true})
+    private shouldShowPagination: boolean;
+
     private alertText: string;
     private loading: boolean;
     private apiService: ApiService;
@@ -44,6 +47,7 @@ export class PendingVehiclesElement extends LitElement {
         this.pageSize = 10;
         this.totalItems = 0;
         this.apiService = ApiService.getInstance();
+        this.shouldShowPagination = false;
     }
 
     // Disable shadow DOM to allow inherit css
@@ -86,6 +90,7 @@ export class PendingVehiclesElement extends LitElement {
                 // If we got a full page, there might be more items
                 this.totalItems = skip + response.data.length + 1; // +1 to indicate there might be more
             }
+            this.shouldShowPagination = this.totalItems > this.pageSize;
         } else {
             this.alertText = response.error || "Failed to load pending vehicles";
             this.items = [];
@@ -160,10 +165,11 @@ export class PendingVehiclesElement extends LitElement {
                         </tr>
                     `)}
                 </table>
-                
+
                 <!-- Pagination Controls -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding: 0.5rem;">
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <div ?hidden=${!this.shouldShowPagination}>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
                         <button 
                             @click=${this.previousPage} 
                             ?disabled=${!this.hasPreviousPage}
@@ -184,6 +190,7 @@ export class PendingVehiclesElement extends LitElement {
                     </div>
                     <div style="font-size: 0.875rem; color: #666;">
                         Showing ${this.items.length} of ${this.totalItems} items
+                    </div>
                     </div>
                 </div>
             `}
