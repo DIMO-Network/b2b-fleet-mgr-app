@@ -87,9 +87,13 @@ export class AddVinElement extends BaseOnboardingElement {
     @property({attribute: false})
     private ownerAddress: string | null;
 
+    @property({attribute: false})
+    private ownerEmailAddress: string | null;
+
     @state() sessionExpiresIn: number = 0;
 
     private settings: SettingsService;
+
 
 
     constructor() {
@@ -104,6 +108,7 @@ export class AddVinElement extends BaseOnboardingElement {
         this.sacdPermissions = defaultPermissions;
         this.enableSetOwner = false;
         this.ownerAddress = "";
+        this.ownerEmailAddress = "";
     }
 
     // Disable shadow DOM to allow inherit css
@@ -123,6 +128,10 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = this.settings.sharingInfo?.enabled || false;
         this.sacdGrantee = this.settings.sharingInfo?.grantee || "";
         this.sacdPermissions = this.settings.sharingInfo?.permissions as Permissions || defaultPermissions;
+        
+        this.enableSetOwner = this.settings.sharingInfo?.ownerEnabled || false;
+        this.ownerAddress = this.settings.sharingInfo?.ownerAddress || "";
+        this.ownerEmailAddress = this.settings.sharingInfo?.ownerEmailAddress || "";
     }
 
     togglePermission(permission: number) {
@@ -182,6 +191,12 @@ export class AddVinElement extends BaseOnboardingElement {
                         <label>Owner 0x Account Address
                             <input type="text" placeholder="0x" maxlength="42"
                                    value=${this.ownerAddress} @input="${(e: InputEvent) => this.ownerAddress = (e.target as HTMLInputElement).value}">
+                        </label>
+                    </fieldset>
+                    <fieldset>
+                        <label>Owner Email Address
+                            <input type="text" placeholder="bob@smith.com" maxlength="42"
+                                   value=${this.ownerEmailAddress} @input="${(e: InputEvent) => this.ownerEmailAddress = (e.target as HTMLInputElement).value}">
                         </label>
                     </fieldset>
                 </form>
@@ -282,6 +297,7 @@ export class AddVinElement extends BaseOnboardingElement {
                 sacdInput = null;
 
                 this.settings.sharingInfo = {
+                    ...this.settings.sharingInfo,
                     enabled: false
                 }
 
@@ -298,6 +314,7 @@ export class AddVinElement extends BaseOnboardingElement {
                 }
 
                 this.settings.sharingInfo = {
+                    ...this.settings.sharingInfo,
                     enabled: true,
                     grantee: this.sacdGrantee!,
                     permissions: this.sacdPermissions,
@@ -307,6 +324,16 @@ export class AddVinElement extends BaseOnboardingElement {
 
                 console.debug('SACD', sacdInput)
             }
+
+            // Save owner settings
+            this.settings.sharingInfo = {
+                ...this.settings.sharingInfo,
+                ownerEnabled: this.enableSetOwner,
+                ownerAddress: this.ownerAddress || "",
+                ownerEmailAddress: this.ownerEmailAddress || ""
+            }
+            this.settings.saveSharingInfo()
+
             type HexString = `0x${string}`;
 
             const status = await this.onboardVINs(vinsArray, sacdInput, this.ownerAddress as HexString)
