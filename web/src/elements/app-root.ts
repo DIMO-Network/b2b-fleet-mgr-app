@@ -43,6 +43,7 @@ export class AppRoot extends LitElement {
             </div>
             <oracle-selector .selectedOption=${this.oracle} @option-changed=${this.handleOracleChange}></oracle-selector>
             <add-vin-element @item-changed=${this.getUserVehicles}></add-vin-element>
+            <pending-vehicles-element @onboard-vehicle=${this.handleOnboardVehicle}></pending-vehicles-element>
             
             <vehicle-list-element .items=${this.vehicles} @item-changed=${this.getUserVehicles}></vehicle-list-element>
     `;
@@ -77,6 +78,14 @@ export class AppRoot extends LitElement {
     private loadOracle(defaultOracle: string) {
         const oracle = localStorage.getItem(ORACLE_STORAGE_KEY)
         return oracle === null ? defaultOracle : oracle;
+    }
+
+    private handleOnboardVehicle(e: CustomEvent) {
+        const { vin } = e.detail;
+        const addVinElement = this.querySelector('add-vin-element') as any;
+        if (addVinElement && addVinElement.setVin) {
+            addVinElement.setVin(vin);
+        }
     }
 
     private handleLogout() {

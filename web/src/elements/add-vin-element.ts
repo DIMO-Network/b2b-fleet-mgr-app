@@ -293,4 +293,9 @@ export class AddVinElement extends BaseOnboardingElement {
             composed: true
         }));
     }
+
+    public setVin(vin: string) {
+        this.vinsBulk = vin;
+        this.requestUpdate();
+    }
 }
