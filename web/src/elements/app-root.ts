@@ -42,8 +42,8 @@ export class AppRoot extends LitElement {
                 <button class="logout-btn" @click=${this.handleLogout} >Logout</button>
             </div>
             <oracle-selector .selectedOption=${this.oracle} @option-changed=${this.handleOracleChange}></oracle-selector>
-            <add-vin-element @item-changed=${this.getUserVehicles}></add-vin-element>
             <pending-vehicles-element @onboard-vehicle=${this.handleOnboardVehicle}></pending-vehicles-element>
+            <add-vin-element @item-changed=${this.getUserVehicles}></add-vin-element>
             
             <vehicle-list-element .items=${this.vehicles} @item-changed=${this.getUserVehicles}></vehicle-list-element>
     `;

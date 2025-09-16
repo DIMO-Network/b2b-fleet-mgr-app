@@ -39,6 +39,9 @@ func (v *VehiclesController) GetPendingVehicles(c *fiber.Ctx) error {
 	u := GetOracleURL(c, v.settings)
 	targetURL := u.JoinPath("/v1/pending-vehicles")
 
+	// Add the query string from the original request
+	targetURL.RawQuery = string(c.Request().URI().QueryString())
+
 	return v.proxyRequest(c, targetURL, nil)
 }
 
