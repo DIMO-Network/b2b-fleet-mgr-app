@@ -103,6 +103,7 @@ export class AddVinElement extends BaseOnboardingElement {
     private settings: SettingsService;
     private apiService: ApiService;
 
+
     constructor() {
         super();
         this.vinsBulk = "";
@@ -133,7 +134,7 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = this.settings.sharingInfo?.enabled || false;
         this.sacdGrantee = this.settings.sharingInfo?.grantee || "";
         this.sacdPermissions = this.settings.sharingInfo?.permissions as Permissions || defaultPermissions;
-        
+
         // Load pending vehicles
         await this.loadPendingVehicles();
     }
@@ -151,12 +152,12 @@ export class AddVinElement extends BaseOnboardingElement {
     private async loadPendingVehicles() {
         this.pendingVehiclesLoading = true;
         this.pendingVehiclesError = "";
-        
+
         const skip = (this.currentPage - 1) * this.pageSize;
         const take = this.pageSize;
-        
+
         const url = `/pending-vehicles?skip=${skip}&take=${take}`;
-        
+
         const response = await this.apiService.callApi<PendingVehicle[]>(
             'GET',
             url,
@@ -193,7 +194,7 @@ export class AddVinElement extends BaseOnboardingElement {
 
     private toggleAllPendingVehicles() {
         const allSelected = this.pendingVehicles.every(vehicle => this.selectedPendingVehicles.has(vehicle.vin));
-        
+
         if (allSelected) {
             // If all are selected, deselect all
             this.selectedPendingVehicles.clear();
@@ -406,7 +407,7 @@ export class AddVinElement extends BaseOnboardingElement {
 
         try {
             await this.performOnboarding(vinsArray);
-            
+
             // Clear selected pending vehicles after successful onboarding
             this.selectedPendingVehicles.clear();
             this.vinsBulk = "";
