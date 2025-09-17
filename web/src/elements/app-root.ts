@@ -36,10 +36,14 @@ export class AppRoot extends LitElement {
     }
 
     render() {
+        const userEmail = localStorage.getItem("email") || "";
         return html`
             <div class="header">
                 <h1 class="title">Fleet Onboarding App</h1>
-                <button class="logout-btn" @click=${this.handleLogout} >Logout</button>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 0.875rem; color: #666;">${userEmail}</span>
+                    <button class="logout-btn" @click=${this.handleLogout} >Logout</button>
+                </div>
             </div>
             <oracle-selector .selectedOption=${this.oracle} @option-changed=${this.handleOracleChange}></oracle-selector>
             <pending-vehicles-element @onboard-vehicle=${this.handleOnboardVehicle}></pending-vehicles-element>

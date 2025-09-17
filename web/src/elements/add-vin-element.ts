@@ -187,14 +187,14 @@ export class AddVinElement extends BaseOnboardingElement {
             </div>
             <div ?hidden=${!this.enableSetOwner}>
                 <form class="grid" >
-                    <fieldset>
-                        <label>Owner 0x Account Address
+                    <fieldset style="display: flex; gap: 1rem; align-items: end;">
+                        <label style="flex: 1;">
+                            Owner 0x Account Address
                             <input type="text" placeholder="0x" maxlength="42"
                                    value=${this.ownerAddress} @input="${(e: InputEvent) => this.ownerAddress = (e.target as HTMLInputElement).value}">
                         </label>
-                    </fieldset>
-                    <fieldset>
-                        <label>Owner Email Address
+                        <label style="flex: 1;">
+                            Owner Email Address
                             <input type="text" placeholder="bob@smith.com" maxlength="42"
                                    value=${this.ownerEmailAddress} @input="${(e: InputEvent) => this.ownerEmailAddress = (e.target as HTMLInputElement).value}">
                         </label>
