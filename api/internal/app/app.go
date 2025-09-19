@@ -57,6 +57,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	vehiclesCtrl := controllers.NewVehiclesController(settings, logger)
 	settingsCtrl := controllers.NewSettingsController(settings, logger)
+	accountsCtrl := controllers.NewAccountsController(settings, logger)
 
 	jwtAuth := jwtware.New(jwtware.Config{
 		JWKSetURLs: []string{settings.JwtKeySetURL.String()},
@@ -92,6 +93,10 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	// settings the app needs to operate, pulled from config / env vars
 	oracleApp.Get("/settings", jwtAuth, settingsCtrl.GetSettings) // todo some of these are oracle specific
+
+	// acounts
+	oracleApp.Get("/account/:emailOrWallet", jwtAuth, accountsCtrl.GetAccount)
+	oracleApp.Post("/account", jwtAuth, accountsCtrl.CreateAccount)
 
 	return app
 }
