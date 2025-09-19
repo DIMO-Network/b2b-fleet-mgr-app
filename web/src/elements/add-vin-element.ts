@@ -161,16 +161,16 @@ export class AddVinElement extends BaseOnboardingElement {
             </div>
             <form class="grid">
                 <label>
-                    <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}> Share onboarded vehicles
+                    <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}> Share vehicles with Developer
                 </label>
                 <label>
-                    <input type="checkbox" .checked="${this.enableSetOwner}" @click=${this.toggleEnableSetOwner}> Set different owner
+                    <input type="checkbox" .checked="${this.enableSetOwner}" @click=${this.toggleEnableSetOwner}> Set different owner wallet
                 </label>
             </form>
             <div ?hidden=${!this.enableSacd}>
                 <form class="grid" >
                     <fieldset>
-                        <label>Grantee 0x Client ID
+                        <label>Developer License 0x Client ID
                             <input type="text" placeholder="0x" maxlength="42"
                                    value=${this.sacdGrantee} @input="${(e: InputEvent) => this.sacdGrantee = (e.target as HTMLInputElement).value}">
                         </label>
@@ -189,7 +189,7 @@ export class AddVinElement extends BaseOnboardingElement {
                 <form class="grid" >
                     <fieldset style="display: flex; gap: 1rem; align-items: end;">
                         <label style="flex: 1;">
-                            Owner 0x Account Address
+                            Owner 0x Wallet Address
                             <input type="text" placeholder="0x" maxlength="42"
                                    value=${this.ownerAddress} @input="${(e: InputEvent) => this.ownerAddress = (e.target as HTMLInputElement).value}">
                         </label>
