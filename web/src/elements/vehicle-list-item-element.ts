@@ -84,6 +84,16 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
               </td>
+              <td>
+                  <button 
+                      type="button" 
+                      ?disabled=${this.processing || !this.item.isCurrentUserOwner}
+                      @click=${this.openTransferModal}
+                  >
+                      transfer
+                      ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
+                  </button>
+              </td>
           ` : nothing
     }
 
@@ -187,5 +197,22 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         this.processing = false
         this.deletionProcessing = false
         this.dispatchItemChanged()
+    }
+
+    private openTransferModal() {
+        console.log("Opening transfer modal for vehicle:", this.item?.vin);
+        
+        // Create the transfer modal using the separate component
+        const modal = document.createElement('transfer-modal-element') as any;
+        modal.show = true;
+        modal.vehicleVin = this.item?.vin || '';
+        
+        // Add event listener for modal close
+        modal.addEventListener('modal-closed', () => {
+            document.body.removeChild(modal);
+        });
+        
+        // Add to body
+        document.body.appendChild(modal);
     }
 }
