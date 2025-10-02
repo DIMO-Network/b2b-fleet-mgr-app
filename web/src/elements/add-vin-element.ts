@@ -81,15 +81,6 @@ export class AddVinElement extends BaseOnboardingElement {
     @property({attribute: false})
     private sacdPermissions: Permissions;
 
-    @property({attribute: false})
-    private enableSetOwner: boolean;
-
-    @property({attribute: false})
-    private ownerAddress: string | null;
-
-    @property({attribute: false})
-    private ownerEmailAddress: string | null;
-
     @state() sessionExpiresIn: number = 0;
 
     private settings: SettingsService;
@@ -106,9 +97,6 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = false;
         this.sacdGrantee = "";
         this.sacdPermissions = defaultPermissions;
-        this.enableSetOwner = false;
-        this.ownerAddress = "";
-        this.ownerEmailAddress = "";
     }
 
     // Disable shadow DOM to allow inherit css
@@ -128,10 +116,6 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = this.settings.sharingInfo?.enabled || false;
         this.sacdGrantee = this.settings.sharingInfo?.grantee || "";
         this.sacdPermissions = this.settings.sharingInfo?.permissions as Permissions || defaultPermissions;
-        
-        this.enableSetOwner = this.settings.sharingInfo?.ownerEnabled || false;
-        this.ownerAddress = this.settings.sharingInfo?.ownerAddress || "";
-        this.ownerEmailAddress = this.settings.sharingInfo?.ownerEmailAddress || "";
     }
 
     togglePermission(permission: number) {
@@ -141,10 +125,6 @@ export class AddVinElement extends BaseOnboardingElement {
 
     toggleEnableSacd() {
         this.enableSacd = !this.enableSacd;
-    }
-
-    toggleEnableSetOwner() {
-        this.enableSetOwner = !this.enableSetOwner;
     }
 
     render() {
@@ -163,9 +143,6 @@ export class AddVinElement extends BaseOnboardingElement {
                 <label>
                     <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}> Share vehicles with Developer
                 </label>
-                <label>
-                    <input type="checkbox" .checked="${this.enableSetOwner}" @click=${this.toggleEnableSetOwner}> Set different owner wallet
-                </label>
             </form>
             <div ?hidden=${!this.enableSacd}>
                 <form class="grid" >
@@ -182,22 +159,6 @@ export class AddVinElement extends BaseOnboardingElement {
                             <input type="checkbox" .checked="${this.sacdPermissions?.[item as Permission]}" @click=${() => this.togglePermission(item)}> ${PERMISSIONS_MAP[item]}
                         </label>
                     `)}
-                    </fieldset>
-                </form>
-            </div>
-            <div ?hidden=${!this.enableSetOwner}>
-                <form class="grid" >
-                    <fieldset style="display: flex; gap: 1rem; align-items: end;">
-                        <label style="flex: 1;">
-                            Owner 0x Wallet Address
-                            <input type="text" placeholder="0x" maxlength="42"
-                                   value=${this.ownerAddress} @input="${(e: InputEvent) => this.ownerAddress = (e.target as HTMLInputElement).value}">
-                        </label>
-                        <label style="flex: 1;">
-                            Owner Email Address
-                            <input type="text" placeholder="bob@smith.com" maxlength="42"
-                                   value=${this.ownerEmailAddress} @input="${(e: InputEvent) => this.ownerEmailAddress = (e.target as HTMLInputElement).value}">
-                        </label>
                     </fieldset>
                 </form>
             </div>
@@ -328,15 +289,10 @@ export class AddVinElement extends BaseOnboardingElement {
             // Save owner settings
             this.settings.sharingInfo = {
                 ...this.settings.sharingInfo,
-                ownerEnabled: this.enableSetOwner,
-                ownerAddress: this.ownerAddress || "",
-                ownerEmailAddress: this.ownerEmailAddress || ""
             }
             this.settings.saveSharingInfo()
 
-            type HexString = `0x${string}`;
-
-            const status = await this.onboardVINs(vinsArray, sacdInput, this.ownerAddress as HexString)
+            const status = await this.onboardVINs(vinsArray, sacdInput)
             if (!status) {
                 // Handle failure case if needed
             }

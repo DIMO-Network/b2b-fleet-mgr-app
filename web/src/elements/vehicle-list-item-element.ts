@@ -62,7 +62,9 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       ?disabled=${this.processing || !this.item.syntheticDevice.tokenId || !this.item.isCurrentUserOwner}
                       class=${this.connectionProcessing ? 'processing' : ''}
                       @click=${this.disconnectVehicle}
-                  >disconnect
+                  >
+                      disconnect
+                      ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
                   <button ?hidden=${!this.canConnect(this.item)}
                           type="button"
@@ -75,10 +77,14 @@ export class VehicleListItemElement extends BaseOnboardingElement {
               <td>
                   <button 
                       type="button" 
-                      ?disabled=${this.item.syntheticDevice.tokenId || this.processing}
-                      @click=${this.deleteVehicle || !this.item.isCurrentUserOwner}
+                      ?disabled=${this.item.syntheticDevice.tokenId || this.processing || !this.item.isCurrentUserOwner}
+                      @click=${this.deleteVehicle}
                       class=${this.deletionProcessing ? 'processing' : ''}
-                  >delete</button></td>
+                  >
+                      delete
+                      ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
+                  </button>
+              </td>
           ` : nothing
     }
 
@@ -141,7 +147,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true
         this.connectionProcessing = true
-        await this.onboardVINs([this.item.vin], null, null)
+        await this.onboardVINs([this.item.vin], null)
         await delay(5000)
         this.processing = false
         this.connectionProcessing = false

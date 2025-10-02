@@ -47,15 +47,17 @@ func (s *Settings) GetOracles() []Oracle {
 			URL:      s.StaexOracleAPIURL,
 		},
 		{
-			Name:     "Kaufmann",
-			OracleID: "kaufmann",
-			URL:      s.KaufmannOracleAPIURL,
+			Name:           "Kaufmann",
+			OracleID:       "kaufmann",
+			URL:            s.KaufmannOracleAPIURL,
+			UsePendingMode: true,
 		},
 	}
 }
 
 type Oracle struct {
-	Name     string  `json:"name"`
-	OracleID string  `json:"oracleId"`
-	URL      url.URL `json:"-"`
+	Name           string  `json:"name"`
+	OracleID       string  `json:"oracleId"`
+	URL            url.URL `json:"-"`
+	UsePendingMode bool    `json:"usePendingMode,omitempty"`
 }

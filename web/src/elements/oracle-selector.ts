@@ -28,9 +28,20 @@ export class OracleSelector extends LitElement {
     async connectedCallback() {
         super.connectedCallback();
 
-        this.settings.fetchPublicSettings().then(settings => {
-            this.options = settings?.oracles || []
-        })
+        try {
+            const settings = await this.settings.fetchPublicSettings();
+            this.options = settings?.oracles || [];
+            
+            // Dispatch event when options are loaded
+            this.dispatchEvent(new CustomEvent('options-loaded', {
+                detail: { options: this.options },
+                bubbles: true,
+                composed: true
+            }));
+        } catch (error) {
+            console.error('Failed to load oracle options:', error);
+            this.options = [];
+        }
     }
 
     private handleChange(e: Event) {
