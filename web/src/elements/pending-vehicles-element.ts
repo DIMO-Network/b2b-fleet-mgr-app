@@ -6,6 +6,7 @@ import {ApiService} from "@services/api-service.ts";
 interface PendingVehicle {
     vin: string;
     imei: string;
+    firstSeen: string;
 }
 
 @customElement('pending-vehicles-element')
@@ -151,12 +152,14 @@ export class PendingVehiclesElement extends LitElement {
                     <tr>
                         <th>VIN</th>
                         <th>IMEI</th>
+                        <th>First Seen</th>
                         <th>Action</th>
                     </tr>
                     ${repeat(this.items, (item) => item.vin, (item) => html`
                         <tr>
                             <td>${item.vin}</td>
                             <td>${item.imei}</td>
+                            <td>${item.firstSeen}</td>
                             <td>
                                 <button @click=${() => this.onboardVehicle(item.vin, item.imei)}>
                                     Onboard

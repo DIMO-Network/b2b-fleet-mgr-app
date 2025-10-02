@@ -52,13 +52,14 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         return this.item ? html`
               <td>${this.item.vin}</td>
               <td>${this.item.definition.make} ${this.item.definition.model} ${this.item.definition.year}</td>
+              <td>${this.item.imei}</td>
               <td>${this.item.tokenId}</td>
               <td>${this.item.syntheticDevice?.tokenId || ''}</td>
               <td>${ConnectionStatusMap[this.getConnectionStatus(this.item)]}</td>
               <td>
                   <button ?hidden=${!this.canDisconnect(this.item)}
                       type="button" 
-                      ?disabled=${this.processing || !this.item.syntheticDevice.tokenId}
+                      ?disabled=${this.processing || !this.item.syntheticDevice.tokenId || !this.item.isCurrentUserOwner}
                       class=${this.connectionProcessing ? 'processing' : ''}
                       @click=${this.disconnectVehicle}
                   >disconnect
@@ -75,7 +76,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   <button 
                       type="button" 
                       ?disabled=${this.item.syntheticDevice.tokenId || this.processing}
-                      @click=${this.deleteVehicle}
+                      @click=${this.deleteVehicle || !this.item.isCurrentUserOwner}
                       class=${this.deletionProcessing ? 'processing' : ''}
                   >delete</button></td>
           ` : nothing
