@@ -28,9 +28,6 @@ export class AppRoot extends LitElement {
     constructor() {
         super();
         this.vehicles = []
-        // todo loop over each oracle until find which ones have access to.
-        // we want to show like an X or something next to ones you don't have access to and preselect the one you have access to
-        // if you select one you don't have access to hide all rest of UI and just show a thing that says you don't have access.
         this.oracle = this.loadOracle("kaufmann")
     }
 
@@ -54,7 +51,6 @@ export class AppRoot extends LitElement {
             
             ${this.hasOracleAccess ? html`
                 <!-- Show these elements only if user has access to the selected oracle -->
-                <pending-vehicles-element @onboard-vehicle=${this.handleOnboardVehicle}></pending-vehicles-element>
                 <add-vin-element @item-changed=${this.getUserVehicles}></add-vin-element>
                 <vehicle-list-element .items=${this.vehicles} @item-changed=${this.getUserVehicles}></vehicle-list-element>
             ` : html`
@@ -113,14 +109,6 @@ export class AppRoot extends LitElement {
         return oracle === null ? defaultOracle : oracle;
     }
 
-    private handleOnboardVehicle(e: CustomEvent) {
-        console.log('received event Onboarding vehicle', e.detail);
-        const { vin } = e.detail;
-        const addVinElement = this.querySelector('add-vin-element') as any;
-        if (addVinElement && addVinElement.onboardSingleVin) {
-            addVinElement.onboardSingleVin(vin);
-        }
-    }
 
     private handleLogout() {
         const keysToRemove = ['token', 'email', 'appSettings', 'accountInfo', 'signerPublicKey', 'signerApiKey'];

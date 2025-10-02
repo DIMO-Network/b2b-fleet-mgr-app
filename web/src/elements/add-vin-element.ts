@@ -6,6 +6,13 @@ import './session-timer';
 import {range} from "lodash";
 import {BaseOnboardingElement, SacdInput} from "@elements/base-onboarding-element.ts";
 import {delay} from "@utils/utils.ts";
+import {ApiService} from "@services/api-service.ts";
+
+interface PendingVehicle {
+    vin: string;
+    imei: string;
+    firstSeen: string;
+}
 
 enum Permission {
     NONLOCATION_TELEMETRY= 1,
@@ -83,15 +90,25 @@ export class AddVinElement extends BaseOnboardingElement {
 
     @state() sessionExpiresIn: number = 0;
 
+    // Pending vehicles properties
+    @state() private pendingVehicles: PendingVehicle[] = [];
+    @state() private selectedPendingVehicles: Set<string> = new Set();
+    @state() private pendingVehiclesLoading: boolean = false;
+    @state() private pendingVehiclesError: string = "";
+    @state() private currentPage: number = 1;
+    @state() private pageSize: number = 10;
+    @state() private totalItems: number = 0;
+    @state() private shouldShowPagination: boolean = false;
+
     private settings: SettingsService;
-
-
+    private apiService: ApiService;
 
     constructor() {
         super();
         this.vinsBulk = "";
         this.email = localStorage.getItem("email");
         this.settings = SettingsService.getInstance();
+        this.apiService = ApiService.getInstance();
         this.alertText = "";
 
         this.enableSacd = false;
@@ -116,6 +133,9 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = this.settings.sharingInfo?.enabled || false;
         this.sacdGrantee = this.settings.sharingInfo?.grantee || "";
         this.sacdPermissions = this.settings.sharingInfo?.permissions as Permissions || defaultPermissions;
+        
+        // Load pending vehicles
+        await this.loadPendingVehicles();
     }
 
     togglePermission(permission: number) {
@@ -127,18 +147,178 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = !this.enableSacd;
     }
 
+    // Pending vehicles methods
+    private async loadPendingVehicles() {
+        this.pendingVehiclesLoading = true;
+        this.pendingVehiclesError = "";
+        
+        const skip = (this.currentPage - 1) * this.pageSize;
+        const take = this.pageSize;
+        
+        const url = `/pending-vehicles?skip=${skip}&take=${take}`;
+        
+        const response = await this.apiService.callApi<PendingVehicle[]>(
+            'GET',
+            url,
+            null,
+            true, // auth required
+            true  // oracle endpoint
+        );
+
+        this.pendingVehiclesLoading = false;
+
+        if (response.success && response.data) {
+            this.pendingVehicles = response.data;
+            if (response.data.length < this.pageSize) {
+                this.totalItems = skip + response.data.length;
+            } else {
+                this.totalItems = skip + response.data.length + 1;
+            }
+            this.shouldShowPagination = this.totalItems > this.pageSize;
+        } else {
+            this.pendingVehiclesError = response.error || "Failed to load pending vehicles";
+            this.pendingVehicles = [];
+            this.totalItems = 0;
+        }
+    }
+
+    private togglePendingVehicle(vin: string) {
+        if (this.selectedPendingVehicles.has(vin)) {
+            this.selectedPendingVehicles.delete(vin);
+        } else {
+            this.selectedPendingVehicles.add(vin);
+        }
+        this.requestUpdate();
+    }
+
+    private toggleAllPendingVehicles() {
+        const allSelected = this.pendingVehicles.every(vehicle => this.selectedPendingVehicles.has(vehicle.vin));
+        
+        if (allSelected) {
+            // If all are selected, deselect all
+            this.selectedPendingVehicles.clear();
+        } else {
+            // If not all are selected, select all
+            this.pendingVehicles.forEach(vehicle => {
+                this.selectedPendingVehicles.add(vehicle.vin);
+            });
+        }
+        this.requestUpdate();
+    }
+
+
+    private async goToPage(page: number) {
+        if (page < 1) return;
+        this.currentPage = page;
+        await this.loadPendingVehicles();
+    }
+
+    private async nextPage() {
+        const maxPage = Math.ceil(this.totalItems / this.pageSize);
+        if (this.currentPage < maxPage) {
+            await this.goToPage(this.currentPage + 1);
+        }
+    }
+
+    private async previousPage() {
+        if (this.currentPage > 1) {
+            await this.goToPage(this.currentPage - 1);
+        }
+    }
+
+    private get totalPages(): number {
+        return Math.ceil(this.totalItems / this.pageSize);
+    }
+
+    private get hasNextPage(): boolean {
+        return this.currentPage < this.totalPages;
+    }
+
+    private get hasPreviousPage(): boolean {
+        return this.currentPage > 1;
+    }
+
     render() {
         return html`
             <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
                 ${this.alertText}
             </div>
+            <!-- Pending Vehicles Section -->
             <div>
+                <h3>Pending Vehicles to Onboard</h3>
+                <div class="alert alert-error" role="alert" ?hidden=${this.pendingVehiclesError === ""}>
+                    ${this.pendingVehiclesError}
+                </div>
+                ${this.pendingVehiclesLoading ? html`<div>Loading pending vehicles...</div>` : html`
+                    ${this.pendingVehicles.length > 0 ? html`
+                        <table style="font-size: 80%; margin-bottom: 1rem;">
+                            <tr>
+                                <th>
+                                    <input type="checkbox" 
+                                           .checked=${this.pendingVehicles.length > 0 && this.pendingVehicles.every(vehicle => this.selectedPendingVehicles.has(vehicle.vin))}
+                                           @change=${this.toggleAllPendingVehicles}>
+                                           Select
+                                </th>
+                                <th>VIN</th>
+                                <th>IMEI</th>
+                                <th>First Seen</th>
+                            </tr>
+                            ${repeat(this.pendingVehicles, (item) => item.vin, (item) => html`
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" 
+                                               .checked=${this.selectedPendingVehicles.has(item.vin)}
+                                               @change=${() => this.togglePendingVehicle(item.vin)}>
+                                    </td>
+                                    <td>${item.vin}</td>
+                                    <td>${item.imei}</td>
+                                    <td>${item.firstSeen}</td>
+                                </tr>
+                            `)}
+                        </table>
+                        
+                        <!-- Pagination Controls -->
+                        <div ?hidden=${!this.shouldShowPagination}>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding: 0.5rem;">
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <button 
+                                        @click=${this.previousPage} 
+                                        ?disabled=${!this.hasPreviousPage}
+                                        style="padding: 0.25rem 0.5rem; font-size: 0.875rem;"
+                                    >
+                                        Previous
+                                    </button>
+                                    <span style="font-size: 0.875rem;">
+                                        Page ${this.currentPage} of ${this.totalPages}
+                                    </span>
+                                    <button 
+                                        @click=${this.nextPage} 
+                                        ?disabled=${!this.hasNextPage}
+                                        style="padding: 0.25rem 0.5rem; font-size: 0.875rem;"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                                <div style="font-size: 0.875rem; color: #666;">
+                                    Showing ${this.pendingVehicles.length} of ${this.totalItems} items
+                                </div>
+                            </div>
+                        </div>
+                    ` : html`
+                        <div style="color: #666; font-style: italic; margin: 1rem 0;">
+                            No pending vehicles found.
+                        </div>
+                    `}
+                `}
+            </div>
+            <div ?hidden=${this.settings.publicSettings?.oracles.find(oracle => oracle.oracleId === this.apiService.oracle)?.usePendingMode}>
                 <form class="grid">
-                    <label>- OR - Bulk Upload VINs (newline separated)
+                    <label>Bulk Upload VINs (newline separated)
                         <textarea class="" style="display: block; height: 10em; width: 100%" placeholder="VIN1\nVIN2\nVIN3" @input="${(e: InputEvent) => this.vinsBulk = (e.target as HTMLInputElement).value}"></textarea>
                     </label>
                 </form>
             </div>
+            <hr />
             <form class="grid">
                 <label>
                     <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}> Share vehicles with Developer
@@ -162,6 +342,7 @@ export class AddVinElement extends BaseOnboardingElement {
                     </fieldset>
                 </form>
             </div>
+            
             <div>
                 <form class="grid">
                     <button type="button" @click=${this._submitVINs} ?disabled=${this.processing} class=${this.processing ? 'processing' : ''} >
@@ -209,15 +390,27 @@ export class AddVinElement extends BaseOnboardingElement {
 
         console.log("submitting vin(s)");
 
+        // Collect VINs from bulk textarea
         if (this.vinsBulk !== null && this.vinsBulk !== undefined && this.vinsBulk?.length > 0) {
             vinsArray = this.vinsBulk.split('\n');
-        } else {
+        }
+
+        // Add selected pending vehicles
+        const selectedPendingVins = Array.from(this.selectedPendingVehicles);
+        vinsArray = [...vinsArray, ...selectedPendingVins];
+
+        if (vinsArray.length === 0) {
             this.processing = false;
             return this.displayFailure("no vin provided");
         }
 
         try {
             await this.performOnboarding(vinsArray);
+            
+            // Clear selected pending vehicles after successful onboarding
+            this.selectedPendingVehicles.clear();
+            this.vinsBulk = "";
+            this.requestUpdate();
         } catch (e) {
             this.displayFailure("failed to onboard vins: " + e);
         }

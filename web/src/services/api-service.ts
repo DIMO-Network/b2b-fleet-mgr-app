@@ -11,7 +11,7 @@ export class ApiService {
     private static instance: ApiService;
     private readonly baseUrl: string;
     private static readonly DEFAULT_LOCAL_DEV_URL = "https://localdev.dimo.org:3007";
-    private oracle: string = "motorq"; // default
+    public oracle: string = "motorq"; // default
 
     private constructor() {
         this.baseUrl = this.getBaseUrl();

@@ -9,6 +9,7 @@ export interface PublicSettings {
 export interface Oracle {
     oracleId: string,
     name: string,
+    usePendingMode: boolean,
 }
 
 export interface PrivateSettings {

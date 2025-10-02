@@ -54,7 +54,6 @@ export class VehicleListItemElement extends BaseOnboardingElement {
               <td>${this.item.definition.make} ${this.item.definition.model} ${this.item.definition.year}</td>
               <td>${this.item.imei}</td>
               <td>${this.item.tokenId}</td>
-              <td>${this.item.syntheticDevice?.tokenId || ''}</td>
               <td>${ConnectionStatusMap[this.getConnectionStatus(this.item)]}</td>
               <td>
                   <button ?hidden=${!this.canDisconnect(this.item)}
