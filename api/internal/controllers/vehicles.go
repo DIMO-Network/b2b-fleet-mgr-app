@@ -48,6 +48,7 @@ func (v *VehiclesController) GetVehicleFromOracle(c *fiber.Ctx) error {
 	return ProxyRequest(c, targetURL, nil, v.logger)
 }
 
+// GetVehicles is used to list all onboarded vehicles from oracle
 func (v *VehiclesController) GetVehicles(c *fiber.Ctx) error {
 	u := GetOracleURL(c, v.settings)
 	targetURL := u.JoinPath("/v1/vehicles")

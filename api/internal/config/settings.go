@@ -23,6 +23,11 @@ type Settings struct {
 	ClientID       string  `yaml:"CLIENT_ID"`
 	LoginURL       url.URL `yaml:"LOGIN_URL"`
 	AccountsAPIURL url.URL `yaml:"ACCOUNTS_API_URL"`
+
+	// DIMO JWT Configuration
+	DIMOAPIURL       url.URL `yaml:"DIMO_API_URL"`
+	DIMOClientID     string  `yaml:"DIMO_CLIENT_ID"`
+	DIMOClientSecret string  `yaml:"DIMO_CLIENT_SECRET"`
 }
 
 func (s *Settings) IsProduction() bool {
