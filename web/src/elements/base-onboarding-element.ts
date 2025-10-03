@@ -151,8 +151,8 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async getMintingData(vins: string[], ownerAddress: `0x${string}` | null) {
-        const query = qs.stringify({vins: vins.join(','), owner_address: ownerAddress}, {arrayFormat: 'comma'});
+    async getMintingData(vins: string[]) {
+        const query = qs.stringify({vins: vins.join(',')});
         const mintData = await this.api.callApi<VinsMintDataResult>('GET', `/vehicle/mint?${query}`, null, true);
         if (!mintData.success || !mintData.data) {
             return [];
@@ -228,7 +228,7 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async onboardVINs(vins: string[], sacd: SacdInput | null, ownerAddress: `0x${string}` | null): Promise<boolean> {
+    async onboardVINs(vins: string[], sacd: SacdInput | null): Promise<boolean> {
         let allVinsValid = true;
         for (const vin of vins) {
             const validVin = vin?.length === 17
@@ -251,7 +251,7 @@ export class BaseOnboardingElement extends LitElement {
             return false
         }
 
-        const mintData = await this.getMintingData(vins, ownerAddress);
+        const mintData = await this.getMintingData(vins);
         if (mintData.length === 0) {
             this.displayFailure("Failed to fetch minting data");
             return false

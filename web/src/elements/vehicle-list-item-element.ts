@@ -52,16 +52,18 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         return this.item ? html`
               <td>${this.item.vin}</td>
               <td>${this.item.definition.make} ${this.item.definition.model} ${this.item.definition.year}</td>
+              <td>${this.item.imei}</td>
               <td>${this.item.tokenId}</td>
-              <td>${this.item.syntheticDevice?.tokenId || ''}</td>
               <td>${ConnectionStatusMap[this.getConnectionStatus(this.item)]}</td>
               <td>
                   <button ?hidden=${!this.canDisconnect(this.item)}
                       type="button" 
-                      ?disabled=${this.processing || !this.item.syntheticDevice.tokenId}
+                      ?disabled=${this.processing || !this.item.syntheticDevice.tokenId || !this.item.isCurrentUserOwner}
                       class=${this.connectionProcessing ? 'processing' : ''}
                       @click=${this.disconnectVehicle}
-                  >disconnect
+                  >
+                      disconnect
+                      ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
                   <button ?hidden=${!this.canConnect(this.item)}
                           type="button"
@@ -74,10 +76,22 @@ export class VehicleListItemElement extends BaseOnboardingElement {
               <td>
                   <button 
                       type="button" 
-                      ?disabled=${this.item.syntheticDevice.tokenId || this.processing}
+                      ?disabled=${this.item.syntheticDevice.tokenId || this.processing || !this.item.isCurrentUserOwner}
                       @click=${this.deleteVehicle}
                       class=${this.deletionProcessing ? 'processing' : ''}
-                  >delete</button></td>
+                  >
+                      delete
+                      ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
+                  </button>
+                  <button
+                          type="button"
+                          ?disabled=${this.processing || !this.item.isCurrentUserOwner}
+                          @click=${this.openTransferModal}
+                  >
+                      transfer
+                      ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
+                  </button>
+              </td>
           ` : nothing
     }
 
@@ -140,7 +154,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true
         this.connectionProcessing = true
-        await this.onboardVINs([this.item.vin], null, null)
+        await this.onboardVINs([this.item.vin], null)
         await delay(5000)
         this.processing = false
         this.connectionProcessing = false
@@ -181,5 +195,22 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         this.processing = false
         this.deletionProcessing = false
         this.dispatchItemChanged()
+    }
+
+    private openTransferModal() {
+        console.log("Opening transfer modal for vehicle:", this.item?.vin);
+        
+        // Create the transfer modal using the separate component
+        const modal = document.createElement('transfer-modal-element') as any;
+        modal.show = true;
+        modal.vehicleVin = this.item?.vin || '';
+        
+        // Add event listener for modal close
+        modal.addEventListener('modal-closed', () => {
+            document.body.removeChild(modal);
+        });
+        
+        // Add to body
+        document.body.appendChild(modal);
     }
 }

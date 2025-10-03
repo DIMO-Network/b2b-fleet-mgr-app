@@ -57,6 +57,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	vehiclesCtrl := controllers.NewVehiclesController(settings, logger)
 	settingsCtrl := controllers.NewSettingsController(settings, logger)
+	accountsCtrl := controllers.NewAccountsController(settings, logger)
 
 	jwtAuth := jwtware.New(jwtware.Config{
 		JWKSetURLs: []string{settings.JwtKeySetURL.String()},
@@ -70,6 +71,8 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp := app.Group("/oracle/:oracleID", jwtAuth, oracleIDMiddleware(knownOracles))
 	oracleApp.Get("/permissions", vehiclesCtrl.GetOraclePermissions)
 	oracleApp.Get("/pending-vehicles", vehiclesCtrl.GetPendingVehicles)
+	oracleApp.Get("/pending-vehicle-telemetry/:imei", vehiclesCtrl.GetPendingVehicleTelemetry)
+	oracleApp.Delete("/pending-vehicle-telemetry/:imei", vehiclesCtrl.ClearPendingVehicleTelemetry)
 	oracleApp.Get("/vehicles", vehiclesCtrl.GetVehicles)
 
 	oracleApp.Get("/vehicle/verify", vehiclesCtrl.GetVehiclesVerificationStatus)
@@ -90,8 +93,14 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Get("/vehicle/:vin", vehiclesCtrl.GetVehicleFromOracle)
 	oracleApp.Post("/vehicle/register", vehiclesCtrl.RegisterVehicle)
 
+	oracleApp.Delete("/vehicle/reset-onboarding/:imei", vehiclesCtrl.ResetOnboarding)
+
 	// settings the app needs to operate, pulled from config / env vars
 	oracleApp.Get("/settings", jwtAuth, settingsCtrl.GetSettings) // todo some of these are oracle specific
+
+	// acounts
+	oracleApp.Get("/account/:emailOrWallet", jwtAuth, accountsCtrl.GetAccount)
+	oracleApp.Post("/account", jwtAuth, accountsCtrl.CreateAccount)
 
 	return app
 }

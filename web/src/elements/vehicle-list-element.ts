@@ -31,7 +31,7 @@ export class VehicleListElement extends LitElement {
 
     render() {
         return html`
-            <h2>My Vehicles</h2>
+            <h2>Onboarded Vehicles</h2>
             <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
                 ${this.alertText}
             </div>
@@ -39,8 +39,8 @@ export class VehicleListElement extends LitElement {
                 <tr>
                     <th>VIN</th>
                     <th>Make Model Year</th>
+                    <th>IMEI</th>
                     <th>Token ID</th>
-                    <th>Synthetic <br/>Device ID</th>
                     <th>Vendor <br />Connection</th>
                     <th></th>
                 </tr>

@@ -9,6 +9,7 @@ export interface PublicSettings {
 export interface Oracle {
     oracleId: string,
     name: string,
+    usePendingMode: boolean,
 }
 
 export interface PrivateSettings {
@@ -33,7 +34,10 @@ export interface AccountInfo {
 export interface SharingInfo {
     enabled: boolean,
     grantee?: string,
-    permissions?: Record<number, boolean>
+    permissions?: Record<number, boolean>,
+    ownerEnabled?: boolean,
+    ownerAddress?: string,
+    ownerEmailAddress?: string
 }
 
 const PRIVATE_SETTINGS_KEY = "appPrivateSettings";

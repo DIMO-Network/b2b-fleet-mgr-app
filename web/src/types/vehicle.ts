@@ -14,6 +14,7 @@ export interface SyntheticDevice {
 export interface Vehicle {
     vin: string;
     id: string;
+    imei: string;
     tokenId: number;
     mintedAt: string;
     owner: `0x${string}`
@@ -21,4 +22,5 @@ export interface Vehicle {
     syntheticDevice: SyntheticDevice;
     connectionStatus: string;       // status of connection to the vendor
     disconnectionStatus: string;    // status of disconnection from vendor
+    isCurrentUserOwner: boolean;
 }

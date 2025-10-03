@@ -11,7 +11,7 @@ export class ApiService {
     private static instance: ApiService;
     private readonly baseUrl: string;
     private static readonly DEFAULT_LOCAL_DEV_URL = "https://localdev.dimo.org:3007";
-    private oracle: string = "motorq"; // default
+    public oracle: string = "motorq"; // default
 
     private constructor() {
         this.baseUrl = this.getBaseUrl();
@@ -52,6 +52,7 @@ export class ApiService {
         }
     }
 
+    // makes a request to the backend proxy with the currently selected oracle route.
     public async callApi<T>(
         method: 'GET' | 'POST',
         endpoint: string,
@@ -96,7 +97,10 @@ export class ApiService {
         }
     }
 
-    setOracle(selectedValue: string) {
+    // sets the oracle at the API service level for future calls and checks if we have access
+    async setOracle(selectedValue: string): Promise<boolean> {
         this.oracle = selectedValue;
+        const resp = await this.callApi("GET", "/permissions", null, true)
+        return resp.success;
     }
 }

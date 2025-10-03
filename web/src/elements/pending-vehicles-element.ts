@@ -6,6 +6,7 @@ import {ApiService} from "@services/api-service.ts";
 interface PendingVehicle {
     vin: string;
     imei: string;
+    firstSeen: string;
 }
 
 @customElement('pending-vehicles-element')
@@ -37,6 +38,8 @@ export class PendingVehiclesElement extends LitElement {
     private alertText: string;
     private loading: boolean;
     private apiService: ApiService;
+    private showTelemetryModal: boolean = false;
+    private vehicleVin: string = "";
 
     constructor() {
         super();
@@ -148,22 +151,31 @@ export class PendingVehiclesElement extends LitElement {
             </div>
             ${this.loading ? html`<div>Loading...</div>` : html`
                 <table style="font-size: 80%">
+                    <thead>
                     <tr>
                         <th>VIN</th>
                         <th>IMEI</th>
+                        <th>First Seen</th>
                         <th>Action</th>
                     </tr>
+                    </thead>
+                    <tbody>
                     ${repeat(this.items, (item) => item.vin, (item) => html`
                         <tr>
                             <td>${item.vin}</td>
                             <td>${item.imei}</td>
+                            <td>${item.firstSeen}</td>
                             <td>
                                 <button @click=${() => this.onboardVehicle(item.vin, item.imei)}>
                                     Onboard
                                 </button>
+                                <button @click=${() => this.openTelemetryModal(item.imei)} style="margin-left: 0.5rem;">
+                                    Telemetry
+                                </button>
                             </td>
                         </tr>
                     `)}
+                    </tbody>
                 </table>
 
                 <!-- Pagination Controls -->
@@ -194,7 +206,32 @@ export class PendingVehiclesElement extends LitElement {
                     </div>
                 </div>
             `}
+            
+            <!-- Telemetry Modal -->
+            <telemetry-modal-element 
+                .show=${this.showTelemetryModal}
+                .vehicleVin=${this.vehicleVin || ""}
+                @modal-closed=${this.closeTelemetryModal}>
+            </telemetry-modal-element>
         `
+    }
+
+    private openTelemetryModal(vin: string) {
+        console.log("Opening telemetry modal for vehicle:", vin);
+        this.vehicleVin = vin;
+        this.showTelemetryModal = true;
+        
+        // Load telemetry data
+        const modal = document.querySelector('telemetry-modal-element') as any;
+        if (modal) {
+            modal.loadTelemetryData();
+        }
+    }
+
+    private closeTelemetryModal() {
+        this.showTelemetryModal = false;
+        this.vehicleVin = "";
+        console.log("Closing telemetry modal");
     }
 }
 

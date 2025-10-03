@@ -22,11 +22,13 @@ export class AppRoot extends LitElement {
     @state()
     private oracle: string;
 
+    @state()
+    private hasOracleAccess: boolean = true;
+
     constructor() {
         super();
         this.vehicles = []
-        this.oracle = this.loadOracle("motorq")
-        this.apiService.setOracle(this.oracle)
+        this.oracle = this.loadOracle("kaufmann")
     }
 
     // enable inherit css
@@ -36,16 +38,31 @@ export class AppRoot extends LitElement {
     }
 
     render() {
+        const userEmail = localStorage.getItem("email") || "";
         return html`
             <div class="header">
                 <h1 class="title">Fleet Onboarding App</h1>
-                <button class="logout-btn" @click=${this.handleLogout} >Logout</button>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 0.875rem; color: #666;">${userEmail}</span>
+                    <button class="logout-btn" @click=${this.handleLogout} >Logout</button>
+                </div>
             </div>
             <oracle-selector .selectedOption=${this.oracle} @option-changed=${this.handleOracleChange}></oracle-selector>
-            <pending-vehicles-element @onboard-vehicle=${this.handleOnboardVehicle}></pending-vehicles-element>
-            <add-vin-element @item-changed=${this.getUserVehicles}></add-vin-element>
             
-            <vehicle-list-element .items=${this.vehicles} @item-changed=${this.getUserVehicles}></vehicle-list-element>
+            ${this.hasOracleAccess ? html`
+                <!-- Show these elements only if user has access to the selected oracle -->
+                <add-vin-element @item-changed=${this.getUserVehicles}></add-vin-element>
+                <vehicle-list-element .items=${this.vehicles} @item-changed=${this.getUserVehicles}></vehicle-list-element>
+            ` : html`
+                <!-- Show access denied notice if user doesn't have access -->
+                <div class="access-denied-notice">
+                    <div class="icon">🚫</div>
+                    <h3>Access Denied</h3>
+                    <p>
+                        You do not have access to the selected oracle. Please contact your administrator or select a different oracle.
+                    </p>
+                </div>
+            `}
     `;
     }
 
@@ -54,14 +71,26 @@ export class AppRoot extends LitElement {
         const selectedValue = e.detail.value;
         console.log('Oracle changed to:', selectedValue);
 
-        this.apiService.setOracle(selectedValue);
+        const access = await this.apiService.setOracle(selectedValue);
+        this.hasOracleAccess = access;
         this.saveOracle(selectedValue)
-        await this.getUserVehicles()
+        
+        if (access) {
+            await this.getUserVehicles()
+        } else {
+            // Clear vehicles if no access
+            this.vehicles = [];
+        }
     }
 
     async connectedCallback() {
         super.connectedCallback();
-        await this.getUserVehicles()
+        const access = await this.apiService.setOracle(this.oracle);
+        this.hasOracleAccess = access;
+        
+        if (access) {
+            await this.getUserVehicles()
+        }
     }
 
     async getUserVehicles() {
@@ -80,14 +109,6 @@ export class AppRoot extends LitElement {
         return oracle === null ? defaultOracle : oracle;
     }
 
-    private handleOnboardVehicle(e: CustomEvent) {
-        console.log('received event Onboarding vehicle', e.detail);
-        const { vin } = e.detail;
-        const addVinElement = this.querySelector('add-vin-element') as any;
-        if (addVinElement && addVinElement.onboardSingleVin) {
-            addVinElement.onboardSingleVin(vin);
-        }
-    }
 
     private handleLogout() {
         const keysToRemove = ['token', 'email', 'appSettings', 'accountInfo', 'signerPublicKey', 'signerApiKey'];
