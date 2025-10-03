@@ -83,12 +83,10 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       delete
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
-              </td>
-              <td>
-                  <button 
-                      type="button" 
-                      ?disabled=${this.processing || !this.item.isCurrentUserOwner}
-                      @click=${this.openTransferModal}
+                  <button
+                          type="button"
+                          ?disabled=${this.processing || !this.item.isCurrentUserOwner}
+                          @click=${this.openTransferModal}
                   >
                       transfer
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
