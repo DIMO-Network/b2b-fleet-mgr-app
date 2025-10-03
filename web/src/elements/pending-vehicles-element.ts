@@ -1,6 +1,6 @@
 import {html, LitElement} from 'lit'
 import {repeat} from 'lit/directives/repeat.js';
-import {customElement, property} from "lit/decorators.js";
+import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 
 interface PendingVehicle {
@@ -40,6 +40,9 @@ export class PendingVehiclesElement extends LitElement {
     private apiService: ApiService;
     private showTelemetryModal: boolean = false;
     private vehicleVin: string = "";
+
+    @state()
+    private selectedPendingVehicles: Set<string> = new Set();
 
     constructor() {
         super();
@@ -153,6 +156,12 @@ export class PendingVehiclesElement extends LitElement {
                 <table style="font-size: 80%">
                     <thead>
                     <tr>
+                        <th>
+                            <input type="checkbox" 
+                                   .checked=${this.items.length > 0 && this.items.every(vehicle => this.selectedPendingVehicles.has(vehicle.vin))}
+                                   @change=${this.toggleAllPendingVehicles}>
+                            Select
+                        </th>
                         <th>VIN</th>
                         <th>IMEI</th>
                         <th>First Seen</th>
@@ -162,6 +171,11 @@ export class PendingVehiclesElement extends LitElement {
                     <tbody>
                     ${repeat(this.items, (item) => item.vin, (item) => html`
                         <tr>
+                            <td>
+                                <input type="checkbox" 
+                                       .checked=${this.selectedPendingVehicles.has(item.vin)}
+                                       @change=${() => this.togglePendingVehicle(item.vin)}>
+                            </td>
                             <td>${item.vin}</td>
                             <td>${item.imei}</td>
                             <td>${item.firstSeen}</td>
@@ -232,6 +246,52 @@ export class PendingVehiclesElement extends LitElement {
         this.showTelemetryModal = false;
         this.vehicleVin = "";
         console.log("Closing telemetry modal");
+    }
+
+    private togglePendingVehicle(vin: string) {
+        if (this.selectedPendingVehicles.has(vin)) {
+            this.selectedPendingVehicles.delete(vin);
+        } else {
+            this.selectedPendingVehicles.add(vin);
+        }
+        this.requestUpdate();
+        this.dispatchSelectionChanged();
+    }
+
+    private toggleAllPendingVehicles() {
+        const allSelected = this.items.every(vehicle => this.selectedPendingVehicles.has(vehicle.vin));
+        
+        if (allSelected) {
+            // If all are selected, deselect all
+            this.selectedPendingVehicles.clear();
+        } else {
+            // If not all are selected, select all
+            this.items.forEach(vehicle => {
+                this.selectedPendingVehicles.add(vehicle.vin);
+            });
+        }
+        this.requestUpdate();
+        this.dispatchSelectionChanged();
+    }
+
+    private dispatchSelectionChanged() {
+        this.dispatchEvent(new CustomEvent('selection-changed', {
+            detail: { selectedVehicles: Array.from(this.selectedPendingVehicles) },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    // Public method to get selected vehicles
+    public getSelectedVehicles(): string[] {
+        return Array.from(this.selectedPendingVehicles);
+    }
+
+    // Public method to clear selection
+    public clearSelection() {
+        this.selectedPendingVehicles.clear();
+        this.requestUpdate();
+        this.dispatchSelectionChanged();
     }
 }
 

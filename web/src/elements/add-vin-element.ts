@@ -8,11 +8,6 @@ import {BaseOnboardingElement, SacdInput} from "@elements/base-onboarding-elemen
 import {delay} from "@utils/utils.ts";
 import {ApiService} from "@services/api-service.ts";
 
-interface PendingVehicle {
-    vin: string;
-    imei: string;
-    firstSeen: string;
-}
 
 enum Permission {
     NONLOCATION_TELEMETRY= 1,
@@ -91,14 +86,7 @@ export class AddVinElement extends BaseOnboardingElement {
     @state() sessionExpiresIn: number = 0;
 
     // Pending vehicles properties
-    @state() private pendingVehicles: PendingVehicle[] = [];
-    @state() private selectedPendingVehicles: Set<string> = new Set();
-    @state() private pendingVehiclesLoading: boolean = false;
-    @state() private pendingVehiclesError: string = "";
-    @state() private currentPage: number = 1;
-    @state() private pageSize: number = 10;
-    @state() private totalItems: number = 0;
-    @state() private shouldShowPagination: boolean = false;
+    @state() private selectedPendingVehicles: string[] = [];
 
     private settings: SettingsService;
     private apiService: ApiService;
@@ -245,73 +233,9 @@ export class AddVinElement extends BaseOnboardingElement {
                 ${this.alertText}
             </div>
             <!-- Pending Vehicles Section -->
-            <div>
-                <h3>Pending Vehicles to Onboard</h3>
-                <div class="alert alert-error" role="alert" ?hidden=${this.pendingVehiclesError === ""}>
-                    ${this.pendingVehiclesError}
-                </div>
-                ${this.pendingVehiclesLoading ? html`<div>Loading pending vehicles...</div>` : html`
-                    ${this.pendingVehicles.length > 0 ? html`
-                        <table style="font-size: 80%; margin-bottom: 1rem;">
-                            <tr>
-                                <th>
-                                    <input type="checkbox" 
-                                           .checked=${this.pendingVehicles.length > 0 && this.pendingVehicles.every(vehicle => this.selectedPendingVehicles.has(vehicle.vin))}
-                                           @change=${this.toggleAllPendingVehicles}>
-                                           Select
-                                </th>
-                                <th>VIN</th>
-                                <th>IMEI</th>
-                                <th>First Seen</th>
-                            </tr>
-                            ${repeat(this.pendingVehicles, (item) => item.vin, (item) => html`
-                                <tr>
-                                    <td>
-                                        <input type="checkbox" 
-                                               .checked=${this.selectedPendingVehicles.has(item.vin)}
-                                               @change=${() => this.togglePendingVehicle(item.vin)}>
-                                    </td>
-                                    <td>${item.vin}</td>
-                                    <td>${item.imei}</td>
-                                    <td>${item.firstSeen}</td>
-                                </tr>
-                            `)}
-                        </table>
-                        
-                        <!-- Pagination Controls -->
-                        <div ?hidden=${!this.shouldShowPagination}>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding: 0.5rem;">
-                                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                    <button 
-                                        @click=${this.previousPage} 
-                                        ?disabled=${!this.hasPreviousPage}
-                                        style="padding: 0.25rem 0.5rem; font-size: 0.875rem;"
-                                    >
-                                        Previous
-                                    </button>
-                                    <span style="font-size: 0.875rem;">
-                                        Page ${this.currentPage} of ${this.totalPages}
-                                    </span>
-                                    <button 
-                                        @click=${this.nextPage} 
-                                        ?disabled=${!this.hasNextPage}
-                                        style="padding: 0.25rem 0.5rem; font-size: 0.875rem;"
-                                    >
-                                        Next
-                                    </button>
-                                </div>
-                                <div style="font-size: 0.875rem; color: #666;">
-                                    Showing ${this.pendingVehicles.length} of ${this.totalItems} items
-                                </div>
-                            </div>
-                        </div>
-                    ` : html`
-                        <div style="color: #666; font-style: italic; margin: 1rem 0;">
-                            No pending vehicles found.
-                        </div>
-                    `}
-                `}
-            </div>
+            <pending-vehicles-element 
+                @selection-changed=${this.handlePendingVehiclesSelection}>
+            </pending-vehicles-element>
             <div ?hidden=${this.settings.publicSettings?.oracles.find(oracle => oracle.oracleId === this.apiService.oracle)?.usePendingMode}>
                 <form class="grid">
                     <label>Bulk Upload VINs (newline separated)
@@ -397,8 +321,7 @@ export class AddVinElement extends BaseOnboardingElement {
         }
 
         // Add selected pending vehicles
-        const selectedPendingVins = Array.from(this.selectedPendingVehicles);
-        vinsArray = [...vinsArray, ...selectedPendingVins];
+        vinsArray = [...vinsArray, ...this.selectedPendingVehicles];
 
         if (vinsArray.length === 0) {
             this.processing = false;
@@ -409,9 +332,15 @@ export class AddVinElement extends BaseOnboardingElement {
             await this.performOnboarding(vinsArray);
 
             // Clear selected pending vehicles after successful onboarding
-            this.selectedPendingVehicles.clear();
+            this.selectedPendingVehicles = [];
             this.vinsBulk = "";
             this.requestUpdate();
+
+            // Clear selection in pending vehicles component
+            const pendingVehiclesElement = this.querySelector('pending-vehicles-element') as any;
+            if (pendingVehiclesElement) {
+                pendingVehiclesElement.clearSelection();
+            }
         } catch (e) {
             this.displayFailure("failed to onboard vins: " + e);
         }
