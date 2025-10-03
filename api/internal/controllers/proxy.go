@@ -11,12 +11,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// ProxyRequest forwards a request to the target URL and returns the response
+// ProxyRequest forwards a request to the target URL and returns the response. uses the method from the original request
 // It handles both GET and POST requests based on whether requestBody is provided
 // If authHeader is not empty, it will be added as an Authorization header to the request
 func ProxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte, logger *zerolog.Logger, authHeader ...string) error {
 	// Perform GET request to the target URL
-	req, err := http.NewRequest("GET", targetURL.String(), nil)
+	req, err := http.NewRequest(c.Method(), targetURL.String(), nil)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create request",

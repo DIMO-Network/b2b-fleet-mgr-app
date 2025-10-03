@@ -154,3 +154,24 @@ func (v *VehiclesController) GetDeleteStatus(c *fiber.Ctx) error {
 	targetURL.RawQuery = fmt.Sprintf("vins=%s", vins)
 	return ProxyRequest(c, targetURL, nil, v.logger)
 }
+
+func (v *VehiclesController) GetPendingVehicleTelemetry(c *fiber.Ctx) error {
+	imei := c.Params("imei", "")
+	u := GetOracleURL(c, v.settings)
+	targetURL := u.JoinPath(fmt.Sprintf("/v1/pending-vehicle-telemetry/%s", imei))
+	return ProxyRequest(c, targetURL, nil, v.logger)
+}
+
+func (v *VehiclesController) ClearPendingVehicleTelemetry(c *fiber.Ctx) error {
+	imei := c.Params("imei", "")
+	u := GetOracleURL(c, v.settings)
+	targetURL := u.JoinPath(fmt.Sprintf("/v1/pending-vehicle-telemetry/%s", imei))
+	return ProxyRequest(c, targetURL, nil, v.logger)
+}
+
+func (v *VehiclesController) ResetOnboarding(c *fiber.Ctx) error {
+	imei := c.Params("imei", "")
+	u := GetOracleURL(c, v.settings)
+	targetURL := u.JoinPath(fmt.Sprintf("/v1/vehicle/reset-onboarding/%s", imei))
+	return ProxyRequest(c, targetURL, nil, v.logger)
+}
