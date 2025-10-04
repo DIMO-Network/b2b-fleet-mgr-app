@@ -226,6 +226,31 @@ button[disabled] {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+/* Checkbox styling */
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  accent-color: #9ca3af;
+}
+
+input[type="checkbox"]:disabled:checked {
+  background-color: #9ca3af;
+  border-color: #9ca3af;
+}
+
+/* Spinner animation for loading states */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;

@@ -1,6 +1,6 @@
 import {html, LitElement} from 'lit'
 import {repeat} from 'lit/directives/repeat.js';
-import {customElement, property} from "lit/decorators.js";
+import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 
 interface PendingVehicle {
@@ -38,8 +38,9 @@ export class PendingVehiclesElement extends LitElement {
     private alertText: string;
     private loading: boolean;
     private apiService: ApiService;
-    private showTelemetryModal: boolean = false;
-    private vehicleVin: string = "";
+
+    @state()
+    private selectedPendingVehicles: Set<string> = new Set();
 
     constructor() {
         super();
@@ -101,17 +102,6 @@ export class PendingVehiclesElement extends LitElement {
         }
     }
 
-    private async onboardVehicle(vin: string, imei: string) {
-        console.log(`Onboarding vehicle with VIN: ${vin}, IMEI: ${imei}`);
-        
-        // Dispatch event to copy VIN to add-vin-element
-        this.dispatchEvent(new CustomEvent('onboard-vehicle', {
-            detail: { vin: vin, imei: imei },
-            bubbles: true,
-            composed: true
-        }));
-    }
-
     private async goToPage(page: number) {
         if (page < 1) return;
         this.currentPage = page;
@@ -153,6 +143,15 @@ export class PendingVehiclesElement extends LitElement {
                 <table style="font-size: 80%">
                     <thead>
                     <tr>
+                        <th>
+                            <input type="checkbox" 
+                                   .checked=${(() => {
+                                       const validVehicles = this.items.filter(vehicle => vehicle.vin && vehicle.vin.trim() !== '');
+                                       return validVehicles.length > 0 && validVehicles.every(vehicle => this.selectedPendingVehicles.has(vehicle.vin));
+                                   })()}
+                                   @change=${this.toggleAllPendingVehicles}>
+                            Select
+                        </th>
                         <th>VIN</th>
                         <th>IMEI</th>
                         <th>First Seen</th>
@@ -162,13 +161,21 @@ export class PendingVehiclesElement extends LitElement {
                     <tbody>
                     ${repeat(this.items, (item) => item.vin, (item) => html`
                         <tr>
-                            <td>${item.vin}</td>
+                            <td>
+                                <input type="checkbox" 
+                                       .checked=${this.selectedPendingVehicles.has(item.vin)}
+                                       ?disabled=${!item.vin || item.vin.trim() === ''}
+                                       @click=${(e: Event) => {
+                                           e.stopPropagation();
+                                           if (item.vin && item.vin.trim() !== '') {
+                                               this.togglePendingVehicle(item.vin);
+                                           }
+                                       }}>
+                            </td>
+                            <td>${item.vin || 'N/A'}</td>
                             <td>${item.imei}</td>
                             <td>${item.firstSeen}</td>
                             <td>
-                                <button @click=${() => this.onboardVehicle(item.vin, item.imei)}>
-                                    Onboard
-                                </button>
                                 <button @click=${() => this.openTelemetryModal(item.imei)} style="margin-left: 0.5rem;">
                                     Telemetry
                                 </button>
@@ -206,32 +213,78 @@ export class PendingVehiclesElement extends LitElement {
                     </div>
                 </div>
             `}
-            
-            <!-- Telemetry Modal -->
-            <telemetry-modal-element 
-                .show=${this.showTelemetryModal}
-                .vehicleVin=${this.vehicleVin || ""}
-                @modal-closed=${this.closeTelemetryModal}>
-            </telemetry-modal-element>
         `
     }
 
-    private openTelemetryModal(vin: string) {
-        console.log("Opening telemetry modal for vehicle:", vin);
-        this.vehicleVin = vin;
-        this.showTelemetryModal = true;
+    private openTelemetryModal(imei: string) {
+        console.log("Opening telemetry modal for IMEI:", imei);
         
-        // Load telemetry data
-        const modal = document.querySelector('telemetry-modal-element') as any;
-        if (modal) {
+        // Create the telemetry modal using the separate component
+        const modal = document.createElement('telemetry-modal-element') as any;
+        modal.show = true;
+        modal.imei = imei;
+        
+        // Add event listener for modal close
+        modal.addEventListener('modal-closed', () => {
+            document.body.removeChild(modal);
+        });
+        
+        // Add to body
+        document.body.appendChild(modal);
+        
+        // Load telemetry data after the modal is added to the DOM
+        setTimeout(() => {
             modal.loadTelemetryData();
-        }
+        }, 100);
     }
 
-    private closeTelemetryModal() {
-        this.showTelemetryModal = false;
-        this.vehicleVin = "";
-        console.log("Closing telemetry modal");
+
+    private togglePendingVehicle(vin: string) {
+        if (this.selectedPendingVehicles.has(vin)) {
+            this.selectedPendingVehicles.delete(vin);
+        } else {
+            this.selectedPendingVehicles.add(vin);
+        }
+        this.requestUpdate();
+        this.dispatchSelectionChanged();
+    }
+
+    private toggleAllPendingVehicles() {
+        // Only consider vehicles with valid VINs
+        const validVehicles = this.items.filter(vehicle => vehicle.vin && vehicle.vin.trim() !== '');
+        const allSelected = validVehicles.every(vehicle => this.selectedPendingVehicles.has(vehicle.vin));
+        
+        if (allSelected) {
+            // If all valid vehicles are selected, deselect all
+            this.selectedPendingVehicles.clear();
+        } else {
+            // If not all valid vehicles are selected, select all valid ones
+            validVehicles.forEach(vehicle => {
+                this.selectedPendingVehicles.add(vehicle.vin);
+            });
+        }
+        this.requestUpdate();
+        this.dispatchSelectionChanged();
+    }
+
+    private dispatchSelectionChanged() {
+        this.dispatchEvent(new CustomEvent('selection-changed', {
+            detail: { selectedVehicles: Array.from(this.selectedPendingVehicles) },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    // Public method to get selected vehicles
+    public getSelectedVehicles(): string[] {
+        return Array.from(this.selectedPendingVehicles);
+    }
+
+    // Public method to clear selection
+    public clearSelection() {
+        this.selectedPendingVehicles.clear();
+        this.requestUpdate();
+        this.dispatchSelectionChanged();
     }
 }
 

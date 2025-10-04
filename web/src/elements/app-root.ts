@@ -74,7 +74,7 @@ export class AppRoot extends LitElement {
         const access = await this.apiService.setOracle(selectedValue);
         this.hasOracleAccess = access;
         this.saveOracle(selectedValue)
-        
+
         if (access) {
             await this.getUserVehicles()
         } else {
@@ -87,7 +87,7 @@ export class AppRoot extends LitElement {
         super.connectedCallback();
         const access = await this.apiService.setOracle(this.oracle);
         this.hasOracleAccess = access;
-        
+
         if (access) {
             await this.getUserVehicles()
         }
