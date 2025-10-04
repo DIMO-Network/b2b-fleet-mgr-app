@@ -122,9 +122,6 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = this.settings.sharingInfo?.enabled || false;
         this.sacdGrantee = this.settings.sharingInfo?.grantee || "";
         this.sacdPermissions = this.settings.sharingInfo?.permissions as Permissions || defaultPermissions;
-
-        // Load pending vehicles
-        await this.loadPendingVehicles();
     }
 
     togglePermission(permission: number) {
@@ -134,97 +131,6 @@ export class AddVinElement extends BaseOnboardingElement {
 
     toggleEnableSacd() {
         this.enableSacd = !this.enableSacd;
-    }
-
-    // Pending vehicles methods
-    private async loadPendingVehicles() {
-        this.pendingVehiclesLoading = true;
-        this.pendingVehiclesError = "";
-
-        const skip = (this.currentPage - 1) * this.pageSize;
-        const take = this.pageSize;
-
-        const url = `/pending-vehicles?skip=${skip}&take=${take}`;
-
-        const response = await this.apiService.callApi<PendingVehicle[]>(
-            'GET',
-            url,
-            null,
-            true, // auth required
-            true  // oracle endpoint
-        );
-
-        this.pendingVehiclesLoading = false;
-
-        if (response.success && response.data) {
-            this.pendingVehicles = response.data;
-            if (response.data.length < this.pageSize) {
-                this.totalItems = skip + response.data.length;
-            } else {
-                this.totalItems = skip + response.data.length + 1;
-            }
-            this.shouldShowPagination = this.totalItems > this.pageSize;
-        } else {
-            this.pendingVehiclesError = response.error || "Failed to load pending vehicles";
-            this.pendingVehicles = [];
-            this.totalItems = 0;
-        }
-    }
-
-    private togglePendingVehicle(vin: string) {
-        if (this.selectedPendingVehicles.has(vin)) {
-            this.selectedPendingVehicles.delete(vin);
-        } else {
-            this.selectedPendingVehicles.add(vin);
-        }
-        this.requestUpdate();
-    }
-
-    private toggleAllPendingVehicles() {
-        const allSelected = this.pendingVehicles.every(vehicle => this.selectedPendingVehicles.has(vehicle.vin));
-
-        if (allSelected) {
-            // If all are selected, deselect all
-            this.selectedPendingVehicles.clear();
-        } else {
-            // If not all are selected, select all
-            this.pendingVehicles.forEach(vehicle => {
-                this.selectedPendingVehicles.add(vehicle.vin);
-            });
-        }
-        this.requestUpdate();
-    }
-
-
-    private async goToPage(page: number) {
-        if (page < 1) return;
-        this.currentPage = page;
-        await this.loadPendingVehicles();
-    }
-
-    private async nextPage() {
-        const maxPage = Math.ceil(this.totalItems / this.pageSize);
-        if (this.currentPage < maxPage) {
-            await this.goToPage(this.currentPage + 1);
-        }
-    }
-
-    private async previousPage() {
-        if (this.currentPage > 1) {
-            await this.goToPage(this.currentPage - 1);
-        }
-    }
-
-    private get totalPages(): number {
-        return Math.ceil(this.totalItems / this.pageSize);
-    }
-
-    private get hasNextPage(): boolean {
-        return this.currentPage < this.totalPages;
-    }
-
-    private get hasPreviousPage(): boolean {
-        return this.currentPage > 1;
     }
 
     render() {
