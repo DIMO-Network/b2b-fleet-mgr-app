@@ -87,6 +87,7 @@ export class AddVinElement extends BaseOnboardingElement {
 
     // Pending vehicles properties
     @state() private selectedPendingVehicles: string[] = [];
+    @state() private selectedVinsForSubmission: string[] = [];
 
     private settings: SettingsService;
     private apiService: ApiService;
@@ -133,6 +134,13 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = !this.enableSacd;
     }
 
+    handlePendingVehiclesSelection(event: CustomEvent) {
+        this.selectedPendingVehicles = event.detail.selectedVehicles;
+        this.selectedVinsForSubmission = [...this.selectedPendingVehicles];
+        console.log("Selected pending vehicles:", this.selectedPendingVehicles);
+        this.requestUpdate();
+    }
+
     render() {
         return html`
             <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
@@ -177,7 +185,7 @@ export class AddVinElement extends BaseOnboardingElement {
             <div>
                 <form class="grid">
                     <button type="button" @click=${this._submitVINs} ?disabled=${this.processing} class=${this.processing ? 'processing' : ''} >
-                        Onboard VINs
+                        Onboard Vehicles
                     </button>
                 </form>
             </div>
@@ -221,13 +229,14 @@ export class AddVinElement extends BaseOnboardingElement {
 
         console.log("submitting vin(s)");
 
-        // Collect VINs from bulk textarea
-        if (this.vinsBulk !== null && this.vinsBulk !== undefined && this.vinsBulk?.length > 0) {
+        // Use selected VINs from checkboxes if available, otherwise use textarea
+        if (this.selectedVinsForSubmission.length > 0) {
+            vinsArray = [...this.selectedVinsForSubmission];
+            console.log("Using selected VINs from checkboxes:", vinsArray);
+        } else if (this.vinsBulk !== null && this.vinsBulk !== undefined && this.vinsBulk?.length > 0) {
             vinsArray = this.vinsBulk.split('\n');
+            console.log("Using VINs from textarea:", vinsArray);
         }
-
-        // Add selected pending vehicles
-        vinsArray = [...vinsArray, ...this.selectedPendingVehicles];
 
         if (vinsArray.length === 0) {
             this.processing = false;
@@ -237,8 +246,9 @@ export class AddVinElement extends BaseOnboardingElement {
         try {
             await this.performOnboarding(vinsArray);
 
-            // Clear selected pending vehicles after successful onboarding
+            // Clear all VIN sources after successful onboarding
             this.selectedPendingVehicles = [];
+            this.selectedVinsForSubmission = [];
             this.vinsBulk = "";
             this.requestUpdate();
 
