@@ -25,6 +25,9 @@ export class TelemetryModalElement extends LitElement {
     @state()
     private error = ""
 
+    @state()
+    private resetting = false
+
     private apiService: ApiService;
 
     constructor() {
@@ -51,7 +54,17 @@ export class TelemetryModalElement extends LitElement {
                 <div class="modal-content telemetry-modal" @click=${(e: Event) => e.stopPropagation()}>
                     <div class="modal-header">
                         <h3>Telemetry Data - ${this.imei}</h3>
-                        <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <button type="button" 
+                                    class="btn-secondary" 
+                                    ?disabled=${this.resetting}
+                                    @click=${this.resetTelemetry}
+                                    style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                ${this.resetting ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
+                                Reset Telemetry
+                            </button>
+                            <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
+                        </div>
                     </div>
                     <div class="modal-body">
                         ${this.loading ? html`
@@ -98,12 +111,39 @@ export class TelemetryModalElement extends LitElement {
         this.telemetryData = [];
         this.error = "";
         this.loading = false;
+        this.resetting = false;
         
         // Dispatch event to parent
         this.dispatchEvent(new CustomEvent('modal-closed', {
             bubbles: true,
             composed: true
         }));
+    }
+
+    private async resetTelemetry() {
+        if (!this.imei) {
+            this.error = "No IMEI provided";
+            return;
+        }
+
+        this.resetting = true;
+        this.error = "";
+        
+        try {
+            const response = await this.apiService.callApi('DELETE', `/pending-vehicle-telemetry/${this.imei}`, null, true, true);
+            if (response.success) {
+                // Clear the telemetry data after successful reset
+                this.telemetryData = [];
+                console.log("Telemetry data reset successfully");
+            } else {
+                this.error = response.error || "Failed to reset telemetry data";
+            }
+        } catch (err) {
+            this.error = "Failed to reset telemetry data";
+            console.error("Error resetting telemetry data:", err);
+        } finally {
+            this.resetting = false;
+        }
     }
 
     // Method to load telemetry data (to be called from parent)

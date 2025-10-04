@@ -54,7 +54,7 @@ export class ApiService {
 
     // makes a request to the backend proxy with the currently selected oracle route.
     public async callApi<T>(
-        method: 'GET' | 'POST',
+        method: 'GET' | 'POST' | 'DELETE',
         endpoint: string,
         requestBody: Record<string, any> | null = null,
         auth: boolean = false,

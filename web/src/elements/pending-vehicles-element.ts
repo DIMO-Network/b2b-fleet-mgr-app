@@ -172,7 +172,7 @@ export class PendingVehiclesElement extends LitElement {
                                            }
                                        }}>
                             </td>
-                            <td>${item.vin}</td>
+                            <td>${item.vin || 'N/A'}</td>
                             <td>${item.imei}</td>
                             <td>${item.firstSeen}</td>
                             <td>
