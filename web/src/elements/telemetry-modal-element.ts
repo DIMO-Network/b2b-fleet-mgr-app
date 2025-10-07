@@ -3,9 +3,20 @@ import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
 import { ApiService } from '../services/api-service';
 
+interface IoElement {
+    id: number;
+    value: string;
+}
+
+interface RawTelemetryEntry {
+    header?: Record<string, any>;
+    io_elements?: IoElement[];
+}
+
 interface TelemetryData {
-    rawTelemetry: string;
-    receivedAt: string;
+    // API can return an array of entries, a single entry object, or a stringified JSON
+    rawTelemetry: RawTelemetryEntry[] | RawTelemetryEntry | string;
+    receivedAt?: string;
 }
 
 @customElement('telemetry-modal-element')
@@ -77,15 +88,15 @@ export class TelemetryModalElement extends LitElement {
                                     <table class="telemetry-table">
                                         <thead>
                                             <tr>
-                                                <th>Date Received</th>
-                                                <th>Telemetry Blob</th>
+                                                <th>Header</th>
+                                                <th>IO Elements</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            ${this.telemetryData.map(item => html`
+                                            ${this.telemetryData.flatMap(item => this.getRawTelemetryRows(item)).map(row => html`
                                                 <tr>
-                                                    <td>${item.receivedAt}</td>
-                                                    <td><pre class="telemetry-blob">${JSON.stringify(JSON.parse(item.rawTelemetry), null, 2)}</pre></td>
+                                                    <td><pre class="telemetry-blob">${this.formatJsonForDisplay(row.header)}</pre></td>
+                                                    <td><pre class="telemetry-blob">${this.formatJsonForDisplay(row.io_elements)}</pre></td>
                                                 </tr>
                                             `)}
                                         </tbody>
@@ -168,6 +179,59 @@ export class TelemetryModalElement extends LitElement {
             console.error("Error loading telemetry data:", err);
         } finally {
             this.loading = false;
+        }
+    }
+
+    private getRawTelemetryRows(item: TelemetryData): { header: unknown; io_elements: unknown }[] {
+        const raw = item.rawTelemetry;
+
+        // If it's already an array of entries
+        if (Array.isArray(raw)) {
+            return raw.map(entry => ({
+                header: entry?.header ?? {},
+                io_elements: entry?.io_elements ?? []
+            }));
+        }
+
+        // If it's an object entry
+        if (raw && typeof raw === 'object') {
+            const entry = raw as RawTelemetryEntry;
+            return [{
+                header: entry?.header ?? {},
+                io_elements: entry?.io_elements ?? []
+            }];
+        }
+
+        // If it's a string (possibly stringified JSON)
+        if (typeof raw === 'string') {
+            try {
+                const parsed = JSON.parse(raw) as RawTelemetryEntry | RawTelemetryEntry[];
+                if (Array.isArray(parsed)) {
+                    return parsed.map(entry => ({
+                        header: entry?.header ?? {},
+                        io_elements: entry?.io_elements ?? []
+                    }));
+                }
+                return [{
+                    header: parsed?.header ?? {},
+                    io_elements: parsed?.io_elements ?? []
+                }];
+            } catch {
+                // Fallback: can't parse, return raw string in header column
+                return [{ header: raw, io_elements: [] }];
+            }
+        }
+
+        return [{ header: {}, io_elements: [] }];
+    }
+
+    private formatJsonForDisplay(data: unknown): string {
+        try {
+            const toFormat = typeof data === 'string' ? JSON.parse(data) : data;
+            return JSON.stringify(toFormat, null, 2);
+        } catch {
+            // If not JSON string, display as-is or as JSON
+            return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
         }
     }
 }
