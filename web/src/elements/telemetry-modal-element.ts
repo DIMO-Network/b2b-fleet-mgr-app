@@ -39,6 +39,12 @@ export class TelemetryModalElement extends LitElement {
     @state()
     private resetting = false
 
+    @state()
+    private odometerDisplay: string = "—"
+
+    @state()
+    private rpmDisplay: string = "—"
+
     private apiService: ApiService;
 
     constructor() {
@@ -84,6 +90,10 @@ export class TelemetryModalElement extends LitElement {
                             ${this.error ? html`
                                 <div class="alert alert-error">${this.error}</div>
                             ` : html`
+                                <div class="telemetry-metrics" style="display: flex; align-items: baseline; gap: 2rem; margin-bottom: 0.5rem;">
+                                    <div><span style="opacity: 0.8;">Odometer:</span> <strong>${this.odometerDisplay}</strong></div>
+                                    <div><span style="opacity: 0.8;">RPM:</span> <strong>${this.rpmDisplay}</strong></div>
+                                </div>
                                 ${this.telemetryData.length > 0 ? html`
                                     <table class="telemetry-table">
                                         <thead>
@@ -123,6 +133,8 @@ export class TelemetryModalElement extends LitElement {
         this.error = "";
         this.loading = false;
         this.resetting = false;
+        this.odometerDisplay = "—";
+        this.rpmDisplay = "—";
         
         // Dispatch event to parent
         this.dispatchEvent(new CustomEvent('modal-closed', {
@@ -145,6 +157,8 @@ export class TelemetryModalElement extends LitElement {
             if (response.success) {
                 // Clear the telemetry data after successful reset
                 this.telemetryData = [];
+                this.odometerDisplay = "—";
+                this.rpmDisplay = "—";
                 console.log("Telemetry data reset successfully");
             } else {
                 this.error = response.error || "Failed to reset telemetry data";
@@ -171,6 +185,8 @@ export class TelemetryModalElement extends LitElement {
             const response = await this.apiService.callApi<TelemetryData[]>('GET', `/pending-vehicle-telemetry/${this.imei}`, null, true, true);
             if (response.success && response.data) {
                 this.telemetryData = Array.isArray(response.data) ? response.data : [];
+                this.updateOdometerDisplay();
+                this.updateRpmDisplay();
             } else {
                 this.error = response.error || "Failed to load telemetry data";
             }
@@ -233,5 +249,81 @@ export class TelemetryModalElement extends LitElement {
             // If not JSON string, display as-is or as JSON
             return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
         }
+    }
+
+    private updateOdometerDisplay(): void {
+        if (!this.telemetryData || this.telemetryData.length === 0) {
+            this.odometerDisplay = "—";
+            return;
+        }
+
+        const first = this.telemetryData[0];
+        const rows = this.getRawTelemetryRows(first);
+        if (!rows || rows.length === 0) {
+            this.odometerDisplay = "—";
+            return;
+        }
+
+        const io = rows[0].io_elements as any;
+        if (!Array.isArray(io)) {
+            this.odometerDisplay = "—";
+            return;
+        }
+
+        const match = io.find((el: any) => el && typeof el === 'object' && 'id' in el && el.id === 645);
+        const valueStr = match?.value;
+        if (typeof valueStr !== 'string') {
+            this.odometerDisplay = "—";
+            return;
+        }
+
+        const decimal = this.hexStringToDecimal(valueStr);
+        this.odometerDisplay = decimal !== null ? String(decimal) : "—";
+    }
+
+    private hexStringToDecimal(value: string): number | null {
+        let hex = value.trim();
+        if (hex.startsWith('0x') || hex.startsWith('0X')) {
+            hex = hex.slice(2);
+        }
+        // reject non-hex strings
+        if (!/^[0-9a-fA-F]+$/.test(hex)) {
+            return null;
+        }
+        try {
+            return parseInt(hex, 16);
+        } catch {
+            return null;
+        }
+    }
+
+    private updateRpmDisplay(): void {
+        if (!this.telemetryData || this.telemetryData.length === 0) {
+            this.rpmDisplay = "—";
+            return;
+        }
+
+        const first = this.telemetryData[0];
+        const rows = this.getRawTelemetryRows(first);
+        if (!rows || rows.length === 0) {
+            this.rpmDisplay = "—";
+            return;
+        }
+
+        const io = rows[0].io_elements as any;
+        if (!Array.isArray(io)) {
+            this.rpmDisplay = "—";
+            return;
+        }
+
+        const match = io.find((el: any) => el && typeof el === 'object' && 'id' in el && el.id === 94);
+        const valueStr = match?.value;
+        if (typeof valueStr !== 'string') {
+            this.rpmDisplay = "—";
+            return;
+        }
+
+        const decimal = this.hexStringToDecimal(valueStr);
+        this.rpmDisplay = decimal !== null ? String(decimal) : "—";
     }
 }
