@@ -72,8 +72,6 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                           @click=${this.connectVehicle}
                   >connect
                   </button>
-              </td>
-              <td>
                   <button 
                       type="button" 
                       ?disabled=${this.item.syntheticDevice.tokenId || this.processing || !this.item.isCurrentUserOwner}
@@ -83,10 +81,10 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       delete
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
-                  <button
-                          type="button"
-                          ?disabled=${this.processing || !this.item.isCurrentUserOwner}
-                          @click=${this.openTransferModal}
+                  <button 
+                      type="button" 
+                      ?disabled=${this.processing || !this.item.isCurrentUserOwner}
+                      @click=${this.openTransferModal}
                   >
                       transfer
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
@@ -199,17 +197,17 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
     private openTransferModal() {
         console.log("Opening transfer modal for vehicle:", this.item?.vin);
-        
+
         // Create the transfer modal using the separate component
         const modal = document.createElement('transfer-modal-element') as any;
         modal.show = true;
         modal.vehicleVin = this.item?.vin || '';
-        
+
         // Add event listener for modal close
         modal.addEventListener('modal-closed', () => {
             document.body.removeChild(modal);
         });
-        
+
         // Add to body
         document.body.appendChild(modal);
     }

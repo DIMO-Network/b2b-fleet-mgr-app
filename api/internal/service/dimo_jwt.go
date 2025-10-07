@@ -86,7 +86,7 @@ func (d *dimoJWTService) RefreshJWT() (string, error) {
 	}
 
 	// Get public key in compressed format
-	publicKeyBytes := elliptic.MarshalCompressed(elliptic.P256(), privateKey.PublicKey.X, privateKey.PublicKey.Y)
+	publicKeyBytes := elliptic.MarshalCompressed(elliptic.P256(), privateKey.X, privateKey.Y)
 	publicKeyHex := hex.EncodeToString(publicKeyBytes)
 
 	// Create JWT payload
