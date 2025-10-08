@@ -89,6 +89,14 @@ export class AddVinElement extends BaseOnboardingElement {
     @state() private selectedPendingVehicles: string[] = [];
     @state() private selectedVinsForSubmission: string[] = [];
 
+	// Predefined grantees (temporary until backend provides these)
+	@state() private availableGrantees: { label: string; value: string }[] = [
+		{ label: "Copiloto", value: "0x8863beed0Db7086b1e3DEca019E0A43431EFE35F" },
+        { label: "HoneyRuns", value: "0x9d4Ffa984Bd263c3f308A391172581C0684e81f2" }
+	];
+	@state() private selectedGrantees: string[] = [];
+	@state() private useBelow: boolean = false;
+
     private settings: SettingsService;
     private apiService: ApiService;
 
@@ -134,6 +142,27 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = !this.enableSacd;
     }
 
+    private toggleUseBelow = () => {
+        this.useBelow = !this.useBelow;
+        if (!this.useBelow) {
+            if (this.selectedGrantees.length > 0) {
+                this.sacdGrantee = this.selectedGrantees[0] as any;
+            }
+        }
+    }
+
+    private handleGranteeToggle = (value: string) => {
+        const idx = this.selectedGrantees.indexOf(value);
+        if (idx >= 0) {
+            this.selectedGrantees = [
+                ...this.selectedGrantees.slice(0, idx),
+                ...this.selectedGrantees.slice(idx + 1)
+            ];
+        } else {
+            this.selectedGrantees = [...this.selectedGrantees, value];
+        }
+    }
+
     handlePendingVehiclesSelection(event: CustomEvent) {
         this.selectedPendingVehicles = event.detail.selectedVehicles;
         this.selectedVinsForSubmission = [...this.selectedPendingVehicles];
@@ -164,11 +193,28 @@ export class AddVinElement extends BaseOnboardingElement {
                 </label>
             </form>
             <div ?hidden=${!this.enableSacd}>
-                <form class="grid" >
+                <form>
+                    <div>
+					<fieldset>
+						${repeat(this.availableGrantees, (g) => g.value, (g) => html`
+						<label style="margin-bottom: 0.5rem">
+							<input type="checkbox" .checked=${this.selectedGrantees.includes(g.value)} @click=${() => this.handleGranteeToggle(g.value)}> ${g.label} : ${g.value}
+						</label>
+						`)}
+					</fieldset>
+                    </div>
+                    <div>
+					<fieldset>
+						<label>
+							<input type="checkbox" .checked=${this.useBelow} @click=${this.toggleUseBelow}> Use below:
+						</label>
+					</fieldset>
+                    </div>
+                    <div class="grid">
                     <fieldset>
                         <label>Developer License 0x Client ID
-                            <input type="text" placeholder="0x" maxlength="42"
-                                   value=${this.sacdGrantee} @input="${(e: InputEvent) => this.sacdGrantee = (e.target as HTMLInputElement).value}">
+							<input type="text" placeholder="0x" maxlength="42"
+								   value=${this.sacdGrantee} @input="${(e: InputEvent) => this.sacdGrantee = (e.target as HTMLInputElement).value}" ?disabled=${!this.useBelow}>
                         </label>
                     </fieldset>
 
@@ -179,6 +225,7 @@ export class AddVinElement extends BaseOnboardingElement {
                         </label>
                     `)}
                     </fieldset>
+                    </div>
                 </form>
             </div>
             
