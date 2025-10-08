@@ -194,7 +194,10 @@ func (d *dimoJWTService) registerPublicKey(publicKeyHex string) error {
 func generateJTI() string {
 	// Generate a random 16-byte JTI
 	bytes := make([]byte, 16)
-	rand.Read(bytes)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return hex.EncodeToString(bytes)
 }
 
