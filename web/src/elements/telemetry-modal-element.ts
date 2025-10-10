@@ -45,6 +45,12 @@ export class TelemetryModalElement extends LitElement {
     @state()
     private rpmDisplay: string = "—"
 
+    @state()
+    private ignitionDisplay: string = "—"
+
+    @state()
+    private engineBlockDisplay: string = "—"
+
     private apiService: ApiService;
 
     constructor() {
@@ -93,6 +99,8 @@ export class TelemetryModalElement extends LitElement {
                                 <div class="telemetry-metrics" style="display: flex; align-items: baseline; gap: 2rem; margin-bottom: 0.5rem;">
                                     <div><span style="opacity: 0.8;">Odometer:</span> <strong>${this.odometerDisplay}</strong></div>
                                     <div><span style="opacity: 0.8;">RPM:</span> <strong>${this.rpmDisplay}</strong></div>
+                                    <div><span style="opacity: 0.8;">Ignition:</span> <strong>${this.ignitionDisplay}</strong></div>
+                                    <div><span style="opacity: 0.8;">Engine Block:</span> <strong>${this.engineBlockDisplay}</strong></div>
                                 </div>
                                 ${this.telemetryData.length > 0 ? html`
                                     <table class="telemetry-table">
@@ -135,6 +143,8 @@ export class TelemetryModalElement extends LitElement {
         this.resetting = false;
         this.odometerDisplay = "—";
         this.rpmDisplay = "—";
+        this.ignitionDisplay = "—";
+        this.engineBlockDisplay = "—";
         
         // Dispatch event to parent
         this.dispatchEvent(new CustomEvent('modal-closed', {
@@ -159,6 +169,8 @@ export class TelemetryModalElement extends LitElement {
                 this.telemetryData = [];
                 this.odometerDisplay = "—";
                 this.rpmDisplay = "—";
+                this.ignitionDisplay = "—";
+                this.engineBlockDisplay = "—";
                 console.log("Telemetry data reset successfully");
             } else {
                 this.error = response.error || "Failed to reset telemetry data";
@@ -185,8 +197,13 @@ export class TelemetryModalElement extends LitElement {
             const response = await this.apiService.callApi<TelemetryData[]>('GET', `/pending-vehicle-telemetry/${this.imei}`, null, true, true);
             if (response.success && response.data) {
                 this.telemetryData = Array.isArray(response.data) ? response.data : [];
-                this.updateOdometerDisplay();
-                this.updateRpmDisplay();
+                if (this.telemetryData.length > 0) {
+                const first = this.telemetryData[0];
+                this.updateOdometerDisplay(first);
+                    this.updateRpmDisplay(first);
+                    this.updateIgnitionDisplay(first);
+                    this.updateEngineBlockDisplay(first);
+                }
             } else {
                 this.error = response.error || "Failed to load telemetry data";
             }
@@ -251,33 +268,13 @@ export class TelemetryModalElement extends LitElement {
         }
     }
 
-    private updateOdometerDisplay(): void {
-        if (!this.telemetryData || this.telemetryData.length === 0) {
+    private updateOdometerDisplay(item: TelemetryData | undefined): void {
+        if (!item) {
             this.odometerDisplay = "—";
             return;
         }
 
-        const first = this.telemetryData[0];
-        const rows = this.getRawTelemetryRows(first);
-        if (!rows || rows.length === 0) {
-            this.odometerDisplay = "—";
-            return;
-        }
-
-        const io = rows[0].io_elements as any;
-        if (!Array.isArray(io)) {
-            this.odometerDisplay = "—";
-            return;
-        }
-
-        const match = io.find((el: any) => el && typeof el === 'object' && 'id' in el && el.id === 645);
-        const valueStr = match?.value;
-        if (typeof valueStr !== 'string') {
-            this.odometerDisplay = "—";
-            return;
-        }
-
-        const decimal = this.hexStringToDecimal(valueStr);
+        const decimal = this.findIoValueDecimal(item, 645);
         this.odometerDisplay = decimal !== null ? String(decimal) : "—";
     }
 
@@ -297,33 +294,45 @@ export class TelemetryModalElement extends LitElement {
         }
     }
 
-    private updateRpmDisplay(): void {
-        if (!this.telemetryData || this.telemetryData.length === 0) {
-            this.rpmDisplay = "—";
-            return;
-        }
-
-        const first = this.telemetryData[0];
-        const rows = this.getRawTelemetryRows(first);
-        if (!rows || rows.length === 0) {
-            this.rpmDisplay = "—";
-            return;
-        }
-
+    private findIoValueDecimal(item: TelemetryData | undefined, ioId: number): number | null {
+        if (!item) return null;
+        const rows = this.getRawTelemetryRows(item);
+        if (!rows || rows.length === 0) return null;
         const io = rows[0].io_elements as any;
-        if (!Array.isArray(io)) {
-            this.rpmDisplay = "—";
-            return;
-        }
-
-        const match = io.find((el: any) => el && typeof el === 'object' && 'id' in el && el.id === 94);
+        if (!Array.isArray(io)) return null;
+        const match = io.find((el: any) => el && typeof el === 'object' && 'id' in el && el.id === ioId);
         const valueStr = match?.value;
-        if (typeof valueStr !== 'string') {
+        if (typeof valueStr !== 'string') return null;
+        return this.hexStringToDecimal(valueStr);
+    }
+
+    private updateRpmDisplay(item: TelemetryData | undefined): void {
+        if (!item) {
             this.rpmDisplay = "—";
             return;
         }
 
-        const decimal = this.hexStringToDecimal(valueStr);
+        const decimal = this.findIoValueDecimal(item, 94);
         this.rpmDisplay = decimal !== null ? String(decimal) : "—";
+    }
+
+    private updateIgnitionDisplay(item: TelemetryData | undefined): void {
+        if (!item) {
+            this.ignitionDisplay = "—";
+            return;
+        }
+
+        const decimal = this.findIoValueDecimal(item, 409);
+        this.ignitionDisplay = decimal !== null ? String(decimal) : "—";
+    }
+
+    private updateEngineBlockDisplay(item: TelemetryData | undefined): void {
+        if (!item) {
+            this.engineBlockDisplay = "—";
+            return;
+        }
+
+        const decimal = this.findIoValueDecimal(item, 405);
+        this.engineBlockDisplay = decimal !== null ? String(decimal) : "—";
     }
 }

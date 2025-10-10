@@ -183,12 +183,11 @@ export class BaseOnboardingElement extends LitElement {
         return result;
     }
 
-    async submitMintingData(mintingData: VinMintData[], sacd: SacdInput | null) {
-        const payload: {vinMintingData: VinMintData[], sacd?: SacdInput} = {
+    async submitMintingData(mintingData: VinMintData[], sacd: SacdInput[] | null) {
+        const payload: {vinMintingData: VinMintData[], sacd?: SacdInput[]} = {
             vinMintingData: mintingData,
         }
-
-        if (sacd !== null) {
+        if (sacd !== null && sacd.length > 0) {
             payload.sacd = sacd
         }
 
@@ -228,7 +227,7 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async onboardVINs(vins: string[], sacd: SacdInput | null): Promise<boolean> {
+    async onboardVINs(vins: string[], sacd: SacdInput[] | null): Promise<boolean> {
         let allVinsValid = true;
         for (const vin of vins) {
             const validVin = vin?.length === 17
