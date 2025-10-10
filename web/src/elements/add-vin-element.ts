@@ -336,10 +336,10 @@ export class AddVinElement extends BaseOnboardingElement {
 
         this.processing = false;
     }
-
+// todo i think we pass in an array of SacdInput in here and have something that builds the sacd inputs
     private async performOnboarding(vinsArray: string[]) {
         try {
-            let sacdInput: SacdInput | null;
+            let sacdInput: SacdInput[] | null;
             if (!this.enableSacd) {
                 sacdInput = null;
 
@@ -350,14 +350,28 @@ export class AddVinElement extends BaseOnboardingElement {
 
                 this.settings.saveSharingInfo();
             } else {
+                // create a SACD expiration 40 years in the future.
                 const expiration = new Date();
                 expiration.setFullYear(expiration.getFullYear() + 40)
                 const expirationTimestamp = Math.round(expiration.getTime() / 1000)
-                sacdInput = {
-                    grantee: this.sacdGrantee as `0x${string}`,
-                    permissions: sacdPermissionValue(this.sacdPermissions!),
-                    expiration: BigInt(expirationTimestamp),
-                    source: ''
+                const perms = sacdPermissionValue(this.sacdPermissions!)
+                // Build SACD array; append the one from "Use below" if checked, then loop over the selected grantees and append them
+                sacdInput = [];
+                if (this.useBelow && this.sacdGrantee) {
+                    sacdInput.push({
+                        grantee: this.sacdGrantee as `0x${string}`,
+                        permissions: perms,
+                        expiration: BigInt(expirationTimestamp),
+                        source: ''
+                    });
+                }
+                for (const grantee of this.selectedGrantees) {
+                    sacdInput.push({
+                        grantee: grantee as `0x${string}`,
+                        permissions: perms,
+                        expiration: BigInt(expirationTimestamp),
+                        source: ''
+                    });
                 }
 
                 this.settings.sharingInfo = {
