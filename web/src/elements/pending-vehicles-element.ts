@@ -39,6 +39,11 @@ export class PendingVehiclesElement extends LitElement {
     private loading: boolean;
     private apiService: ApiService;
 
+	@state()
+	private searchTerm: string = "";
+
+	private searchDebounce?: number;
+
     @state()
     private selectedPendingVehicles: Set<string> = new Set();
 
@@ -71,7 +76,8 @@ export class PendingVehiclesElement extends LitElement {
         const skip = (this.currentPage - 1) * this.pageSize;
         const take = this.pageSize;
         
-        const url = `/pending-vehicles?skip=${skip}&take=${take}`;
+		const search = this.searchTerm?.trim();
+		const url = `/pending-vehicles?skip=${skip}&take=${take}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
         
         const response = await this.apiService.callApi<PendingVehicle[]>(
             'GET',
@@ -133,9 +139,16 @@ export class PendingVehiclesElement extends LitElement {
         return this.currentPage > 1;
     }
 
-    render() {
+		render() {
         return html`
-            <h2>Pending to Onboard Vehicles</h2>
+				<div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;">
+					<h2 style="margin: 0;">Pending to Onboard Vehicles</h2>
+					<input type="text"
+						placeholder="Search"
+						style="width: 40%; min-width: 200px;"
+						.value=${this.searchTerm}
+						@input=${this.onSearchInput}>
+				</div>
             <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
                 ${this.alertText}
             </div>
@@ -274,6 +287,17 @@ export class PendingVehiclesElement extends LitElement {
             composed: true
         }));
     }
+
+	private onSearchInput = (e: InputEvent) => {
+		this.searchTerm = (e.target as HTMLInputElement).value;
+		if (this.searchDebounce) {
+			clearTimeout(this.searchDebounce);
+		}
+		this.searchDebounce = window.setTimeout(() => {
+			this.currentPage = 1;
+			this.loadPendingVehicles();
+		}, 500);
+	}
 
     // Public method to get selected vehicles
     public getSelectedVehicles(): string[] {
