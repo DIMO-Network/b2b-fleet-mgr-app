@@ -89,6 +89,14 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       transfer
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
+                  <button 
+                  ?hidden=${this.item.tokenId !== 0}
+                      type="button" 
+                      ?disabled=${this.processing}
+                      @click=${() => this.resetOnboarding(this.item?.imei || '')}
+                  >
+                      reset onboarding
+                  </button>
               </td>
           ` : nothing
     }
@@ -192,6 +200,18 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         await delay(5000)
         this.processing = false
         this.deletionProcessing = false
+        this.dispatchItemChanged()
+    }
+
+    async resetOnboarding(imei: string) {
+        if (!imei) {
+            return;
+        }
+
+        this.processing = true
+        await this.api.callApi('DELETE', `/vehicle/reset-onboarding/${imei}`, null, true, true)
+        await delay(1000)
+        this.processing = false
         this.dispatchItemChanged()
     }
 
