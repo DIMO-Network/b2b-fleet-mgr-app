@@ -186,9 +186,9 @@ export class BaseOnboardingElement extends LitElement {
         return result;
     }
 
-    async submitMintingData(mintingData: VinMintData[], sacd: SacdInput[] | null) {
-        const payload: {vinMintingData: VinMintData[], sacd?: SacdInput[]} = {
-            vinMintingData: mintingData,
+    async submitMintingData(mintingData: VinMintData[], sacd: SacdInput[] | null, enableOracleOwner: boolean) {
+        const payload: {vinMintingData: VinMintData[], sacd?: SacdInput[], enableOracleOwner: boolean} = {
+            vinMintingData: mintingData, enableOracleOwner: enableOracleOwner
         }
         if (sacd !== null && sacd.length > 0) {
             payload.sacd = sacd
@@ -260,7 +260,7 @@ export class BaseOnboardingElement extends LitElement {
         }
 
         const signedMintData = await this.signMintingData(mintData, enableOracleOwner);// this won't sign if enableOracleOwner true
-        const minted = await this.submitMintingData(signedMintData, sacd);
+        const minted = await this.submitMintingData(signedMintData, sacd, enableOracleOwner);
 
         if (!minted) {
             this.displayFailure("Failed to onboard at least one VIN");
