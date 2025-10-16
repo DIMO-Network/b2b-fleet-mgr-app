@@ -144,7 +144,7 @@ export class PendingVehiclesElement extends LitElement {
 				<div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;">
 					<h2 style="margin: 0;">Pending to Onboard Vehicles</h2>
 					<input type="text"
-						placeholder="Search"
+						placeholder="Search by IMEI or VIN"
 						style="width: 40%; min-width: 200px;"
 						.value=${this.searchTerm}
 						@input=${this.onSearchInput}>

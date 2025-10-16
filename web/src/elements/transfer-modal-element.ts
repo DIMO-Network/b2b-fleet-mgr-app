@@ -1,6 +1,8 @@
 import {html, nothing} from 'lit'
 import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
+// import {ApiService} from "@services/api-service.ts";
+import './session-timer';
 
 @customElement('transfer-modal-element')
 export class TransferModalElement extends LitElement {
@@ -120,6 +122,11 @@ export class TransferModalElement extends LitElement {
         } else {
             console.log("Email:", this.email);
         }
+
+        // get data to sign
+        // signing service to sign the data
+        // post data with the signature, this should cause backend to update the owner in the db. Do this process with a river job.
+        // we could have frontend query for status if want to give it a better experience.
         
         // TODO: Implement actual transfer logic here
         this.closeModal();
