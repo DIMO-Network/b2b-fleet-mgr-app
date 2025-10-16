@@ -1,8 +1,7 @@
 import {html, nothing} from 'lit'
 import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
-import {ApiService} from "@services/api-service.ts";
-import {SigningService} from "@services/signing-service.ts";
+// import {ApiService} from "@services/api-service.ts";
 import './session-timer';
 
 @customElement('transfer-modal-element')

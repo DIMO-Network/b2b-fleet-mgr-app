@@ -78,6 +78,9 @@ export class AddVinElement extends BaseOnboardingElement {
     private enableSacd: boolean;
 
     @property({attribute: false})
+    private enableOracleOwner: boolean;
+
+    @property({attribute: false})
     private sacdGrantee: string | null;
 
     @property({attribute: false})
@@ -111,6 +114,7 @@ export class AddVinElement extends BaseOnboardingElement {
         this.alertText = "";
 
         this.enableSacd = false;
+        this.enableOracleOwner = true;
         this.sacdGrantee = "";
         this.sacdPermissions = defaultPermissions;
     }
@@ -141,6 +145,10 @@ export class AddVinElement extends BaseOnboardingElement {
 
     toggleEnableSacd() {
         this.enableSacd = !this.enableSacd;
+    }
+
+    toggleEnableOracleOwner() {
+        this.enableOracleOwner = !this.enableOracleOwner;
     }
 
     private toggleUseBelow = () => {
@@ -188,9 +196,12 @@ export class AddVinElement extends BaseOnboardingElement {
                 </form>
             </div>
             <hr />
-            <form class="grid">
+            <form class="grid" style="display: flex; align-items: center; gap: 1rem;">
                 <label>
                     <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}> Share vehicles with Developer
+                </label>
+                <label>
+                    <input type="checkbox" .checked="${this.enableOracleOwner}" @click=${this.toggleEnableOracleOwner}> Enable Oracle Owner
                 </label>
             </form>
             <div ?hidden=${!this.enableSacd}>
@@ -393,7 +404,7 @@ export class AddVinElement extends BaseOnboardingElement {
             }
             this.settings.saveSharingInfo()
 
-            const status = await this.onboardVINs(vinsArray, sacdInput)
+            const status = await this.onboardVINs(vinsArray, sacdInput, this.enableOracleOwner)
             if (!status) {
                 // Handle failure case if needed
             }

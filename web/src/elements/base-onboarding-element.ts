@@ -161,20 +161,23 @@ export class BaseOnboardingElement extends LitElement {
         return mintData.data.vinMintingData;
     }
 
-    async signMintingData(mintingData: VinMintData[]) {
+    // signMintingData adds the signature from frontend signer to the mintingData objects. If enableOracleOwner is true, does not add signature
+    async signMintingData(mintingData: VinMintData[], enableOracleOwner: boolean) {
         const result: VinMintData[] = [];
         for (const d of mintingData) {
             if (d.typedData) {
-                const signature = await this.signingService.signTypedData(d.typedData);
+                if (enableOracleOwner) {
+                    const signature = await this.signingService.signTypedData(d.typedData);
 
-                if (!signature.success || !signature.signature) {
-                    continue
+                    if (!signature.success || !signature.signature) {
+                        continue
+                    }
+
+                    result.push({
+                        ...d,
+                        signature: signature.signature
+                    })
                 }
-
-                result.push({
-                    ...d,
-                    signature: signature.signature
-                })
             } else {
                 result.push(d)
             }
@@ -227,7 +230,7 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async onboardVINs(vins: string[], sacd: SacdInput[] | null): Promise<boolean> {
+    async onboardVINs(vins: string[], sacd: SacdInput[] | null, enableOracleOwner: boolean): Promise<boolean> {
         let allVinsValid = true;
         for (const vin of vins) {
             const validVin = vin?.length === 17
@@ -256,7 +259,7 @@ export class BaseOnboardingElement extends LitElement {
             return false
         }
 
-        const signedMintData = await this.signMintingData(mintData);
+        const signedMintData = await this.signMintingData(mintData, enableOracleOwner);// this won't sign if enableOracleOwner true
         const minted = await this.submitMintingData(signedMintData, sacd);
 
         if (!minted) {
