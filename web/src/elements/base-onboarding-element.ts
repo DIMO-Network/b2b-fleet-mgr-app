@@ -151,8 +151,8 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async getMintingData(vins: string[]) {
-        const query = qs.stringify({vins: vins.join(',')});
+    async getMintingData(vins: string[], enableOracleOwner: boolean) {
+        const query = qs.stringify({enableOracleOwner: enableOracleOwner, vins: vins.join(',')});
         const mintData = await this.api.callApi<VinsMintDataResult>('GET', `/vehicle/mint?${query}`, null, true);
         if (!mintData.success || !mintData.data) {
             return [];
@@ -253,7 +253,7 @@ export class BaseOnboardingElement extends LitElement {
             return false
         }
 
-        const mintData = await this.getMintingData(vins);
+        const mintData = await this.getMintingData(vins, enableOracleOwner);
         if (mintData.length === 0) {
             this.displayFailure("Failed to fetch minting data");
             return false

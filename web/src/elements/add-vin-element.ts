@@ -114,7 +114,7 @@ export class AddVinElement extends BaseOnboardingElement {
         this.alertText = "";
 
         this.enableSacd = false;
-        this.enableOracleOwner = true;
+        this.enableOracleOwner = false;
         this.sacdGrantee = "";
         this.sacdPermissions = defaultPermissions;
     }
@@ -201,7 +201,7 @@ export class AddVinElement extends BaseOnboardingElement {
                     <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}> Share vehicles with Developer
                 </label>
                 <label>
-                    <input type="checkbox" .checked="${this.enableOracleOwner}" @click=${this.toggleEnableOracleOwner}> Enable Oracle Owner
+                    <input type="checkbox" disabled .checked="${this.enableOracleOwner}" @click=${this.toggleEnableOracleOwner}> Enable Oracle Owner
                 </label>
             </form>
             <div ?hidden=${!this.enableSacd}>
