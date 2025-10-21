@@ -1,11 +1,12 @@
 import {html, nothing} from 'lit'
 import {customElement, property, state} from "lit/decorators.js";
-import {LitElement} from 'lit';
 // import {ApiService} from "@services/api-service.ts";
 import './session-timer';
+import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
+import {delay} from "@utils/utils.ts";
 
 @customElement('transfer-modal-element')
-export class TransferModalElement extends LitElement {
+export class TransferModalElement extends BaseOnboardingElement {
     @property({attribute: true, type: Boolean})
     public show = false
 
@@ -112,14 +113,16 @@ export class TransferModalElement extends LitElement {
         }));
     }
 
-    private confirmTransfer(transferType: 'wallet' | 'email') {
-        console.log("Confirm Transfer clicked");
+    async confirmTransfer(transferType: 'wallet' | 'email') {
+        this.processing = true;
+
         console.log("Vehicle VIN:", this.vehicleVin);
         console.log("Transfer Type:", transferType);
         
         if (transferType === 'wallet') {
             console.log("Wallet Address:", this.walletAddress);
         } else {
+            // todo lookup account if not exists create
             console.log("Email:", this.email);
         }
 
@@ -129,6 +132,9 @@ export class TransferModalElement extends LitElement {
         // we could have frontend query for status if want to give it a better experience.
         
         // TODO: Implement actual transfer logic here
+        await delay(5000)
+        this.processing = false
+
         this.closeModal();
     }
 }

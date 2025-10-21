@@ -36,6 +36,7 @@ export interface SacdInput {
 
 export interface VinUserOperationData {
     vin: string;
+    imei: string;
     userOperation: Object;
     hash: string;
     signature?: string;
@@ -51,6 +52,7 @@ export interface VinsDeleteDataResult {
 
 export interface VinStatus {
     vin: string;
+    imei: string;
     status: string;
     details: string;
 }
@@ -58,6 +60,11 @@ export interface VinStatus {
 export interface VinsStatusResult {
     statuses: VinStatus[];
 }
+
+// Generic return object for control flow of a result or an error
+type Result<T, E = Error> = 
+  | { success: true; data: T }
+  | { success: false; error: E };
 
 export class BaseOnboardingElement extends LitElement {
 
@@ -268,6 +275,121 @@ export class BaseOnboardingElement extends LitElement {
         }
 
         return true
+    }
+    
+    async getTransferData(imei: string): Promise<Result<VinUserOperationData, string>> {
+        const query = qs.stringify({imei: imei});
+        const transferData = await this.api.callApi<VinUserOperationData>('GET', `/vehicle/transfer?${query}`, null, true);
+        
+        if (!transferData.success || !transferData.data) {
+            return {
+                success: false,
+                error: transferData.error || "Failed to fetch transfer data"
+            };
+        }
+
+        return {
+            success: true,
+            data: transferData.data
+        };
+    }
+
+    async signTransferData(transferData: VinUserOperationData): Promise<Result<VinUserOperationData, string>> {
+        const signature = await this.signingService.signUserOperation(transferData.userOperation);
+        if (!signature.success) {
+            return {
+                success: false,
+                error: signature.error || "Failed to sign transfer data"
+            };
+        }
+        
+        return {
+            success: true,
+            data: {
+                ...transferData,
+                signature: signature.signature
+            }
+        };
+    }
+
+    async submitTransferData(transferData: VinUserOperationData): Promise<Result<void, string>> {
+        const mintResponse = await this.api.callApi('POST', '/vehicle/transfer', transferData, true);
+        if (!mintResponse.success || !mintResponse.data) {
+            return {
+                success: false,
+                error: mintResponse.error || "Failed to submit transfer data"
+            };
+        }
+        
+        // todo could probably refactor this pattern with two other functions
+        let success = true;
+        for (const attempt of range(30)) {
+            success = true;
+            const query = qs.stringify({imei: transferData.imei});
+            const status = await this.api.callApi<VinStatus>('GET', `/vehicle/transfer/status?${query}`, null, true);
+
+            if (!status.success || !status.data) {
+                return {
+                    success: false,
+                    error: status.error || "Failed to check transfer status"
+                };
+            }
+
+            if (status.data.status !== 'Success') {
+                success = false;
+            }
+
+            if (success) {
+                break;
+            }
+
+            if (attempt < 29) {
+                await delay(5000);
+            }
+        }
+
+        if (!success) {
+            return {
+                success: false,
+                error: "Transfer operation timed out"
+            };
+        }
+
+        return {
+            success: true,
+            data: undefined
+        };
+    }
+
+    async transferVehicle(imei: string) : Promise<Result<void, string>> {
+        const transferData = await this.getTransferData(imei);
+        if (!transferData.success) {
+            return {
+                success: false,
+                error: transferData.error
+            };
+        }
+
+        const signedDisconnectData = await this.signTransferData(transferData.data)
+        if (!signedDisconnectData.success) {
+            return {
+                success: false,
+                error: signedDisconnectData.error
+            }
+        }
+
+        const submitResponse = await this.submitTransferData(signedDisconnectData.data)
+        if (!submitResponse.success) {
+            return {
+                success:false,
+                error: submitResponse.error
+            }
+        }
+
+        return {
+            success: true,
+            data: undefined
+        }
     }
 
     async getDisconnectData(vins: string[]) {

@@ -90,6 +90,7 @@ export class SigningService {
                 entryPoint: getEntryPoint("0.7"),
                 kernelVersion: KERNEL_V3_1,
             });
+
             const signature = await kernelAccount?.signUserOperation(payload);
             return {
                 success: true,
