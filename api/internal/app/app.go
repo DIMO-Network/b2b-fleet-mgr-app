@@ -78,14 +78,22 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Get("/vehicle/verify", vehiclesCtrl.GetVehiclesVerificationStatus)
 	oracleApp.Post("/vehicle/verify", vehiclesCtrl.SubmitVehiclesVerification)
 
+	// Mint new vehicle
 	oracleApp.Get("/vehicle/mint", vehiclesCtrl.GetVehiclesMintData)
 	oracleApp.Get("/vehicle/mint/status", vehiclesCtrl.GetVehiclesMintStatus)
 	oracleApp.Post("/vehicle/mint", vehiclesCtrl.SubmitVehiclesMintData)
 
+	// Disconnect vehicle
 	oracleApp.Get("/vehicle/disconnect", vehiclesCtrl.GetDisconnectData)
 	oracleApp.Post("/vehicle/disconnect", vehiclesCtrl.SubmitDisconnectData)
 	oracleApp.Get("/vehicle/disconnect/status", vehiclesCtrl.GetDisconnectStatus)
 
+	// Transfer vehicle
+	oracleApp.Get("/vehicle/transfer", vehiclesCtrl.GetTransferData)
+	oracleApp.Post("/vehicle/transfer", vehiclesCtrl.SubmitTransferData)
+	oracleApp.Get("/vehicle/transfer/status", vehiclesCtrl.GetTransferStatus)
+
+	// Delete vehicle
 	oracleApp.Get("/vehicle/delete", vehiclesCtrl.GetDeleteData)
 	oracleApp.Post("/vehicle/delete", vehiclesCtrl.SubmitDeleteData)
 	oracleApp.Get("/vehicle/delete/status", vehiclesCtrl.GetDeleteStatus)
@@ -93,6 +101,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Get("/vehicle/:vin", vehiclesCtrl.GetVehicleFromOracle)
 	oracleApp.Post("/vehicle/register", vehiclesCtrl.RegisterVehicle)
 
+	// reset onboarding for deleted vehicles
 	oracleApp.Delete("/vehicle/reset-onboarding/:imei", vehiclesCtrl.ResetOnboarding)
 
 	// settings the app needs to operate, pulled from config / env vars

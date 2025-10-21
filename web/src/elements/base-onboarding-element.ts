@@ -277,8 +277,8 @@ export class BaseOnboardingElement extends LitElement {
         return true
     }
     
-    async getTransferData(imei: string): Promise<Result<VinUserOperationData, string>> {
-        const query = qs.stringify({imei: imei});
+    async getTransferData(imei: string, targetWallet: string): Promise<Result<VinUserOperationData, string>> {
+        const query = qs.stringify({imei: imei, targetWallet: targetWallet});
         const transferData = await this.api.callApi<VinUserOperationData>('GET', `/vehicle/transfer?${query}`, null, true);
         
         if (!transferData.success || !transferData.data) {
@@ -361,8 +361,9 @@ export class BaseOnboardingElement extends LitElement {
         };
     }
 
-    async transferVehicle(imei: string) : Promise<Result<void, string>> {
-        const transferData = await this.getTransferData(imei);
+    // transferVehicle coordinates all of the necessary calls to get the data to sign, signing it and submitting the trx to transfer a vehicle
+    async transferVehicle(imei: string, targetWallet: string) : Promise<Result<void, string>> {
+        const transferData = await this.getTransferData(imei, targetWallet);
         if (!transferData.success) {
             return {
                 success: false,
