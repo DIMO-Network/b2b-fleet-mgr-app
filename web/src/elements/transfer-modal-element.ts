@@ -13,17 +13,11 @@ export class TransferModalElement extends BaseOnboardingElement {
     @property({attribute: true})
     public vehicleVin = ""
 
-    @property({attribute: true})
-    public imei = ""
-
     @state()
     private walletAddress = ""
 
     @state()
     private email = ""
-
-    @state()
-    private errorMessage = ""
 
     constructor() {
         super();
@@ -51,12 +45,6 @@ export class TransferModalElement extends BaseOnboardingElement {
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>
                         <div class="modal-body">
-                            ${this.errorMessage ? html`
-                                <div style="background-color: #fee; border: 1px solid #fcc; border-radius: 4px; padding: 12px; margin-bottom: 16px; color: #c33;">
-                                    ${this.errorMessage}
-                                </div>
-                            ` : nothing}
-                            
                             <div class="transfer-options">
                                 <div class="transfer-option">
                                     <h4>Transfer by Wallet Address</h4>
@@ -116,7 +104,6 @@ export class TransferModalElement extends BaseOnboardingElement {
         this.show = false;
         this.walletAddress = "";
         this.email = "";
-        this.errorMessage = "";
         console.log("Closing transfer modal");
         
         // Dispatch event to parent
@@ -128,7 +115,6 @@ export class TransferModalElement extends BaseOnboardingElement {
 
     async confirmTransfer(transferType: 'wallet' | 'email') {
         this.processing = true;
-        this.errorMessage = "";
 
         console.log("Vehicle VIN:", this.vehicleVin);
         console.log("Transfer Type:", transferType);
@@ -138,13 +124,6 @@ export class TransferModalElement extends BaseOnboardingElement {
         } else {
             // todo lookup account if not exists create
             console.log("Email:", this.email);
-        }
-
-        const result = await this.transferVehicle(this.imei, this.walletAddress)
-        if (!result.success) {
-            this.errorMessage = result.error;
-            this.processing = false;
-            return;
         }
 
         // get data to sign

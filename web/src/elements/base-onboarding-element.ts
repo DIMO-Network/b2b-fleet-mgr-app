@@ -62,7 +62,7 @@ export interface VinsStatusResult {
 }
 
 // Generic return object for control flow of a result or an error
-type Result<T, E = Error> = 
+type Result<T, E = Error> =
   | { success: true; data: T }
   | { success: false; error: E };
 
@@ -276,11 +276,11 @@ export class BaseOnboardingElement extends LitElement {
 
         return true
     }
-    
-    async getTransferData(imei: string, targetWallet: string): Promise<Result<VinUserOperationData, string>> {
-        const query = qs.stringify({imei: imei, targetWallet: targetWallet});
+
+    async getTransferData(imei: string): Promise<Result<VinUserOperationData, string>> {
+        const query = qs.stringify({imei: imei});
         const transferData = await this.api.callApi<VinUserOperationData>('GET', `/vehicle/transfer?${query}`, null, true);
-        
+
         if (!transferData.success || !transferData.data) {
             return {
                 success: false,
@@ -302,7 +302,7 @@ export class BaseOnboardingElement extends LitElement {
                 error: signature.error || "Failed to sign transfer data"
             };
         }
-        
+
         return {
             success: true,
             data: {
@@ -320,7 +320,7 @@ export class BaseOnboardingElement extends LitElement {
                 error: mintResponse.error || "Failed to submit transfer data"
             };
         }
-        
+
         // todo could probably refactor this pattern with two other functions
         let success = true;
         for (const attempt of range(30)) {
@@ -361,9 +361,8 @@ export class BaseOnboardingElement extends LitElement {
         };
     }
 
-    // transferVehicle coordinates all of the necessary calls to get the data to sign, signing it and submitting the trx to transfer a vehicle
-    async transferVehicle(imei: string, targetWallet: string) : Promise<Result<void, string>> {
-        const transferData = await this.getTransferData(imei, targetWallet);
+    async transferVehicle(imei: string) : Promise<Result<void, string>> {
+        const transferData = await this.getTransferData(imei);
         if (!transferData.success) {
             return {
                 success: false,
