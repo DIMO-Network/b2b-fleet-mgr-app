@@ -160,7 +160,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true
         this.connectionProcessing = true
-        await this.onboardVINs([this.item.vin], null)
+        await this.onboardVINs([this.item.vin], null, false);
         await delay(5000)
         this.processing = false
         this.connectionProcessing = false
