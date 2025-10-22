@@ -222,6 +222,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         const modal = document.createElement('transfer-modal-element') as any;
         modal.show = true;
         modal.vehicleVin = this.item?.vin || '';
+        modal.imei = this.item?.imei || '';
 
         // Add event listener for modal close
         modal.addEventListener('modal-closed', () => {

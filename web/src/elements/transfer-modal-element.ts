@@ -1,22 +1,29 @@
 import {html, nothing} from 'lit'
 import {customElement, property, state} from "lit/decorators.js";
-import {LitElement} from 'lit';
 // import {ApiService} from "@services/api-service.ts";
 import './session-timer';
+import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
+import {delay} from "@utils/utils.ts";
 
 @customElement('transfer-modal-element')
-export class TransferModalElement extends LitElement {
+export class TransferModalElement extends BaseOnboardingElement {
     @property({attribute: true, type: Boolean})
     public show = false
 
     @property({attribute: true})
     public vehicleVin = ""
 
+    @property({attribute: true})
+    public imei = ""
+
     @state()
     private walletAddress = ""
 
     @state()
     private email = ""
+
+    @state()
+    private errorMessage = ""
 
     constructor() {
         super();
@@ -44,6 +51,12 @@ export class TransferModalElement extends LitElement {
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>
                         <div class="modal-body">
+                            ${this.errorMessage ? html`
+                                <div style="background-color: #fee; border: 1px solid #fcc; border-radius: 4px; padding: 12px; margin-bottom: 16px; color: #c33;">
+                                    ${this.errorMessage}
+                                </div>
+                            ` : nothing}
+                            
                             <div class="transfer-options">
                                 <div class="transfer-option">
                                     <h4>Transfer by Wallet Address</h4>
@@ -103,6 +116,7 @@ export class TransferModalElement extends LitElement {
         this.show = false;
         this.walletAddress = "";
         this.email = "";
+        this.errorMessage = "";
         console.log("Closing transfer modal");
         
         // Dispatch event to parent
@@ -112,15 +126,25 @@ export class TransferModalElement extends LitElement {
         }));
     }
 
-    private confirmTransfer(transferType: 'wallet' | 'email') {
-        console.log("Confirm Transfer clicked");
+    async confirmTransfer(transferType: 'wallet' | 'email') {
+        this.processing = true;
+        this.errorMessage = "";
+
         console.log("Vehicle VIN:", this.vehicleVin);
         console.log("Transfer Type:", transferType);
         
         if (transferType === 'wallet') {
             console.log("Wallet Address:", this.walletAddress);
         } else {
+            // todo lookup account if not exists create
             console.log("Email:", this.email);
+        }
+
+        const result = await this.transferVehicle(this.imei, this.walletAddress)
+        if (!result.success) {
+            this.errorMessage = result.error;
+            this.processing = false;
+            return;
         }
 
         // get data to sign
@@ -129,6 +153,9 @@ export class TransferModalElement extends LitElement {
         // we could have frontend query for status if want to give it a better experience.
         
         // TODO: Implement actual transfer logic here
+        await delay(5000)
+        this.processing = false
+
         this.closeModal();
     }
 }

@@ -175,3 +175,29 @@ func (v *VehiclesController) ResetOnboarding(c *fiber.Ctx) error {
 	targetURL := u.JoinPath(fmt.Sprintf("/v1/vehicle/reset-onboarding/%s", imei))
 	return ProxyRequest(c, targetURL, nil, v.logger)
 }
+
+func (v *VehiclesController) GetTransferData(c *fiber.Ctx) error {
+	imei := c.Query("imei", "")
+	targetWallet := c.Query("targetWallet", "")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/transfer")
+	targetURL.RawQuery = fmt.Sprintf("imei=%s&targetWallet=%s", imei, targetWallet)
+	return ProxyRequest(c, targetURL, nil, v.logger)
+}
+
+func (v *VehiclesController) SubmitTransferData(c *fiber.Ctx) error {
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/transfer")
+	return ProxyRequest(c, targetURL, c.Body(), v.logger)
+}
+
+func (v *VehiclesController) GetTransferStatus(c *fiber.Ctx) error {
+	imei := c.Query("imei", "")
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/transfer/status")
+	targetURL.RawQuery = fmt.Sprintf("imei=%s", imei)
+	return ProxyRequest(c, targetURL, nil, v.logger)
+}
