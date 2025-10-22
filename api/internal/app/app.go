@@ -108,7 +108,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Get("/settings", jwtAuth, settingsCtrl.GetSettings) // todo some of these are oracle specific
 
 	// acounts
-	oracleApp.Get("/account/:emailOrWallet", jwtAuth, accountsCtrl.GetAccount)
+	oracleApp.Get("/account", jwtAuth, accountsCtrl.GetAccount)
 	oracleApp.Post("/account", jwtAuth, accountsCtrl.CreateAccount)
 
 	return app

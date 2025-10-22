@@ -278,7 +278,7 @@ export class BaseOnboardingElement extends LitElement {
     }
     
     async getTransferData(imei: string, targetWallet: string): Promise<Result<VinUserOperationData, string>> {
-        const query = qs.stringify({imei: imei, targetWallet: targetWallet});
+        const query = qs.stringify({imei: imei, targetWalletAddress: targetWallet});
         const transferData = await this.api.callApi<VinUserOperationData>('GET', `/vehicle/transfer?${query}`, null, true);
 
         if (!transferData.success || !transferData.data) {

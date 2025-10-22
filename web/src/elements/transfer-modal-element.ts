@@ -98,6 +98,9 @@ export class TransferModalElement extends BaseOnboardingElement {
                                                 ?disabled=${!this.email.trim()}>
                                             Transfer by Email
                                         </button>
+                                        <p>
+                                           If account is new, user will receive an email with an OTP code to login to the App.  
+                                        </p>
                                     </form>
                                 </div>
                             </div>
