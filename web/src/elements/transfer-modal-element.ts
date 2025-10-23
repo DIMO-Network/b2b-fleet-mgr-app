@@ -3,7 +3,12 @@ import {customElement, property, state} from "lit/decorators.js";
 // import {ApiService} from "@services/api-service.ts";
 import './session-timer';
 import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
-import {delay} from "@utils/utils.ts";
+import {delay, Result} from "@utils/utils.ts";
+
+export interface AccountData {
+    walletAddress: string;
+    subOrganizationId: string;
+}
 
 @customElement('transfer-modal-element')
 export class TransferModalElement extends BaseOnboardingElement {
@@ -24,6 +29,14 @@ export class TransferModalElement extends BaseOnboardingElement {
 
     @state()
     private errorMessage = ""
+
+    @state()
+    private isCheckingAccount = false
+
+    @state()
+    private accountNotFound: boolean | null = null
+
+    private accountCheckTimeout?: number
 
     constructor() {
         super();
@@ -62,13 +75,21 @@ export class TransferModalElement extends BaseOnboardingElement {
                                     <h4>Transfer by Wallet Address</h4>
                                     <form class="transfer-form">
                                         <label>
-                                            Wallet 0x Address
-                                            <input type="text" 
-                                                   placeholder="0x..." 
-                                                   maxlength="42"
-                                                   .value=${this.walletAddress}
-                                                   @input=${(e: InputEvent) => this.walletAddress = (e.target as HTMLInputElement).value}>
+                                            Wallet 0x Address (for existing accounts)
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <input type="text" 
+                                                       placeholder="0x..." 
+                                                       maxlength="42"
+                                                       .value=${this.walletAddress}
+                                                       @input=${this.handleWalletInput}>
+                                                ${this.isCheckingAccount ? html`<span style="font-size: 12px; color: #666;">Checking…</span>` : nothing}
+                                            </div>
                                         </label>
+                                        ${this.walletAddress && this.accountNotFound ? html`
+                                            <div style="font-size: 12px; color: #fc0303; margin-top: 6px;">
+                                                the wallet address ${this.walletAddress} does not exist.
+                                            </div>
+                                        ` : nothing}
                                         <button type="button" 
                                                 class="btn-primary" 
                                                 @click=${() => this.confirmTransfer('wallet')}
@@ -90,7 +111,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                             <input type="email" 
                                                    placeholder="user@example.com"
                                                    .value=${this.email}
-                                                   @input=${(e: InputEvent) => this.email = (e.target as HTMLInputElement).value}>
+                                                   @input=${this.handleEmailInput}>
                                         </label>
                                         <button type="button" 
                                                 class="btn-primary" 
@@ -129,6 +150,44 @@ export class TransferModalElement extends BaseOnboardingElement {
         }));
     }
 
+    private handleEmailInput = (e: InputEvent) => {
+        this.email = (e.target as HTMLInputElement).value;
+    }
+
+    private handleWalletInput = (e: InputEvent) => {
+        const value = (e.target as HTMLInputElement).value;
+        this.walletAddress = value;
+        this.accountNotFound = null;
+
+        if (this.accountCheckTimeout) {
+            clearTimeout(this.accountCheckTimeout);
+        }
+
+        const trimmed = value.trim();
+        if (!trimmed) {
+            this.isCheckingAccount = false;
+            return;
+        }
+
+        this.isCheckingAccount = true;
+        this.accountCheckTimeout = window.setTimeout(() => {
+            this.lookupAccount(trimmed);
+        }, 400);
+    }
+
+    private async lookupAccount(walletAddress: string) {
+        this.isCheckingAccount = true;
+        const query = `?walletAddress=${encodeURIComponent(walletAddress)}`;
+        const resp = await this.api.callApi<any>('GET', `/account${query}`, null, true);
+        // If request failed or no body, show helper text
+        if (!resp.success || !resp.data) {
+            this.accountNotFound = true;
+        } else {
+            this.accountNotFound = false;
+        }
+        this.isCheckingAccount = false;
+    }
+
     async confirmTransfer(transferType: 'wallet' | 'email') {
         this.processing = true;
         this.errorMessage = "";
@@ -136,11 +195,15 @@ export class TransferModalElement extends BaseOnboardingElement {
         console.log("Vehicle VIN:", this.vehicleVin);
         console.log("Transfer Type:", transferType);
         
-        if (transferType === 'wallet') {
-            console.log("Wallet Address:", this.walletAddress);
-        } else {
-            // todo lookup account if not exists create
-            console.log("Email:", this.email);
+        if (transferType === 'email') {
+            const createAccountResp = await this.createAccount(this.email);
+            if (!createAccountResp.success) {
+                this.errorMessage = createAccountResp.error;
+                this.processing = false;
+                return;
+            }
+            this.walletAddress = createAccountResp.data.walletAddress;
+            console.log("Created account with wallet address:", this.walletAddress);
         }
 
         const result = await this.transferVehicle(this.imei, this.walletAddress)
@@ -150,15 +213,27 @@ export class TransferModalElement extends BaseOnboardingElement {
             return;
         }
 
-        // get data to sign
-        // signing service to sign the data
-        // post data with the signature, this should cause backend to update the owner in the db. Do this process with a river job.
-        // we could have frontend query for status if want to give it a better experience.
-        
-        // TODO: Implement actual transfer logic here
-        await delay(5000)
+        await delay(1000)
         this.processing = false
 
         this.closeModal();
+    }
+
+    async createAccount(email:string): Promise<Result<AccountData, string>> {
+        const payload = {
+            email: email,
+        }
+        const creatResp = await this.api.callApi<AccountData>('POST', '/account', payload, true);
+        if (!creatResp.success || !creatResp.data) {
+            return {
+                success: false,
+                error: creatResp.error || "Failed to create account"
+            };
+        }
+        
+        return {
+            success: true,
+            data: creatResp.data
+        };
     }
 }

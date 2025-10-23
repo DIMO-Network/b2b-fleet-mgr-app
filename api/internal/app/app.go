@@ -104,12 +104,12 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	// reset onboarding for deleted vehicles
 	oracleApp.Delete("/vehicle/reset-onboarding/:imei", vehiclesCtrl.ResetOnboarding)
 
-	// settings the app needs to operate, pulled from config / env vars
-	oracleApp.Get("/settings", jwtAuth, settingsCtrl.GetSettings) // todo some of these are oracle specific
+	// accounts
+	oracleApp.Get("/account", accountsCtrl.GetAccount)
+	oracleApp.Post("/account", accountsCtrl.CreateAccount)
 
-	// acounts
-	oracleApp.Get("/account", jwtAuth, accountsCtrl.GetAccount)
-	oracleApp.Post("/account", jwtAuth, accountsCtrl.CreateAccount)
+	// settings the app needs to operate, pulled from config / env vars
+	oracleApp.Get("/settings", settingsCtrl.GetSettings) // todo some of these are oracle specific
 
 	return app
 }

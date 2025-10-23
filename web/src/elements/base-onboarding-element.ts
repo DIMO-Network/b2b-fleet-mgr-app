@@ -5,7 +5,7 @@ import {SigningService} from "@services/signing-service.ts";
 import './session-timer';
 import qs from 'qs';
 import {range} from "lodash";
-import {delay} from "@utils/utils";
+import {delay, Result} from "@utils/utils";
 
 interface VinOnboardingStatus {
     vin: string;
@@ -60,11 +60,6 @@ export interface VinStatus {
 export interface VinsStatusResult {
     statuses: VinStatus[];
 }
-
-// Generic return object for control flow of a result or an error
-type Result<T, E = Error> =
-  | { success: true; data: T }
-  | { success: false; error: E };
 
 export class BaseOnboardingElement extends LitElement {
 
