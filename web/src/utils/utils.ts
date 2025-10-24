@@ -30,3 +30,8 @@ export function formatEthereumSignature(signResult) {
 export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+// Generic return object for control flow of a result or an error
+export type Result<T, E = Error> =
+  | { success: true; data: T }
+  | { success: false; error: E };

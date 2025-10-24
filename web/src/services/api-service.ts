@@ -78,7 +78,7 @@ export class ApiService {
             if (!response.ok) {
                 return {
                     success: false,
-                    error: result.message || result || "HTTP error",
+                    error: result.message || result.error || result || "HTTP error",
                     status: response.status,
                 };
             }

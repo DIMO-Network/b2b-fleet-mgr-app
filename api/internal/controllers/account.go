@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"fmt"
-
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
@@ -22,17 +20,18 @@ func NewAccountsController(settings *config.Settings, logger *zerolog.Logger) *A
 
 // GetAccount can get by email or 0x
 func (a *AccountsController) GetAccount(c *fiber.Ctx) error {
-	u := a.settings.AccountsAPIURL
-	targetURL := u.JoinPath(fmt.Sprintf("/api/account/%s", c.Params("emailOrWallet", "")))
+	u := GetOracleURL(c, a.settings)
+	targetURL := u.JoinPath("/v1/account")
 
-	// get developer jwt token
+	// Add the query string from the original request
+	targetURL.RawQuery = string(c.Request().URI().QueryString())
 
 	return ProxyRequest(c, targetURL, nil, a.logger)
 }
 
 func (a *AccountsController) CreateAccount(c *fiber.Ctx) error {
-	u := a.settings.AccountsAPIURL
-	targetURL := u.JoinPath("/api/account")
+	u := GetOracleURL(c, a.settings)
+	targetURL := u.JoinPath("/v1/account")
 
 	return ProxyRequest(c, targetURL, c.Body(), a.logger)
 }
