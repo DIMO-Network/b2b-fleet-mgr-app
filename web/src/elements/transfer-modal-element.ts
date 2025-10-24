@@ -91,10 +91,10 @@ export class TransferModalElement extends BaseOnboardingElement {
                                             </div>
                                         ` : nothing}
                                         <button type="button" 
-                                                class="btn-primary" 
+                                                class="btn-primary ${this.processing ? 'processing' : ''}" 
                                                 @click=${() => this.confirmTransfer('wallet')}
-                                                ?disabled=${!this.walletAddress.trim()}>
-                                            Transfer by Wallet
+                                                ?disabled=${!this.walletAddress.trim() || this.processing}>
+                                            ${this.processing ? 'Processing...' : 'Transfer by Wallet'}
                                         </button>
                                     </form>
                                 </div>
@@ -114,10 +114,10 @@ export class TransferModalElement extends BaseOnboardingElement {
                                                    @input=${this.handleEmailInput}>
                                         </label>
                                         <button type="button" 
-                                                class="btn-primary" 
+                                                class="btn-primary ${this.processing ? 'processing' : ''}" 
                                                 @click=${() => this.confirmTransfer('email')}
-                                                ?disabled=${!this.email.trim()}>
-                                            Transfer by Email
+                                                ?disabled=${!this.email.trim() || this.processing}>
+                                            ${this.processing ? 'Processing...' : 'Transfer by Email'}
                                         </button>
                                         <p>
                                            If account is new, user will receive an email with an OTP code to login to the App.  
@@ -205,6 +205,14 @@ export class TransferModalElement extends BaseOnboardingElement {
             this.walletAddress = createAccountResp.data.walletAddress;
             console.log("Created account with wallet address:", this.walletAddress);
         }
+
+        if (this.walletAddress == "") {
+            alert("Please enter a wallet address");
+            return
+        }
+        console.log("Transfer Type:", transferType);
+        console.log("imei", this.imei);
+        console.log("target wallet", this.walletAddress);
 
         const result = await this.transferVehicle(this.imei, this.walletAddress)
         if (!result.success) {
