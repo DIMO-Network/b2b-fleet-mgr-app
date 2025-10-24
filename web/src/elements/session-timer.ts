@@ -25,8 +25,6 @@ export class SessionTimer extends LitElement {
     protected update(_changedProperties: PropertyValues) {
         super.update(_changedProperties);
 
-        console.log(_changedProperties)
-
         this.calculateRemainingTime();
         this.startTimer();
     }
@@ -53,7 +51,7 @@ export class SessionTimer extends LitElement {
     private startTimer() {
         this.timerInterval = window.setInterval(() => {
             this.calculateRemainingTime();
-        }, 10000); // Call every 10 seconds
+        }, 20000); // Call every 10 seconds
     }
 
     /**
