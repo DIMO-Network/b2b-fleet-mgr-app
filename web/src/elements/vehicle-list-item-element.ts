@@ -153,6 +153,12 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         if (!this.item) {
             return;
         }
+        console.log("connect vehicle:");
+        console.log(this.item)
+        if (this.item.vin == "") {
+            alert("vin is empty!" + this.item.vin);
+            return
+        }
 
         if (!confirm("Are you sure you want to re-connect the vehicle?")) {
             return;
@@ -160,7 +166,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true
         this.connectionProcessing = true
-        await this.onboardVINs([this.item.vin], null, false);
+        await this.onboardVINs([this.item.vin], null);
         await delay(5000)
         this.processing = false
         this.connectionProcessing = false

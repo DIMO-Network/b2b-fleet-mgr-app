@@ -153,8 +153,8 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async getMintingData(vins: string[], enableOracleOwner: boolean) {
-        const query = qs.stringify({enableOracleOwner: enableOracleOwner, vins: vins.join(',')});
+    async getMintingData(vins: string[]) {
+        const query = qs.stringify({ vins: vins.join(',')});
         const mintData = await this.api.callApi<VinsMintDataResult>('GET', `/vehicle/mint?${query}`, null, true);
         if (!mintData.success || !mintData.data) {
             return [];
@@ -164,22 +164,19 @@ export class BaseOnboardingElement extends LitElement {
     }
 
     // signMintingData adds the signature from frontend signer to the mintingData objects. If enableOracleOwner is true, does not add signature
-    async signMintingData(mintingData: VinMintData[], enableOracleOwner: boolean) {
+    async signMintingData(mintingData: VinMintData[]) {
         const result: VinMintData[] = [];
         for (const d of mintingData) {
             if (d.typedData) {
-                if (enableOracleOwner) {
-                    const signature = await this.signingService.signTypedData(d.typedData);
-
-                    if (!signature.success || !signature.signature) {
-                        continue
-                    }
-
-                    result.push({
-                        ...d,
-                        signature: signature.signature
-                    })
+                const signature = await this.signingService.signTypedData(d.typedData);
+                if (!signature.success || !signature.signature) {
+                    console.error(`Signature failed: ${signature.error} ${d.typedData}`);
+                    continue
                 }
+                result.push({
+                    ...d,
+                    signature: signature.signature
+                })
             } else {
                 result.push(d)
             }
@@ -188,9 +185,9 @@ export class BaseOnboardingElement extends LitElement {
         return result;
     }
 
-    async submitMintingData(mintingData: VinMintData[], sacd: SacdInput[] | null, enableOracleOwner: boolean) {
-        const payload: {vinMintingData: VinMintData[], sacd?: SacdInput[], enableOracleOwner: boolean} = {
-            vinMintingData: mintingData, enableOracleOwner: enableOracleOwner
+    async submitMintingData(mintingData: VinMintData[], sacd: SacdInput[] | null) {
+        const payload: {vinMintingData: VinMintData[], sacd?: SacdInput[]} = {
+            vinMintingData: mintingData
         }
         if (sacd !== null && sacd.length > 0) {
             payload.sacd = sacd
@@ -232,7 +229,7 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async onboardVINs(vins: string[], sacd: SacdInput[] | null, enableOracleOwner: boolean): Promise<boolean> {
+    async onboardVINs(vins: string[], sacd: SacdInput[] | null): Promise<boolean> {
         let allVinsValid = true;
         for (const vin of vins) {
             const validVin = vin?.length === 17
@@ -255,14 +252,14 @@ export class BaseOnboardingElement extends LitElement {
             return false
         }
 
-        const mintData = await this.getMintingData(vins, enableOracleOwner);
+        const mintData = await this.getMintingData(vins);
         if (mintData.length === 0) {
             this.displayFailure("Failed to fetch minting data");
             return false
         }
 
-        const signedMintData = await this.signMintingData(mintData, enableOracleOwner);// this won't sign if enableOracleOwner true
-        const minted = await this.submitMintingData(signedMintData, sacd, enableOracleOwner);
+        const signedMintData = await this.signMintingData(mintData);
+        const minted = await this.submitMintingData(signedMintData, sacd);
 
         if (!minted) {
             this.displayFailure("Failed to onboard at least one VIN");
