@@ -42,6 +42,10 @@ export interface VinUserOperationData {
     signature?: string;
 }
 
+export interface VinTransferResponse {
+    jobId: string;
+}
+
 export interface VinsDisconnectDataResult {
     vinDisconnectData: VinUserOperationData[];
 }
@@ -305,7 +309,7 @@ export class BaseOnboardingElement extends LitElement {
     }
 
     async submitTransferData(transferData: VinUserOperationData): Promise<Result<void, string>> {
-        const mintResponse = await this.api.callApi('POST', '/vehicle/transfer', transferData, true);
+        const mintResponse = await this.api.callApi<VinTransferResponse>('POST', '/vehicle/transfer', transferData, true);
         if (!mintResponse.success || !mintResponse.data) {
             return {
                 success: false,
@@ -317,7 +321,7 @@ export class BaseOnboardingElement extends LitElement {
         let success = true;
         for (const attempt of range(30)) {
             success = true;
-            const query = qs.stringify({imei: transferData.imei});
+            const query = qs.stringify({jobId: mintResponse.data.jobId});
             const status = await this.api.callApi<VinStatus>('GET', `/vehicle/transfer/status?${query}`, null, true);
 
             if (!status.success || !status.data) {
