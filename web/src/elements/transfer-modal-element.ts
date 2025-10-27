@@ -36,6 +36,9 @@ export class TransferModalElement extends BaseOnboardingElement {
     @state()
     private accountNotFound: boolean | null = null
 
+    @state()
+    private accountFound: boolean = false
+
     private accountCheckTimeout?: number
 
     constructor() {
@@ -83,6 +86,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                                        .value=${this.walletAddress}
                                                        @input=${this.handleWalletInput}>
                                                 ${this.isCheckingAccount ? html`<span style="font-size: 12px; color: #666;">Checking…</span>` : nothing}
+                                                ${this.accountFound ? html`<span style="color: #22c55e; font-size: 16px;">✓</span>` : nothing}
                                             </div>
                                         </label>
                                         ${this.walletAddress && this.accountNotFound ? html`
@@ -158,6 +162,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         const value = (e.target as HTMLInputElement).value;
         this.walletAddress = value;
         this.accountNotFound = null;
+        this.accountFound = false;
 
         if (this.accountCheckTimeout) {
             clearTimeout(this.accountCheckTimeout);
@@ -182,8 +187,10 @@ export class TransferModalElement extends BaseOnboardingElement {
         // If request failed or no body, show helper text
         if (!resp.success || !resp.data) {
             this.accountNotFound = true;
+            this.accountFound = false;
         } else {
             this.accountNotFound = false;
+            this.accountFound = true;
         }
         this.isCheckingAccount = false;
     }
