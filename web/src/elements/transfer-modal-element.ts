@@ -3,7 +3,7 @@ import {customElement, property, state} from "lit/decorators.js";
 // import {ApiService} from "@services/api-service.ts";
 import './session-timer';
 import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
-import {Result} from "@utils/utils.ts";
+import {delay, Result} from "@utils/utils.ts";
 
 export interface AccountData {
     walletAddress: string;
@@ -31,6 +31,9 @@ export class TransferModalElement extends BaseOnboardingElement {
     private errorMessage = ""
 
     @state()
+    private statusMessage = ""
+
+    @state()
     private isCheckingAccount = false
 
     @state()
@@ -47,6 +50,16 @@ export class TransferModalElement extends BaseOnboardingElement {
 
     connectedCallback() {
         super.connectedCallback();
+        this.addEventListener('status-update', this.handleStatusUpdate as EventListener);
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this.removeEventListener('status-update', this.handleStatusUpdate as EventListener);
+    }
+
+    private handleStatusUpdate = (event: CustomEvent<{ status: string }>) => {
+        this.statusMessage = event.detail.status;
     }
 
     // Disable shadow DOM to allow inherit css
@@ -70,6 +83,11 @@ export class TransferModalElement extends BaseOnboardingElement {
                             ${this.errorMessage ? html`
                                 <div style="background-color: #fee; border: 1px solid #fcc; border-radius: 4px; padding: 12px; margin-bottom: 16px; color: #c33;">
                                     ${this.errorMessage}
+                                </div>
+                            ` : nothing}
+                            ${this.statusMessage ? html`
+                                <div style="background-color: #fff4e6; border: 1px solid #ffa500; border-radius: 4px; padding: 12px; margin-bottom: 16px; color: #e67700;">
+                                    ${this.statusMessage}
                                 </div>
                             ` : nothing}
                             
@@ -145,6 +163,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         this.walletAddress = "";
         this.email = "";
         this.errorMessage = "";
+        this.statusMessage = "";
         console.log("Closing transfer modal");
         
         // Dispatch event to parent
@@ -198,12 +217,15 @@ export class TransferModalElement extends BaseOnboardingElement {
     async confirmTransfer(transferType: 'wallet' | 'email') {
         this.processing = true;
         this.errorMessage = "";
+        this.statusMessage = "";
 
         console.log("Vehicle VIN:", this.vehicleVin);
         console.log("Vehicle IMEI", this.imei);
         console.log("Transfer Type:", transferType);
+        this.statusMessage = "Processing transfer for IMEI: " + this.imei;
         
         if (transferType === 'email') {
+            this.statusMessage = "Creating account for email: " + this.email;
             const createAccountResp = await this.createAccount(this.email);
             if (!createAccountResp.success) {
                 this.errorMessage = createAccountResp.error;
@@ -212,10 +234,12 @@ export class TransferModalElement extends BaseOnboardingElement {
             }
             this.walletAddress = createAccountResp.data.walletAddress;
             console.log("Created account with wallet address:", this.walletAddress);
+            this.statusMessage = "Account created with wallet address: " + this.walletAddress;
         }
 
         if (this.walletAddress == "") {
             alert("Please enter a wallet address");
+            this.processing = false;
             return
         }
 
@@ -227,7 +251,9 @@ export class TransferModalElement extends BaseOnboardingElement {
             this.processing = false;
             return;
         }
+        this.statusMessage = "Transfer completed successfully";
 
+        await delay(1500);
         this.processing = false
 
         this.closeModal();
