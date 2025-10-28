@@ -39,11 +39,15 @@ export class AppRoot extends LitElement {
 
     render() {
         const userEmail = localStorage.getItem("email") || "";
+        const userWalletAddress = this.apiService.getWalletAddress() || "";
         return html`
             <div class="header">
                 <h1 class="title">Fleet Onboarding App</h1>
                 <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="font-size: 0.875rem; color: #666;">${userEmail}</span>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                        <span style="font-size: 0.875rem; color: #666;">${userEmail}</span>
+                        <span style="font-size: 0.875rem; color: #666;">${userWalletAddress}</span>
+                    </div>
                     <button class="logout-btn" @click=${this.handleLogout} >Logout</button>
                 </div>
             </div>
