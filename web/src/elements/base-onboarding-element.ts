@@ -97,6 +97,14 @@ export class BaseOnboardingElement extends LitElement {
         this.processingMessage = "";
     }
 
+    protected dispatchStatusUpdate(status: string) {
+        this.dispatchEvent(new CustomEvent('status-update', {
+            detail: { status },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
     updateResult(result : VinsOnboardingResult) {
         const statusesByVin: Record<string, VinOnboardingStatus> = {}
         for (const item of result.statuses) {
@@ -323,6 +331,7 @@ export class BaseOnboardingElement extends LitElement {
             success = true;
             const query = qs.stringify({jobId: mintResponse.data.jobId});
             const status = await this.api.callApi<VinStatus>('GET', `/vehicle/transfer/status?${query}`, null, true);
+            this.dispatchStatusUpdate("Checking transfer status... " + attempt);
 
             if (!status.success || !status.data) {
                 return {
@@ -340,7 +349,7 @@ export class BaseOnboardingElement extends LitElement {
             }
 
             if (attempt < 29) {
-                await delay(5000);
+                await delay(4000);
             }
         }
 
@@ -359,6 +368,7 @@ export class BaseOnboardingElement extends LitElement {
 
     // transferVehicle coordinates all of the necessary calls to get the data to sign, signing it and submitting the trx to transfer a vehicle
     async transferVehicle(imei: string, targetWallet: string) : Promise<Result<void, string>> {
+        this.dispatchStatusUpdate("Fetching transfer data...");
         const transferData = await this.getTransferData(imei, targetWallet);
         if (!transferData.success) {
             return {
@@ -367,6 +377,7 @@ export class BaseOnboardingElement extends LitElement {
             };
         }
 
+        this.dispatchStatusUpdate("Signing transfer data...");
         const signedDisconnectData = await this.signTransferData(transferData.data)
         if (!signedDisconnectData.success) {
             return {
@@ -375,6 +386,7 @@ export class BaseOnboardingElement extends LitElement {
             }
         }
 
+        this.dispatchStatusUpdate("Submitting transfer to blockchain...");
         const submitResponse = await this.submitTransferData(signedDisconnectData.data)
         if (!submitResponse.success) {
             return {
@@ -383,6 +395,7 @@ export class BaseOnboardingElement extends LitElement {
             }
         }
 
+        this.dispatchStatusUpdate("Transfer completed successfully");
         return {
             success: true,
             data: undefined

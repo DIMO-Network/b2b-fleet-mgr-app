@@ -52,6 +52,38 @@ export class ApiService {
         }
     }
 
+    public getWalletAddress(): string | null {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            return null;
+        }
+
+        try {
+            // JWT format is: header.payload.signature
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                console.error('Invalid JWT token format');
+                return null;
+            }
+
+            // Decode the payload (second part)
+            const payload = parts[1];
+            const decodedPayload = JSON.parse(atob(payload));
+
+            // Extract ethereum_address claim
+            const ethereumAddress = decodedPayload.ethereum_address;
+            if (!ethereumAddress) {
+                console.error('ethereum_address claim not found in JWT token');
+                return null;
+            }
+
+            return ethereumAddress;
+        } catch (error) {
+            console.error('Error decoding JWT token:', error);
+            return null;
+        }
+    }
+
     // makes a request to the backend proxy with the currently selected oracle route.
     public async callApi<T>(
         method: 'GET' | 'POST' | 'DELETE',

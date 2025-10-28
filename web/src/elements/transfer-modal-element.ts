@@ -31,10 +31,16 @@ export class TransferModalElement extends BaseOnboardingElement {
     private errorMessage = ""
 
     @state()
+    private statusMessage = ""
+
+    @state()
     private isCheckingAccount = false
 
     @state()
     private accountNotFound: boolean | null = null
+
+    @state()
+    private accountFound: boolean = false
 
     private accountCheckTimeout?: number
 
@@ -44,6 +50,16 @@ export class TransferModalElement extends BaseOnboardingElement {
 
     connectedCallback() {
         super.connectedCallback();
+        this.addEventListener('status-update', this.handleStatusUpdate as EventListener);
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this.removeEventListener('status-update', this.handleStatusUpdate as EventListener);
+    }
+
+    private handleStatusUpdate = (event: CustomEvent<{ status: string }>) => {
+        this.statusMessage = event.detail.status;
     }
 
     // Disable shadow DOM to allow inherit css
@@ -69,6 +85,11 @@ export class TransferModalElement extends BaseOnboardingElement {
                                     ${this.errorMessage}
                                 </div>
                             ` : nothing}
+                            ${this.statusMessage ? html`
+                                <div style="background-color: #fff4e6; border: 1px solid #ffa500; border-radius: 4px; padding: 12px; margin-bottom: 16px; color: #e67700;">
+                                    ${this.statusMessage}
+                                </div>
+                            ` : nothing}
                             
                             <div class="transfer-options">
                                 <div class="transfer-option">
@@ -83,6 +104,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                                        .value=${this.walletAddress}
                                                        @input=${this.handleWalletInput}>
                                                 ${this.isCheckingAccount ? html`<span style="font-size: 12px; color: #666;">Checking…</span>` : nothing}
+                                                ${this.accountFound ? html`<span style="color: #22c55e; font-size: 16px;">✓</span>` : nothing}
                                             </div>
                                         </label>
                                         ${this.walletAddress && this.accountNotFound ? html`
@@ -104,7 +126,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                 </div>
                                 
                                 <div class="transfer-option">
-                                    <h4>Transfer by Email</h4>
+                                    <h4>Transfer by Email (new accounts)</h4>
                                     <form class="transfer-form">
                                         <label>
                                             Email Address
@@ -120,7 +142,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                             ${this.processing ? 'Processing...' : 'Transfer by Email'}
                                         </button>
                                         <p>
-                                           If account is new, user will receive an email with an OTP code to login to the App.  
+                                           User will receive an email with an OTP code to login to the App. This will not work for existing accounts.
                                         </p>
                                     </form>
                                 </div>
@@ -141,6 +163,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         this.walletAddress = "";
         this.email = "";
         this.errorMessage = "";
+        this.statusMessage = "";
         console.log("Closing transfer modal");
         
         // Dispatch event to parent
@@ -158,6 +181,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         const value = (e.target as HTMLInputElement).value;
         this.walletAddress = value;
         this.accountNotFound = null;
+        this.accountFound = false;
 
         if (this.accountCheckTimeout) {
             clearTimeout(this.accountCheckTimeout);
@@ -182,8 +206,10 @@ export class TransferModalElement extends BaseOnboardingElement {
         // If request failed or no body, show helper text
         if (!resp.success || !resp.data) {
             this.accountNotFound = true;
+            this.accountFound = false;
         } else {
             this.accountNotFound = false;
+            this.accountFound = true;
         }
         this.isCheckingAccount = false;
     }
@@ -191,11 +217,15 @@ export class TransferModalElement extends BaseOnboardingElement {
     async confirmTransfer(transferType: 'wallet' | 'email') {
         this.processing = true;
         this.errorMessage = "";
+        this.statusMessage = "";
 
         console.log("Vehicle VIN:", this.vehicleVin);
+        console.log("Vehicle IMEI", this.imei);
         console.log("Transfer Type:", transferType);
+        this.statusMessage = "Processing transfer for IMEI: " + this.imei;
         
         if (transferType === 'email') {
+            this.statusMessage = "Creating account for email: " + this.email;
             const createAccountResp = await this.createAccount(this.email);
             if (!createAccountResp.success) {
                 this.errorMessage = createAccountResp.error;
@@ -204,15 +234,16 @@ export class TransferModalElement extends BaseOnboardingElement {
             }
             this.walletAddress = createAccountResp.data.walletAddress;
             console.log("Created account with wallet address:", this.walletAddress);
+            this.statusMessage = "Account created with wallet address: " + this.walletAddress;
         }
 
         if (this.walletAddress == "") {
             alert("Please enter a wallet address");
+            this.processing = false;
             return
         }
-        console.log("Transfer Type:", transferType);
-        console.log("imei", this.imei);
-        console.log("target wallet", this.walletAddress);
+
+        console.log("Target Wallet to transfer to", this.walletAddress);
 
         const result = await this.transferVehicle(this.imei, this.walletAddress)
         if (!result.success) {
@@ -220,8 +251,9 @@ export class TransferModalElement extends BaseOnboardingElement {
             this.processing = false;
             return;
         }
+        this.statusMessage = "Transfer completed successfully";
 
-        await delay(1000)
+        await delay(1500);
         this.processing = false
 
         this.closeModal();
@@ -230,6 +262,7 @@ export class TransferModalElement extends BaseOnboardingElement {
     async createAccount(email:string): Promise<Result<AccountData, string>> {
         const payload = {
             email: email,
+            deployAccount: true
         }
         const creatResp = await this.api.callApi<AccountData>('POST', '/account', payload, true);
         if (!creatResp.success || !creatResp.data) {
