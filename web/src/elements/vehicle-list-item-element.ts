@@ -73,7 +73,8 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   >connect
                   </button>
                   <button 
-                      type="button" 
+                      type="button"
+                      ?hidden=${this.item.tokenId == 0}
                       ?disabled=${this.item.syntheticDevice.tokenId || this.processing || !this.item.isCurrentUserOwner}
                       @click=${this.deleteVehicle}
                       class=${this.deletionProcessing ? 'processing' : ''}
@@ -82,16 +83,17 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
                   <button 
-                      type="button" 
+                      type="button"
+                      ?hidden=${this.item.tokenId == 0}
                       ?disabled=${this.processing || !this.item.isCurrentUserOwner}
                       @click=${this.openTransferModal}
                   >
                       transfer
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
-                  <button 
-                  ?hidden=${this.item.tokenId !== 0}
-                      type="button" 
+                  <button
+                      type="button"
+                      ?hidden=${this.item.tokenId !== 0}
                       ?disabled=${this.processing}
                       @click=${() => this.resetOnboarding(this.item?.imei || '')}
                   >
@@ -233,6 +235,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         // Add event listener for modal close
         modal.addEventListener('modal-closed', () => {
             document.body.removeChild(modal);
+            this.dispatchItemChanged()
         });
 
         // Add to body

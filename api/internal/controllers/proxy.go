@@ -79,7 +79,7 @@ func ProxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte, logger *
 			"error": "Failed to read response",
 		})
 	}
-	logger.Info().Msgf("Proxied request to %s", targetURL)
+	logger.Info().Msgf("%s Proxied request to %s", c.Method(), targetURL)
 
 	// Set headers to match the original response
 	for k, val := range resp.Header {

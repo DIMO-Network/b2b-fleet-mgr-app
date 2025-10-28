@@ -3,7 +3,7 @@ import {customElement, property, state} from "lit/decorators.js";
 // import {ApiService} from "@services/api-service.ts";
 import './session-timer';
 import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
-import {delay, Result} from "@utils/utils.ts";
+import {Result} from "@utils/utils.ts";
 
 export interface AccountData {
     walletAddress: string;
@@ -108,7 +108,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                 </div>
                                 
                                 <div class="transfer-option">
-                                    <h4>Transfer by Email</h4>
+                                    <h4>Transfer by Email (new accounts)</h4>
                                     <form class="transfer-form">
                                         <label>
                                             Email Address
@@ -124,7 +124,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                             ${this.processing ? 'Processing...' : 'Transfer by Email'}
                                         </button>
                                         <p>
-                                           If account is new, user will receive an email with an OTP code to login to the App.  
+                                           User will receive an email with an OTP code to login to the App. This will not work for existing accounts.
                                         </p>
                                     </form>
                                 </div>
@@ -200,6 +200,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         this.errorMessage = "";
 
         console.log("Vehicle VIN:", this.vehicleVin);
+        console.log("Vehicle IMEI", this.imei);
         console.log("Transfer Type:", transferType);
         
         if (transferType === 'email') {
@@ -217,9 +218,8 @@ export class TransferModalElement extends BaseOnboardingElement {
             alert("Please enter a wallet address");
             return
         }
-        console.log("Transfer Type:", transferType);
-        console.log("imei", this.imei);
-        console.log("target wallet", this.walletAddress);
+
+        console.log("Target Wallet to transfer to", this.walletAddress);
 
         const result = await this.transferVehicle(this.imei, this.walletAddress)
         if (!result.success) {
@@ -228,7 +228,6 @@ export class TransferModalElement extends BaseOnboardingElement {
             return;
         }
 
-        await delay(1000)
         this.processing = false
 
         this.closeModal();
@@ -237,6 +236,7 @@ export class TransferModalElement extends BaseOnboardingElement {
     async createAccount(email:string): Promise<Result<AccountData, string>> {
         const payload = {
             email: email,
+            deployAccount: true
         }
         const creatResp = await this.api.callApi<AccountData>('POST', '/account', payload, true);
         if (!creatResp.success || !creatResp.data) {

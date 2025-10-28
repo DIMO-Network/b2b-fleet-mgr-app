@@ -340,7 +340,7 @@ export class BaseOnboardingElement extends LitElement {
             }
 
             if (attempt < 29) {
-                await delay(5000);
+                await delay(4000);
             }
         }
 
