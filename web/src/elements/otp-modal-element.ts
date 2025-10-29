@@ -13,12 +13,6 @@ export class OtpModalElement extends LitElement {
     @property({ attribute: true, type: String })
     public email: string = '';
 
-    @property({ attribute: true, type: String })
-    public orgId: string = '';
-
-    @property({ attribute: true, type: String })
-    public subOrgId: string = '';
-
     private otpId: string;
 
     private apiService: ApiService;
