@@ -56,21 +56,48 @@ export class OtpModalElement extends LitElement {
     }
 
     private handleInput(e: InputEvent, index: number) {
-        const value = (e.target as HTMLInputElement).value.replace(/\D/, '');
-        this.otpValues[index] = value;
-        this.requestUpdate();
+        const input = e.target as HTMLInputElement;
+        const value = input.value.replace(/\D/, '');
+
+        this.otpValues = [
+            ...this.otpValues.slice(0, index),
+            value,
+            ...this.otpValues.slice(index + 1),
+        ];
 
         if (value && index < this.otpValues.length - 1) {
-            const next = this.shadowRoot?.querySelectorAll<HTMLInputElement>('input')[index + 1];
-            next?.focus();
+            this.updateComplete.then(() => {
+                const next = this.querySelectorAll<HTMLInputElement>('input')[index + 1];
+                next?.focus();
+            });
         }
     }
 
+
     private handleKeyDown(e: KeyboardEvent, index: number) {
         if (e.key === 'Backspace' && !this.otpValues[index] && index > 0) {
-            const prev = this.shadowRoot?.querySelectorAll<HTMLInputElement>('input')[index - 1];
+            const prev = this.querySelectorAll<HTMLInputElement>('input')[index - 1];
             prev?.focus();
         }
+    }
+
+    private handlePaste(e: ClipboardEvent) {
+        e.preventDefault();
+
+        const pasted = e.clipboardData?.getData('text') ?? '';
+        const digits = pasted.replace(/\D/g, '').slice(0, this.otpValues.length);
+
+        // Fill values
+        digits.split('').forEach((d, i) => {
+            this.otpValues[i] = d;
+        });
+
+        this.requestUpdate();
+
+        // Focus next empty or last input
+        const inputs = this.shadowRoot?.querySelectorAll<HTMLInputElement>('input');
+        const nextIndex = Math.min(digits.length, this.otpValues.length - 1);
+        inputs?.[nextIndex]?.focus();
     }
 
     private async confirmOtp() {
@@ -118,6 +145,7 @@ export class OtpModalElement extends LitElement {
                                   inputmode="numeric"
                                   @input=${(e: InputEvent) => this.handleInput(e, i)}
                                   @keydown=${(e: KeyboardEvent) => this.handleKeyDown(e, i)}
+                                  @paste=${(e: ClipboardEvent) => this.handlePaste(e)}                                  
                                 />
                               `
                             )}
@@ -139,9 +167,7 @@ export class OtpModalElement extends LitElement {
         this.otpValues = Array(6).fill('');
 
         // Dispatch event to parent
-        this.dispatchEvent(new CustomEvent('otp-closed', {
-
-        }));
+        this.dispatchEvent(new CustomEvent('otp-closed', { }));
     }
 
 
