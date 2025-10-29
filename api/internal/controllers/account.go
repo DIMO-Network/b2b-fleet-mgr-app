@@ -35,3 +35,15 @@ func (a *AccountsController) CreateAccount(c *fiber.Ctx) error {
 
 	return ProxyRequest(c, targetURL, c.Body(), a.logger)
 }
+
+func (a *AccountsController) InitOtpLogin(c *fiber.Ctx) error {
+	u := a.settings.AccountsAPIURL
+	targetURL := u.JoinPath("/api/auth/otp")
+	return ProxyRequest(c, targetURL, c.Body(), a.logger)
+}
+
+func (a *AccountsController) CompleteOtpLogin(c *fiber.Ctx) error {
+	u := a.settings.AccountsAPIURL
+	targetURL := u.JoinPath("api/auth/otp")
+	return ProxyRequest(c, targetURL, c.Body(), a.logger)
+}
