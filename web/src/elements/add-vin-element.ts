@@ -151,6 +151,10 @@ export class AddVinElement extends BaseOnboardingElement {
         this.otpLogin = !this.otpLogin;
     }
 
+    toggleOtpLogin() {
+        this.otpLogin = !this.otpLogin;
+    }
+
     private toggleUseBelow = () => {
         this.useBelow = !this.useBelow;
         if (!this.useBelow) {
