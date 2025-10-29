@@ -106,7 +106,6 @@ export class SigningService {
         }
     }
 
-
     public async signTypedData(payload: any) {
         const settings = this.settings.privateSettings;
         const accountInfo = this.settings.accountInfo;
@@ -173,6 +172,37 @@ export class SigningService {
         }
     }
 
+    public saveSession({ credentialBundle, privateKey }:{ credentialBundle: string; privateKey: string; }) {
+        const nowInSeconds = Math.ceil(Date.now() / 1000);
+        const settings = this.settings.privateSettings;
+        const accountInfo = this.settings.accountInfo;
+
+        if (!settings || !accountInfo) {
+            return {
+                success: false,
+                error: "Signing service not configured"
+            }
+        }
+
+        const { turnkeyOrgId } = settings;
+        const {subOrganizationId} = accountInfo;
+
+        this.storeKey(privateKey);
+
+        const turnkeySession: SigningServiceSession = {
+            organizationId: {
+                organizationId: turnkeyOrgId,
+                subOrganizationId: subOrganizationId,
+            },
+            session: {
+                token: credentialBundle,
+                expiresAt: (nowInSeconds + SESSION_TIME_S) * 1000,
+            }
+        }
+        console.debug("Turnkey session:", turnkeySession);
+        this.storeSession(turnkeySession);
+    }
+
     private async getTurnkeyClient(apiUrl: string, rpId: string, orgId: string, subOrgId: string) {
         const session = this.getSessionIfValid();
         const sessionKey = this.getKey();
@@ -226,6 +256,7 @@ export class SigningService {
 
         return await this.getTurnkeyClientFromSession(apiUrl, turnkeySession, key.privateKey);
     }
+
 
     private async getTurnkeyClientFromSession(apiUrl: string, session: SigningServiceSession, key: string) {
         const privateKey = decryptCredentialBundle(session.session.token, key);
