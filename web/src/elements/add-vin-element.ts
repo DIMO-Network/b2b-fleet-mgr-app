@@ -1,4 +1,4 @@
-import {html} from 'lit'
+import {html, nothing} from 'lit'
 import {SettingsService} from "@services/settings-service";
 import {customElement, property, state} from "lit/decorators.js";
 import {repeat} from "lit/directives/repeat.js";
@@ -85,6 +85,10 @@ export class AddVinElement extends BaseOnboardingElement {
 
     @state() sessionExpiresIn: number = 0;
 
+    @state() otpLogin: boolean = false;
+
+    @state() otpLoggedIn: boolean = false;
+
     // Pending vehicles properties
     @state() private selectedPendingVehicles: string[] = [];
     @state() private selectedVinsForSubmission: string[] = [];
@@ -143,6 +147,10 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = !this.enableSacd;
     }
 
+    toggleOtpLogin() {
+        this.otpLogin = !this.otpLogin;
+    }
+
     private toggleUseBelow = () => {
         this.useBelow = !this.useBelow;
         if (!this.useBelow) {
@@ -171,8 +179,32 @@ export class AddVinElement extends BaseOnboardingElement {
         this.requestUpdate();
     }
 
+    initOtpLogin() {
+        // open modal
+        const modal = document.createElement('otp-modal-element') as any;
+        modal.open = true;
+        modal.email = this.email;
+
+        // send call to init otp and store the otpid
+        modal.requestOtp();
+
+        // add listener for close
+        modal.addEventListener('otp-closed', () => {
+           document.body.removeChild(modal);
+        });
+
+        modal.addEventListener('otp-completed', () => {
+            document.body.removeChild(modal);
+            this.otpLoggedIn = true;
+            console.info("otp success");
+        });
+
+        // add to body
+        document.body.appendChild(modal);
+    }
+
     render() {
-        return html`
+        return html`            
             <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
                 ${this.alertText}
             </div>
@@ -231,8 +263,21 @@ export class AddVinElement extends BaseOnboardingElement {
             </div>
             
             <div>
+                <div class="grid">
+                    <label>
+                        <input type="checkbox" .checked="${this.otpLogin}" @click="${this.toggleOtpLogin}" /> Use OTP
+                    </label>
+                    ${ this.otpLogin ? html`
+                        <button @click=${() => this.initOtpLogin()} ?disabled=${this.processing} class=${this.processing ? 'processing' : ''} >
+                            Sign In
+                        </button>` : nothing } 
+                </div>
+            </div>
+            
+            
+            <div>
                 <form class="grid">
-                    <button type="button" @click=${this._submitVINs} ?disabled=${this.processing} class=${this.processing ? 'processing' : ''} >
+                    <button type="button" @click=${this._submitVINs} ?disabled=${(this.otpLogin && !this.otpLoggedIn) || this.processing} class=${this.processing ? 'processing' : ''} >
                         Onboard Vehicles
                     </button>
                 </form>
