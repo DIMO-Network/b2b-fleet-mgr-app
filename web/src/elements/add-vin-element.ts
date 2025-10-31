@@ -345,10 +345,12 @@ export class AddVinElement extends BaseOnboardingElement {
             this.vinsBulk = "";
             this.requestUpdate();
 
-            // Clear selection in pending vehicles component
+            // Clear selection and reload pending vehicles component
             const pendingVehiclesElement = this.querySelector('pending-vehicles-element') as any;
             if (pendingVehiclesElement) {
                 pendingVehiclesElement.clearSelection();
+                // Reload the pending vehicles list after successful onboarding
+                await pendingVehiclesElement.loadPendingVehicles();
             }
         } catch (e) {
             this.displayFailure("failed to onboard vins: " + e);
@@ -365,24 +367,7 @@ export class AddVinElement extends BaseOnboardingElement {
         }));
     }
 
-    public async onboardSingleVin(vin: string) {
-        console.log('onboarding single vin:', vin);
-        this.requestUpdate();
-        
-        // Start the onboarding process
-        this.alertText = "";
-        this.processingMessage = "";
-        this.processing = true;
-
-        try {
-            await this.performOnboarding([vin]);
-        } catch (e) {
-            this.displayFailure("failed to onboard vin: " + e);
-        }
-
-        this.processing = false;
-    }
-// todo i think we pass in an array of SacdInput in here and have something that builds the sacd inputs
+    // todo i think we pass in an array of SacdInput in here and have something that builds the sacd inputs
     private async performOnboarding(vinsArray: string[]) {
         try {
             let sacdInput: SacdInput[] | null;

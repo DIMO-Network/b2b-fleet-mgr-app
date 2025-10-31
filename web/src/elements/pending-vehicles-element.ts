@@ -69,7 +69,7 @@ export class PendingVehiclesElement extends LitElement {
         await this.loadPendingVehicles();
     }
 
-    private async loadPendingVehicles() {
+    public async loadPendingVehicles() {
         this.loading = true;
         this.alertText = "";
         
