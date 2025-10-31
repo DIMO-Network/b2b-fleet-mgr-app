@@ -14,6 +14,7 @@ var ErrBadRequest = errors.New("bad request")
 
 type IdentityAPI interface {
 	GetDefinitionByID(id string) ([]byte, error)
+	GetVehicleByTokenID(id string) ([]byte, error)
 }
 
 type identityAPIService struct {
@@ -47,6 +48,45 @@ func (i *identityAPIService) GetDefinitionByID(id string) ([]byte, error) {
     	}
   	}
 }`
+
+	body, err := i.Query(graphqlQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+func (i *identityAPIService) GetVehicleByTokenID(id string) ([]byte, error) {
+	// GraphQL query
+	graphqlQuery := `{
+      vehicle(tokenId: ` + id + `) {
+        id
+        owner
+    sacds(first:20) {
+      nodes {
+        grantee
+        permissions
+      }
+    }
+    earnings {
+      totalTokens
+    }
+    mintedAt
+    syntheticDevice {
+      connection {
+        name
+        address
+      }
+    }
+        definition {
+          id
+          make
+          model
+          year
+        }
+      }
+    }`
 
 	body, err := i.Query(graphqlQuery)
 	if err != nil {

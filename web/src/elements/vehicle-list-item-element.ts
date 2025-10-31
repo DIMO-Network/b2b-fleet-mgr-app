@@ -56,6 +56,14 @@ export class VehicleListItemElement extends BaseOnboardingElement {
               <td>${this.item.tokenId}</td>
               <td>${ConnectionStatusMap[this.getConnectionStatus(this.item)]}</td>
               <td>
+                  <button 
+                      type="button"
+                      ?hidden=${this.item.tokenId == 0}
+                      @click=${this.openIdentityInfoModal}
+                      title="View Identity Info"
+                  >
+                      ℹ️
+                  </button>
                   <button ?hidden=${!this.canDisconnect(this.item)}
                       type="button" 
                       ?disabled=${this.processing || !this.item.syntheticDevice.tokenId || !this.item.isCurrentUserOwner}
@@ -240,5 +248,27 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         // Add to body
         document.body.appendChild(modal);
+    }
+
+    private openIdentityInfoModal() {
+        console.log("Opening identity info modal for token ID:", this.item?.tokenId);
+
+        // Create the identity info modal using the separate component
+        const modal = document.createElement('identity-vehicle-info-modal-element') as any;
+        modal.show = true;
+        modal.tokenId = this.item?.tokenId || '';
+
+        // Add event listener for modal close
+        modal.addEventListener('modal-closed', () => {
+            document.body.removeChild(modal);
+        });
+
+        // Add to body
+        document.body.appendChild(modal);
+
+        // Load identity data after the modal is added to the DOM
+        setTimeout(() => {
+            modal.loadIdentityData();
+        }, 100);
     }
 }
