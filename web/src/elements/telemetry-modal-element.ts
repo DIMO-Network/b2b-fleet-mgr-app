@@ -27,6 +27,9 @@ export class TelemetryModalElement extends LitElement {
     @property({attribute: true})
     public imei = ""
 
+    @property({attribute: true})
+    public vin = ""
+
     @state()
     private telemetryData: TelemetryData[] = []
 
@@ -76,7 +79,7 @@ export class TelemetryModalElement extends LitElement {
             <div class="modal-overlay" @click=${this.closeModal}>
                 <div class="modal-content telemetry-modal" @click=${(e: Event) => e.stopPropagation()}>
                     <div class="modal-header">
-                        <h3>Telemetry Data - ${this.imei}</h3>
+                        <h3>Telemetry Data - ${this.imei}${this.vin ? ` (${this.vin})` : ''}</h3>
                         <div style="display: flex; align-items: center; gap: 1rem;">
                             <button type="button" 
                                     class="btn-secondary" 
