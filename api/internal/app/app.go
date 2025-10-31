@@ -56,6 +56,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	app.Get("/health", healthCheck)
 
 	vehiclesCtrl := controllers.NewVehiclesController(settings, logger)
+	identityCtrl := controllers.NewIdentityController(settings, logger)
 	settingsCtrl := controllers.NewSettingsController(settings, logger)
 	accountsCtrl := controllers.NewAccountsController(settings, logger)
 
@@ -66,6 +67,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	// these are general to the app, not oracle specific
 	app.Get("/public/settings", settingsCtrl.GetPublicSettings)
+	app.Get("/identity/vehicle/:tokenID", identityCtrl.GetVehicleByTokenID)
 
 	// oracle group with route parameter.
 	oracleApp := app.Group("/oracle/:oracleID", jwtAuth, oracleIDMiddleware(knownOracles))
