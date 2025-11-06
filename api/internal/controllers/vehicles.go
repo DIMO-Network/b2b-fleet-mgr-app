@@ -201,3 +201,11 @@ func (v *VehiclesController) GetTransferStatus(c *fiber.Ctx) error {
 	targetURL.RawQuery = fmt.Sprintf("jobId=%s", jobID)
 	return ProxyRequest(c, targetURL, nil, v.logger)
 }
+
+func (v *VehiclesController) SubmitCommand(c *fiber.Ctx) error {
+	imei := c.Params("imei", "")
+
+	u := GetOracleURL(c, v.settings)
+	targetURL := u.JoinPath(fmt.Sprintf("/v1/pending-vehicle/command/%s", imei))
+	return ProxyRequest(c, targetURL, nil, v.logger)
+}

@@ -54,6 +54,12 @@ export class TelemetryModalElement extends LitElement {
     @state()
     private engineBlockDisplay: string = "—"
 
+    @state()
+    private immobilizerLoading = false
+
+    @state()
+    private immobilizerError = ""
+
     private apiService: ApiService;
 
     constructor() {
@@ -91,6 +97,27 @@ export class TelemetryModalElement extends LitElement {
                             </button>
                             <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                         </div>
+                    </div>
+                    <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 0.75rem;">
+                        <button type="button" 
+                                class="btn-danger" 
+                                ?disabled=${this.immobilizerLoading}
+                                @click=${this.immobilizerOn}
+                                style="font-size: 0.875rem; padding: 0.5rem 1rem; background-color: #dc2626; color: white; border: none; border-radius: 0.375rem; cursor: pointer;">
+                            ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
+                            Immobilizer On
+                        </button>
+                        <button type="button" 
+                                class="btn-success" 
+                                ?disabled=${this.immobilizerLoading}
+                                @click=${this.immobilizerOff}
+                                style="font-size: 0.875rem; padding: 0.5rem 1rem; background-color: #16a34a; color: white; border: none; border-radius: 0.375rem; cursor: pointer;">
+                            ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
+                            Immobilizer Off
+                        </button>
+                        ${this.immobilizerError ? html`
+                            <div style="color: #dc2626; font-size: 0.875rem;">${this.immobilizerError}</div>
+                        ` : ''}
                     </div>
                     <div class="modal-body">
                         ${this.loading ? html`
@@ -144,6 +171,8 @@ export class TelemetryModalElement extends LitElement {
         this.error = "";
         this.loading = false;
         this.resetting = false;
+        this.immobilizerLoading = false;
+        this.immobilizerError = "";
         this.odometerDisplay = "—";
         this.rpmDisplay = "—";
         this.ignitionDisplay = "—";
@@ -184,6 +213,44 @@ export class TelemetryModalElement extends LitElement {
         } finally {
             this.resetting = false;
         }
+    }
+
+    private async sendImmobilizerCommand(state: 'on' | 'off') {
+        if (!this.imei) {
+            this.immobilizerError = "No IMEI provided";
+            return;
+        }
+
+        this.immobilizerLoading = true;
+        this.immobilizerError = "";
+        
+        try {
+            const response = await this.apiService.callApi(
+                'POST', 
+                `/pending-vehicle/command/${this.imei}`, 
+                { command: `immobilizer/${state}` },
+                true, 
+                true
+            );
+            if (response.success) {
+                console.log(`Immobilizer ${state} command sent successfully`);
+            } else {
+                this.immobilizerError = response.error || `Failed to send immobilizer ${state} command`;
+            }
+        } catch (err) {
+            this.immobilizerError = `Failed to send immobilizer ${state} command`;
+            console.error(`Error sending immobilizer ${state} command:`, err);
+        } finally {
+            this.immobilizerLoading = false;
+        }
+    }
+
+    private immobilizerOn() {
+        this.sendImmobilizerCommand('on');
+    }
+
+    private immobilizerOff() {
+        this.sendImmobilizerCommand('off');
     }
 
     // Method to load telemetry data (to be called from parent)
