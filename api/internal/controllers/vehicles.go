@@ -207,5 +207,5 @@ func (v *VehiclesController) SubmitCommand(c *fiber.Ctx) error {
 
 	u := GetOracleURL(c, v.settings)
 	targetURL := u.JoinPath(fmt.Sprintf("/v1/pending-vehicle/command/%s", imei))
-	return ProxyRequest(c, targetURL, nil, v.logger)
+	return ProxyRequest(c, targetURL, c.Body(), v.logger)
 }
