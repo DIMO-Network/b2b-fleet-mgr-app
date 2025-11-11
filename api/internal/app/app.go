@@ -76,7 +76,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Get("/pending-vehicles", vehiclesCtrl.GetPendingVehicles)
 	oracleApp.Get("/pending-vehicle-telemetry/:imei", vehiclesCtrl.GetPendingVehicleTelemetry)
 	oracleApp.Delete("/pending-vehicle-telemetry/:imei", vehiclesCtrl.ClearPendingVehicleTelemetry)
-	app.Post("/pending-vehicle/command/:imei", vehiclesCtrl.SubmitCommand)
+	oracleApp.Post("/pending-vehicle/command/:imei", vehiclesCtrl.SubmitCommand)
 
 	oracleApp.Get("/vehicles", vehiclesCtrl.GetVehicles)
 	oracleApp.Get("/vehicle/verify", vehiclesCtrl.GetVehiclesVerificationStatus)
