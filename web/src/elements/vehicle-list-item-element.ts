@@ -257,6 +257,8 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         const modal = document.createElement('identity-vehicle-info-modal-element') as any;
         modal.show = true;
         modal.tokenId = this.item?.tokenId || '';
+        modal.imei = this.item?.imei || '';
+        modal.vin = this.item?.vin || '';
 
         // Add event listener for modal close
         modal.addEventListener('modal-closed', () => {

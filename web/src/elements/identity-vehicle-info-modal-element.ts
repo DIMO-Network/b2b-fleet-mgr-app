@@ -18,6 +18,12 @@ export class IdentityVehicleInfoModalElement extends LitElement {
     @property({attribute: true})
     public tokenId = ""
 
+    @property({attribute: true})
+    public imei = ""
+
+    @property({attribute: true})
+    public vin = ""
+
     @state()
     private identityData: VehicleIdentityData | null = null
 
@@ -53,7 +59,17 @@ export class IdentityVehicleInfoModalElement extends LitElement {
                 <div class="modal-content" @click=${(e: Event) => e.stopPropagation()} style="max-width: 800px;">
                     <div class="modal-header">
                         <h3>Vehicle Identity Information - Token ID: ${this.tokenId}</h3>
-                        <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            ${this.imei ? html`
+                                <button type="button" 
+                                        class="btn-primary" 
+                                        @click=${this.openTelemetryModal}
+                                        style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                    Telemetry & Command
+                                </button>
+                            ` : ''}
+                            <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
+                        </div>
                     </div>
                     <div class="modal-body">
                         ${this.loading ? html`
@@ -91,6 +107,34 @@ export class IdentityVehicleInfoModalElement extends LitElement {
             bubbles: true,
             composed: true
         }));
+    }
+
+    private openTelemetryModal() {
+        if (!this.imei) {
+            console.error("No IMEI available to open telemetry modal");
+            return;
+        }
+
+        console.log("Opening telemetry modal for IMEI:", this.imei, "VIN:", this.vin);
+        
+        // Create the telemetry modal using the separate component
+        const modal = document.createElement('telemetry-modal-element') as any;
+        modal.show = true;
+        modal.imei = this.imei;
+        modal.vin = this.vin || '';
+        
+        // Add event listener for modal close
+        modal.addEventListener('modal-closed', () => {
+            document.body.removeChild(modal);
+        });
+        
+        // Add to body
+        document.body.appendChild(modal);
+        
+        // Load telemetry data after the modal is added to the DOM
+        setTimeout(() => {
+            modal.loadTelemetryData();
+        }, 100);
     }
 
     // Method to load identity data (to be called from parent)
