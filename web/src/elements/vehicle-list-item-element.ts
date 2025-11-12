@@ -64,6 +64,14 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   >
                       ℹ️
                   </button>
+                  <button 
+                      type="button"
+                      ?hidden=${!this.item.imei}
+                      @click=${this.openTelemetryModal}
+                      title="Telemetry & Command"
+                  >
+                      ⚡
+                  </button>
                   <button ?hidden=${!this.canDisconnect(this.item)}
                       type="button" 
                       ?disabled=${this.processing || !this.item.syntheticDevice.tokenId || !this.item.isCurrentUserOwner}
@@ -257,8 +265,6 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         const modal = document.createElement('identity-vehicle-info-modal-element') as any;
         modal.show = true;
         modal.tokenId = this.item?.tokenId || '';
-        modal.imei = this.item?.imei || '';
-        modal.vin = this.item?.vin || '';
 
         // Add event listener for modal close
         modal.addEventListener('modal-closed', () => {
@@ -271,6 +277,29 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         // Load identity data after the modal is added to the DOM
         setTimeout(() => {
             modal.loadIdentityData();
+        }, 100);
+    }
+
+    private openTelemetryModal() {
+        console.log("Opening telemetry modal for IMEI:", this.item?.imei, "VIN:", this.item?.vin);
+        
+        // Create the telemetry modal using the separate component
+        const modal = document.createElement('telemetry-modal-element') as any;
+        modal.show = true;
+        modal.imei = this.item?.imei || '';
+        modal.vin = this.item?.vin || '';
+        
+        // Add event listener for modal close
+        modal.addEventListener('modal-closed', () => {
+            document.body.removeChild(modal);
+        });
+        
+        // Add to body
+        document.body.appendChild(modal);
+        
+        // Load telemetry data after the modal is added to the DOM
+        setTimeout(() => {
+            modal.loadTelemetryData();
         }, 100);
     }
 }

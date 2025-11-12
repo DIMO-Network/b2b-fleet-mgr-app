@@ -244,12 +244,17 @@ export class TransferModalElement extends BaseOnboardingElement {
         }
 
         console.log("Target Wallet to transfer to", this.walletAddress);
-
+        // this method does a lot of steps. It also checks the status of the transfer, which should be separated out into own function.
         const result = await this.transferVehicle(this.imei, this.walletAddress)
         if (!result.success) {
-            this.errorMessage = result.error;
-            this.processing = false;
-            return;
+            if (result.error.toLowerCase().includes('timeout')) { 
+                this.errorMessage = "Check Info for final transfer verification";
+            } else {
+                this.errorMessage = result.error;
+                this.processing = false;
+                return;
+            }
+            
         }
         this.statusMessage = "Transfer completed successfully";
 
