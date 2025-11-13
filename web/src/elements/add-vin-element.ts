@@ -3,8 +3,9 @@ import {SettingsService} from "@services/settings-service";
 import {customElement, property, state} from "lit/decorators.js";
 import {repeat} from "lit/directives/repeat.js";
 import './session-timer';
+import './confirm-onboarding-modal-element';
 import {range} from "lodash";
-import {BaseOnboardingElement, SacdInput} from "@elements/base-onboarding-element.ts";
+import {BaseOnboardingElement, SacdInput, VehicleWithDefinition} from "@elements/base-onboarding-element.ts";
 import {delay} from "@utils/utils.ts";
 import {ApiService} from "@services/api-service.ts";
 
@@ -317,7 +318,7 @@ export class AddVinElement extends BaseOnboardingElement {
     async _submitVINs(_event: MouseEvent) {
         this.alertText = "";
         this.processingMessage = "";
-        this.processing = true;
+        this.processing = false; // Don't set processing yet, modal will handle it
         let vinsArray: string[] = []
 
         console.log("submitting vin(s)");
@@ -327,36 +328,60 @@ export class AddVinElement extends BaseOnboardingElement {
             vinsArray = [...this.selectedVinsForSubmission];
             console.log("Using selected VINs from checkboxes:", vinsArray);
         } else if (this.vinsBulk !== null && this.vinsBulk !== undefined && this.vinsBulk?.length > 0) {
-            vinsArray = this.vinsBulk.split('\n');
+            vinsArray = this.vinsBulk.split('\n').filter(v => v.trim().length > 0);
             console.log("Using VINs from textarea:", vinsArray);
         }
 
         if (vinsArray.length === 0) {
-            this.processing = false;
             return this.displayFailure("no vin provided");
         }
 
-        try {
-            await this.performOnboarding(vinsArray);
+        // Open the confirmation modal
+        this.openConfirmationModal(vinsArray);
+    }
 
-            // Clear all VIN sources after successful onboarding
-            this.selectedPendingVehicles = [];
-            this.selectedVinsForSubmission = [];
-            this.vinsBulk = "";
-            this.requestUpdate();
+    private openConfirmationModal(vinsArray: string[]) {
+        const modal = document.createElement('confirm-onboarding-modal-element') as any;
+        modal.show = true;
+        modal.vins = vinsArray;
 
-            // Clear selection and reload pending vehicles component
-            const pendingVehiclesElement = this.querySelector('pending-vehicles-element') as any;
-            if (pendingVehiclesElement) {
-                pendingVehiclesElement.clearSelection();
-                // Reload the pending vehicles list after successful onboarding
-                await pendingVehiclesElement.loadPendingVehicles();
+        // Listen for modal close
+        modal.addEventListener('modal-closed', () => {
+            document.body.removeChild(modal);
+        });
+
+        // Listen for onboarding confirmation
+        modal.addEventListener('onboarding-confirmed', async (event: CustomEvent) => {
+            document.body.removeChild(modal);
+            const vehicles: VehicleWithDefinition[] = event.detail.vehicles;
+            console.log("Confirmed vehicles with definitions:", vehicles);
+            
+            this.processing = true;
+            try {
+                await this.performOnboarding(vehicles);
+
+                // Clear all VIN sources after successful onboarding
+                this.selectedPendingVehicles = [];
+                this.selectedVinsForSubmission = [];
+                this.vinsBulk = "";
+                this.requestUpdate();
+
+                // Clear selection and reload pending vehicles component
+                const pendingVehiclesElement = this.querySelector('pending-vehicles-element') as any;
+                if (pendingVehiclesElement) {
+                    pendingVehiclesElement.clearSelection();
+                    // Reload the pending vehicles list after successful onboarding
+                    await pendingVehiclesElement.loadPendingVehicles();
+                }
+            } catch (e) {
+                this.displayFailure("failed to onboard vins: " + e);
             }
-        } catch (e) {
-            this.displayFailure("failed to onboard vins: " + e);
-        }
 
-        this.processing = false;
+            this.processing = false;
+        });
+
+        // Add to body
+        document.body.appendChild(modal);
     }
 
     private dispatchItemChanged() {
@@ -368,7 +393,7 @@ export class AddVinElement extends BaseOnboardingElement {
     }
 
     // todo i think we pass in an array of SacdInput in here and have something that builds the sacd inputs
-    private async performOnboarding(vinsArray: string[]) {
+    private async performOnboarding(vehicles: VehicleWithDefinition[]) {
         try {
             let sacdInput: SacdInput[] | null;
             if (!this.enableSacd) {
@@ -423,7 +448,7 @@ export class AddVinElement extends BaseOnboardingElement {
             }
             this.settings.saveSharingInfo()
 
-            const status = await this.onboardVINs(vinsArray, sacdInput)
+            const status = await this.onboardVINs(vehicles, sacdInput)
             if (!status) {
                 // Handle failure case if needed
             }
