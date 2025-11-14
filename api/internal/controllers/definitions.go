@@ -19,7 +19,7 @@ func NewDefinitionsController(settings *config.Settings, logger *zerolog.Logger)
 }
 
 func (v *DefinitionsController) DecodeVIN(c *fiber.Ctx) error {
-	targetURL := v.settings.DefinitionAPIURL.JoinPath("/v1/device-definitions/decode-vin")
-	
+	targetURL := v.settings.DefinitionAPIURL.JoinPath("/device-definitions/decode-vin")
+
 	return ProxyRequest(c, targetURL, c.Body(), v.logger)
 }
