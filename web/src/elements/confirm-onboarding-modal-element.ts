@@ -10,6 +10,23 @@ interface DecodeVinResponse {
     newTransactionHash: string;
 }
 
+interface Manufacturer {
+    tokenId: number;
+    name: string;
+}
+
+interface DeviceDefinition {
+    model: string;
+    year: number;
+    manufacturer: Manufacturer;
+}
+
+interface DefinitionResponse {
+    data: {
+        deviceDefinition: DeviceDefinition;
+    };
+}
+
 @customElement('confirm-onboarding-modal-element')
 export class ConfirmOnboardingModalElement extends LitElement {
     @property({attribute: true, type: Boolean})
@@ -27,7 +44,17 @@ export class ConfirmOnboardingModalElement extends LitElement {
     @state()
     private invalidVins: Set<string> = new Set()
 
+    @state()
+    private validatingVins: Set<string> = new Set()
+
+    @state()
+    private validDefinitions: Set<string> = new Set()
+
+    @state()
+    private invalidDefinitions: Set<string> = new Set()
+
     private apiService: ApiService;
+    private validationTimers: Map<string, number> = new Map();
 
     constructor() {
         super();
@@ -108,19 +135,32 @@ export class ConfirmOnboardingModalElement extends LitElement {
                                                     </span>
                                                 ` : nothing}
                                             </div>
-                                            <input 
-                                                type="text" 
-                                                placeholder="make_model_year" 
-                                                .value=${this.vehicleDefinitions.get(vin) || ''}
-                                                @input=${(e: InputEvent) => this.handleDefinitionInput(vin, e)}
-                                                ?disabled=${this.decodingVins.has(vin)}
-                                                class=${this.invalidVins.has(vin) ? 'invalid' : ''}
-                                                required
-                                                style="width: 100%; margin-top: 0.25rem;">
+                                            <div style="position: relative; display: flex; align-items: center; gap: 0.5rem;">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="make_model_year" 
+                                                    .value=${this.vehicleDefinitions.get(vin) || ''}
+                                                    @input=${(e: InputEvent) => this.handleDefinitionInput(vin, e)}
+                                                    ?disabled=${this.decodingVins.has(vin)}
+                                                    class=${this.invalidVins.has(vin) || this.invalidDefinitions.has(vin) ? 'invalid' : ''}
+                                                    required
+                                                    style="width: 100%; margin-top: 0.25rem; flex: 1;">
+                                                ${this.validatingVins.has(vin) ? html`
+                                                    <span class="spinner" style="display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc; border-top-color: #333; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;"></span>
+                                                ` : this.validDefinitions.has(vin) ? html`
+                                                    <span style="color: #16a34a; font-size: 1.25rem; flex-shrink: 0; margin-top: 0.25rem;">✓</span>
+                                                ` : this.invalidDefinitions.has(vin) ? html`
+                                                    <span style="color: #dc2626; font-size: 1.25rem; flex-shrink: 0; margin-top: 0.25rem;">✗</span>
+                                                ` : nothing}
+                                            </div>
                                         </label>
                                         ${this.invalidVins.has(vin) ? html`
                                             <div style="color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem;">
                                                 This field is required
+                                            </div>
+                                        ` : this.invalidDefinitions.has(vin) ? html`
+                                            <div style="color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem;">
+                                                This definition does not exist
                                             </div>
                                         ` : nothing}
                                     </div>
@@ -150,14 +190,71 @@ export class ConfirmOnboardingModalElement extends LitElement {
             this.invalidVins.delete(vin);
         }
         
+        // Clear previous validation states
+        this.validDefinitions.delete(vin);
+        this.invalidDefinitions.delete(vin);
+        
+        // Clear any existing validation timer for this VIN
+        const existingTimer = this.validationTimers.get(vin);
+        if (existingTimer) {
+            clearTimeout(existingTimer);
+        }
+        
+        // If empty, don't validate yet (will be caught by required validation)
+        if (!value.trim()) {
+            this.requestUpdate();
+            return;
+        }
+        
+        // Set up debounced validation (1 second delay)
+        const timerId = setTimeout(() => {
+            this.validateDefinition(vin, value.trim());
+        }, 1000) as unknown as number;
+        
+        this.validationTimers.set(vin, timerId);
         this.requestUpdate();
+    }
+
+    private async validateDefinition(vin: string, definitionId: string) {
+        // Validate the definition exists
+        this.validatingVins.add(vin);
+        this.requestUpdate();
+        
+        try {
+            const response = await this.getDefinitionById(definitionId);
+            
+            if (response.success && response.data?.data?.deviceDefinition?.model) {
+                // Definition is valid
+                this.validDefinitions.add(vin);
+                this.invalidDefinitions.delete(vin);
+            } else {
+                // Definition is invalid
+                this.invalidDefinitions.add(vin);
+                this.validDefinitions.delete(vin);
+            }
+        } catch (error) {
+            console.error(`Error validating definition for VIN ${vin}:`, error);
+            // On error, mark as invalid
+            this.invalidDefinitions.add(vin);
+            this.validDefinitions.delete(vin);
+        } finally {
+            this.validatingVins.delete(vin);
+            this.validationTimers.delete(vin);
+            this.requestUpdate();
+        }
     }
 
     private closeModal() {
         this.show = false;
         
+        // Clear all validation timers
+        this.validationTimers.forEach(timerId => clearTimeout(timerId));
+        this.validationTimers.clear();
+        
         // Clear invalid states when closing
         this.invalidVins.clear();
+        this.validDefinitions.clear();
+        this.invalidDefinitions.clear();
         
         // Dispatch event to parent
         this.dispatchEvent(new CustomEvent('modal-closed', {
@@ -180,6 +277,13 @@ export class ConfirmOnboardingModalElement extends LitElement {
         // If there are invalid fields, show errors and don't submit
         if (newInvalidVins.size > 0) {
             this.invalidVins = newInvalidVins;
+            this.requestUpdate();
+            return;
+        }
+        
+        // Check if any definitions are invalid (don't exist)
+        if (this.invalidDefinitions.size > 0) {
+            // Don't submit if there are invalid definitions
             this.requestUpdate();
             return;
         }
@@ -220,6 +324,8 @@ export class ConfirmOnboardingModalElement extends LitElement {
                 if (response.success && response.data) {
                     // Set the decoded definition
                     this.vehicleDefinitions.set(vin, response.data.deviceDefinitionId);
+                    // Mark as valid since it came from the decode endpoint
+                    this.validDefinitions.add(vin);
                 }
             } catch (error) {
                 console.error(`Error decoding VIN ${vin}:`, error);
@@ -237,6 +343,10 @@ export class ConfirmOnboardingModalElement extends LitElement {
             countryCode: countryCode
         }
         return await this.apiService.callApi<DecodeVinResponse>('POST', '/definitions/decodevin', payload, true, false);
+    }
+
+    private async getDefinitionById(id: string): Promise<ApiResponse<DefinitionResponse>> {
+        return await this.apiService.callApi<DefinitionResponse>('GET', `/identity/definition/${id}`, null, true, false);
     }
 }
 
