@@ -27,6 +27,11 @@ interface VinsMintDataResult {
     vinMintingData: VinMintData[];
 }
 
+export interface VehicleWithDefinition {
+    vin: string;
+    definition: string;
+}
+
 export interface SacdInput {
     grantee: `0x${string}`;
     permissions: BigInt;
@@ -124,9 +129,9 @@ export class BaseOnboardingElement extends LitElement {
         this.onboardResult = newResult
     }
 
-    async verifyVehicles(vins: string[]) {
+    async verifyVehicles(vehicles: VehicleWithDefinition[]) {
         const payload = {
-            vins: vins.map(v => ({vin: v, countryCode: 'USA'}))
+            vins: vehicles.map(v => ({vin: v.vin, countryCode: 'USA', definition: v.definition}))
         }
 
         const submitStatus = await this.api.callApi('POST', '/vehicle/verify', payload, true);
@@ -135,9 +140,10 @@ export class BaseOnboardingElement extends LitElement {
         }
 
         let success = true
+        const vinsList = vehicles.map(v => v.vin);
         for (const attempt of range(10)) {
             success = true
-            const query = qs.stringify({vins: vins.join(',')}, {arrayFormat: 'comma'});
+            const query = qs.stringify({vins: vinsList.join(',')}, {arrayFormat: 'comma'});
             const status = await this.api.callApi<VinsOnboardingResult>('GET', `/vehicle/verify?${query}`, null, true);
 
             if (!status.success || !status.data) {
@@ -165,8 +171,9 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async getMintingData(vins: string[]) {
-        const query = qs.stringify({ vins: vins.join(',')});
+    async getMintingData(vehicles: VehicleWithDefinition[]) {
+        const vinsList = vehicles.map(v => v.vin);
+        const query = qs.stringify({ vins: vinsList.join(',')});
         const mintData = await this.api.callApi<VinsMintDataResult>('GET', `/vehicle/mint?${query}`, null, true);
         if (!mintData.success || !mintData.data) {
             return [];
@@ -241,13 +248,13 @@ export class BaseOnboardingElement extends LitElement {
         return success;
     }
 
-    async onboardVINs(vins: string[], sacd: SacdInput[] | null): Promise<boolean> {
+    async onboardVINs(vehicles: VehicleWithDefinition[], sacd: SacdInput[] | null): Promise<boolean> {
         let allVinsValid = true;
-        for (const vin of vins) {
-            const validVin = vin?.length === 17
+        for (const vehicle of vehicles) {
+            const validVin = vehicle.vin?.length === 17
             allVinsValid = allVinsValid && validVin
             this.onboardResult.push({
-                vin: vin,
+                vin: vehicle.vin,
                 status: "Unknown",
                 details: validVin ? "Valid VIN" : "Invalid VIN"
             })
@@ -258,13 +265,13 @@ export class BaseOnboardingElement extends LitElement {
             return false;
         }
 
-        const verified = await this.verifyVehicles(vins);
+        const verified = await this.verifyVehicles(vehicles);
         if (!verified) {
             this.displayFailure("Failed to verify at least one VIN");
             return false
         }
 
-        const mintData = await this.getMintingData(vins);
+        const mintData = await this.getMintingData(vehicles);
         if (mintData.length === 0) {
             this.displayFailure("Failed to fetch minting data");
             return false
