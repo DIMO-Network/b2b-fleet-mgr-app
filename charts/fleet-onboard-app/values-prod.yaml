@@ -35,6 +35,7 @@ env:
   TURNKEY_ORG_ID: c28319a1-73ec-489a-a212-ec8dbd65dd52
   TURNKEY_API_URL: https://api.turnkey.com
   TURNKEY_RP_ID: dimo.org
+  DEFINITION_API_URL: https://device-definitions-api.dimo.zone
 service:
   type: ClusterIP
   ports:

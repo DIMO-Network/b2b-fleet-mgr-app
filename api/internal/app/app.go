@@ -59,6 +59,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	identityCtrl := controllers.NewIdentityController(settings, logger)
 	settingsCtrl := controllers.NewSettingsController(settings, logger)
 	accountsCtrl := controllers.NewAccountsController(settings, logger)
+	definitionsCtrl := controllers.NewDefinitionsController(settings, logger)
 
 	jwtAuth := jwtware.New(jwtware.Config{
 		JWKSetURLs: []string{settings.JwtKeySetURL.String()},
@@ -68,6 +69,8 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	// these are general to the app, not oracle specific
 	app.Get("/public/settings", settingsCtrl.GetPublicSettings)
 	app.Get("/identity/vehicle/:tokenID", identityCtrl.GetVehicleByTokenID)
+	app.Get("/identity/definition/:id", identityCtrl.GetDefinitionByID)
+	app.Post("/definitions/decodevin", jwtAuth, definitionsCtrl.DecodeVIN)
 
 	// oracle group with route parameter.
 	oracleApp := app.Group("/oracle/:oracleID", jwtAuth, oracleIDMiddleware(knownOracles))
@@ -81,6 +84,8 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Get("/vehicles", vehiclesCtrl.GetVehicles)
 	oracleApp.Get("/vehicle/verify", vehiclesCtrl.GetVehiclesVerificationStatus)
 	oracleApp.Post("/vehicle/verify", vehiclesCtrl.SubmitVehiclesVerification)
+
+	oracleApp.Get("/definitions/top", definitionsCtrl.TopDefinitions)
 
 	// Mint new vehicle
 	oracleApp.Get("/vehicle/mint", vehiclesCtrl.GetVehiclesMintData)

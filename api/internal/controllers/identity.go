@@ -45,3 +45,28 @@ func (i *IdentityController) GetVehicleByTokenID(c *fiber.Ctx) error {
 	c.Set("Content-Type", "application/json")
 	return c.Send(data)
 }
+
+// GetDefinitionByID
+// @Summary Get definition by def id
+// @Description Retrieves definition from the identity API using the mmy id make_model_year
+// @Tags Identity
+// @Produce json
+// @Param id "make_model_year"
+// @Success 200
+// @Router /identity/definition/{id} [get]
+func (i *IdentityController) GetDefinitionByID(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	if id == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "mmy id is required")
+	}
+
+	data, err := i.identityAPI.GetDefinitionByID(id)
+	if err != nil {
+		i.logger.Err(err).Str("definition_id", id).Msg("Failed to get definition ID")
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get definition information")
+	}
+
+	c.Set("Content-Type", "application/json")
+	return c.Send(data)
+}

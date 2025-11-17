@@ -257,6 +257,22 @@ input[type="text"]:disabled:checked {
     border-color: #9ca3af;
 }
 
+/* Invalid input states - reusable for form validation */
+input.invalid,
+textarea.invalid,
+select.invalid {
+    border-color: #dc2626 !important;
+    background-color: #fef2f2;
+}
+
+input.invalid:focus,
+textarea.invalid:focus,
+select.invalid:focus {
+    outline: none;
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
 /* Spinner animation for loading states */
 @keyframes spin {
   0% { transform: rotate(0deg); }
