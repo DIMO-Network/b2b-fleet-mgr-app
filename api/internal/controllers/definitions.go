@@ -23,3 +23,10 @@ func (v *DefinitionsController) DecodeVIN(c *fiber.Ctx) error {
 
 	return ProxyRequest(c, targetURL, c.Body(), v.logger)
 }
+
+func (v *DefinitionsController) TopDefinitions(c *fiber.Ctx) error {
+	u := GetOracleURL(c, v.settings)
+	targetURL := u.JoinPath("/v1/device-definitions/top")
+
+	return ProxyRequest(c, targetURL, nil, v.logger)
+}

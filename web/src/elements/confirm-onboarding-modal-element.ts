@@ -27,6 +27,10 @@ interface DefinitionResponse {
     };
 }
 
+interface TopDefinitionsResponse {
+    definitions: string[];
+}
+
 @customElement('confirm-onboarding-modal-element')
 export class ConfirmOnboardingModalElement extends LitElement {
     @property({attribute: true, type: Boolean})
@@ -53,6 +57,9 @@ export class ConfirmOnboardingModalElement extends LitElement {
     @state()
     private invalidDefinitions: Set<string> = new Set()
 
+    @state()
+    private topDefinitions: string[] = []
+
     private apiService: ApiService;
     private validationTimers: Map<string, number> = new Map();
 
@@ -78,6 +85,7 @@ export class ConfirmOnboardingModalElement extends LitElement {
             this.initializeDefinitions();
         }
         if (changedProperties.has('show') && this.show) {
+            this.loadTopDefinitions();
             this.decodeAllVins();
         }
     }
@@ -139,12 +147,18 @@ export class ConfirmOnboardingModalElement extends LitElement {
                                                 <input 
                                                     type="text" 
                                                     placeholder="make_model_year" 
+                                                    list="definitions-datalist-${vin}"
                                                     .value=${this.vehicleDefinitions.get(vin) || ''}
                                                     @input=${(e: InputEvent) => this.handleDefinitionInput(vin, e)}
                                                     ?disabled=${this.decodingVins.has(vin)}
                                                     class=${this.invalidVins.has(vin) || this.invalidDefinitions.has(vin) ? 'invalid' : ''}
                                                     required
                                                     style="width: 100%; margin-top: 0.25rem; flex: 1;">
+                                                <datalist id="definitions-datalist-${vin}">
+                                                    ${this.topDefinitions.map(def => html`
+                                                        <option value=${def}></option>
+                                                    `)}
+                                                </datalist>
                                                 ${this.validatingVins.has(vin) ? html`
                                                     <span class="spinner" style="display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc; border-top-color: #333; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;"></span>
                                                 ` : this.validDefinitions.has(vin) ? html`
@@ -343,6 +357,18 @@ export class ConfirmOnboardingModalElement extends LitElement {
             countryCode: countryCode
         }
         return await this.apiService.callApi<DecodeVinResponse>('POST', '/definitions/decodevin', payload, true, false);
+    }
+
+    private async loadTopDefinitions() {
+        try {
+            const response = await this.apiService.callApi<TopDefinitionsResponse>('GET', '/definitions/top', null, true, true);
+            
+            if (response.success && response.data?.definitions) {
+                this.topDefinitions = response.data.definitions;
+            }
+        } catch (error) {
+            console.error('Error loading top definitions:', error);
+        }
     }
 
     private async getDefinitionById(id: string): Promise<ApiResponse<DefinitionResponse>> {

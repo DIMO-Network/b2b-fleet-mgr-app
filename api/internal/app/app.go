@@ -85,6 +85,8 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Get("/vehicle/verify", vehiclesCtrl.GetVehiclesVerificationStatus)
 	oracleApp.Post("/vehicle/verify", vehiclesCtrl.SubmitVehiclesVerification)
 
+	oracleApp.Get("/definitions/top", definitionsCtrl.TopDefinitions)
+
 	// Mint new vehicle
 	oracleApp.Get("/vehicle/mint", vehiclesCtrl.GetVehiclesMintData)
 	oracleApp.Get("/vehicle/mint/status", vehiclesCtrl.GetVehiclesMintStatus)
