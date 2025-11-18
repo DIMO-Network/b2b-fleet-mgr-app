@@ -268,8 +268,8 @@ export class TelemetryModalElement extends LitElement {
             if (response.success && response.data) {
                 this.telemetryData = Array.isArray(response.data) ? response.data : [];
                 if (this.telemetryData.length > 0) {
-                const first = this.telemetryData[0];
-                this.updateOdometerDisplay(first);
+                    const first = this.telemetryData[0];
+                    this.updateOdometerDisplay(this.telemetryData);
                     this.updateRpmDisplay(first);
                     this.updateIgnitionDisplay(first);
                     this.updateEngineBlockDisplay(first);
@@ -338,14 +338,44 @@ export class TelemetryModalElement extends LitElement {
         }
     }
 
-    private updateOdometerDisplay(item: TelemetryData | undefined): void {
-        if (!item) {
+    private updateOdometerDisplay(items: TelemetryData[]): void {
+        if (!items || items.length === 0) {
             this.odometerDisplay = "—";
             return;
         }
 
-        const decimal = this.findIoValueDecimal(item, 645);
-        this.odometerDisplay = decimal !== null ? String(decimal) : "—";
+        // Filter out error values between 4261412864 and 4294967295
+        const MIN_ERROR_VALUE = 4261412864;
+        const MAX_ERROR_VALUE = 4294967295;
+
+        for (const item of items) {
+            // Check both IO 645 and IO 114 for odometer value
+            const value645 = this.findIoValueDecimal(item, 645);
+            const value114 = this.findIoValueDecimal(item, 114);
+            
+            // Helper function to check if value is valid
+            const isValidValue = (val: number | null): boolean => {
+                if (val === null) return false;
+                if (val === 0) return false;
+                if (val >= MIN_ERROR_VALUE && val <= MAX_ERROR_VALUE) return false;
+                return true;
+            };
+            
+            // Use value from IO 645 if valid
+            if (isValidValue(value645)) {
+                this.odometerDisplay = String(value645);
+                return;
+            }
+            
+            // Otherwise use value from IO 114 if valid
+            if (isValidValue(value114)) {
+                this.odometerDisplay = String(value114);
+                return;
+            }
+        }
+
+        // No valid value found in any record
+        this.odometerDisplay = "—";
     }
 
     private hexStringToDecimal(value: string): number | null {
