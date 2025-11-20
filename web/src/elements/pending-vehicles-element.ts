@@ -9,6 +9,11 @@ interface PendingVehicle {
     firstSeen: string;
 }
 
+interface PendingVehiclesResponse {
+    vehicles: PendingVehicle[];
+    totalCount: number;
+}
+
 @customElement('pending-vehicles-element')
 export class PendingVehiclesElement extends LitElement {
     static properties = {
@@ -79,7 +84,7 @@ export class PendingVehiclesElement extends LitElement {
 		const search = this.searchTerm?.trim();
 		const url = `/pending-vehicles?skip=${skip}&take=${take}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
         
-        const response = await this.apiService.callApi<PendingVehicle[]>(
+        const response = await this.apiService.callApi<PendingVehiclesResponse>(
             'GET',
             url,
             null,
@@ -90,16 +95,8 @@ export class PendingVehiclesElement extends LitElement {
         this.loading = false;
 
         if (response.success && response.data) {
-            this.items = response.data;
-            // Note: You may need to update this based on your API response structure
-            // If the API returns total count, use it: this.totalItems = response.totalCount;
-            // For now, we'll estimate based on current page and items
-            if (response.data.length < this.pageSize) {
-                this.totalItems = skip + response.data.length;
-            } else {
-                // If we got a full page, there might be more items
-                this.totalItems = skip + response.data.length + 1; // +1 to indicate there might be more
-            }
+            this.items = response.data.vehicles;
+            this.totalItems = response.data.totalCount;
             this.shouldShowPagination = this.totalItems > this.pageSize;
         } else {
             this.alertText = response.error || "Failed to load pending vehicles";
