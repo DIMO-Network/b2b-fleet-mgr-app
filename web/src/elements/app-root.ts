@@ -3,11 +3,6 @@ import {customElement, state} from 'lit/decorators.js';
 import { provide } from '@lit/context';
 import { apiServiceContext } from '../context';
 import {ApiService} from "@services/api-service.ts";
-import {Vehicle} from "@datatypes/vehicle.ts";
-
-interface VehiclesResponse {
-    vehicles: Vehicle[];
-}
 
 const ORACLE_STORAGE_KEY = "oracle"
 
@@ -17,9 +12,6 @@ export class AppRoot extends LitElement {
     apiService = ApiService.getInstance(); // app-level singleton
 
     @state()
-    private vehicles: Vehicle[]
-
-    @state()
     private oracle: string;
 
     @state()
@@ -27,7 +19,6 @@ export class AppRoot extends LitElement {
 
     constructor() {
         super();
-        this.vehicles = []
         this.oracle = this.loadOracle("kaufmann")
     }
 
@@ -55,8 +46,8 @@ export class AppRoot extends LitElement {
             
             ${this.hasOracleAccess ? html`
                 <!-- Show these elements only if user has access to the selected oracle -->
-                <add-vin-element @item-changed=${this.getUserVehicles}></add-vin-element>
-                <vehicle-list-element .items=${this.vehicles} @item-changed=${this.getUserVehicles}></vehicle-list-element>
+                <add-vin-element @item-changed=${this.handleItemChanged}></add-vin-element>
+                <vehicle-list-element @item-changed=${this.handleItemChanged}></vehicle-list-element>
             ` : html`
                 <!-- Show access denied notice if user doesn't have access -->
                 <div class="access-denied-notice">
@@ -80,10 +71,7 @@ export class AppRoot extends LitElement {
         this.saveOracle(selectedValue)
 
         if (access) {
-            await this.getUserVehicles()
-        } else {
-            // Clear vehicles if no access
-            this.vehicles = [];
+            await this.reloadVehicleList();
         }
     }
 
@@ -91,17 +79,19 @@ export class AppRoot extends LitElement {
         super.connectedCallback();
         const access = await this.apiService.setOracle(this.oracle);
         this.hasOracleAccess = access;
+    }
 
-        if (access) {
-            await this.getUserVehicles()
+    private async reloadVehicleList() {
+        // Reload the vehicle list by calling the vehicle-list-element's load method
+        const vehicleListElement = this.querySelector('vehicle-list-element') as any;
+        if (vehicleListElement && vehicleListElement.loadVehicles) {
+            await vehicleListElement.loadVehicles();
         }
     }
 
-    async getUserVehicles() {
-        const url = "/vehicles";
-        const userVehiclesResponse = await this.apiService.callApi<VehiclesResponse>('GET', url, null, true);
-        console.debug('user vehicles', userVehiclesResponse)
-        this.vehicles = userVehiclesResponse.data?.vehicles?.sort((a, b) => a.tokenId - b.tokenId) || [];
+    private async handleItemChanged() {
+        // When items are added/changed, reload the vehicle list
+        await this.reloadVehicleList();
     }
 
     private saveOracle(oracle: string) {
