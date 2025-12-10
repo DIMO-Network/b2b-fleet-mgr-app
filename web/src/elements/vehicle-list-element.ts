@@ -1,8 +1,9 @@
-import {html, LitElement} from 'lit'
+import {css, html, LitElement} from 'lit'
 import {repeat} from 'lit/directives/repeat.js';
 import {customElement, property, state} from "lit/decorators.js";
 import {Vehicle} from "@datatypes//vehicle.ts";
 import {ApiService} from "@services/api-service.ts";
+import {globalStyles} from "../global-styles.ts";
 
 interface VehiclesResponse {
     vehicles: Vehicle[];
@@ -11,6 +12,9 @@ interface VehiclesResponse {
 
 @customElement('vehicle-list-element')
 export class VehicleListElement extends LitElement {
+    static styles = [ globalStyles,
+        css`` ]
+
     static properties = {
         items: {type: Array},
         alertText: {type: String},

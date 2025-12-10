@@ -1,9 +1,10 @@
-import {html, nothing} from 'lit'
+import {css, html, nothing} from 'lit'
 import {customElement, property, state} from "lit/decorators.js";
 import {Vehicle} from "@datatypes//vehicle.ts";
 
 import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
 import {delay} from "@utils/utils.ts";
+import {globalStyles} from "../global-styles.ts";
 
 enum ConnectionStatus {
     UNKNOWN,
@@ -27,6 +28,9 @@ const ConnectionStatusMap:  Record<ConnectionStatus, string> = {
 
 @customElement('vehicle-list-item-element')
 export class VehicleListItemElement extends BaseOnboardingElement {
+    static styles = [ globalStyles,
+        css`` ]
+
     @property({attribute: true})
     public item?: Vehicle
 

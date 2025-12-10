@@ -1,9 +1,12 @@
 import { LitElement, css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import {globalStyles} from "../global-styles.ts";
 
 @customElement('vehicles-fleets-view')
 export class VehiclesFleetsView extends LitElement {
-  static styles = css``;
+  static styles = [ globalStyles,
+    css`` ]
+
   render() {
     return html`
         <div class="page" id="page-vehicles">

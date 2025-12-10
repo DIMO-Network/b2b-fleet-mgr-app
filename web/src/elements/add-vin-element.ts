@@ -1,4 +1,4 @@
-import {html, nothing} from 'lit'
+import {css, html, nothing} from 'lit'
 import {SettingsService} from "@services/settings-service";
 import {customElement, property, state} from "lit/decorators.js";
 import {repeat} from "lit/directives/repeat.js";
@@ -8,6 +8,7 @@ import {range} from "lodash";
 import {BaseOnboardingElement, SacdInput, VehicleWithDefinition} from "@elements/base-onboarding-element.ts";
 import {delay} from "@utils/utils.ts";
 import {ApiService} from "@services/api-service.ts";
+import {globalStyles} from "../global-styles.ts";
 
 
 enum Permission {
@@ -66,6 +67,9 @@ const defaultPermissions = {
 
 @customElement('add-vin-element')
 export class AddVinElement extends BaseOnboardingElement {
+    static styles = [ globalStyles,
+        css`` ]
+
     @property({attribute: false})
     private vinsBulk: string | null;
 

@@ -1,9 +1,10 @@
-import { LitElement, html } from 'lit';
+import {LitElement, html, css} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 import { provide } from '@lit/context';
 import { apiServiceContext } from '../context';
 import {ApiService} from "@services/api-service.ts";
 import { Router } from '@lit-labs/router';
+import {globalStyles} from "../global-styles.ts";
 
 const ORACLE_STORAGE_KEY = "oracle"
 
@@ -12,6 +13,8 @@ export class AppRootV2 extends LitElement {
     private router: Router;
     private boundOnHashChange = () => this.onHashChange();
 
+    static styles = [ globalStyles,
+        css`` ]
 
     @provide({ context: apiServiceContext })
     apiService = ApiService.getInstance(); // app-level singleton
@@ -33,12 +36,6 @@ export class AppRootV2 extends LitElement {
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
             { path: '/onboarding', render: () => html`<onboarding-view></onboarding-view>` },
         ]);
-    }
-
-    // enable inherit css
-    createRenderRoot() {
-        // there is another function to do this.
-        return this;
     }
 
     async connectedCallback() {
