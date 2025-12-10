@@ -7,9 +7,30 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
 )
+
+type GenericProxyController struct {
+	settings *config.Settings
+	logger   *zerolog.Logger
+}
+
+func NewGenericProxyController(settings *config.Settings, logger *zerolog.Logger) *GenericProxyController {
+	return &GenericProxyController{settings: settings, logger: logger}
+}
+
+// Proxy forwards a request to the oracle API, assuming the path matches the oracle path with a prepended /v1
+// it also copies the query string from the original request. Automatically determines http verb
+func (gp *GenericProxyController) Proxy(c *fiber.Ctx) error {
+	u := GetOracleURL(c, gp.settings)
+
+	targetURL := u.JoinPath("/v1").JoinPath(string(c.Request().URI().Path()))
+	targetURL.RawQuery = string(c.Request().URI().QueryString())
+
+	return ProxyRequest(c, targetURL, nil, gp.logger)
+}
 
 // ProxyRequest forwards a request to the target URL and returns the response. uses the method from the original request
 // It handles both GET and POST requests based on whether requestBody is provided

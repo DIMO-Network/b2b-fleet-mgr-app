@@ -60,6 +60,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	settingsCtrl := controllers.NewSettingsController(settings, logger)
 	accountsCtrl := controllers.NewAccountsController(settings, logger)
 	definitionsCtrl := controllers.NewDefinitionsController(settings, logger)
+	genericProxyCtrl := controllers.NewGenericProxyController(settings, logger)
 
 	jwtAuth := jwtware.New(jwtware.Config{
 		JWKSetURLs: []string{settings.JwtKeySetURL.String()},
@@ -121,6 +122,10 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	// settings the app needs to operate, pulled from config / env vars
 	oracleApp.Get("/settings", settingsCtrl.GetSettings) // todo some of these are oracle specific
+
+	oracleApp.Get("/tenants", genericProxyCtrl.Proxy)
+	oracleApp.Get("/tenant/settings", genericProxyCtrl.Proxy)
+	oracleApp.Post("/tenant/settings", genericProxyCtrl.Proxy)
 
 	return app
 }
