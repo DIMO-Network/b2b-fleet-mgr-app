@@ -57,6 +57,10 @@ export const globalStyles = css`
         border-left: 3px solid transparent;
         transition: background 0.1s;
     }
+    
+    .nav-item a {
+        color: #fff;
+    }
 
     .nav-item:hover {
         background: #222;
