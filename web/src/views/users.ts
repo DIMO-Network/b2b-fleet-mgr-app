@@ -140,3 +140,9 @@ export class UsersView extends LitElement {
     `;
   }
 }
+// doesn't seem to do much
+declare global {
+  interface HTMLElementTagNameMap {
+    'users-view': UsersView;
+  }
+}

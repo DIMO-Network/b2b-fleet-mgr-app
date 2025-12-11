@@ -95,7 +95,7 @@ export class AppRootV2 extends LitElement {
                     <div class="sidebar-header">
                         <img src="/assets/kaufmann-logo.svg" alt="Kaufmann" class="logo" />
                     </div>
-                    <nav class="sidebar-nav">
+                    <nav class="sidebar-nav" @click=${this.onSidebarClick}>
                         <div class="nav-item active" data-page="home">
                             <a data-page="home" href="#/">Home</a>
                         </div>
@@ -155,6 +155,23 @@ export class AppRootV2 extends LitElement {
             
             
     `;
+    }
+
+    private onSidebarClick = async (e: MouseEvent) => {
+        // Delegate anchor clicks to ensure hash navigation triggers our router.
+        const target = e.target as HTMLElement | null;
+        const anchor = target?.closest?.('a[href^="#"]') as HTMLAnchorElement | null;
+        if (!anchor) return;
+        // Prevent the browser default and set the hash ourselves to guarantee a hashchange.
+        e.preventDefault();
+        const hash = anchor.getAttribute('href') || '#/';
+        const path = hash.startsWith('#') ? hash.slice(1) : hash;
+        if (location.hash !== `#${path}`) {
+            location.hash = path;
+        } else {
+            // If same hash, manually invoke router to refresh view if needed.
+            await this.router.goto(path || '/');
+        }
     }
 
     private async handleOracleChange(e: CustomEvent) {
