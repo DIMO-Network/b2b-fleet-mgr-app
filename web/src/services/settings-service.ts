@@ -3,8 +3,9 @@ import {ApiService} from "@services/api-service.ts";
 export interface PublicSettings {
     "clientId": `0x${string}`,
     "loginUrl": string
-    "oracles": Oracle[]
+    "oracles": Oracle[] // future: this should be moved to it's own thing and own backend endpoint
 }
+
 
 export interface Oracle {
     oracleId: string,
@@ -53,6 +54,7 @@ export class SettingsService {
     privateSettings?: PrivateSettings;
     accountInfo?: AccountInfo;
     sharingInfo?: SharingInfo;
+    // Tenant/oracle state is now managed by OracleTenantService
 
     private apiService = ApiService.getInstance();
 

@@ -48,7 +48,7 @@ func (s *Settings) GetOracles() []Oracle {
 			URL:      s.StaexOracleAPIURL,
 		},
 		{
-			Name:           "Kaufmann",
+			Name:           "Ruptela",
 			OracleID:       "kaufmann",
 			URL:            s.KaufmannOracleAPIURL,
 			UsePendingMode: true,

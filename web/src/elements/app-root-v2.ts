@@ -5,8 +5,7 @@ import { apiServiceContext } from '../context';
 import {ApiService} from "@services/api-service.ts";
 import { Router } from '@lit-labs/router';
 import {globalStyles} from "../global-styles.ts";
-
-const ORACLE_STORAGE_KEY = "oracle"
+import {OracleTenantService} from "@services/oracle-tenant-service.ts";
 
 @customElement('app-root-v2')
 export class AppRootV2 extends LitElement {
@@ -14,20 +13,58 @@ export class AppRootV2 extends LitElement {
     private boundOnHashChange = () => this.onHashChange();
 
     static styles = [ globalStyles,
-        css`` ]
+        css`
+            .sidebar-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+
+            .switch-tenant-btn {
+                white-space: normal; /* allow breaking at space to fit nicely */
+                text-align: center;
+                line-height: 1.1;
+            }
+
+            .header-right {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            /* Stack email and wallet vertically while keeping Logout button to the right */
+            .user-block {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                line-height: 1.2;
+            }
+
+            .user-info {
+                display: block;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 360px; /* fallback clamp; can be adjusted or removed if global styles set width */
+            }
+
+            .user-wallet.clickable {
+                cursor: pointer;
+            }
+        ` ]
 
     @provide({ context: apiServiceContext })
     apiService = ApiService.getInstance(); // app-level singleton
 
-    @state()
-    private oracle: string;
+    private oracleTenantService = OracleTenantService.getInstance();
 
     @state()
     private hasOracleAccess: boolean = true;
 
     constructor() {
         super();
-        this.oracle = this.loadOracle("kaufmann")
+
 
         this.router = new Router(this, [
             // Handle direct loads to the html entry file (e.g., /app-v2.html)
@@ -37,6 +74,7 @@ export class AppRootV2 extends LitElement {
             { path: '/users', render: () => html`<users-view></users-view>` },
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
             { path: '/onboarding', render: () => html`<onboarding-view></onboarding-view>` },
+            { path: '/tenant-selector', render: () => html`<tenant-selector-view></tenant-selector-view>` },
         ]);
     }
 
@@ -51,7 +89,8 @@ export class AppRootV2 extends LitElement {
         }
         await this.onHashChange();
 
-        this.hasOracleAccess = await this.apiService.setOracle(this.oracle);
+        // Ensure oracle in global state and verify access
+        this.hasOracleAccess = await this.oracleTenantService.verifyOracleAccess();
     }
 
     disconnectedCallback(): void {
@@ -85,15 +124,59 @@ export class AppRootV2 extends LitElement {
         await this.router.goto(path);
     }
 
+    private truncateWalletToEmail(wallet: string, email: string): string {
+        if (!wallet) return '';
+        if (!email) return wallet; // nothing to match against
+
+        const targetLen = email.length;
+        if (wallet.length <= targetLen) return wallet;
+
+        // Middle ellipsis to fit within targetLen
+        // keep at least 6 chars on each side when possible
+        const ellipsis = '…';
+        const available = Math.max(0, targetLen - ellipsis.length);
+        const left = Math.max(6, Math.floor(available / 2));
+        const right = Math.max(6, available - left);
+        if (left + right <= 0) return ellipsis;
+        const start = wallet.slice(0, left);
+        const end = wallet.slice(-right);
+        return `${start}${ellipsis}${end}`;
+    }
+
+    private async copyWalletToClipboard(address: string) {
+        if (!address) return;
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(address);
+            } else {
+                // Fallback for older browsers
+                const ta = document.createElement('textarea');
+                ta.value = address;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+            // Optional: simple feedback
+            console.debug('Wallet address copied to clipboard');
+        } catch (e) {
+            console.error('Failed to copy wallet address', e);
+        }
+    }
+
     render() {
         const userEmail = localStorage.getItem("email") || "";
         const userWalletAddress = this.apiService.getWalletAddress() || "";
+        const walletDisplay = this.truncateWalletToEmail(userWalletAddress, userEmail);
         return html`
             <div class="app-container">
                 <!-- Sidebar -->
                 <aside class="sidebar">
-                    <div class="sidebar-header">
+                    <div class="sidebar-header" @click=${this.onSidebarClick}>
                         <img src="/assets/kaufmann-logo.svg" alt="Kaufmann" class="logo" />
+                        <a class="btn btn-sm switch-tenant-btn" href="#/tenant-selector">Switch Tenant</a>
                     </div>
                     <nav class="sidebar-nav" @click=${this.onSidebarClick}>
                         <div class="nav-item active" data-page="home">
@@ -122,8 +205,14 @@ export class AppRootV2 extends LitElement {
                     <header class="top-header">
                         <div class="header-title" id="page-title">Home</div>
                         <div class="header-right">
-                            <span class="user-info">${userEmail}</span>
-                            <span class="user-info">${userWalletAddress}</span>
+                            <div class="user-block">
+                                <span class="user-info user-email" title="${userEmail}">${userEmail}</span>
+                                <span
+                                  class="user-info user-wallet clickable"
+                                  title="${userWalletAddress} (click to copy)"
+                                  @click=${() => this.copyWalletToClipboard(userWalletAddress)}
+                                >${walletDisplay}</span>
+                            </div>
                             <button class="btn btn-sm" @click=${this.handleLogout}>LOGOUT</button>
                         </div>
                     </header>
@@ -131,22 +220,19 @@ export class AppRootV2 extends LitElement {
                     <!-- Content Area -->
                     <div class="content">
                         <div class="content-inner">
-                            <!-- todo: move oracle selector and tenant selector to own screen -->
-                            <oracle-selector .selectedOption=${this.oracle} @option-changed=${this.handleOracleChange}></oracle-selector>
-
-                            ${this.hasOracleAccess ? html`
-                                ${this.router.outlet()}
+                            ${!this.hasOracleAccess ? html`
+                                <!-- Show access denied notice if user doesn't have access -->
+                                <div class="access-denied-notice">
+                                    <div class="icon">🚫</div>
+                                    <h3>Access Denied</h3>
+                                    <p>
+                                        You do not have access to the selected oracle. Please pick a different Oracle.
+                                    </p>
+                                </div>
                          ` : html`
-                             <!-- Show access denied notice if user doesn't have access -->
-                             <div class="access-denied-notice">
-                                 <div class="icon">🚫</div>
-                                 <h3>Access Denied</h3>
-                                 <p>
-                                     You do not have access to the selected oracle. Please contact your administrator or select a different oracle.
-                                 </p>
-                             </div>
-                         `}
-                            
+                                <span></span>
+                         `} 
+                         ${this.router.outlet()}
                         </div>
                     </div>
                     
@@ -174,37 +260,7 @@ export class AppRootV2 extends LitElement {
         }
     }
 
-    private async handleOracleChange(e: CustomEvent) {
-        // Access the selected value from the event detail
-        const selectedValue = e.detail.value;
-        console.log('Oracle changed to:', selectedValue);
-
-        const access = await this.apiService.setOracle(selectedValue);
-        this.hasOracleAccess = access;
-        this.saveOracle(selectedValue)
-
-        if (access) {
-            await this.reloadVehicleList();
-        }
-    }
-
-    private async reloadVehicleList() {
-        // Reload the vehicle list by calling the vehicle-list-element's load method
-        const vehicleListElement = this.querySelector('vehicle-list-element') as any;
-        if (vehicleListElement && vehicleListElement.loadVehicles) {
-            await vehicleListElement.loadVehicles();
-        }
-    }
-
-    private saveOracle(oracle: string) {
-        localStorage.setItem(ORACLE_STORAGE_KEY, oracle)
-    }
-
-    private loadOracle(defaultOracle: string) {
-        const oracle = localStorage.getItem(ORACLE_STORAGE_KEY)
-        return oracle === null ? defaultOracle : oracle;
-    }
-
+    // Oracle persistence is handled by OracleTenantService
 
     private handleLogout() {
         const keysToRemove = ['token', 'email', 'appSettings', 'accountInfo', 'signerPublicKey', 'signerApiKey'];

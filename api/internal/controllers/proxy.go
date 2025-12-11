@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/DIMO-Network/b2b-fleet-mgr-app/internal/config"
 	"github.com/gofiber/fiber/v2"
@@ -26,7 +27,16 @@ func NewGenericProxyController(settings *config.Settings, logger *zerolog.Logger
 func (gp *GenericProxyController) Proxy(c *fiber.Ctx) error {
 	u := GetOracleURL(c, gp.settings)
 
-	targetURL := u.JoinPath("/v1").JoinPath(string(c.Request().URI().Path()))
+	fullPath := string(c.Request().URI().Path())
+	// Remove leading oracle/{name} segment; examples:
+	stripped := stripOraclePrefix(fullPath)
+
+	// Build target URL: base + /v1 + stripped path (if not root)
+	targetURL := u.JoinPath("/v1")
+	seg := strings.TrimPrefix(stripped, "/")
+	if seg != "" {
+		targetURL = targetURL.JoinPath(seg)
+	}
 	targetURL.RawQuery = string(c.Request().URI().QueryString())
 
 	return ProxyRequest(c, targetURL, nil, gp.logger)

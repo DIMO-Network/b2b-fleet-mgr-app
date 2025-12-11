@@ -1,15 +1,18 @@
 import {isLocalhost} from "@utils/utils.ts";
 import { ApiResponse } from '@datatypes/api-response.ts';
+import {OracleTenantService} from "@services/oracle-tenant-service.ts";
 
 
 export class ApiService {
     private static instance: ApiService;
     private readonly baseUrl: string;
     private static readonly DEFAULT_LOCAL_DEV_URL = "https://localdev.dimo.org:3007";
-    public oracle: string = "motorq"; // default
+    private oracleTenantService : OracleTenantService | undefined;
 
     private constructor() {
         this.baseUrl = this.getBaseUrl();
+        // can't initialize oracleTenantService here, because it depends on ourselves and would cause a circular dependency
+        // ideal solution is to refactor the code to avoid circular dependencies
     }
 
     public static getInstance(): ApiService {
@@ -23,10 +26,14 @@ export class ApiService {
         return isLocalhost() ? ApiService.DEFAULT_LOCAL_DEV_URL : "";
     }
 
-    private constructUrl(endpoint: string, oracle: boolean): string {
+    private constructUrl(endpoint: string, useOracle: boolean): string {
         let base = this.baseUrl;
-        if (oracle) {
-            base = `${base}/oracle/${this.oracle}`;
+        if (useOracle) {
+            if (this.oracleTenantService === undefined) {
+                this.oracleTenantService = OracleTenantService.getInstance();
+            }
+            const currentOracle = this.oracleTenantService.getOracle();
+            base = `${base}/oracle/${currentOracle}`;
         }
         return endpoint.startsWith('/') ? `${base}${endpoint}` : endpoint;
     }
@@ -35,6 +42,14 @@ export class ApiService {
         if (!auth) return {};
         const token = localStorage.getItem('token');
         return token ? {"Authorization": `Bearer ${token}`} : {};
+    }
+
+    private getTenantIdHeader(): Record<string, string> {
+        if (this.oracleTenantService === undefined) {
+            this.oracleTenantService = OracleTenantService.getInstance();
+        }
+        const tenant = this.oracleTenantService.getSelectedTenant();
+        return tenant?.id ? {"Tenant-Id": tenant.id} : {};
     }
 
     private async processResponse(response: Response): Promise<any> {
@@ -93,6 +108,7 @@ export class ApiService {
             "Accept": "application/json",
             "Content-Type": "application/json",
             ...this.getAuthorizationHeader(auth),
+            ...this.getTenantIdHeader(),
         };
 
         const finalUrl = this.constructUrl(endpoint, oracle);
@@ -122,12 +138,5 @@ export class ApiService {
                 error: error.message || "An unexpected error occurred",
             };
         }
-    }
-
-    // sets the oracle at the API service level for future calls and checks if we have access
-    async setOracle(selectedValue: string): Promise<boolean> {
-        this.oracle = selectedValue;
-        const resp = await this.callApi("GET", "/permissions", null, true)
-        return resp.success;
     }
 }

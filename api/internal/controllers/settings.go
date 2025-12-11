@@ -7,8 +7,8 @@ import (
 )
 
 type SettingsController struct {
-	settings *config.Settings
-	logger   *zerolog.Logger
+    settings *config.Settings
+    logger   *zerolog.Logger
 }
 
 func NewSettingsController(settings *config.Settings, logger *zerolog.Logger) *SettingsController {
@@ -43,13 +43,18 @@ func (v *SettingsController) GetSettings(c *fiber.Ctx) error {
 }
 
 func (v *SettingsController) GetPublicSettings(c *fiber.Ctx) error {
-	payload := PublicSettingsResponse{
-		ClientID: v.settings.ClientID, // this is not the oracle's client ID but the frontend web app client id
-		LoginURL: v.settings.LoginURL.String(),
-		Oracles:  v.settings.GetOracles(),
-	}
+    payload := PublicSettingsResponse{
+        ClientID: v.settings.ClientID, // this is not the oracle's client ID but the frontend web app client id
+        LoginURL: v.settings.LoginURL.String(),
+        Oracles:  v.settings.GetOracles(),
+    }
 
-	return c.JSON(payload)
+    return c.JSON(payload)
+}
+
+// GetOracles returns only the public list of oracles
+func (v *SettingsController) GetOracles(c *fiber.Ctx) error {
+    return c.JSON(v.settings.GetOracles())
 }
 
 type SettingsResponse struct {
