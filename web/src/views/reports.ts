@@ -10,7 +10,7 @@ export class ReportsView extends LitElement {
   render() {
     return html`
         <!-- REPORTS PAGE -->
-        <div class="page" id="page-reports">
+        <div class="page active" id="page-reports">
 
             <!-- EXISTING REPORTS SECTION -->
             <div class="section-header">Existing Reports</div>

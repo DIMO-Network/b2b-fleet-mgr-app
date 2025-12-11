@@ -9,7 +9,7 @@ export class VehiclesFleetsView extends LitElement {
 
   render() {
     return html`
-        <div class="page" id="page-vehicles">
+        <div class="page active" id="page-vehicles">
             <div class="inner-tabs">
                 <div class="inner-tab active" data-subtab="vehicles-list">Vehicles</div>
                 <div class="inner-tab" data-subtab="fleet-groups">Fleet Groups</div>

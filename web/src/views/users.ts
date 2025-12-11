@@ -10,7 +10,7 @@ export class UsersView extends LitElement {
   render() {
     return html`
         <!-- USERS PAGE -->
-        <div class="page" id="page-users">
+        <div class="page active" id="page-users">
             <div class="section-header">User Lookup</div>
 
             <!-- Search Section -->
