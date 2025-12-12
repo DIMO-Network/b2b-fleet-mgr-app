@@ -45,7 +45,7 @@ export class UsersView extends LitElement {
                 </div>
 
                 <!-- User Found State (hidden by default) -->
-                <div id="user-found" style="display: none;">
+                <div id="user-found">
                     <!-- User Profile Header -->
                     <div class="panel mb-16">
                         <div class="panel-header">User Profile</div>

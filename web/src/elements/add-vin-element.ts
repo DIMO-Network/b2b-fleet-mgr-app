@@ -54,7 +54,7 @@ const sacdPermissionValue = (sacdPerms: Permissions): bigint => {
 
 const defaultPermissions = {
     [Permission.NONLOCATION_TELEMETRY]: true,
-    [Permission.COMMANDS]: false,
+    [Permission.COMMANDS]: true,
     [Permission.CURRENT_LOCATION]: true,
     [Permission.ALLTIME_LOCATION]: true,
     [Permission.CREDENTIALS]: true,

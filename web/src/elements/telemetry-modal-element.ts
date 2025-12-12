@@ -157,7 +157,7 @@ export class TelemetryModalElement extends LitElement {
                         `}
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn-secondary" @click=${this.closeModal}>
+                        <button type="button" class="action-btn secondary" @click=${this.closeModal}>
                             Close
                         </button>
                     </div>

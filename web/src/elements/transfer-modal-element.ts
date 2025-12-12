@@ -186,7 +186,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn-secondary" @click=${this.closeModal}>
+                            <button type="button" class="action-btn secondary" @click=${this.closeModal}>
                                 Cancel
                             </button>
                         </div>
