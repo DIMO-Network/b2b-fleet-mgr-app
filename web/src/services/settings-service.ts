@@ -96,7 +96,7 @@ export class SettingsService {
     async fetchAccountInfo(email: string) {
         const apiUrl = this.privateSettings?.accountsApiUrl;
         const url = `${apiUrl}/api/account/${email}`;
-        const response = await this.apiService.callApi<AccountInfo>("GET", url, null, false);
+        const response = await this.apiService.callApi<AccountInfo>("GET", url, null, false, true, false);
 
         if (response.success) {
             this.accountInfo = response.data!;

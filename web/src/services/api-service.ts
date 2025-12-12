@@ -44,7 +44,8 @@ export class ApiService {
         return token ? {"Authorization": `Bearer ${token}`} : {};
     }
 
-    private getTenantIdHeader(): Record<string, string> {
+    private getTenantIdHeader(enable: boolean): Record<string, string> {
+        if (!enable) return {};
         if (this.oracleTenantService === undefined) {
             this.oracleTenantService = OracleTenantService.getInstance();
         }
@@ -100,7 +101,8 @@ export class ApiService {
         endpoint: string,
         requestBody: Record<string, any> | null = null,
         auth: boolean = false,
-        oracle: boolean = true
+        useOracle: boolean = true,
+        includeTenantId: boolean = true
     ): Promise<ApiResponse<T>> {
         const body = requestBody ? JSON.stringify(requestBody) : null;
 
@@ -108,10 +110,10 @@ export class ApiService {
             "Accept": "application/json",
             "Content-Type": "application/json",
             ...this.getAuthorizationHeader(auth),
-            ...this.getTenantIdHeader(),
+            ...this.getTenantIdHeader(includeTenantId),
         };
 
-        const finalUrl = this.constructUrl(endpoint, oracle);
+        const finalUrl = this.constructUrl(endpoint, useOracle);
 
         try {
             const response = await fetch(finalUrl, {method, headers, body});
