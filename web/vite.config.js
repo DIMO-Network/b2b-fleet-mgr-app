@@ -22,10 +22,9 @@ export default defineConfig({
     build: {
         chunkSizeWarningLimit: 1000,
         rollupOptions: {
-            // Define multiple entry points
+            // Define app entry points (only main is used now)
             input: {
-                main: resolve(__dirname, 'index.html'),
-                app: resolve(__dirname, 'app.html')
+                main: resolve(__dirname, 'index.html')
             }
         }
     },

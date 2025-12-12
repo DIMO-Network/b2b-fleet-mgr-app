@@ -26,6 +26,7 @@
     "paths": {
       "@context/*": ["./context/*"],
       "@elements/*": ["./elements/*"],
+      "@views/*": ["./views/*"],
       "@services/*": ["./services/*"],
       "@styles/*": ["./styles/*"],
       "@utils/*": ["./utils/*"],
