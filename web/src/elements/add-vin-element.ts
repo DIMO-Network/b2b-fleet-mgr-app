@@ -7,8 +7,8 @@ import './confirm-onboarding-modal-element';
 import {range} from "lodash";
 import {BaseOnboardingElement, SacdInput, VehicleWithDefinition} from "@elements/base-onboarding-element.ts";
 import {delay} from "@utils/utils.ts";
-import {ApiService} from "@services/api-service.ts";
 import {globalStyles} from "../global-styles.ts";
+import {OracleTenantService} from "@services/oracle-tenant-service.ts";
 
 
 enum Permission {
@@ -108,7 +108,7 @@ export class AddVinElement extends BaseOnboardingElement {
 	@state() private useBelow: boolean = false;
 
     private settings: SettingsService;
-    private apiService: ApiService;
+    private oracleTenantService: OracleTenantService;
 
 
     constructor() {
@@ -116,7 +116,7 @@ export class AddVinElement extends BaseOnboardingElement {
         this.vinsBulk = "";
         this.email = localStorage.getItem("email");
         this.settings = SettingsService.getInstance();
-        this.apiService = ApiService.getInstance();
+        this.oracleTenantService = OracleTenantService.getInstance();
         this.alertText = "";
 
         this.enableSacd = false;
@@ -217,7 +217,8 @@ export class AddVinElement extends BaseOnboardingElement {
             <pending-vehicles-element 
                 @selection-changed=${this.handlePendingVehiclesSelection}>
             </pending-vehicles-element>
-            <div ?hidden=${this.settings.publicSettings?.oracles.find(oracle => oracle.oracleId === this.apiService.oracle)?.usePendingMode}>
+            // todo need to add something that just has the oracles object array, and also that just returns the oracle object
+            <div ?hidden=${this.oracleTenantService.getOracle()?.usePendingMode}>
                 <form class="grid">
                     <label>Bulk Upload VINs (newline separated)
                         <textarea class="" style="display: block; height: 10em; width: 100%" placeholder="VIN1\nVIN2\nVIN3" @input="${(e: InputEvent) => this.vinsBulk = (e.target as HTMLInputElement).value}"></textarea>

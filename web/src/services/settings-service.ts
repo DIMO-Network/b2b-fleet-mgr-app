@@ -3,14 +3,6 @@ import {ApiService} from "@services/api-service.ts";
 export interface PublicSettings {
     "clientId": `0x${string}`,
     "loginUrl": string
-    "oracles": Oracle[] // future: this should be moved to it's own thing and own backend endpoint
-}
-
-
-export interface Oracle {
-    oracleId: string,
-    name: string,
-    usePendingMode: boolean,
 }
 
 export interface PrivateSettings {

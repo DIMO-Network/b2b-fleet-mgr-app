@@ -33,7 +33,10 @@ export class ApiService {
                 this.oracleTenantService = OracleTenantService.getInstance();
             }
             const currentOracle = this.oracleTenantService.getOracle();
-            base = `${base}/oracle/${currentOracle}`;
+            const oracleId = currentOracle?.oracleId;
+            if (oracleId) {
+                base = `${base}/oracle/${oracleId}`;
+            }
         }
         return endpoint.startsWith('/') ? `${base}${endpoint}` : endpoint;
     }

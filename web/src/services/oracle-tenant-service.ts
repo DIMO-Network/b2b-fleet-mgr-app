@@ -21,7 +21,8 @@ export class OracleTenantService {
 
   private api: ApiService;
 
-  private currentOracle?: string;
+  private currentOracle?: Oracle;
+  private oracles: Oracle[] = [];
   private tenants: Tenant[] = [];
   private selectedTenant?: Tenant;
 
@@ -29,13 +30,14 @@ export class OracleTenantService {
     this.api = ApiService.getInstance();
 
     this.currentOracle = this.loadOracle() ?? undefined;
+    // If no oracle stored, fetch list and default to first
     if (this.currentOracle === undefined) {
       this.fetchOracles().then(oracles => {
         if (oracles != null && oracles.length > 0) {
-          const defaultOracle = oracles[0]
-          this.setOracle(defaultOracle.oracleId)
+          const defaultOracle = oracles[0];
+          this.setOracle(defaultOracle);
         }
-      })
+      }).catch(() => void 0);
     }
     this.tenants = this.loadTenants() ?? [];
     this.selectedTenant = this.loadSelectedTenant();
@@ -49,21 +51,53 @@ export class OracleTenantService {
   }
 
   // ORACLE
-  getOracle(): string | undefined {
+  getOracle(): Oracle | undefined {
     return this.currentOracle;
   }
 
-  setOracle(value: string): void {
+  // Set the current oracle by full object
+  setOracle(value: Oracle): void {
     this.currentOracle = value;
     this.saveOracle(value);
   }
 
-  private saveOracle(value: string) {
-    localStorage.setItem(ORACLE_STORAGE_KEY, value);
+  // Convenience: set by id (commonly used by UI components)
+  setOracleById(oracleId: string): void {
+    if (!oracleId) return;
+    const found = this.oracles.find(o => o.oracleId === oracleId);
+    if (found) {
+      this.setOracle(found);
+    } else {
+      // If not in memory, at least persist minimal object; name/usePendingMode unknown
+      this.setOracle({ oracleId, name: oracleId, usePendingMode: false });
+    }
   }
 
-  private loadOracle(): string | null {
-    return localStorage.getItem(ORACLE_STORAGE_KEY);
+  private saveOracle(value: Oracle) {
+    localStorage.setItem(ORACLE_STORAGE_KEY, JSON.stringify(value));
+  }
+
+  private loadOracle(): Oracle | undefined {
+    const raw = localStorage.getItem(ORACLE_STORAGE_KEY);
+    if (!raw) return undefined;
+    try {
+      // Handle legacy string storage (only oracleId)
+      if (!raw.startsWith('{')) {
+        const legacyId = raw;
+        const migrated: Oracle = { oracleId: legacyId, name: legacyId, usePendingMode: false };
+        // Persist migrated object
+        this.saveOracle(migrated);
+        return migrated;
+      }
+      const parsed = JSON.parse(raw);
+      // Basic shape validation
+      if (parsed && typeof parsed.oracleId === 'string') {
+        return parsed as Oracle;
+      }
+    } catch {
+      // ignore and fall through
+    }
+    return undefined;
   }
 
   // TENANTS LIST
@@ -120,7 +154,9 @@ export class OracleTenantService {
       false
     );
     if (resp.success) {
-      return resp.data ?? [];
+      const list = (resp.data ?? []) as Oracle[];
+      this.oracles = list;
+      return list;
     }
     return null;
   }

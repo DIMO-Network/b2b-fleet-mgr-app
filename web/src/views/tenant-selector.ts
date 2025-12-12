@@ -1,7 +1,7 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import {globalStyles} from "../global-styles.ts";
-import type {Tenant} from "@services/oracle-tenant-service.ts";
+import type {Tenant, Oracle} from "@services/oracle-tenant-service.ts";
 import {OracleTenantService} from "@services/oracle-tenant-service.ts";
 
 @customElement('tenant-selector-view')
@@ -45,7 +45,7 @@ export class TenantSelectorView extends LitElement {
     ` ]
 
     @state()
-    private oracle: string | undefined;
+    private oracleId: string | undefined;
     @state()
     private tenants: Tenant[] = [];
     @state()
@@ -55,18 +55,20 @@ export class TenantSelectorView extends LitElement {
 
   constructor() {
     super();
-      this.oracle = this.oracleTenantService.getOracle();
+      this.oracleId = this.oracleTenantService.getOracle()?.oracleId;
   }
 
     async connectedCallback() {
         super.connectedCallback();
-        let selectedOracle = this.oracleTenantService.getOracle();
-        if (selectedOracle === undefined || selectedOracle === '') {
-            const allOracles = this.oracleTenantService.fetchOracles();
-            selectedOracle = Array.isArray(allOracles) ? allOracles[0] : '';
-            this.oracleTenantService.setOracle(selectedOracle ?? '');
+        let selectedOracle: Oracle | undefined = this.oracleTenantService.getOracle();
+        if (!selectedOracle) {
+            const allOracles = await this.oracleTenantService.fetchOracles();
+            if (allOracles && allOracles.length > 0) {
+                selectedOracle = allOracles[0];
+                this.oracleTenantService.setOracle(selectedOracle);
+            }
         }
-        this.oracle = selectedOracle;
+        this.oracleId = selectedOracle?.oracleId;
 
         const selected = this.oracleTenantService.getSelectedTenant();
         this.selectedTenantId = selected?.id ?? null;
@@ -78,10 +80,10 @@ export class TenantSelectorView extends LitElement {
     private async handleOracleChange(e: CustomEvent) {
         // Access the selected value from the event detail
         const selectedValue = e.detail.value;
-        this.oracle = selectedValue;
+        this.oracleId = selectedValue;
         console.log('Oracle changed to:', selectedValue);
 
-        this.oracleTenantService.setOracle(selectedValue);
+        this.oracleTenantService.setOracleById(selectedValue);
         const access = await this.oracleTenantService.verifyOracleAccess();
 
         if (access) {
@@ -97,7 +99,7 @@ export class TenantSelectorView extends LitElement {
     return html`
         <div class="page active" id="page-tenant-selector">
             <div class="section-header">Pick your Oracle</div>
-            <oracle-selector .selectedOption=${this.oracle} @option-changed=${this.handleOracleChange}></oracle-selector>
+            <oracle-selector .selectedOption=${this.oracleId} @option-changed=${this.handleOracleChange}></oracle-selector>
 
             <div class="section-header" style="margin-top: 2em">Tenant Selector</div>
             ${this.tenants.length === 0 ? html`
