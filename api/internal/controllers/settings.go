@@ -52,6 +52,11 @@ func (v *SettingsController) GetPublicSettings(c *fiber.Ctx) error {
 	return c.JSON(payload)
 }
 
+// GetOracles returns only the public list of oracles
+func (v *SettingsController) GetOracles(c *fiber.Ctx) error {
+	return c.JSON(v.settings.GetOracles())
+}
+
 type SettingsResponse struct {
 	AccountsAPIURL string `json:"accountsApiUrl"`
 	PaymasterURL   string `json:"paymasterUrl"`

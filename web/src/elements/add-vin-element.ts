@@ -1,4 +1,4 @@
-import {html, nothing} from 'lit'
+import {css, html, nothing} from 'lit'
 import {SettingsService} from "@services/settings-service";
 import {customElement, property, state} from "lit/decorators.js";
 import {repeat} from "lit/directives/repeat.js";
@@ -7,7 +7,7 @@ import './confirm-onboarding-modal-element';
 import {range} from "lodash";
 import {BaseOnboardingElement, SacdInput, VehicleWithDefinition} from "@elements/base-onboarding-element.ts";
 import {delay} from "@utils/utils.ts";
-import {ApiService} from "@services/api-service.ts";
+import {globalStyles} from "../global-styles.ts";
 
 
 enum Permission {
@@ -66,6 +66,9 @@ const defaultPermissions = {
 
 @customElement('add-vin-element')
 export class AddVinElement extends BaseOnboardingElement {
+    static styles = [ globalStyles,
+        css`` ]
+
     @property({attribute: false})
     private vinsBulk: string | null;
 
@@ -104,15 +107,12 @@ export class AddVinElement extends BaseOnboardingElement {
 	@state() private useBelow: boolean = false;
 
     private settings: SettingsService;
-    private apiService: ApiService;
-
 
     constructor() {
         super();
         this.vinsBulk = "";
         this.email = localStorage.getItem("email");
         this.settings = SettingsService.getInstance();
-        this.apiService = ApiService.getInstance();
         this.alertText = "";
 
         this.enableSacd = false;
@@ -213,99 +213,94 @@ export class AddVinElement extends BaseOnboardingElement {
             <pending-vehicles-element 
                 @selection-changed=${this.handlePendingVehiclesSelection}>
             </pending-vehicles-element>
-            <div ?hidden=${this.settings.publicSettings?.oracles.find(oracle => oracle.oracleId === this.apiService.oracle)?.usePendingMode}>
-                <form class="grid">
-                    <label>Bulk Upload VINs (newline separated)
-                        <textarea class="" style="display: block; height: 10em; width: 100%" placeholder="VIN1\nVIN2\nVIN3" @input="${(e: InputEvent) => this.vinsBulk = (e.target as HTMLInputElement).value}"></textarea>
+
+            <div class="onboard-section">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 8px;">
+                    <label>
+                        <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}> Share vehicles with Developer
                     </label>
-                </form>
-            </div>
-            <hr />
-            <form class="grid" style="display: flex; align-items: center; gap: 1rem;">
-                <label>
-                    <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}> Share vehicles with Developer
-                </label>
-            </form>
-            <div ?hidden=${!this.enableSacd}>
-                <form>
-                    <div>
-					<fieldset>
-						${repeat(this.availableGrantees, (g) => g.value, (g) => html`
+                </div>
+                <div style="margin-bottom: 8px;" ?hidden=${!this.enableSacd}>
+                    <form>
+                        <div>
+                            <fieldset>
+                                ${repeat(this.availableGrantees, (g) => g.value, (g) => html`
 						<label style="margin-bottom: 0.5rem">
 							<input type="checkbox" .checked=${this.selectedGrantees.includes(g.value)} @click=${() => this.handleGranteeToggle(g.value)}> ${g.label} : ${g.value}
 						</label>
 						`)}
-					</fieldset>
-                    </div>
-                    <div>
-					<fieldset>
-						<label>
-							<input type="checkbox" .checked=${this.useBelow} @click=${this.toggleUseBelow}> Use below:
-						</label>
-					</fieldset>
-                    </div>
-                    <div class="grid">
-                    <fieldset>
-                        <label>Developer License 0x Client ID
-							<input type="text" placeholder="0x" maxlength="42"
-								   value=${this.sacdGrantee} @input="${(e: InputEvent) => this.sacdGrantee = (e.target as HTMLInputElement).value}" ?disabled=${!this.useBelow}>
-                        </label>
-                    </fieldset>
+                            </fieldset>
+                        </div>
+                        <div>
+                            <fieldset>
+                                <label>
+                                    <input type="checkbox" .checked=${this.useBelow} @click=${this.toggleUseBelow}> Use below:
+                                </label>
+                            </fieldset>
+                        </div>
+                        <div class="grid">
+                            <fieldset>
+                                <label>Developer License 0x Client ID
+                                    <input type="text" placeholder="0x" maxlength="42"
+                                           value=${this.sacdGrantee} @input="${(e: InputEvent) => this.sacdGrantee = (e.target as HTMLInputElement).value}" ?disabled=${!this.useBelow}>
+                                </label>
+                            </fieldset>
 
-                    <fieldset>
-                        ${repeat(range(1, Permission.MAX), (item) => item, (item) => html`
+                            <fieldset>
+                                ${repeat(range(1, Permission.MAX), (item) => item, (item) => html`
                         <label>
                             <input type="checkbox" .checked="${this.sacdPermissions?.[item as Permission]}" @click=${() => this.togglePermission(item)}> ${PERMISSIONS_MAP[item]}
                         </label>
                     `)}
-                    </fieldset>
-                    </div>
-                </form>
-            </div>
-            
-            <div>
-                <div class="grid">
-                    <label>
-                        <input type="checkbox" .checked="${this.otpLogin}" @click="${this.toggleOtpLogin}" /> Use OTP
-                    </label>
+                            </fieldset>
+                        </div>
+                    </form>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <label><input type="checkbox" .checked="${this.otpLogin}" @click="${this.toggleOtpLogin}" /> Use OTP</label>
                     ${ this.otpLogin ? html`
-                        <button @click=${() => this.initOtpLogin()} ?disabled=${this.processing} class=${this.processing ? 'processing' : ''} >
+                        <button class=${this.processing ? 'processing action-btn' : 'action-btn'} @click=${() => this.initOtpLogin()} ?disabled=${this.processing} >
                             Sign In
-                        </button>` : nothing } 
+                        </button>` : nothing }
+                </div>
+                <div>
+                    <form class="grid">
+                        <button type="button" @click=${this._submitVINs} ?disabled=${(this.otpLogin && !this.otpLoggedIn) || this.processing} class=${this.processing ? 'processing action-btn' : 'action-btn'} >
+                            Onboard Vehicles
+                        </button>
+                    </form>
                 </div>
             </div>
-            
-            
-            <div>
-                <form class="grid">
-                    <button type="button" @click=${this._submitVINs} ?disabled=${(this.otpLogin && !this.otpLoggedIn) || this.processing} class=${this.processing ? 'processing' : ''} >
-                        Onboard Vehicles
-                    </button>
-                </form>
-            </div>
-            
-            <div class="alert alert-success" ?hidden=${this.processingMessage === "" || this.alertText.length > 0}>
-                ${this.processingMessage}
-            </div>
-            
-            <session-timer .expirationTime=${this.signingService.getSession()?.session.expiresAt}></session-timer>
-            
-            <div class="grid" ?hidden=${this.onboardResult.length === 0}>
-                <table style="font-size: 80%">
-                    <tr>
-                        <th>#</th>
-                        <th>Result</th>
-                        <th>VIN</th>
-                        <th>Details</th>
-                    </tr>
-                    ${repeat(this.onboardResult, (item) => item.vin, (item, index) => html`
+            <div class="onboard-section">
+                <div class="onboard-header">ONBOARD RESULT</div>
+                <div class="panel-body" style="border: 1px solid #ccc; border-top: none;">
+                    <div class="alert alert-success" ?hidden=${this.processingMessage === "" || this.alertText.length > 0}>
+                        ${this.processingMessage}
+                    </div>
+                    <session-timer style="margin-bottom: 12px;" .expirationTime=${this.signingService.getSession()?.session.expiresAt}></session-timer>
+                    <table style="width: max();">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Result</th>
+                            <th>VIN</th>
+                            <th>Details</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ?hidden=${this.onboardResult.length > 0}>
+                            <td colspan="4" style="text-align: center; color: #666; padding: 24px;">No vehicles pending onboard</td>
+                        </tr>
+                        ${repeat(this.onboardResult, (item) => item.vin, (item, index) => html`
                     <tr>
                         <td>${index + 1}</td>
                         <td>${item.status}</td>
                         <td>${item.vin}</td>
                         <td>${item.details}</td>
                     </tr>`)}
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
     }

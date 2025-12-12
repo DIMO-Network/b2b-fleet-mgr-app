@@ -36,7 +36,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "https://localdev.dimo.org:3008", // localhost development
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, Tenant-Id",
 		AllowCredentials: true,
 	}))
 
@@ -60,6 +60,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	settingsCtrl := controllers.NewSettingsController(settings, logger)
 	accountsCtrl := controllers.NewAccountsController(settings, logger)
 	definitionsCtrl := controllers.NewDefinitionsController(settings, logger)
+	genericProxyCtrl := controllers.NewGenericProxyController(settings, logger)
 
 	jwtAuth := jwtware.New(jwtware.Config{
 		JWKSetURLs: []string{settings.JwtKeySetURL.String()},
@@ -68,6 +69,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	// these are general to the app, not oracle specific
 	app.Get("/public/settings", settingsCtrl.GetPublicSettings)
+	app.Get("/public/oracles", settingsCtrl.GetOracles)
 	app.Get("/identity/vehicle/:tokenID", identityCtrl.GetVehicleByTokenID)
 	app.Get("/identity/definition/:id", identityCtrl.GetDefinitionByID)
 	app.Post("/definitions/decodevin", jwtAuth, definitionsCtrl.DecodeVIN)
@@ -121,6 +123,10 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	// settings the app needs to operate, pulled from config / env vars
 	oracleApp.Get("/settings", settingsCtrl.GetSettings) // todo some of these are oracle specific
+
+	oracleApp.Get("/tenants", genericProxyCtrl.Proxy)
+	oracleApp.Get("/tenant/settings", genericProxyCtrl.Proxy)
+	oracleApp.Post("/tenant/settings", genericProxyCtrl.Proxy)
 
 	return app
 }

@@ -202,7 +202,7 @@ export class TransferModalElement extends BaseOnboardingElement {
     private async lookupAccount(walletAddress: string) {
         this.isCheckingAccount = true;
         const query = `?walletAddress=${encodeURIComponent(walletAddress)}`;
-        const resp = await this.api.callApi<any>('GET', `/account${query}`, null, true);
+        const resp = await this.api.callApi<any>('GET', `/account${query}`, null, true, true, false);
         // If request failed or no body, show helper text
         if (!resp.success || !resp.data) {
             this.accountNotFound = true;
@@ -269,7 +269,7 @@ export class TransferModalElement extends BaseOnboardingElement {
             email: email,
             deployAccount: true
         }
-        const creatResp = await this.api.callApi<AccountData>('POST', '/account', payload, true);
+        const creatResp = await this.api.callApi<AccountData>('POST', '/account', payload, true, true, false);
         if (!creatResp.success || !creatResp.data) {
             return {
                 success: false,

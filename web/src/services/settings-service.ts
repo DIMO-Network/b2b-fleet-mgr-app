@@ -3,13 +3,6 @@ import {ApiService} from "@services/api-service.ts";
 export interface PublicSettings {
     "clientId": `0x${string}`,
     "loginUrl": string
-    "oracles": Oracle[]
-}
-
-export interface Oracle {
-    oracleId: string,
-    name: string,
-    usePendingMode: boolean,
 }
 
 export interface PrivateSettings {
@@ -53,6 +46,7 @@ export class SettingsService {
     privateSettings?: PrivateSettings;
     accountInfo?: AccountInfo;
     sharingInfo?: SharingInfo;
+    // Tenant/oracle state is now managed by OracleTenantService
 
     private apiService = ApiService.getInstance();
 
@@ -94,7 +88,7 @@ export class SettingsService {
     async fetchAccountInfo(email: string) {
         const apiUrl = this.privateSettings?.accountsApiUrl;
         const url = `${apiUrl}/api/account/${email}`;
-        const response = await this.apiService.callApi<AccountInfo>("GET", url, null, false);
+        const response = await this.apiService.callApi<AccountInfo>("GET", url, null, false, true, false);
 
         if (response.success) {
             this.accountInfo = response.data!;

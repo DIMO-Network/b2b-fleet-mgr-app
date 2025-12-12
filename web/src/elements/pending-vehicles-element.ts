@@ -1,7 +1,8 @@
-import {html, LitElement} from 'lit'
+import {css, html, LitElement} from 'lit'
 import {repeat} from 'lit/directives/repeat.js';
 import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
+import {globalStyles} from "../global-styles.ts";
 
 interface PendingVehicle {
     vin: string;
@@ -16,6 +17,9 @@ interface PendingVehiclesResponse {
 
 @customElement('pending-vehicles-element')
 export class PendingVehiclesElement extends LitElement {
+    static styles = [ globalStyles,
+        css`` ]
+
     static properties = {
         items: {type: Array},
         alertText: {type: String},
@@ -138,91 +142,69 @@ export class PendingVehiclesElement extends LitElement {
 
 		render() {
         return html`
-				<div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;">
-					<h2 style="margin: 0;">Pending to Onboard Vehicles</h2>
-					<input type="text"
-						placeholder="Search by IMEI or VIN"
-						style="width: 40%; min-width: 200px;"
-						.value=${this.searchTerm}
-						@input=${this.onSearchInput}>
-				</div>
-            <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
-                ${this.alertText}
-            </div>
-            ${this.loading ? html`<div>Loading...</div>` : html`
-                <table style="font-size: 80%">
-                    <thead>
-                    <tr>
-                        <th>
-                            <input type="checkbox" 
-                                   .checked=${(() => {
-                                       const validVehicles = this.items.filter(vehicle => vehicle.vin && vehicle.vin.trim() !== '');
-                                       return validVehicles.length > 0 && validVehicles.every(vehicle => this.selectedPendingVehicles.has(vehicle.vin));
-                                   })()}
-                                   @change=${this.toggleAllPendingVehicles}>
-                            Select
-                        </th>
-                        <th>VIN</th>
-                        <th>IMEI</th>
-                        <th>First Seen</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    ${repeat(this.items, (item) => item.vin, (item) => html`
+            <div class="onboard-section">
+                <div class="onboard-header">PENDING TO ONBOARD VEHICLES</div>
+                <div class="onboard-toolbar">
+                    <input type="text"
+                       placeholder="Search by IMEI or VIN"
+                       style="width: 40%; min-width: 200px;"
+                       .value=${this.searchTerm}
+                       @input=${this.onSearchInput}>
+                </div>
+                <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
+                    ${this.alertText}
+                </div>
+                <div class="table-container" style="border-top: none;" ?hidden="${this.loading}" >
+                    <table>
+                        <thead>
+                        <tr>
+                            <th style="width: 30px;"><input type="checkbox"
+                                                            .checked=${(() => {
+                                                                const validVehicles = this.items.filter(vehicle => vehicle.vin && vehicle.vin.trim() !== '');
+                                                                return validVehicles.length > 0 && validVehicles.every(vehicle => this.selectedPendingVehicles.has(vehicle.vin));
+                                                            })()}
+                                                            @change=${this.toggleAllPendingVehicles}>
+                            </th>
+                            <th>VIN</th>
+                            <th>IMEI</th>
+                            <th>First Seen</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        ${repeat(this.items, (item) => item.vin, (item) => html`
                         <tr>
                             <td>
                                 <input type="checkbox" 
                                        .checked=${this.selectedPendingVehicles.has(item.vin)}
                                        ?disabled=${!item.vin || item.vin.trim() === ''}
                                        @click=${(e: Event) => {
-                                           e.stopPropagation();
-                                           if (item.vin && item.vin.trim() !== '') {
-                                               this.togglePendingVehicle(item.vin);
-                                           }
-                                       }}>
+                            e.stopPropagation();
+                            if (item.vin && item.vin.trim() !== '') {
+                                this.togglePendingVehicle(item.vin);
+                            }
+                        }}>
                             </td>
                             <td>${item.vin || 'N/A'}</td>
                             <td>${item.imei}</td>
                             <td>${item.firstSeen}</td>
                             <td>
-                                <button @click=${() => this.openTelemetryModal(item.imei, item.vin)} style="margin-left: 0.5rem;">
-                                    Telemetry
+                                <button class="action-btn" @click=${() => this.openTelemetryModal(item.imei, item.vin)} style="margin-left: 0.5rem;">
+                                    TELEMETRY
                                 </button>
                             </td>
                         </tr>
                     `)}
-                    </tbody>
-                </table>
-
-                <!-- Pagination Controls -->
-                <div ?hidden=${!this.shouldShowPagination}>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding: 0.5rem;">
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button 
-                            @click=${this.previousPage} 
-                            ?disabled=${!this.hasPreviousPage}
-                            style="padding: 0.25rem 0.5rem; font-size: 0.875rem;"
-                        >
-                            Previous
-                        </button>
-                        <span style="font-size: 0.875rem;">
-                            Page ${this.currentPage} of ${this.totalPages}
-                        </span>
-                        <button 
-                            @click=${this.nextPage} 
-                            ?disabled=${!this.hasNextPage}
-                            style="padding: 0.25rem 0.5rem; font-size: 0.875rem;"
-                        >
-                            Next
-                        </button>
-                    </div>
-                    <div style="font-size: 0.875rem; color: #666;">
-                        Showing ${this.items.length} of ${this.totalItems} items
-                    </div>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
-            `}
+                <div class="pagination" ?hidden=${!this.shouldShowPagination}>
+                    <button class="pagination-btn" @click=${this.previousPage} ?disabled=${!this.hasPreviousPage}>PREVIOUS</button>
+                    <span>Page ${this.currentPage} of ${this.totalPages}</span>
+                    <button class="pagination-btn" @click=${this.nextPage} ?disabled=${!this.hasNextPage}>NEXT</button>
+                    <span style="margin-left: auto; color: #666;">Showing ${this.items.length} of ${this.totalItems} items</span>
+                </div>
+            </div>
         `
     }
 

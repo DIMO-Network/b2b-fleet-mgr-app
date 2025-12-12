@@ -471,3 +471,507 @@ select.invalid:focus {
     text-align: center;
     align-content: center;
 }
+
+/* ========================================
+   V2 DESIGN STYLES (Kaufmann Dashboard)
+   ======================================== */
+
+/* Reset for V2 */
+.v2-root * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.v2-root {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 17px;
+    background: #fff;
+    color: #000;
+    line-height: 1.4;
+}
+
+/* Layout Structure */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 200px;
+    background: #000;
+    color: #fff;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border-bottom: 1px solid #333;
+    background: #fff;
+}
+
+.sidebar-header .logo {
+    max-height: 40px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 16px 0;
+}
+
+.nav-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.1s;
+}
+
+.nav-item:hover {
+    background: #222;
+}
+
+.nav-item.active {
+    background: #222;
+    border-left-color: #fff;
+}
+
+.nav-divider {
+    height: 1px;
+    background: #333;
+    margin: 8px 16px;
+}
+
+/* Main Content Area */
+.main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Top Header */
+.top-header {
+    height: 64px;
+    background: #fff;
+    border-bottom: 1px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+}
+
+.header-title {
+    font-size: 19px;
+    font-weight: bold;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-info {
+    font-size: 13px;
+}
+
+/* Content Area */
+.content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    background: #fafafa;
+}
+
+.content-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Tiles / Cards */
+.tiles-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.tile {
+    background: #fff;
+    border: 1px solid #000;
+    padding: 16px;
+    min-height: 100px;
+}
+
+.tile-label {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.tile-value {
+    font-size: 34px;
+    font-weight: bold;
+}
+
+.tile-subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.tile-clickable {
+    cursor: pointer;
+}
+
+.tile-clickable:hover {
+    background: #f5f5f5;
+}
+
+/* Section Headers */
+.section-header {
+    font-size: 17px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ccc;
+}
+
+/* Tables - V2 Style */
+.v2-root table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    font-size: 16px;
+}
+
+.v2-root th,
+.v2-root td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.v2-root th {
+    background: #f0f0f0;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+.v2-root tr:hover {
+    background: #fafafa;
+}
+
+.table-container {
+    background: #fff;
+    border: 1px solid #000;
+    overflow-x: auto;
+}
+
+.table-container table {
+    border: none;
+}
+
+.table-container th:first-child,
+.table-container td:first-child {
+    border-left: none;
+}
+
+.table-container th:last-child,
+.table-container td:last-child {
+    border-right: none;
+}
+
+.table-container tr:first-child th {
+    border-top: none;
+}
+
+.table-container tr:last-child td {
+    border-bottom: none;
+}
+
+/* Buttons - V2 Style */
+.v2-root .btn {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    padding: 8px 14px;
+    border: 1px solid #000;
+    background: #fff;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.v2-root .btn:hover {
+    background: #f0f0f0;
+}
+
+.v2-root .btn-primary {
+    background: #000;
+    color: #fff;
+}
+
+.v2-root .btn-primary:hover {
+    background: #333;
+}
+
+.v2-root .btn-danger {
+    background: #c00;
+    color: #fff;
+    border-color: #c00;
+}
+
+.v2-root .btn-danger:hover {
+    background: #900;
+}
+
+.v2-root .btn-sm {
+    padding: 5px 10px;
+    font-size: 13px;
+}
+
+.v2-root .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Forms - V2 Style */
+.v2-root input,
+.v2-root select,
+.v2-root textarea {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    padding: 8px 10px;
+    border: 1px solid #000;
+    background: #fff;
+}
+
+.v2-root input:focus,
+.v2-root select:focus,
+.v2-root textarea:focus {
+    outline: 2px solid #000;
+    outline-offset: -2px;
+}
+
+.v2-root input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+/* Status Indicators */
+.status {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-connected {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-offline {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-never {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.status-inventory {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-customer {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-blocked {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-unblocked {
+    background: #d4edda;
+    color: #155724;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 12px;
+    background: #e9ecef;
+    border: 1px solid #ccc;
+    margin-right: 4px;
+    margin-bottom: 4px;
+}
+
+/* Search/Filter Bar */
+.toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    width: 250px;
+}
+
+/* Panels */
+.panel {
+    background: #fff;
+    border: 1px solid #000;
+    margin-bottom: 16px;
+}
+
+.panel-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid #ccc;
+    font-weight: bold;
+    font-size: 14px;
+    background: #f8f8f8;
+}
+
+.panel-body {
+    padding: 16px;
+}
+
+/* Vehicle Detail Specific */
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.detail-row {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    padding: 6px 0;
+}
+
+.detail-label {
+    width: 160px;
+    font-size: 13px;
+    text-transform: uppercase;
+    color: #666;
+    flex-shrink: 0;
+}
+
+.detail-value {
+    flex: 1;
+}
+
+/* Link styling */
+.link {
+    color: #0066cc;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.link:hover {
+    color: #004499;
+}
+
+/* Inner Tabs */
+.inner-tabs {
+    display: flex;
+    border-bottom: 1px solid #000;
+    margin-bottom: 16px;
+}
+
+.inner-tab {
+    padding: 8px 16px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    margin-bottom: -1px;
+    background: #f0f0f0;
+}
+
+.inner-tab:hover {
+    background: #e0e0e0;
+}
+
+.inner-tab.active {
+    background: #fff;
+    border-color: #000;
+}
+
+/* Utility Classes */
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.mb-16 {
+    margin-bottom: 16px;
+}
+
+.mb-24 {
+    margin-bottom: 24px;
+}
+
+.mt-16 {
+    margin-top: 16px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .tiles-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .tiles-grid {
+        grid-template-columns: 1fr;
+    }
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,6 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import {Oracle, SettingsService} from "@services/settings-service.ts";
+import type { Oracle } from "@services/oracle-tenant-service.ts";
+import { OracleTenantService } from "@services/oracle-tenant-service.ts";
 import {repeat} from "lit/directives/repeat.js";
 
 @customElement('oracle-selector')
@@ -11,7 +12,7 @@ export class OracleSelector extends LitElement {
     @property()
     options: Oracle[] = []
 
-    private settings: SettingsService;
+    private oracleTenantService = OracleTenantService.getInstance();
 
     // Disable shadow DOM to allow inherit css
     createRenderRoot() {
@@ -21,17 +22,21 @@ export class OracleSelector extends LitElement {
 
     constructor() {
         super();
-        this.selectedOption = "";
-        this.settings = SettingsService.getInstance()
+        this.selectedOption = this.oracleTenantService.getOracle()?.oracleId ?? "";
     }
 
     async connectedCallback() {
         super.connectedCallback();
 
         try {
-            const settings = await this.settings.fetchPublicSettings();
-            this.options = settings?.oracles || [];
-            
+            const list = await this.oracleTenantService.fetchOracles();
+            this.options = Array.isArray(list) ? list : [];
+
+            // Ensure selectedOption is in sync if not set
+            if (!this.selectedOption && this.options.length > 0) {
+                this.selectedOption = this.options[0].oracleId;
+            }
+
             // Dispatch event when options are loaded
             this.dispatchEvent(new CustomEvent('options-loaded', {
                 detail: { options: this.options },
