@@ -62,6 +62,9 @@ export class AppRootV2 extends LitElement {
     @state()
     private hasOracleAccess: boolean = true;
 
+    @state()
+    private currentPath: string = '/';
+
     constructor() {
         super();
 
@@ -121,7 +124,23 @@ export class AppRootV2 extends LitElement {
         const path = location.hash?.slice(1) || '/';
         // Debug aid
         // console.debug('[app-root-v2] onHashChange ->', path);
+        this.currentPath = path;
         await this.router.goto(path);
+    }
+
+    private isActive(targetPath: string): boolean {
+        return this.currentPath === targetPath;
+    }
+
+    private getPageTitle(): string {
+        const path = this.currentPath || '/';
+        if (path === '/') return 'Home';
+        if (path.startsWith('/onboarding')) return 'Onboarding';
+        if (path.startsWith('/vehicles-fleets')) return 'Vehicles & Fleets';
+        if (path.startsWith('/reports')) return 'Reports';
+        if (path.startsWith('/users')) return 'Users';
+        if (path.startsWith('/tenant-selector')) return 'Tenant Selector';
+        return 'Home';
     }
 
     private truncateWalletToEmail(wallet: string, email: string): string {
@@ -179,22 +198,23 @@ export class AppRootV2 extends LitElement {
                         <a class="btn btn-sm switch-tenant-btn" href="#/tenant-selector">Switch Tenant</a>
                     </div>
                     <nav class="sidebar-nav" @click=${this.onSidebarClick}>
-                        <div class="nav-item active" data-page="home">
-                            <a data-page="home" href="#/">Home</a>
+                        <div class="nav-item ${this.isActive('/') ? 'active' : ''}" data-page="home">
+                            <a data-page="home" href="#/" aria-current="${this.isActive('/') ? 'page' : 'false'}">Home</a>
                         </div>
-                        <div class="nav-item">
-                            <a data-page="vehicles" href="#/vehicles-fleets">Vehicles & Fleets</a>
+                        <div class="nav-item ${this.isActive('/onboarding') ? 'active' : ''}">
+                            <a data-page="onboarding" href="#/onboarding" aria-current="${this.isActive('/onboarding') ? 'page' : 'false'}">Onboarding</a>
                         </div>
-                        <div class="nav-item">
-                            <a data-page="users" href="#/users">Users</a>
+                        <div class="nav-item ${this.isActive('/vehicles-fleets') ? 'active' : ''}">
+                            <a data-page="vehicles" href="#/vehicles-fleets" aria-current="${this.isActive('/vehicles-fleets') ? 'page' : 'false'}">Vehicles & Fleets</a>
                         </div>
+                        
                         <div class="nav-item hidden" data-page="vehicle-detail" id="nav-vehicle-detail">Vehicle Detail</div>
                         <div class="nav-divider"></div>
-                        <div class="nav-item">
-                            <a data-page="reports" href="#/reports">Reports</a>
+                        <div class="nav-item ${this.isActive('/reports') ? 'active' : ''}">
+                            <a data-page="reports" href="#/reports" aria-current="${this.isActive('/reports') ? 'page' : 'false'}">Reports</a>
                         </div>
-                        <div class="nav-item">
-                            <a data-page="onboarding" href="#/onboarding">Onboarding</a>
+                        <div class="nav-item ${this.isActive('/users') ? 'active' : ''}">
+                            <a data-page="users" href="#/users" aria-current="${this.isActive('/users') ? 'page' : 'false'}">Users</a>
                         </div>
                     </nav>
                 </aside>
@@ -203,7 +223,7 @@ export class AppRootV2 extends LitElement {
                 <main class="main-area">
                     <!-- Top Header -->
                     <header class="top-header">
-                        <div class="header-title" id="page-title">Home</div>
+                        <div class="header-title" id="page-title">${this.getPageTitle()}</div>
                         <div class="header-right">
                             <div class="user-block">
                                 <span class="user-info user-email" title="${userEmail}">${userEmail}</span>

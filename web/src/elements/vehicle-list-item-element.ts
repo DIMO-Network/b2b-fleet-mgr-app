@@ -54,17 +54,19 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
     render() {
         return this.item ? html`
+            <tr>
               <td>${this.item.vin}</td>
               <td>${this.item.definition.make} ${this.item.definition.model} ${this.item.definition.year}</td>
               <td>${this.item.imei}</td>
               <td>${this.item.tokenId}</td>
-              <td>${ConnectionStatusMap[this.getConnectionStatus(this.item)]}</td>
+                <td><span class=${ConnectionStatusMap[this.getConnectionStatus(this.item)] == 'Connected' ? 'status status-connected' : 'status status-offline'}>${ConnectionStatusMap[this.getConnectionStatus(this.item)]}</span></td>
               <td>
                   <button 
                       type="button"
                       ?hidden=${this.item.tokenId == 0}
                       @click=${this.openIdentityInfoModal}
                       title="View Identity Info"
+                      class="action-btn secondary"
                   >
                       ℹ️
                   </button>
@@ -73,13 +75,14 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       ?hidden=${!this.item.imei}
                       @click=${this.openTelemetryModal}
                       title="Telemetry & Command"
+                      class="action-btn secondary"
                   >
                       ⚡
                   </button>
                   <button ?hidden=${!this.canDisconnect(this.item)}
                       type="button" 
                       ?disabled=${this.processing || !this.item.syntheticDevice.tokenId || !this.item.isCurrentUserOwner}
-                      class=${this.connectionProcessing ? 'processing' : ''}
+                      class=${this.connectionProcessing ? 'processing action-btn secondary' : 'action-btn secondary'}
                       @click=${this.disconnectVehicle}
                   >
                       disconnect
@@ -88,7 +91,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   <button ?hidden=${!this.canConnect(this.item)}
                           type="button"
                           ?disabled=${this.processing}
-                          class=${this.connectionProcessing ? 'processing' : ''}
+                          class=${this.connectionProcessing ? 'processing action-btn secondary' : 'action-btn'}
                           @click=${this.connectVehicle}
                   >connect
                   </button>
@@ -97,7 +100,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       ?hidden=${this.item.tokenId == 0}
                       ?disabled=${this.item.syntheticDevice.tokenId || this.processing || !this.item.isCurrentUserOwner}
                       @click=${this.deleteVehicle}
-                      class=${this.deletionProcessing ? 'processing' : ''}
+                      class=${this.deletionProcessing ? 'processing action-btn secondary' : 'action-btn secondary'}
                   >
                       delete
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
@@ -107,6 +110,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       ?hidden=${this.item.tokenId == 0}
                       ?disabled=${this.processing || !this.item.isCurrentUserOwner}
                       @click=${this.openTransferModal}
+                      class="action-btn"
                   >
                       transfer
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
@@ -116,10 +120,12 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       ?hidden=${this.item.tokenId !== 0}
                       ?disabled=${this.processing}
                       @click=${() => this.resetOnboarding(this.item?.imei || '')}
+                      class="action-btn"
                   >
                       reset onboarding
                   </button>
               </td>
+            </tr>
           ` : nothing
     }
 
