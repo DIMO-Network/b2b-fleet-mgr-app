@@ -45,27 +45,8 @@
      </div>
  </form>
 </div>
-<script>
-    function isTokenExpired(token) {
-        if (!token) {
-            console.log("No token found");
-            return true; // If there's no token, treat it as expired
-        }
-
-        try {
-            // Split the token and get the payload (2nd part)
-            const payload = JSON.parse(atob(token.split('.')[1]));
-
-            // Get the current time in seconds
-            const currentTime = Math.floor(Date.now() / 1000);
-
-            // Check if the `exp` claim (expiration time) is still valid
-            return payload.exp < currentTime;
-        } catch (error) {
-            console.error("Invalid token:", error);
-            return true; // If parsing fails, assume token is expired
-        }
-    }
+<script type="module">
+    import { isTokenExpired } from './src/utils/token.ts';
 
     // I'll get back following in querystrings:
     // token, walletAddress, email
@@ -74,7 +55,7 @@
 
     if (queryString === '') {
         // not from login redirect, just wait for user to login
-        token = localStorage.getItem("token");
+        const token = localStorage.getItem("token");
         if (isTokenExpired(token) === false) {
             window.location.href = "/";
         }

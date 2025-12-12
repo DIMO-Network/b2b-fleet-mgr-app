@@ -14,10 +14,12 @@
 </head>
 <body>
   <app-root-v2></app-root-v2>
-  <script>
-    token = localStorage.getItem("token");
-    if (token === null) {
-      window.location.href = "/login.html";
+  <script type="module">
+    import { isTokenExpired } from './src/utils/token.ts';
+
+    const token = localStorage.getItem('token');
+    if (!token || isTokenExpired(token)) {
+      window.location.href = '/login.html';
     }
   </script>
 </body>
