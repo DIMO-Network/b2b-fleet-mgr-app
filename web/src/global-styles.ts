@@ -726,46 +726,85 @@ export const globalStyles = css`
         gap: 8px;
     }
 
-    /* Modal placeholder */
+    /* Modal (shared across elements) */
     .modal-overlay {
-        display: none;
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
         background: rgba(0,0,0,0.5);
+        display: flex;
         align-items: center;
         justify-content: center;
         z-index: 1000;
     }
 
+    /* Backward-compat support if elements toggle .active */
     .modal-overlay.active {
         display: flex;
     }
 
-    .modal {
+    /* Dialog container */
+    .modal-content, .modal {
         background: #fff;
         border: 1px solid #000;
-        padding: 24px;
-        min-width: 400px;
-        max-width: 600px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        width: min(90vw, 800px);
+        max-height: 90vh;
+        overflow: hidden; /* header/footer stick, body scrolls */
     }
 
     .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e5e7eb;
         font-weight: bold;
-        margin-bottom: 16px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #ccc;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 18px;
+        color: #000;
+    }
+
+    .modal-close {
+        background: none;
+        border: 1px solid transparent;
+        font-size: 20px;
+        cursor: pointer;
+        color: #333;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+    }
+
+    .modal-close:hover {
+        background-color: #f3f4f6;
+        border-color: #ccc;
+    }
+
+    .modal-body {
+        padding: 16px;
+        overflow: auto;
+        max-height: calc(90vh - 56px); /* subtract header approx */
     }
 
     .modal-footer {
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid #ccc;
+        padding: 12px 16px;
+        border-top: 1px solid #e5e7eb;
         display: flex;
         gap: 8px;
         justify-content: flex-end;
+        background: #fff;
     }
 
     /* Clickable report rows */

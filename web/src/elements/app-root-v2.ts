@@ -68,7 +68,6 @@ export class AppRootV2 extends LitElement {
     constructor() {
         super();
 
-
         this.router = new Router(this, [
             // Handle direct loads to the html entry file (e.g., /app-v2.html)
             // so the router doesn't error before hash-based navigation kicks in.

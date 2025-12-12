@@ -1,7 +1,8 @@
-import {html, nothing} from 'lit'
+import {css, html, nothing} from 'lit'
 import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
 import { ApiService } from '../services/api-service';
+import {globalStyles} from "../global-styles.ts";
 
 interface IoElement {
     id: number;
@@ -21,6 +22,9 @@ interface TelemetryData {
 
 @customElement('telemetry-modal-element')
 export class TelemetryModalElement extends LitElement {
+    static styles = [ globalStyles,
+        css``
+    ]
     @property({attribute: true, type: Boolean})
     public show = false
 
@@ -71,10 +75,7 @@ export class TelemetryModalElement extends LitElement {
         super.connectedCallback();
     }
 
-    // Disable shadow DOM to allow inherit css
-    createRenderRoot() {
-        return this;
-    }
+    // Use shadow DOM; styles are provided via globalStyles
 
     render() {
         if (!this.show) {
