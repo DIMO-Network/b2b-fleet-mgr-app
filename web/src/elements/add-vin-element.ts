@@ -217,7 +217,6 @@ export class AddVinElement extends BaseOnboardingElement {
             <pending-vehicles-element 
                 @selection-changed=${this.handlePendingVehiclesSelection}>
             </pending-vehicles-element>
-            // todo need to add something that just has the oracles object array, and also that just returns the oracle object
             <div ?hidden=${this.oracleTenantService.getOracle()?.usePendingMode}>
                 <form class="grid">
                     <label>Bulk Upload VINs (newline separated)
