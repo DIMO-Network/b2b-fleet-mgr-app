@@ -131,7 +131,7 @@ export class TenantSelectorView extends LitElement {
       this.dispatchEvent(new CustomEvent('tenant-changed', { detail: { tenant }, bubbles: true, composed: true }));
         // sleep for 500ms
         setTimeout(() => {
-            window.location.href = '/';
+            window.location.href = '/#/onboarding';
         }, 500)
     }
 
