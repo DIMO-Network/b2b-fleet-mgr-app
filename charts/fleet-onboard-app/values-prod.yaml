@@ -2,7 +2,7 @@ replicaCount: 2
 image:
   repository: dimozone/fleet-onboard-app
   pullPolicy: IfNotPresent
-  tag: 52ca71d
+  tag: 3a910d7
 imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
