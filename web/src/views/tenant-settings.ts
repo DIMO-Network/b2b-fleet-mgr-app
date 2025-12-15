@@ -203,11 +203,11 @@ export class TenantSettingsView extends LitElement {
                   <fieldset>
                     <label class="form-label">DIMO Secret</label>
                     ${this.editing ? html`
-                      <input type="password" placeholder="${this.data.has_dimo_secret ? '****' : ''}"
+                      <input type="text" placeholder="${this.data.has_dimo_secret ? '****' : ''}"
                         .value=${this.dimo_secret_input}
                         @input=${(e: InputEvent) => this.onInput(e, v => this.dimo_secret_input = v)}>
                     ` : html`
-                      <input type="password" .value=${this.data.has_dimo_secret ? '****' : ''} disabled>
+                      <input type="text" .value=${this.data.has_dimo_secret ? '****' : ''} disabled>
                     `}
                   </fieldset>
                 </div>
