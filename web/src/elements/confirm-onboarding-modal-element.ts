@@ -183,10 +183,10 @@ export class ConfirmOnboardingModalElement extends LitElement {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn-secondary" @click=${this.closeModal}>
+                        <button type="button" class="btn btn-secondary" @click=${this.closeModal}>
                             Cancel
                         </button>
-                        <button type="button" class="btn-primary" @click=${this.confirmOnboarding}>
+                        <button type="button" class="btn btn-primary" @click=${this.confirmOnboarding}>
                             Confirm Onboarding
                         </button>
                     </div>

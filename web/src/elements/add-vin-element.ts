@@ -67,7 +67,21 @@ const defaultPermissions = {
 @customElement('add-vin-element')
 export class AddVinElement extends BaseOnboardingElement {
     static styles = [ globalStyles,
-        css`` ]
+        css`
+            /* Stack grantee checkboxes vertically with consistent spacing */
+            .grantee-list {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
+            }
+            .grantee-item {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                margin: 0;
+            }
+        ` ]
 
     @property({attribute: false})
     private vinsBulk: string | null;
@@ -118,12 +132,6 @@ export class AddVinElement extends BaseOnboardingElement {
         this.enableSacd = false;
         this.sacdGrantee = "";
         this.sacdPermissions = defaultPermissions;
-    }
-
-    // Disable shadow DOM to allow inherit css
-    createRenderRoot() {
-        // there is another function to do this.
-        return this;
     }
 
     async connectedCallback() {
@@ -215,76 +223,102 @@ export class AddVinElement extends BaseOnboardingElement {
             </pending-vehicles-element>
 
             <div class="onboard-section">
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 8px;">
-                    <label>
-                        <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}> Share vehicles with Developer
-                    </label>
-                </div>
-                <div style="margin-bottom: 8px;" ?hidden=${!this.enableSacd}>
-                    <form>
-                        <div>
-                            <fieldset>
-                                ${repeat(this.availableGrantees, (g) => g.value, (g) => html`
-						<label style="margin-bottom: 0.5rem">
-							<input type="checkbox" .checked=${this.selectedGrantees.includes(g.value)} @click=${() => this.handleGranteeToggle(g.value)}> ${g.label} : ${g.value}
-						</label>
-						`)}
-                            </fieldset>
-                        </div>
-                        <div>
-                            <fieldset>
-                                <label>
-                                    <input type="checkbox" .checked=${this.useBelow} @click=${this.toggleUseBelow}> Use below:
+                <div class="panel mb-16">
+                    <div class="panel-header">Developer Sharing & OTP</div>
+                    <div class="panel-body">
+                        <div class="form-row" style="margin: 0 0 8px 0;">
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}>
+                                    Share vehicles with Developer
                                 </label>
-                            </fieldset>
+                            </div>
                         </div>
-                        <div class="grid">
-                            <fieldset>
-                                <label>Developer License 0x Client ID
-                                    <input type="text" placeholder="0x" maxlength="42"
-                                           value=${this.sacdGrantee} @input="${(e: InputEvent) => this.sacdGrantee = (e.target as HTMLInputElement).value}" ?disabled=${!this.useBelow}>
-                                </label>
-                            </fieldset>
 
-                            <fieldset>
-                                ${repeat(range(1, Permission.MAX), (item) => item, (item) => html`
-                        <label>
-                            <input type="checkbox" .checked="${this.sacdPermissions?.[item as Permission]}" @click=${() => this.togglePermission(item)}> ${PERMISSIONS_MAP[item]}
-                        </label>
-                    `)}
-                            </fieldset>
+                        <div class="panel nested" ?hidden=${!this.enableSacd}>
+                            <div class="panel-body">
+                                <form class="grid" style="gap: 12px;">
+                                    <fieldset>
+                                        <legend class="form-label">Select Developer Grantees</legend>
+                                        <div class="grantee-list">
+                                            ${repeat(this.availableGrantees, (g) => g.value, (g) => html`
+                                                <label class="checkbox grantee-item">
+                                                    <input type="checkbox" .checked=${this.selectedGrantees.includes(g.value)} @click=${() => this.handleGranteeToggle(g.value)}>
+                                                    <span>${g.label} : ${g.value}</span>
+                                                </label>
+                                            `)}
+                                        </div>
+                                    </fieldset>
+
+                                    <fieldset>
+                                        <label class="checkbox">
+                                            <input type="checkbox" .checked=${this.useBelow} @click=${this.toggleUseBelow}>
+                                            <span>Use below:</span>
+                                        </label>
+                                    </fieldset>
+
+                                    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+                                        <fieldset>
+                                            <label class="form-label">Developer License 0x Client ID</label>
+                                            <input type="text" placeholder="0x" maxlength="42"
+                                                   .value=${this.sacdGrantee}
+                                                   @input="${(e: InputEvent) => this.sacdGrantee = (e.target as HTMLInputElement).value}"
+                                                   ?disabled=${!this.useBelow}>
+                                        </fieldset>
+
+                                        <fieldset>
+                                            <legend class="form-label">Permissions</legend>
+                                            <div class="grid" style="grid-template-columns: 1fr; gap: 6px;">
+                                                ${repeat(range(1, Permission.MAX), (item) => item, (item) => html`
+                                                    <label class="checkbox">
+                                                        <input type="checkbox" .checked="${this.sacdPermissions?.[item as Permission]}" @click=${() => this.togglePermission(item)}>
+                                                        <span>${PERMISSIONS_MAP[item]}</span>
+                                                    </label>
+                                                `)}
+                                            </div>
+                                        </fieldset>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                    </form>
-                </div>
-                <div style="margin-bottom: 8px;">
-                    <label><input type="checkbox" .checked="${this.otpLogin}" @click="${this.toggleOtpLogin}" /> Use OTP</label>
-                    ${ this.otpLogin ? html`
-                        <button class=${this.processing ? 'processing action-btn' : 'action-btn'} @click=${() => this.initOtpLogin()} ?disabled=${this.processing} >
-                            Sign In
-                        </button>` : nothing }
-                </div>
-                <div>
-                    <form class="grid">
-                        <button type="button" @click=${this._submitVINs} ?disabled=${(this.otpLogin && !this.otpLoggedIn) || this.processing} class=${this.processing ? 'processing action-btn' : 'action-btn'} >
-                            Onboard Vehicles
-                        </button>
-                    </form>
+
+                        <div class="form-row" style="margin-top: 8px;">
+                            <div class="form-group" style="margin: 0; display:flex; align-items:center; gap:12px;">
+                                <label class="checkbox" style="margin:0;">
+                                    <input type="checkbox" .checked="${this.otpLogin}" @click="${this.toggleOtpLogin}" />
+                                    <span>Use OTP</span>
+                                </label>
+                                ${ this.otpLogin ? html`
+                                    <button class=${this.processing ? 'btn btn-primary processing' : 'btn btn-primary'} @click=${() => this.initOtpLogin()} ?disabled=${this.processing}>
+                                        Sign In
+                                    </button>` : nothing }
+                            </div>
+                        </div>
+
+                        <div class="form-row" style="margin-top: 8px;">
+                            <button type="button" @click=${this._submitVINs} ?disabled=${(this.otpLogin && !this.otpLoggedIn) || this.processing} class=${this.processing ? 'btn btn-primary processing' : 'btn btn-primary'}>
+                                Onboard Vehicles
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="onboard-section">
-                <div class="onboard-header">ONBOARD RESULT</div>
-                <div class="panel-body" style="border: 1px solid #ccc; border-top: none;">
-                    <div class="alert alert-success" ?hidden=${this.processingMessage === "" || this.alertText.length > 0}>
-                        ${this.processingMessage}
-                    </div>
-                    <session-timer style="margin-bottom: 12px;" .expirationTime=${this.signingService.getSession()?.session.expiresAt}></session-timer>
-                    <table style="width: max();">
-                        <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Result</th>
-                            <th>VIN</th>
-                            <th>Details</th>
+                <div class="panel">
+                    <div class="panel-header">Onboard Result</div>
+                    <div class="panel-body">
+                        <div class="alert alert-success" ?hidden=${this.processingMessage === "" || this.alertText.length > 0}>
+                            ${this.processingMessage}
+                        </div>
+                        <session-timer style="margin-bottom: 12px;" .expirationTime=${this.signingService.getSession()?.session.expiresAt}></session-timer>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Result</th>
+                                    <th>VIN</th>
+                                    <th>Details</th>
                         </tr>
                         </thead>
                         <tbody>

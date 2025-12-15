@@ -326,6 +326,10 @@ export const globalStyles = css`
         gap: 16px;
         align-items: flex-end;
     }
+    
+    fieldset {
+        padding: 6px 10px 10px 10px;
+    }
 
     /* Status Indicators */
     .status {
