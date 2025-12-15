@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import eslintPlugin from 'vite-plugin-eslint';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { resolve } from 'path';
 import mkcert from 'vite-plugin-mkcert';
 import path from "node:path";
@@ -24,7 +23,8 @@ export default defineConfig({
         rollupOptions: {
             // Define app entry points (only main is used now)
             input: {
-                main: resolve(__dirname, 'index.html')
+                main: resolve(__dirname, 'index.html'),
+                login: resolve(__dirname, 'login.html')
             }
         }
     },
@@ -36,13 +36,5 @@ export default defineConfig({
         }),
         tsconfigPaths(),
         eslintPlugin(),
-        viteStaticCopy({
-            targets: [
-                {
-                    src: 'login.html', // source files or folder
-                    dest: './'        // destination folder in the dist folder
-                },
-            ],
-        }),
     ],
 });
