@@ -77,6 +77,7 @@ export class AppRootV2 extends LitElement {
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
             { path: '/onboarding', render: () => html`<onboarding-view></onboarding-view>` },
             { path: '/tenant-selector', render: () => html`<tenant-selector-view></tenant-selector-view>` },
+            { path: '/tenant-settings', render: () => html`<tenant-settings-view></tenant-settings-view>` },
         ]);
     }
 
@@ -139,6 +140,7 @@ export class AppRootV2 extends LitElement {
         if (path.startsWith('/reports')) return 'Reports';
         if (path.startsWith('/users')) return 'Users';
         if (path.startsWith('/tenant-selector')) return 'Tenant Selector';
+        if (path.startsWith('/tenant-settings')) return 'Tenant Settings';
         return 'Home';
     }
 
@@ -214,6 +216,10 @@ export class AppRootV2 extends LitElement {
                         </div>
                         <div class="nav-item ${this.isActive('/users') ? 'active' : ''}">
                             <a data-page="users" href="#/users" aria-current="${this.isActive('/users') ? 'page' : 'false'}">Users</a>
+                        </div>
+                        <div class="nav-divider"></div>
+                        <div class="nav-item ${this.isActive('/tenant-settings') ? 'active' : ''}">
+                            <a data-page="tenant-settings" href="#/tenant-settings" aria-current="${this.isActive('/tenant-settings') ? 'page' : 'false'}">Settings</a>
                         </div>
                     </nav>
                 </aside>
