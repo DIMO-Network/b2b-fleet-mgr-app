@@ -28,14 +28,14 @@ export class OracleTenantService {
 
   private constructor() {
     this.api = ApiService.getInstance();
-  // todo improve this.
+  // todo improve this for multi-oracle in future
     // Initialize current oracle to Kaufmann by default; override with persisted value if present
-    this.currentOracle = { oracleId: 'kaufmann', name: 'kaufmann', usePendingMode: false };
+    this.currentOracle = { oracleId: 'kaufmann', name: 'Kaufmann', usePendingMode: true };
 
-    const storedOracle = this.loadOracle();
-    if (storedOracle) {
-      this.currentOracle = storedOracle;
-    }
+    // const storedOracle = this.loadOracle();
+    // if (storedOracle) {
+    //   this.currentOracle = storedOracle;
+    // }
     this.tenants = this.loadTenants() ?? [];
     this.selectedTenant = this.loadSelectedTenant();
   }
@@ -74,28 +74,28 @@ export class OracleTenantService {
     localStorage.setItem(ORACLE_STORAGE_KEY, JSON.stringify(value));
   }
 
-  private loadOracle(): Oracle | undefined {
-    const raw = localStorage.getItem(ORACLE_STORAGE_KEY);
-    if (!raw) return undefined;
-    try {
-      // Handle legacy string storage (only oracleId)
-      if (!raw.startsWith('{')) {
-        const legacyId = raw;
-        const migrated: Oracle = { oracleId: legacyId, name: legacyId, usePendingMode: false };
-        // Persist migrated object
-        this.saveOracle(migrated);
-        return migrated;
-      }
-      const parsed = JSON.parse(raw);
-      // Basic shape validation
-      if (parsed && typeof parsed.oracleId === 'string') {
-        return parsed as Oracle;
-      }
-    } catch {
-      // ignore and fall through
-    }
-    return undefined;
-  }
+  // private loadOracle(): Oracle | undefined {
+  //   const raw = localStorage.getItem(ORACLE_STORAGE_KEY);
+  //   if (!raw) return undefined;
+  //   try {
+  //     // Handle legacy string storage (only oracleId)
+  //     if (!raw.startsWith('{')) {
+  //       const legacyId = raw;
+  //       const migrated: Oracle = { oracleId: legacyId, name: legacyId, usePendingMode: false };
+  //       // Persist migrated object
+  //       this.saveOracle(migrated);
+  //       return migrated;
+  //     }
+  //     const parsed = JSON.parse(raw);
+  //     // Basic shape validation
+  //     if (parsed && typeof parsed.oracleId === 'string') {
+  //       return parsed as Oracle;
+  //     }
+  //   } catch {
+  //     // ignore and fall through
+  //   }
+  //   return undefined;
+  // }
 
   // TENANTS LIST
   saveTenants(list?: Tenant[]) {
