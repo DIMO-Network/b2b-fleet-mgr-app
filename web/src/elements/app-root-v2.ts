@@ -5,7 +5,7 @@ import { apiServiceContext } from '../context';
 import {ApiService} from "@services/api-service.ts";
 import { Router } from '@lit-labs/router';
 import {globalStyles} from "../global-styles.ts";
-import {OracleTenantService} from "@services/oracle-tenant-service.ts";
+// import {OracleTenantService} from "@services/oracle-tenant-service.ts";
 
 @customElement('app-root-v2')
 export class AppRootV2 extends LitElement {
@@ -57,7 +57,7 @@ export class AppRootV2 extends LitElement {
     @provide({ context: apiServiceContext })
     apiService = ApiService.getInstance(); // app-level singleton
 
-    private oracleTenantService = OracleTenantService.getInstance();
+    //private oracleTenantService = OracleTenantService.getInstance();
 
     @state()
     private hasOracleAccess: boolean = true;

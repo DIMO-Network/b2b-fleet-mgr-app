@@ -28,16 +28,13 @@ export class OracleTenantService {
 
   private constructor() {
     this.api = ApiService.getInstance();
+  // todo improve this.
+    // Initialize current oracle to Kaufmann by default; override with persisted value if present
+    this.currentOracle = { oracleId: 'kaufmann', name: 'kaufmann', usePendingMode: false };
 
-    this.currentOracle = this.loadOracle() ?? undefined;
-    // If no oracle stored, fetch list and default to first
-    if (this.currentOracle === undefined) {
-      this.fetchOracles().then(oracles => {
-        if (oracles != null && oracles.length > 0) {
-          const defaultOracle = oracles[0];
-          this.setOracle(defaultOracle);
-        }
-      }).catch(() => void 0);
+    const storedOracle = this.loadOracle();
+    if (storedOracle) {
+      this.currentOracle = storedOracle;
     }
     this.tenants = this.loadTenants() ?? [];
     this.selectedTenant = this.loadSelectedTenant();
