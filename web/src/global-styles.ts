@@ -418,6 +418,29 @@ export const globalStyles = css`
         padding: 16px;
     }
 
+    /* Alerts */
+    .alert {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 14px;
+        padding: 10px 14px;
+        border: 1px solid #000;
+        background: #fff;
+        color: #000;
+        margin: 8px 0 12px 0;
+    }
+
+    .alert-error {
+        background: #f8d7da; /* light red */
+        color: #721c24;      /* dark red text */
+        border-color: #721c24;
+    }
+
+    .alert-success {
+        background: #d4edda; /* light green */
+        color: #155724;      /* dark green text */
+        border-color: #155724;
+    }
+
     /* Vehicle Detail Specific */
     .detail-grid {
         display: grid;
