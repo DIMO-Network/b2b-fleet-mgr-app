@@ -99,8 +99,6 @@ export class TenantSettingsView extends LitElement {
 
     // Build payload: include actual secret fields (without has_) only if user provided a new value
     const payload: Record<string, any> = {
-      id: this.id,
-      name: this.name,
       kore_client_id: this.kore_client_id,
       command_password: this.command_password,
       dimo_client_id: this.dimo_client_id,
@@ -122,7 +120,7 @@ export class TenantSettingsView extends LitElement {
 
     // Update local state with response
     this.data = resp.data;
-    this.populateEditFieldsFromData();
+    //this.populateEditFieldsFromData();
     this.editing = false;
     this.success = 'Settings saved successfully';
   }
@@ -168,18 +166,18 @@ export class TenantSettingsView extends LitElement {
                 <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
                   <fieldset>
                     <label class="form-label">Kore Client ID</label>
-                    <input type="text" .value=${this.kore_client_id}
+                    <input type="text" style="width: 450px" .value=${this.kore_client_id}
                       ?disabled=${!this.editing}
                       @input=${(e: InputEvent) => this.onInput(e, v => this.kore_client_id = v)}>
                   </fieldset>
                   <fieldset>
                     <label class="form-label">Kore Secret</label>
                     ${this.editing ? html`
-                      <input type="password" placeholder="${this.data.has_kore_secret ? '****' : ''}"
+                      <input type="text" style="width: 450px" placeholder="${this.data.has_kore_secret ? '****' : ''}"
                         .value=${this.kore_secret_input}
                         @input=${(e: InputEvent) => this.onInput(e, v => this.kore_secret_input = v)}>
                     ` : html`
-                      <input type="password" .value=${this.data.has_kore_secret ? '****' : ''} disabled>
+                      <input type="text" .value=${this.data.has_kore_secret ? '****' : ''} disabled>
                     `}
                   </fieldset>
                 </div>
@@ -193,7 +191,7 @@ export class TenantSettingsView extends LitElement {
                   </fieldset>
                   <fieldset>
                     <label class="form-label">DIMO Client ID</label>
-                    <input type="text" .value=${this.dimo_client_id}
+                    <input type="text" style="width: 450px" .value=${this.dimo_client_id}
                       ?disabled=${!this.editing}
                       @input=${(e: InputEvent) => this.onInput(e, v => this.dimo_client_id = v)}>
                   </fieldset>
@@ -203,7 +201,7 @@ export class TenantSettingsView extends LitElement {
                   <fieldset>
                     <label class="form-label">DIMO Secret</label>
                     ${this.editing ? html`
-                      <input type="text" placeholder="${this.data.has_dimo_secret ? '****' : ''}"
+                      <input type="text" style="width: 450px" placeholder="${this.data.has_dimo_secret ? '****' : ''}"
                         .value=${this.dimo_secret_input}
                         @input=${(e: InputEvent) => this.onInput(e, v => this.dimo_secret_input = v)}>
                     ` : html`
