@@ -35,7 +35,7 @@ export class TenantSettingsView extends LitElement {
   private data: TenantSettingsDto | null = null;
 
   // editable fields (separate to allow cancel)
-  @state() private id: string = '';
+  @state() private tenantId: string = '';
   @state() private name: string = '';
   @state() private kore_client_id: string = '';
   @state() private kore_secret_input: string = '';
@@ -65,7 +65,7 @@ export class TenantSettingsView extends LitElement {
 
   private populateEditFieldsFromData() {
     if (!this.data) return;
-    this.id = this.data.id ?? '';
+    this.tenantId = this.data.id ?? '';
     this.name = this.data.name ?? '';
     this.kore_client_id = this.data.kore_client_id ?? '';
     this.kore_secret_input = '';
@@ -153,7 +153,7 @@ export class TenantSettingsView extends LitElement {
                   <fieldset>
                     <label class="form-label">Tenant ID</label>
                     <!-- Tenant ID is not editable; render as plain text -->
-                    <span class="detail-value" style="display:block; padding: 8px 0;">${this.id}</span>
+                    <span class="detail-value" style="display:block; padding: 8px 0;">${this.tenantId}</span>
                   </fieldset>
                   <fieldset>
                     <label class="form-label">Tenant Name</label>
