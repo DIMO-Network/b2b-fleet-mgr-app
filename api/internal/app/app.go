@@ -95,7 +95,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Post("/vehicle/mint", vehiclesCtrl.SubmitVehiclesMintData)
 
 	// Disconnect vehicle
-	oracleApp.Get("/vehicle/disconnect", vehiclesCtrl.GetDisconnectData)
+	oracleApp.Get("/vehicle/disconnect", genericProxyCtrl.Proxy)
 	oracleApp.Post("/vehicle/disconnect", vehiclesCtrl.SubmitDisconnectData)
 	oracleApp.Get("/vehicle/disconnect/status", vehiclesCtrl.GetDisconnectStatus)
 
