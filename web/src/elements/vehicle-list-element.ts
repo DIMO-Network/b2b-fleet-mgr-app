@@ -69,7 +69,14 @@ export class VehicleListElement extends LitElement {
 
     async connectedCallback() {
         super.connectedCallback();
+        // Listen for bubbling item change events from row items
+        this.addEventListener('item-changed', this.handleItemChanged as EventListener);
         await this.loadVehicles();
+    }
+
+    disconnectedCallback(): void {
+        this.removeEventListener('item-changed', this.handleItemChanged as EventListener);
+        super.disconnectedCallback();
     }
 
     public async loadVehicles() {
@@ -100,6 +107,11 @@ export class VehicleListElement extends LitElement {
             this.items = [];
             this.totalItems = 0;
         }
+    }
+
+    private handleItemChanged = async () => {
+        // Refresh the list when any row dispatches an item update event
+        await this.loadVehicles();
     }
 
     private async goToPage(page: number) {

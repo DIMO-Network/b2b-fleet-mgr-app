@@ -409,23 +409,32 @@ export class BaseOnboardingElement extends LitElement {
         }
     }
 
-    async getDisconnectData(vins: string[]) {
+    async getDisconnectData(vins: string[]): Promise<Result<VinUserOperationData[], string>> {
         const query = qs.stringify({vins: vins.join(',')}, {arrayFormat: 'comma'});
         const disconnectData = await this.api.callApi<VinsDisconnectDataResult>('GET', `/vehicle/disconnect?${query}`, null, true);
         if (!disconnectData.success || !disconnectData.data) {
-            return [];
+            return {
+                success: false,
+                error: disconnectData.error || 'Failed to fetch disconnect data'
+            };
         }
 
-        return disconnectData.data.vinDisconnectData;
+        return {
+            success: true,
+            data: disconnectData.data.vinDisconnectData
+        };
     }
 
-    async signDisconnectData(disconnectData: VinUserOperationData[]) {
+    async signDisconnectData(disconnectData: VinUserOperationData[]): Promise<Result<VinUserOperationData[], string>> {
         const result: VinUserOperationData[] = [];
         for (const d of disconnectData) {
             const signature = await this.signingService.signUserOperation(d.userOperation);
 
             if (!signature.success || !signature.signature) {
-                continue
+                return {
+                    success: false,
+                    error: 'Failed to sign user operation for VIN ' + d.vin
+                };
             }
 
             result.push({
@@ -434,17 +443,23 @@ export class BaseOnboardingElement extends LitElement {
             })
         }
 
-        return result;
+        return {
+            success: true,
+            data: result
+        };
     }
 
-    async submitDisconnectData(disconnectData: VinUserOperationData[]) {
+    async submitDisconnectData(disconnectData: VinUserOperationData[]): Promise<Result<void, string>> {
         const payload: {vinDisconnectData: VinUserOperationData[]} = {
             vinDisconnectData: disconnectData,
         }
 
         const mintResponse = await this.api.callApi('POST', '/vehicle/disconnect', payload, true);
         if (!mintResponse.success || !mintResponse.data) {
-            return false;
+            return {
+                success: false,
+                error: mintResponse.error || 'Failed to submit disconnect data'
+            };
         }
 
         let success = true
@@ -454,7 +469,10 @@ export class BaseOnboardingElement extends LitElement {
             const status = await this.api.callApi<VinsStatusResult>('GET', `/vehicle/disconnect/status?${query}`, null, true);
 
             if (!status.success || !status.data) {
-                return false;
+                return {
+                    success: false,
+                    error: status.error || 'Failed to check disconnect status'
+                };
             }
 
             for (const s of status.data.statuses) {
@@ -473,40 +491,61 @@ export class BaseOnboardingElement extends LitElement {
             }
         }
 
-        return success;
-    }
-
-    async disconnectVins(vins: string[]) {
-        const disconnectData = await this.getDisconnectData(vins)
-
-        const signedDisconnectData = await this.signDisconnectData(disconnectData)
-
-        const disconnectStatus = await this.submitDisconnectData(signedDisconnectData)
-
-        if (!disconnectStatus) {
-            console.error("Disconnection failed")
+        if (!success) {
+            return {
+                success: false,
+                error: 'Disconnect operation timed out'
+            };
         }
 
-        return;
+        return { success: true, data: undefined };
     }
 
-    async getDeleteData(vins: string[]) {
+    async disconnectVins(vins: string[]): Promise<Result<void, string>> {
+        const disconnectData = await this.getDisconnectData(vins)
+        if (!disconnectData.success) {
+            return { success: false, error: disconnectData.error };
+        }
+
+        const signedDisconnectData = await this.signDisconnectData(disconnectData.data)
+        if (!signedDisconnectData.success) {
+            return { success: false, error: signedDisconnectData.error };
+        }
+
+        const disconnectStatus = await this.submitDisconnectData(signedDisconnectData.data)
+        if (!disconnectStatus.success) {
+            return { success: false, error: disconnectStatus.error };
+        }
+
+        return { success: true, data: undefined };
+    }
+
+    async getDeleteData(vins: string[]): Promise<Result<VinUserOperationData[], string>> {
         const query = qs.stringify({vins: vins.join(',')}, {arrayFormat: 'comma'});
         const deleteData = await this.api.callApi<VinsDeleteDataResult>('GET', `/vehicle/delete?${query}`, null, true);
         if (!deleteData.success || !deleteData.data) {
-            return [];
+            return {
+                success: false,
+                error: deleteData.error || 'Failed to fetch delete data'
+            };
         }
 
-        return deleteData.data.vinDeleteData;
+        return {
+            success: true,
+            data: deleteData.data.vinDeleteData
+        };
     }
 
-    async signDeleteData(deleteData: VinUserOperationData[]) {
+    async signDeleteData(deleteData: VinUserOperationData[]): Promise<Result<VinUserOperationData[], string>> {
         const result: VinUserOperationData[] = [];
         for (const d of deleteData) {
             const signature = await this.signingService.signUserOperation(d.userOperation);
 
             if (!signature.success || !signature.signature) {
-                continue
+                return {
+                    success: false,
+                    error: 'Failed to sign user operation for VIN ' + d.vin
+                };
             }
 
             result.push({
@@ -515,17 +554,23 @@ export class BaseOnboardingElement extends LitElement {
             })
         }
 
-        return result;
+        return {
+            success: true,
+            data: result
+        };
     }
 
-    async submitDeleteData(deleteData: VinUserOperationData[]) {
+    async submitDeleteData(deleteData: VinUserOperationData[]): Promise<Result<void, string>> {
         const payload: {vinDeleteData: VinUserOperationData[]} = {
             vinDeleteData: deleteData,
         }
 
         const deleteResponse = await this.api.callApi('POST', '/vehicle/delete', payload, true);
         if (!deleteResponse.success || !deleteResponse.data) {
-            return false;
+            return {
+                success: false,
+                error: deleteResponse.error || 'Failed to submit delete data'
+            };
         }
 
         let success = true
@@ -535,7 +580,10 @@ export class BaseOnboardingElement extends LitElement {
             const status = await this.api.callApi<VinsStatusResult>('GET', `/vehicle/delete/status?${query}`, null, true);
 
             if (!status.success || !status.data) {
-                return false;
+                return {
+                    success: false,
+                    error: status.error || 'Failed to check delete status'
+                };
             }
 
             for (const s of status.data.statuses) {
@@ -554,20 +602,32 @@ export class BaseOnboardingElement extends LitElement {
             }
         }
 
-        return success;
-    }
-
-    async deleteVins(vins: string[]) {
-        const deleteData = await this.getDeleteData(vins)
-
-        const signedDeleteData = await this.signDeleteData(deleteData)
-
-        const deleteStatus = await this.submitDeleteData(signedDeleteData)
-
-        if (!deleteStatus) {
-            console.error("Delete failed")
+        if (!success) {
+            return {
+                success: false,
+                error: 'Delete operation timed out'
+            };
         }
 
-        return;
+        return { success: true, data: undefined };
+    }
+
+    async deleteVins(vins: string[]): Promise<Result<void, string>> {
+        const deleteData = await this.getDeleteData(vins)
+        if (!deleteData.success) {
+            return { success: false, error: deleteData.error };
+        }
+
+        const signedDeleteData = await this.signDeleteData(deleteData.data)
+        if (!signedDeleteData.success) {
+            return { success: false, error: signedDeleteData.error };
+        }
+
+        const deleteStatus = await this.submitDeleteData(signedDeleteData.data)
+        if (!deleteStatus.success) {
+            return { success: false, error: deleteStatus.error };
+        }
+
+        return { success: true, data: undefined };
     }
 }

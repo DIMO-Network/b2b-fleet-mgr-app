@@ -212,11 +212,17 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true
         this.connectionProcessing = true
-        await this.disconnectVins([this.item.vin])
-        await delay(5000)
-        this.processing = false
-        this.connectionProcessing = false
-        this.dispatchItemChanged()
+        const result = await this.disconnectVins([this.item.vin])
+        if (result.success) {
+            await delay(5000)
+            this.processing = false
+            this.connectionProcessing = false
+            this.dispatchItemChanged()
+        } else {
+            this.processing = false
+            this.connectionProcessing = false
+            this.openErrorModal(result.error || 'Vehicle disconnect failed')
+        }
     }
 
     async deleteVehicle() {
@@ -230,11 +236,17 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true
         this.deletionProcessing = true
-        await this.deleteVins([this.item.vin])
-        await delay(5000)
-        this.processing = false
-        this.deletionProcessing = false
-        this.dispatchItemChanged()
+        const result = await this.deleteVins([this.item.vin])
+        if (result.success) {
+            await delay(5000)
+            this.processing = false
+            this.deletionProcessing = false
+            this.dispatchItemChanged()
+        } else {
+            this.processing = false
+            this.deletionProcessing = false
+            this.openErrorModal(result.error || 'Vehicle delete failed', 'Delete Failed')
+        }
     }
 
     async resetOnboarding(imei: string) {
@@ -265,6 +277,21 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         });
 
         // Add to body
+        document.body.appendChild(modal);
+    }
+
+    private openErrorModal(message: string, title: string = 'Disconnect Failed') {
+        const modal = document.createElement('error-modal-element') as any;
+        modal.show = true;
+        modal.title = title;
+        modal.message = message ?? (title.includes('Disconnect')
+            ? 'An unexpected error occurred while disconnecting the vehicle.'
+            : 'An unexpected error occurred while deleting the vehicle.');
+
+        modal.addEventListener('modal-closed', () => {
+            document.body.removeChild(modal);
+        });
+
         document.body.appendChild(modal);
     }
 

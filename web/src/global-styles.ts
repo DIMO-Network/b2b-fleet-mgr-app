@@ -245,6 +245,12 @@ export const globalStyles = css`
     }
 
     /* Buttons */
+    button[disabled] {
+        color: rgb(190,190,190);
+        border-color: #777;
+        pointer-events: none;
+    }
+    
     .btn {
         font-family: 'Courier New', Courier, monospace;
         font-size: 14px;
@@ -287,6 +293,32 @@ export const globalStyles = css`
     .btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+    }
+
+    .processing {
+        position: relative;
+        pointer-events: none;
+        background-color: #444;
+        border-color: #bbb !important;
+    }
+
+    .processing::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 1em;
+        height: 1em;
+        border: 2px solid white;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.8s linear infinite;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes spin {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
     }
 
     /* Forms */
