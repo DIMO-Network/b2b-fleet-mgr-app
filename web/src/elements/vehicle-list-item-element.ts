@@ -194,11 +194,17 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true
         this.connectionProcessing = true
-        await this.onboardVINs([{vin: this.item.vin, definition: this.item.definition.id}], null);
-        await delay(5000)
-        this.processing = false
-        this.connectionProcessing = false
-        this.dispatchItemChanged()
+        const success = await this.onboardVINs([{vin: this.item.vin, definition: this.item.definition.id}], null);
+        if (success) {
+            await delay(5000)
+            this.processing = false
+            this.connectionProcessing = false
+            this.dispatchItemChanged()
+        } else {
+            this.processing = false
+            this.connectionProcessing = false
+            this.openErrorModal('Vehicle connect failed', 'Connect Failed')
+        }
     }
 
     async disconnectVehicle() {

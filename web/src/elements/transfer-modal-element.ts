@@ -150,7 +150,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                             </div>
                                         ` : nothing}
                                         <button type="button" 
-                                                class="btn-primary ${this.processing ? 'processing' : ''}" 
+                                                class="action-btn ${this.processing ? 'processing' : ''}" 
                                                 @click=${() => this.confirmTransfer('wallet')}
                                                 ?disabled=${!this.walletAddress.trim() || this.processing}>
                                             ${this.processing ? 'Processing...' : 'Transfer by Wallet'}
@@ -173,7 +173,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                                    @input=${this.handleEmailInput}>
                                         </label>
                                         <button type="button" 
-                                                class="btn-primary ${this.processing ? 'processing' : ''}" 
+                                                class="action-btn ${this.processing ? 'processing' : ''}" 
                                                 @click=${() => this.confirmTransfer('email')}
                                                 ?disabled=${!this.email.trim() || this.processing}>
                                             ${this.processing ? 'Processing...' : 'Transfer by Email'}
