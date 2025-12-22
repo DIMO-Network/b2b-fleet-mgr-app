@@ -153,7 +153,7 @@ export class TelemetryModalElement extends LitElement {
                                                 </button>
                                             </div>
                                         </div>
-                                        <div class="panel-body" style="display:grid; gap:12px;">
+                                        <div class="panel-body" style="display:grid; gap:12px; max-height:50vh; overflow:auto;">
                                             <div>
                                                 <div class="tile-label" style="margin-bottom:6px;">Header</div>
                                                 <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.pages[this.currentIndex].header)}</pre>
