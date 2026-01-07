@@ -397,6 +397,11 @@ export const globalStyles = css`
         color: #856404;
     }
 
+    .status-transferred {
+        background: #ffe5b4;
+        color: #856404;
+    }
+
     .status-blocked {
         background: #f8d7da;
         color: #721c24;
