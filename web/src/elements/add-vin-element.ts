@@ -140,7 +140,7 @@ export class AddVinElement extends BaseOnboardingElement {
         if (this.email === undefined || this.email === "") {
             this.displayFailure("email was not set, please make sure you allow sharing email on Login");
         }
-        await this.settings.fetchAccountInfo(this.email!); // load account info
+        await this.settings.fetchAccountInfo({ email: this.email! }); // load account info
 
         this.enableSacd = this.settings.sharingInfo?.enabled || false;
         this.sacdGrantee = this.settings.sharingInfo?.grantee || "";

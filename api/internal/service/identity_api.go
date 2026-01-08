@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"time"
 
@@ -15,6 +16,7 @@ var ErrBadRequest = errors.New("bad request")
 type IdentityAPI interface {
 	GetDefinitionByID(id string) ([]byte, error)
 	GetVehicleByTokenID(id string) ([]byte, error)
+	GetOwnerBy0x(owner string, first int, after string) ([]byte, error)
 }
 
 type identityAPIService struct {
@@ -55,6 +57,56 @@ func (i *identityAPIService) GetDefinitionByID(id string) ([]byte, error) {
 	}
 
 	return body, nil
+}
+
+func (i *identityAPIService) GetOwnerBy0x(owner string, first int, after string) ([]byte, error) {
+	afterClause := ""
+	if after != "" {
+		afterClause = fmt.Sprintf("\n      after: %q", after)
+	}
+
+	// GraphQL query
+	graphqlQuery := fmt.Sprintf(`{
+		vehicles(
+			first: %d
+			%s
+			filterBy: { owner: "%s" }
+		) {
+			nodes {
+			owner
+			tokenId
+			aftermarketDevice {
+				serial
+				owner
+			}
+			syntheticDevice {
+				tokenId
+				connection {
+				name
+				}
+			}
+			definition {
+				make
+				model
+				year
+				}
+			}
+			pageInfo {
+			startCursor
+			endCursor
+			hasNextPage
+			hasPreviousPage
+			}
+		}
+	}`, first, afterClause, owner)
+
+	body, err := i.Query(graphqlQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+
 }
 
 func (i *identityAPIService) GetVehicleByTokenID(id string) ([]byte, error) {
