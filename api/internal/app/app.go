@@ -72,6 +72,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	app.Get("/public/oracles", settingsCtrl.GetOracles)
 	app.Get("/identity/vehicle/:tokenID", identityCtrl.GetVehicleByTokenID)
 	app.Get("/identity/definition/:id", identityCtrl.GetDefinitionByID)
+	app.Get("/identity/owner/:owner", identityCtrl.GetOwnerBy0x)
 	app.Post("/definitions/decodevin", jwtAuth, definitionsCtrl.DecodeVIN)
 
 	// oracle group with route parameter.

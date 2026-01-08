@@ -85,15 +85,35 @@ export class SettingsService {
         return null;
     }
 
-    async fetchAccountInfo(email: string) {
+    async fetchAccountInfo(params: { email?: string; walletAddress?: string }) {
         const apiUrl = this.privateSettings?.accountsApiUrl;
-        const url = `${apiUrl}/api/account/${email}`;
-        const response = await this.apiService.callApi<AccountInfo>("GET", url, null, false, true, false);
+        if (!apiUrl) return null;
+
+        const query = new URLSearchParams();
+
+        if (params.email) {
+            query.set("email", params.email);
+        }
+
+        if (params.walletAddress) {
+            query.set("walletAddress", params.walletAddress);
+        }
+
+        const url = `${apiUrl}/api/account?${query.toString()}`;
+
+        const response = await this.apiService.callApi<AccountInfo>(
+            "GET",
+            url,
+            null,
+            false,
+            true,
+            false
+        );
 
         if (response.success) {
             this.accountInfo = response.data!;
             this.saveAccountInfo();
-            return this.privateSettings;
+            return this.accountInfo;
         }
 
         return null;

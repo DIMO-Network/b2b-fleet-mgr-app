@@ -70,3 +70,36 @@ func (i *IdentityController) GetDefinitionByID(c *fiber.Ctx) error {
 	c.Set("Content-Type", "application/json")
 	return c.Send(data)
 }
+
+// GetOwnerBy0x
+// @Summary Get owner information by wallet 0x
+// @Description Retrieves owner details from the identity API using the wallet 0x
+// @Tags Identity
+// @Produce json
+// @Param owner path string true "Owner Wallet 0x"
+// @Success 200
+// @Router /identity/owner/{owner} [get]
+
+func (i *IdentityController) GetOwnerBy0x(c *fiber.Ctx) error {
+	owner := c.Params("owner")
+
+	i.logger.Info().
+		Str("owner", owner).
+		Msg("GetOwnerBy0x called")
+
+	if owner == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "Wallet 0x is required")
+	}
+
+	after := c.Query("after")
+	first := c.QueryInt("first", 25)
+
+	data, err := i.identityAPI.GetOwnerBy0x(owner, first, after)
+	if err != nil {
+		i.logger.Err(err).Str("owner_0x", owner).Msg("Failed to get owner by 0x")
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get owner information")
+	}
+
+	c.Set("Content-Type", "application/json")
+	return c.Send(data)
+}
