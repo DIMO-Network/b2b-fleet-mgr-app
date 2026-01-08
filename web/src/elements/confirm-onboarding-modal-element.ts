@@ -1,9 +1,10 @@
-import {html, nothing, LitElement} from 'lit'
+import {html, nothing, LitElement, css} from 'lit'
 import {customElement, property, state} from "lit/decorators.js";
 import {repeat} from "lit/directives/repeat.js";
 import {VehicleWithDefinition} from "@elements/base-onboarding-element.ts";
 import {ApiService} from "@services/api-service.ts";
 import {ApiResponse} from "@datatypes/api-response.ts";
+import {globalStyles} from "../global-styles.ts";
 
 interface DecodeVinResponse {
     deviceDefinitionId: string;
@@ -33,6 +34,10 @@ interface TopDefinitionsResponse {
 
 @customElement('confirm-onboarding-modal-element')
 export class ConfirmOnboardingModalElement extends LitElement {
+    static styles = [ globalStyles,
+        css``
+    ]
+
     @property({attribute: true, type: Boolean})
     public show = false
 
@@ -66,11 +71,6 @@ export class ConfirmOnboardingModalElement extends LitElement {
     constructor() {
         super();
         this.apiService = ApiService.getInstance();
-    }
-
-    // Disable shadow DOM to allow inherit css
-    createRenderRoot() {
-        return this;
     }
 
     connectedCallback() {
@@ -183,10 +183,10 @@ export class ConfirmOnboardingModalElement extends LitElement {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn-secondary" @click=${this.closeModal}>
+                        <button type="button" class="btn btn-secondary" @click=${this.closeModal}>
                             Cancel
                         </button>
-                        <button type="button" class="btn-primary" @click=${this.confirmOnboarding}>
+                        <button type="button" class="btn btn-primary" @click=${this.confirmOnboarding}>
                             Confirm Onboarding
                         </button>
                     </div>

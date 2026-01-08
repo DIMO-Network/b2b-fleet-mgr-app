@@ -1,7 +1,8 @@
-import {html, nothing} from 'lit'
+import {css, html, nothing} from 'lit'
 import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
 import { ApiService } from '../services/api-service';
+import {globalStyles} from "../global-styles.ts";
 
 interface VehicleIdentityData {
     data?: {
@@ -12,6 +13,10 @@ interface VehicleIdentityData {
 
 @customElement('identity-vehicle-info-modal-element')
 export class IdentityVehicleInfoModalElement extends LitElement {
+    static styles = [ globalStyles,
+        css``
+    ]
+
     @property({attribute: true, type: Boolean})
     public show = false
 
@@ -36,11 +41,6 @@ export class IdentityVehicleInfoModalElement extends LitElement {
 
     connectedCallback() {
         super.connectedCallback();
-    }
-
-    // Disable shadow DOM to allow inherit css
-    createRenderRoot() {
-        return this;
     }
 
     render() {
@@ -71,7 +71,7 @@ export class IdentityVehicleInfoModalElement extends LitElement {
                         `}
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn-secondary" @click=${this.closeModal}>
+                        <button type="button" class="action-btn secondary" @click=${this.closeModal}>
                             Close
                         </button>
                     </div>

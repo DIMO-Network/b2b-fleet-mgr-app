@@ -1,9 +1,10 @@
-import {html, nothing} from 'lit'
+import {css, html, nothing} from 'lit'
 import {customElement, property, state} from "lit/decorators.js";
 // import {ApiService} from "@services/api-service.ts";
 import './session-timer';
 import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
 import {delay, Result} from "@utils/utils.ts";
+import {globalStyles} from "../global-styles.ts";
 
 export interface AccountData {
     walletAddress: string;
@@ -12,6 +13,45 @@ export interface AccountData {
 
 @customElement('transfer-modal-element')
 export class TransferModalElement extends BaseOnboardingElement {
+    static styles = [ globalStyles,
+        css`
+          .transfer-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+          .transfer-option {
+            border: 1px solid #000;
+            background: #fff;
+            padding: 16px;
+          }
+          .transfer-option h4 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+          }
+          .transfer-form {
+            display: grid;
+            gap: 12px;
+          }
+          .transfer-form label {
+            display: grid;
+            gap: 6px;
+          }
+          .transfer-form input[type="text"],
+          .transfer-form input[type="email"] {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+          }
+          .transfer-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+          }
+        `
+    ]
     @property({attribute: true, type: Boolean})
     public show = false
 
@@ -62,10 +102,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         this.statusMessage = event.detail.status;
     }
 
-    // Disable shadow DOM to allow inherit css
-    createRenderRoot() {
-        return this;
-    }
+    // Use shadow DOM; shared modal styles come from globalStyles
 
     render() {
         if (!this.show) {
@@ -113,7 +150,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                             </div>
                                         ` : nothing}
                                         <button type="button" 
-                                                class="btn-primary ${this.processing ? 'processing' : ''}" 
+                                                class="action-btn ${this.processing ? 'processing' : ''}" 
                                                 @click=${() => this.confirmTransfer('wallet')}
                                                 ?disabled=${!this.walletAddress.trim() || this.processing}>
                                             ${this.processing ? 'Processing...' : 'Transfer by Wallet'}
@@ -136,7 +173,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                                    @input=${this.handleEmailInput}>
                                         </label>
                                         <button type="button" 
-                                                class="btn-primary ${this.processing ? 'processing' : ''}" 
+                                                class="action-btn ${this.processing ? 'processing' : ''}" 
                                                 @click=${() => this.confirmTransfer('email')}
                                                 ?disabled=${!this.email.trim() || this.processing}>
                                             ${this.processing ? 'Processing...' : 'Transfer by Email'}
@@ -149,7 +186,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn-secondary" @click=${this.closeModal}>
+                            <button type="button" class="action-btn secondary" @click=${this.closeModal}>
                                 Cancel
                             </button>
                         </div>

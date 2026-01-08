@@ -1,7 +1,8 @@
-import {html, nothing} from 'lit'
+import {css, html, nothing} from 'lit'
 import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
 import { ApiService } from '../services/api-service';
+import {globalStyles} from "../global-styles.ts";
 
 interface IoElement {
     id: number;
@@ -21,6 +22,9 @@ interface TelemetryData {
 
 @customElement('telemetry-modal-element')
 export class TelemetryModalElement extends LitElement {
+    static styles = [ globalStyles,
+        css``
+    ]
     @property({attribute: true, type: Boolean})
     public show = false
 
@@ -60,6 +64,10 @@ export class TelemetryModalElement extends LitElement {
     @state()
     private immobilizerError = ""
 
+    // Paging over raw telemetry rows
+    @state()
+    private currentIndex: number = 0;
+
     private apiService: ApiService;
 
     constructor() {
@@ -71,10 +79,7 @@ export class TelemetryModalElement extends LitElement {
         super.connectedCallback();
     }
 
-    // Disable shadow DOM to allow inherit css
-    createRenderRoot() {
-        return this;
-    }
+    // Use shadow DOM; styles are provided via globalStyles
 
     render() {
         if (!this.show) {
@@ -88,7 +93,7 @@ export class TelemetryModalElement extends LitElement {
                         <h3>Telemetry Data - ${this.imei}${this.vin ? ` (${this.vin})` : ''}</h3>
                         <div style="display: flex; align-items: center; gap: 1rem;">
                             <button type="button" 
-                                    class="btn-secondary" 
+                                    class="btn btn-secondary" 
                                     ?disabled=${this.resetting}
                                     @click=${this.resetTelemetry}
                                     style="font-size: 0.875rem; padding: 0.5rem 1rem;">
@@ -100,7 +105,7 @@ export class TelemetryModalElement extends LitElement {
                     </div>
                     <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 0.75rem;">
                         <button type="button" 
-                                class="btn-danger" 
+                                class="btn btn-danger" 
                                 ?disabled=${this.immobilizerLoading}
                                 @click=${this.immobilizerOn}
                                 style="font-size: 0.875rem; padding: 0.5rem 1rem; background-color: #dc2626; color: white; border: none; border-radius: 0.375rem; cursor: pointer;">
@@ -108,7 +113,7 @@ export class TelemetryModalElement extends LitElement {
                             Immobilizer On
                         </button>
                         <button type="button" 
-                                class="btn-success" 
+                                class="btn btn-success" 
                                 ?disabled=${this.immobilizerLoading}
                                 @click=${this.immobilizerOff}
                                 style="font-size: 0.875rem; padding: 0.5rem 1rem; background-color: #16a34a; color: white; border: none; border-radius: 0.375rem; cursor: pointer;">
@@ -132,23 +137,33 @@ export class TelemetryModalElement extends LitElement {
                                     <div><span style="opacity: 0.8;">Ignition:</span> <strong>${this.ignitionDisplay}</strong></div>
                                     <div><span style="opacity: 0.8;">Engine Block:</span> <strong>${this.engineBlockDisplay}</strong></div>
                                 </div>
-                                ${this.telemetryData.length > 0 ? html`
-                                    <table class="telemetry-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Header</th>
-                                                <th>IO Elements</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${this.telemetryData.flatMap(item => this.getRawTelemetryRows(item)).map(row => html`
-                                                <tr>
-                                                    <td><pre class="telemetry-blob">${this.formatJsonForDisplay(row.header)}</pre></td>
-                                                    <td><pre class="telemetry-blob">${this.formatJsonForDisplay(row.io_elements)}</pre></td>
-                                                </tr>
-                                            `)}
-                                        </tbody>
-                                    </table>
+                                ${this.pages.length > 0 ? html`
+                                    <div class="panel" style="margin-top: 8px;">
+                                        <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                                            <div>
+                                                ${this.currentTitle}
+                                            </div>
+                                            <div class="pagination" style="margin:0;">
+                                                <button class="pagination-btn" @click=${this.prevPage} ?disabled=${this.currentIndex <= 0} aria-label="Previous">
+                                                    ←
+                                                </button>
+                                                <span>Record ${this.currentIndex + 1} of ${this.pages.length}</span>
+                                                <button class="pagination-btn" @click=${this.nextPage} ?disabled=${this.currentIndex >= this.pages.length - 1} aria-label="Next">
+                                                    →
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="panel-body" style="display:grid; gap:12px; max-height:50vh; overflow:auto;">
+                                            <div>
+                                                <div class="tile-label" style="margin-bottom:6px;">Header</div>
+                                                <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.pages[this.currentIndex].header)}</pre>
+                                            </div>
+                                            <div>
+                                                <div class="tile-label" style="margin-bottom:6px;">IO Elements</div>
+                                                <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.pages[this.currentIndex].io_elements)}</pre>
+                                            </div>
+                                        </div>
+                                    </div>
                                 ` : html`
                                     <div class="no-data">No telemetry data available for this vehicle.</div>
                                 `}
@@ -156,7 +171,7 @@ export class TelemetryModalElement extends LitElement {
                         `}
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn-secondary" @click=${this.closeModal}>
+                        <button type="button" class="action-btn secondary" @click=${this.closeModal}>
                             Close
                         </button>
                     </div>
@@ -177,6 +192,7 @@ export class TelemetryModalElement extends LitElement {
         this.rpmDisplay = "—";
         this.ignitionDisplay = "—";
         this.engineBlockDisplay = "—";
+        this.currentIndex = 0;
         
         // Dispatch event to parent
         this.dispatchEvent(new CustomEvent('modal-closed', {
@@ -203,6 +219,7 @@ export class TelemetryModalElement extends LitElement {
                 this.rpmDisplay = "—";
                 this.ignitionDisplay = "—";
                 this.engineBlockDisplay = "—";
+                this.currentIndex = 0;
                 console.log("Telemetry data reset successfully");
             } else {
                 this.error = response.error || "Failed to reset telemetry data";
@@ -273,6 +290,7 @@ export class TelemetryModalElement extends LitElement {
                     this.updateRpmDisplay(first);
                     this.updateIgnitionDisplay(first);
                     this.updateEngineBlockDisplay(first);
+                    this.currentIndex = 0;
                 }
             } else {
                 this.error = response.error || "Failed to load telemetry data";
@@ -326,6 +344,62 @@ export class TelemetryModalElement extends LitElement {
         }
 
         return [{ header: {}, io_elements: [] }];
+    }
+
+    // Flatten all incoming telemetry entries to page over
+    private get pages(): { header: unknown; io_elements: unknown }[] {
+        if (!this.telemetryData || this.telemetryData.length === 0) return [];
+        const all: { header: unknown; io_elements: unknown }[] = [];
+        for (const item of this.telemetryData) {
+            all.push(...this.getRawTelemetryRows(item));
+        }
+        return all;
+    }
+
+    private get currentTitle(): string {
+        const page = this.pages[this.currentIndex];
+        if (!page) return 'Telemetry Record';
+        // Try to extract header.timestamp
+        const header: any = page.header as any;
+        const ts = header?.timestamp ?? header?.time ?? null;
+        if (ts == null) return 'Telemetry Record';
+        return `Timestamp: ${this.formatTimestamp(ts)}`;
+    }
+
+    private formatTimestamp(ts: any): string {
+        try {
+            if (typeof ts === 'number') {
+                // Heuristic: if in seconds, multiply to ms
+                const ms = ts < 1e12 ? ts * 1000 : ts;
+                return new Date(ms).toLocaleString();
+            }
+            if (typeof ts === 'string') {
+                const num = Number(ts);
+                if (!Number.isNaN(num)) {
+                    const ms = num < 1e12 ? num * 1000 : num;
+                    return new Date(ms).toLocaleString();
+                }
+                // Assume ISO-like
+                const d = new Date(ts);
+                if (!isNaN(d.getTime())) return d.toLocaleString();
+                return ts;
+            }
+            return String(ts);
+        } catch {
+            return String(ts);
+        }
+    }
+
+    private nextPage = () => {
+        if (this.currentIndex < this.pages.length - 1) {
+            this.currentIndex += 1;
+        }
+    }
+
+    private prevPage = () => {
+        if (this.currentIndex > 0) {
+            this.currentIndex -= 1;
+        }
     }
 
     private formatJsonForDisplay(data: unknown): string {

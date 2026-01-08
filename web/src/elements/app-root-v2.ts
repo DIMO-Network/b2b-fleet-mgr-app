@@ -5,7 +5,7 @@ import { apiServiceContext } from '../context';
 import {ApiService} from "@services/api-service.ts";
 import { Router } from '@lit-labs/router';
 import {globalStyles} from "../global-styles.ts";
-import {OracleTenantService} from "@services/oracle-tenant-service.ts";
+// import {OracleTenantService} from "@services/oracle-tenant-service.ts";
 
 @customElement('app-root-v2')
 export class AppRootV2 extends LitElement {
@@ -57,7 +57,7 @@ export class AppRootV2 extends LitElement {
     @provide({ context: apiServiceContext })
     apiService = ApiService.getInstance(); // app-level singleton
 
-    private oracleTenantService = OracleTenantService.getInstance();
+    //private oracleTenantService = OracleTenantService.getInstance();
 
     @state()
     private hasOracleAccess: boolean = true;
@@ -68,7 +68,6 @@ export class AppRootV2 extends LitElement {
     constructor() {
         super();
 
-
         this.router = new Router(this, [
             // Handle direct loads to the html entry file (e.g., /app-v2.html)
             // so the router doesn't error before hash-based navigation kicks in.
@@ -78,6 +77,7 @@ export class AppRootV2 extends LitElement {
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
             { path: '/onboarding', render: () => html`<onboarding-view></onboarding-view>` },
             { path: '/tenant-selector', render: () => html`<tenant-selector-view></tenant-selector-view>` },
+            { path: '/tenant-settings', render: () => html`<tenant-settings-view></tenant-settings-view>` },
         ]);
     }
 
@@ -92,8 +92,8 @@ export class AppRootV2 extends LitElement {
         }
         await this.onHashChange();
 
-        // Ensure oracle in global state and verify access
-        this.hasOracleAccess = await this.oracleTenantService.verifyOracleAccess();
+        // Ensure oracle in global state and verify access TODO
+        this.hasOracleAccess = true;  //await this.oracleTenantService.verifyOracleAccess();
     }
 
     disconnectedCallback(): void {
@@ -140,6 +140,7 @@ export class AppRootV2 extends LitElement {
         if (path.startsWith('/reports')) return 'Reports';
         if (path.startsWith('/users')) return 'Users';
         if (path.startsWith('/tenant-selector')) return 'Tenant Selector';
+        if (path.startsWith('/tenant-settings')) return 'Tenant Settings';
         return 'Home';
     }
 
@@ -215,6 +216,10 @@ export class AppRootV2 extends LitElement {
                         </div>
                         <div class="nav-item ${this.isActive('/users') ? 'active' : ''}">
                             <a data-page="users" href="#/users" aria-current="${this.isActive('/users') ? 'page' : 'false'}">Users</a>
+                        </div>
+                        <div class="nav-divider"></div>
+                        <div class="nav-item ${this.isActive('/tenant-settings') ? 'active' : ''}">
+                            <a data-page="tenant-settings" href="#/tenant-settings" aria-current="${this.isActive('/tenant-settings') ? 'page' : 'false'}">Settings</a>
                         </div>
                     </nav>
                 </aside>

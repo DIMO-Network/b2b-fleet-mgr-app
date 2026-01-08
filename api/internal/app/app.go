@@ -96,7 +96,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Post("/vehicle/mint", vehiclesCtrl.SubmitVehiclesMintData)
 
 	// Disconnect vehicle
-	oracleApp.Get("/vehicle/disconnect", vehiclesCtrl.GetDisconnectData)
+	oracleApp.Get("/vehicle/disconnect", genericProxyCtrl.Proxy)
 	oracleApp.Post("/vehicle/disconnect", vehiclesCtrl.SubmitDisconnectData)
 	oracleApp.Get("/vehicle/disconnect/status", vehiclesCtrl.GetDisconnectStatus)
 
@@ -115,6 +115,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	// reset onboarding for deleted vehicles
 	oracleApp.Delete("/vehicle/reset-onboarding/:imei", vehiclesCtrl.ResetOnboarding)
+	oracleApp.Delete("/vehicle/force/:imei", genericProxyCtrl.Proxy)
 
 	// accounts
 	oracleApp.Get("/account", accountsCtrl.GetAccount)

@@ -31,10 +31,10 @@
     "@types/qs": "^6.9.18",
     "@vitejs/plugin-basic-ssl": "^2.0.0",
     "typescript": "^5.8.2",
-    "vite": "^6.2.3",
+    "vite": "^6.4.1",
     "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-mkcert": "^1.17.8",
-    "vite-plugin-static-copy": "^2.2.0",
+    "vite-plugin-static-copy": "^2.3.2",
     "vite-tsconfig-paths": "^5.1.4"
   }
 }

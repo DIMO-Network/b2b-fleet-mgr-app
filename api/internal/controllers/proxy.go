@@ -38,6 +38,10 @@ func (gp *GenericProxyController) Proxy(c *fiber.Ctx) error {
 		targetURL = targetURL.JoinPath(seg)
 	}
 	targetURL.RawQuery = string(c.Request().URI().QueryString())
+	body := c.Body()
+	if len(body) > 0 {
+		return ProxyRequest(c, targetURL, body, gp.logger)
+	}
 
 	return ProxyRequest(c, targetURL, nil, gp.logger)
 }

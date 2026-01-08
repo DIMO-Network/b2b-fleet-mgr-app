@@ -59,7 +59,12 @@ export class VehicleListItemElement extends BaseOnboardingElement {
               <td>${this.item.definition.make} ${this.item.definition.model} ${this.item.definition.year}</td>
               <td>${this.item.imei}</td>
               <td>${this.item.tokenId}</td>
-                <td><span class=${ConnectionStatusMap[this.getConnectionStatus(this.item)] == 'Connected' ? 'status status-connected' : 'status status-offline'}>${ConnectionStatusMap[this.getConnectionStatus(this.item)]}</span></td>
+                <td>
+                    ${this.item.isCurrentUserOwner ? 
+                        html`<span class=${ConnectionStatusMap[this.getConnectionStatus(this.item)] == 'Connected' ? 'status status-connected' : 'status status-offline'}>${ConnectionStatusMap[this.getConnectionStatus(this.item)]}</span>` :
+                        html`<span class="status status-transferred">Transferred</span>`
+                    }
+                </td>
               <td>
                   <button 
                       type="button"
@@ -97,23 +102,21 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   </button>
                   <button 
                       type="button"
-                      ?hidden=${this.item.tokenId == 0}
-                      ?disabled=${this.item.syntheticDevice.tokenId || this.processing || !this.item.isCurrentUserOwner}
+                      ?hidden=${this.item.tokenId == 0 || !this.item.isCurrentUserOwner}
+                      ?disabled=${this.item.syntheticDevice.tokenId || this.processing}
                       @click=${this.deleteVehicle}
                       class=${this.deletionProcessing ? 'processing action-btn secondary' : 'action-btn secondary'}
                   >
                       delete
-                      ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
                   <button 
                       type="button"
-                      ?hidden=${this.item.tokenId == 0}
-                      ?disabled=${this.processing || !this.item.isCurrentUserOwner}
+                      ?hidden=${this.item.tokenId == 0 || !this.item.isCurrentUserOwner}
+                      ?disabled=${this.processing}
                       @click=${this.openTransferModal}
                       class="action-btn"
                   >
                       transfer
-                      ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
                   <button
                       type="button"
@@ -123,6 +126,15 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       class="action-btn"
                   >
                       reset onboarding
+                  </button>
+                  <button 
+                      type="button"
+                      ?hidden=${this.item.tokenId == 0 || this.item.isCurrentUserOwner}
+                      ?disabled=${this.processing}
+                      @click=${this.forceDeleteVehicle}
+                      class=${this.deletionProcessing ? 'processing action-btn secondary' : 'action-btn secondary'}
+                  >
+                      force delete
                   </button>
               </td>
             </tr>
@@ -194,11 +206,17 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true
         this.connectionProcessing = true
-        await this.onboardVINs([{vin: this.item.vin, definition: this.item.definition.id}], null);
-        await delay(5000)
-        this.processing = false
-        this.connectionProcessing = false
-        this.dispatchItemChanged()
+        const success = await this.onboardVINs([{vin: this.item.vin, definition: this.item.definition.id}], null);
+        if (success) {
+            await delay(5000)
+            this.processing = false
+            this.connectionProcessing = false
+            this.dispatchItemChanged()
+        } else {
+            this.processing = false
+            this.connectionProcessing = false
+            this.openErrorModal('Vehicle connect failed', 'Connect Failed')
+        }
     }
 
     async disconnectVehicle() {
@@ -212,11 +230,17 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true
         this.connectionProcessing = true
-        await this.disconnectVins([this.item.vin])
-        await delay(5000)
-        this.processing = false
-        this.connectionProcessing = false
-        this.dispatchItemChanged()
+        const result = await this.disconnectVins([this.item.vin])
+        if (result.success) {
+            await delay(5000)
+            this.processing = false
+            this.connectionProcessing = false
+            this.dispatchItemChanged()
+        } else {
+            this.processing = false
+            this.connectionProcessing = false
+            this.openErrorModal(result.error || 'Vehicle disconnect failed')
+        }
     }
 
     async deleteVehicle() {
@@ -230,11 +254,41 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true
         this.deletionProcessing = true
-        await this.deleteVins([this.item.vin])
-        await delay(5000)
-        this.processing = false
-        this.deletionProcessing = false
-        this.dispatchItemChanged()
+        const result = await this.deleteVins([this.item.vin])
+        if (result.success) {
+            await delay(5000)
+            this.processing = false
+            this.deletionProcessing = false
+            this.dispatchItemChanged()
+        } else {
+            this.processing = false
+            this.deletionProcessing = false
+            this.openErrorModal(result.error || 'Vehicle delete failed', 'Delete Failed')
+        }
+    }
+
+    // abandons the NFT
+    async forceDeleteVehicle() {
+        if (!this.item) {
+            return;
+        }
+
+        if (!confirm("Are you sure you want to FORCE delete this vehicle? This will abandon all the vehicle history attached to their NFT. Only do this if you are unable to get access to vehicle NFT.")) {
+            return;
+        }
+
+        this.processing = true
+        this.deletionProcessing = true
+        const result = await this.api.callApi('DELETE', `/vehicle/force/${this.item.imei}`, null, true, true)
+        if (result.success) {
+            this.processing = false
+            this.deletionProcessing = false
+            this.dispatchItemChanged()
+        } else {
+            this.processing = false
+            this.deletionProcessing = false
+            this.openErrorModal(result.error || 'Vehicle force delete failed', 'Force Delete Failed')
+        }
     }
 
     async resetOnboarding(imei: string) {
@@ -265,6 +319,21 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         });
 
         // Add to body
+        document.body.appendChild(modal);
+    }
+
+    private openErrorModal(message: string, title: string = 'Disconnect Failed') {
+        const modal = document.createElement('error-modal-element') as any;
+        modal.show = true;
+        modal.title = title;
+        modal.message = message ?? (title.includes('Disconnect')
+            ? 'An unexpected error occurred while disconnecting the vehicle.'
+            : 'An unexpected error occurred while deleting the vehicle.');
+
+        modal.addEventListener('modal-closed', () => {
+            document.body.removeChild(modal);
+        });
+
         document.body.appendChild(modal);
     }
 

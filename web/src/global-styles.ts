@@ -245,6 +245,12 @@ export const globalStyles = css`
     }
 
     /* Buttons */
+    button[disabled] {
+        color: rgb(190,190,190);
+        border-color: #777;
+        pointer-events: none;
+    }
+    
     .btn {
         font-family: 'Courier New', Courier, monospace;
         font-size: 14px;
@@ -289,6 +295,32 @@ export const globalStyles = css`
         cursor: not-allowed;
     }
 
+    .processing {
+        position: relative;
+        pointer-events: none;
+        background-color: #444;
+        border-color: #bbb !important;
+    }
+
+    .processing::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 1em;
+        height: 1em;
+        border: 2px solid white;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.8s linear infinite;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes spin {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
     /* Forms */
     input, select, textarea {
         font-family: 'Courier New', Courier, monospace;
@@ -326,6 +358,10 @@ export const globalStyles = css`
         gap: 16px;
         align-items: flex-end;
     }
+    
+    fieldset {
+        padding: 6px 10px 10px 10px;
+    }
 
     /* Status Indicators */
     .status {
@@ -358,6 +394,11 @@ export const globalStyles = css`
 
     .status-customer {
         background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-transferred {
+        background: #ffe5b4;
         color: #856404;
     }
 
@@ -412,6 +453,29 @@ export const globalStyles = css`
 
     .panel-body {
         padding: 16px;
+    }
+
+    /* Alerts */
+    .alert {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 14px;
+        padding: 10px 14px;
+        border: 1px solid #000;
+        background: #fff;
+        color: #000;
+        margin: 8px 0 12px 0;
+    }
+
+    .alert-error {
+        background: #f8d7da; /* light red */
+        color: #721c24;      /* dark red text */
+        border-color: #721c24;
+    }
+
+    .alert-success {
+        background: #d4edda; /* light green */
+        color: #155724;      /* dark green text */
+        border-color: #155724;
     }
 
     /* Vehicle Detail Specific */
@@ -726,46 +790,85 @@ export const globalStyles = css`
         gap: 8px;
     }
 
-    /* Modal placeholder */
+    /* Modal (shared across elements) */
     .modal-overlay {
-        display: none;
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
         background: rgba(0,0,0,0.5);
+        display: flex;
         align-items: center;
         justify-content: center;
         z-index: 1000;
     }
 
+    /* Backward-compat support if elements toggle .active */
     .modal-overlay.active {
         display: flex;
     }
 
-    .modal {
+    /* Dialog container */
+    .modal-content, .modal {
         background: #fff;
         border: 1px solid #000;
-        padding: 24px;
-        min-width: 400px;
-        max-width: 600px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        width: min(90vw, 800px);
+        max-height: 90vh;
+        overflow: hidden; /* header/footer stick, body scrolls */
     }
 
     .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e5e7eb;
         font-weight: bold;
-        margin-bottom: 16px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #ccc;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 18px;
+        color: #000;
+    }
+
+    .modal-close {
+        background: none;
+        border: 1px solid transparent;
+        font-size: 20px;
+        cursor: pointer;
+        color: #333;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+    }
+
+    .modal-close:hover {
+        background-color: #f3f4f6;
+        border-color: #ccc;
+    }
+
+    .modal-body {
+        padding: 16px;
+        overflow: auto;
+        max-height: calc(90vh - 56px); /* subtract header approx */
     }
 
     .modal-footer {
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid #ccc;
+        padding: 12px 16px;
+        border-top: 1px solid #e5e7eb;
         display: flex;
         gap: 8px;
         justify-content: flex-end;
+        background: #fff;
     }
 
     /* Clickable report rows */
