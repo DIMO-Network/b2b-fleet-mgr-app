@@ -88,7 +88,7 @@ export class OwnedVehiclesTable extends LitElement {
 
               return html`
                 <tr style="cursor:pointer">
-                  <td class="link">${vehicleName}</td>
+                  <td>${vehicleName}</td>
                   <td>${v?.tokenId ?? "—"}</td>
                   <td>-</td>
                   <td>
