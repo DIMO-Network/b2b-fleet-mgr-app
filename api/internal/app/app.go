@@ -122,6 +122,10 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Post("/account", accountsCtrl.CreateAccount)
 	oracleApp.Post("/auth/otp", accountsCtrl.InitOtpLogin)
 	oracleApp.Put("/auth/otp", accountsCtrl.CompleteOtpLogin)
+	// account management
+	oracleApp.Get("/accounts/admin", genericProxyCtrl.Proxy)
+	oracleApp.Post("/accounts/admin/grant", genericProxyCtrl.Proxy)
+	oracleApp.Get("/account/permissions-available", genericProxyCtrl.Proxy)
 
 	// settings the app needs to operate, pulled from config / env vars
 	oracleApp.Get("/settings", settingsCtrl.GetSettings) // todo some of these are oracle specific
