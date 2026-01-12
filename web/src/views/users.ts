@@ -11,7 +11,20 @@ import "../elements/owner-vehicles-table-element.ts";
 
 @customElement("users-view")
 export class UsersView extends LitElement {
-  static styles = [globalStyles, css``];
+  static styles = [
+    globalStyles,
+    css`
+      .btn-success {
+        background: #28a745;
+        color: #fff;
+        border-color: #28a745;
+      }
+      .btn-success:hover {
+        background: #218838;
+        border-color: #1e7e34;
+      }
+    `,
+  ];
 
   private readonly vehiclesPageSize = 25;
 
@@ -171,15 +184,22 @@ export class UsersView extends LitElement {
   render() {
     return html`
       <div class="page active" id="page-users">
-        <div class="section-header">User Lookup</div>
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>User Lookup</span>
+          <button class="btn btn-success" @click=${() => window.location.hash = "/users/create"}>
+            + CREATE NEW USER
+          </button>
+        </div>
 
         <div class="panel mb-24">
           <div class="panel-body">
             <div class="form-row">
               <div class="form-group" style="flex: 1; margin: 0;">
+                <form>
                 <label class="form-label">Search by Email, Wallet Address, or Phone</label>
                 <input
                   type="text"
+                  autofocus
                   id="user-search-input"
                   class="search-box"
                   style="width: 100%;"
@@ -190,6 +210,7 @@ export class UsersView extends LitElement {
               <button class="btn btn-primary" @click=${this.searchUser.bind(this)}>
                 SEARCH
               </button>
+              </form>
             </div>
           </div>
         </div>

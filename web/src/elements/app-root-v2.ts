@@ -74,6 +74,7 @@ export class AppRootV2 extends LitElement {
             { path: '/', render: () => html`<home-view></home-view>` },
             { path: '/vehicles-fleets', render: () => html`<vehicles-fleets-view></vehicles-fleets-view>` },
             { path: '/users', render: () => html`<users-view></users-view>` },
+            { path: '/users/create', render: () => html`<create-user-view></create-user-view>` },
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
             { path: '/onboarding', render: () => html`<onboarding-view></onboarding-view>` },
             { path: '/tenant-selector', render: () => html`<tenant-selector-view></tenant-selector-view>` },
@@ -138,6 +139,7 @@ export class AppRootV2 extends LitElement {
         if (path.startsWith('/onboarding')) return 'Onboarding';
         if (path.startsWith('/vehicles-fleets')) return 'Vehicles & Fleets';
         if (path.startsWith('/reports')) return 'Reports';
+        if (path.startsWith('/users/create')) return 'Create User';
         if (path.startsWith('/users')) return 'Users';
         if (path.startsWith('/tenant-selector')) return 'Tenant Selector';
         if (path.startsWith('/tenant-settings')) return 'Tenant Settings';
