@@ -85,6 +85,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Post("/pending-vehicle/command/:imei", vehiclesCtrl.SubmitCommand)
 
 	oracleApp.Get("/vehicles", vehiclesCtrl.GetVehicles)
+	oracleApp.Get("/vehicles/export", genericProxyCtrl.Proxy)
 	oracleApp.Get("/vehicle/verify", vehiclesCtrl.GetVehiclesVerificationStatus)
 	oracleApp.Post("/vehicle/verify", vehiclesCtrl.SubmitVehiclesVerification)
 

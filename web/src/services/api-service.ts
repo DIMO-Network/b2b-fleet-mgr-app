@@ -66,6 +66,54 @@ export class ApiService {
         }
     }
 
+    public async downloadFile(
+        endpoint: string,
+        auth: boolean = true,
+        useOracle: boolean = true,
+        includeTenantId: boolean = true
+    ): Promise<void> {
+        const headers: Record<string, string> = {
+            ...this.getAuthorizationHeader(auth),
+            ...this.getTenantIdHeader(includeTenantId),
+        };
+
+        const finalUrl = this.constructUrl(endpoint, useOracle);
+
+        try {
+            const response = await fetch(finalUrl, { method: 'GET', headers });
+
+            if (!response.ok) {
+                const result = await this.processResponse(response);
+                throw new Error(result.message || result.error || result || "HTTP error");
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+
+            // Try to get filename from Content-Disposition header
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let fileName = 'export.csv';
+            if (contentDisposition) {
+                const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                if (fileNameMatch && fileNameMatch[1]) {
+                    fileName = fileNameMatch[1];
+                }
+            }
+
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error: any) {
+            console.error(`Error downloading file from ${endpoint}:`, error);
+            throw error;
+        }
+    }
+
     public getWalletAddress(): string | null {
         const token = localStorage.getItem('token');
         if (!token) {
