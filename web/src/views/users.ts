@@ -47,8 +47,37 @@ export class UsersView extends LitElement {
     { hasNextPage: boolean; endCursor?: string }
   >();
 
+  @state() private adminUsers: any[] = [];
+  @state() private adminUsersLoading = false;
+
   @query("#user-search-input")
   private searchInput!: HTMLInputElement;
+
+  async connectedCallback() {
+    super.connectedCallback();
+    await this.fetchAdminUsers();
+  }
+
+  private async fetchAdminUsers() {
+    this.adminUsersLoading = true;
+    try {
+      const res = await ApiService.getInstance().callApi<any[]>(
+        "GET",
+        "/accounts/admin",
+        null,
+        true,
+        true,
+        true
+      );
+      if (res.success && Array.isArray(res.data)) {
+        this.adminUsers = res.data;
+      }
+    } catch (error) {
+      console.error("Failed to fetch admin users:", error);
+    } finally {
+      this.adminUsersLoading = false;
+    }
+  }
 
   private isWalletAddress(value: string): boolean {
     return /^0x[a-fA-F0-9]{40}$/.test(value);
@@ -256,6 +285,49 @@ export class UsersView extends LitElement {
                   : null}
               `
             : null}
+        </div>
+
+        <div class="section-header mt-24">
+          <span>Admin Users</span>
+        </div>
+
+        <div class="panel">
+          <div class="panel-body">
+            ${this.adminUsersLoading
+              ? html`<div>Loading admin users...</div>`
+              : this.adminUsers.length === 0
+              ? html`<div>No admin users found.</div>`
+              : html`
+                  <div class="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Email</th>
+                          <th>Wallet Address</th>
+                          <th>Permissions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${this.adminUsers.map(
+                          (admin) => html`
+                            <tr>
+                              <td>${admin.email || "-"}</td>
+                              <td style="font-family: monospace; font-size: 14px;">
+                                ${admin.walletAddress}
+                              </td>
+                              <td>
+                                ${(admin.permissions || []).map(
+                                  (p: string) => html`<span class="badge">${p}</span>`
+                                )}
+                              </td>
+                            </tr>
+                          `
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                `}
+          </div>
         </div>
       </div>
     `;
