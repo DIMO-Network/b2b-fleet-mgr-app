@@ -155,7 +155,7 @@ export class CreateUserView extends LitElement {
                   .value=${this.email}
                   @input=${this.handleEmailChange}
                   ?disabled=${this.submitting}
-                  required
+                  ?required=${!this.isAdmin}
                 />
               </div>
 
@@ -182,7 +182,7 @@ export class CreateUserView extends LitElement {
                         @input=${this.handleWalletChange}
                         placeholder="0x..."
                         ?disabled=${this.submitting}
-                        required
+                        ?required=${this.isAdmin && !this.email.includes("@")}
                       />
                       <div style="font-size: 12px; color: #666; margin-top: 4px;">
                         For existing accounts only provide 0x, not email.
