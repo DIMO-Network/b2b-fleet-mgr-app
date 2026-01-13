@@ -115,7 +115,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Post("/vehicle/register", vehiclesCtrl.RegisterVehicle)
 
 	// reset onboarding for deleted vehicles
-	oracleApp.Delete("/vehicle/reset-onboarding/:imei", vehiclesCtrl.ResetOnboarding)
+	oracleApp.Delete("/vehicle/reset-onboarding/:imei", genericProxyCtrl.Proxy)
 	oracleApp.Delete("/vehicle/force/:imei", genericProxyCtrl.Proxy)
 
 	// accounts
