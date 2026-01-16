@@ -77,6 +77,8 @@ func ProxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte, logger *
 		req.Header.Set("Authorization", authHeader[0])
 	}
 
+	// store tenantId
+	tenantId := ""
 	// copy any request headers
 	for key, values := range c.GetReqHeaders() {
 		// Skip Authorization header if we've explicitly set one
@@ -86,6 +88,9 @@ func ProxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte, logger *
 
 		for _, value := range values {
 			req.Header.Add(key, value)
+			if key == "Tenant-Id" {
+				tenantId = value
+			}
 		}
 	}
 
@@ -114,7 +119,7 @@ func ProxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte, logger *
 			"error": "Failed to read response",
 		})
 	}
-	logger.Info().Msgf("%s Proxied request to %s", c.Method(), targetURL)
+	logger.Info().Msgf("%s Proxied request to %s with Tenant: %s", c.Method(), targetURL, tenantId)
 
 	// Set headers to match the original response
 	for k, val := range resp.Header {
