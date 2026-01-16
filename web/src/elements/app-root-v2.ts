@@ -197,7 +197,7 @@ export class AppRootV2 extends LitElement {
                 <!-- Sidebar -->
                 <aside class="sidebar">
                     <div class="sidebar-header" @click=${this.onSidebarClick}>
-                        <img src="/assets/kaufmann-logo.svg" alt="Kaufmann" class="logo" />
+                        <img src="/assets/dimo-logo-d.png" alt="DIMO" class="logo" />
                         <a class="btn btn-sm switch-tenant-btn" href="#/tenant-selector">Switch Tenant</a>
                     </div>
                     <nav class="sidebar-nav" @click=${this.onSidebarClick}>

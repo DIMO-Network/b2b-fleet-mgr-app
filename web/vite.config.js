@@ -4,6 +4,7 @@ import { resolve } from 'path';
 import mkcert from 'vite-plugin-mkcert';
 import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
+import {viteStaticCopy} from "vite-plugin-static-copy";
 
 export default defineConfig({
     server: {
@@ -36,5 +37,13 @@ export default defineConfig({
         }),
         tsconfigPaths(),
         eslintPlugin(),
+        viteStaticCopy({
+            targets: [
+                {
+                    src: 'src/assets/*',
+                    dest: 'assets'
+                }
+            ]
+        }),
     ],
 });

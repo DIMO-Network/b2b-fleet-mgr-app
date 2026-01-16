@@ -51,6 +51,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	}
 
 	app.Static("/", "./dist", staticConfig)
+	app.Static("/assets", "./dist/assets", staticConfig)
 
 	// application routes
 	app.Get("/health", healthCheck)
