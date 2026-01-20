@@ -13,7 +13,8 @@ enum ConnectionStatus {
     CONNECTED,
     DISCONNECTING,
     DISCONNECTION_FAILED,
-    DISCONNECTED
+    DISCONNECTED,
+    TRANSFERRED
 }
 
 const ConnectionStatusMap:  Record<ConnectionStatus, string> = {
@@ -24,6 +25,7 @@ const ConnectionStatusMap:  Record<ConnectionStatus, string> = {
     [ConnectionStatus.DISCONNECTING]: "Disconnecting...",
     [ConnectionStatus.DISCONNECTION_FAILED]: "Disconnection failed",
     [ConnectionStatus.DISCONNECTED]: "Disconnected",
+    [ConnectionStatus.TRANSFERRED]: "Transferred",
 }
 
 @customElement('vehicle-list-item-element')
@@ -59,12 +61,9 @@ export class VehicleListItemElement extends BaseOnboardingElement {
               <td>${this.item.definition.make} ${this.item.definition.model} ${this.item.definition.year}</td>
               <td>${this.item.imei}</td>
               <td>${this.item.tokenId}</td>
-                <td>
-                    ${this.item.isCurrentUserOwner ? 
-                        html`<span class=${ConnectionStatusMap[this.getConnectionStatus(this.item)] == 'Connected' ? 'status status-connected' : 'status status-offline'}>${ConnectionStatusMap[this.getConnectionStatus(this.item)]}</span>` :
-                        html`<span class="status status-transferred">Transferred</span>`
-                    }
-                </td>
+              <td>
+                  <span class=${this.getConnectionCSSClass(this.item)}>${ConnectionStatusMap[this.getConnectionStatus(this.item)]}</span>
+              </td>
               <td>
                   <button 
                       type="button"
@@ -142,6 +141,10 @@ export class VehicleListItemElement extends BaseOnboardingElement {
     }
 
     getConnectionStatus(item: Vehicle): ConnectionStatus {
+        if (!item.isCurrentUserOwner && item.tokenId !== 0) {
+            return ConnectionStatus.TRANSFERRED
+        }
+
         if (["inQueue", "inProgress"].includes(item.disconnectionStatus)) {
             return ConnectionStatus.DISCONNECTING
         }
@@ -167,6 +170,14 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         }
 
         return ConnectionStatus.UNKNOWN
+    }
+
+    getConnectionCSSClass(item: Vehicle): string {
+        const status = this.getConnectionStatus(item);
+        if (status === ConnectionStatus.TRANSFERRED) {
+            return "status status-transferred";
+        }
+        return status === ConnectionStatus.CONNECTED ? "status status-connected" : "status status-offline";
     }
 
     canConnect(item: Vehicle): boolean {
