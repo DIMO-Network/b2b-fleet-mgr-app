@@ -92,6 +92,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       disconnect
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
+                  <!--
                   <button ?hidden=${!this.canConnect(this.item)}
                           type="button"
                           ?disabled=${this.processing}
@@ -99,6 +100,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                           @click=${this.connectVehicle}
                   >connect
                   </button>
+                  -->
                   <button 
                       type="button"
                       ?hidden=${this.item.tokenId == 0 || !this.item.isCurrentUserOwner}
