@@ -114,7 +114,6 @@ export class AddVinElement extends BaseOnboardingElement {
 	// Predefined grantees (temporary until backend provides these)
 	@state() private availableGrantees: { label: string; value: string }[] = [
 		{ label: "Kaufmann", value: "0xCa977Abb7eb2706DC1072f266503830D6A8745A8" },
-        { label: "HoneyRuns", value: "0x9d4Ffa984Bd263c3f308A391172581C0684e81f2" }
 	];
     // select both by default, in future could persist choice in local storage
 	@state() private selectedGrantees: string[] = ["0xCa977Abb7eb2706DC1072f266503830D6A8745A8"];
