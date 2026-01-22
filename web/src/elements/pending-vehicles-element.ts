@@ -261,8 +261,15 @@ export class PendingVehiclesElement extends LitElement {
     }
 
     private dispatchSelectionChanged() {
+        const selectedImeis = this.items
+            .filter(vehicle => this.selectedPendingVehicles.has(vehicle.vin))
+            .map(vehicle => vehicle.imei);
+
         this.dispatchEvent(new CustomEvent('selection-changed', {
-            detail: { selectedVehicles: Array.from(this.selectedPendingVehicles) },
+            detail: { 
+                selectedVehicles: Array.from(this.selectedPendingVehicles),
+                selectedImeis: selectedImeis
+            },
             bubbles: true,
             composed: true
         }));

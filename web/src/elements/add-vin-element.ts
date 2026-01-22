@@ -108,6 +108,7 @@ export class AddVinElement extends BaseOnboardingElement {
     @state() otpLoggedIn: boolean = false;
 
     // Pending vehicles properties
+    @state() private selectedImeis: string[] = [];
     @state() private selectedPendingVehicles: string[] = [];
     @state() private selectedVinsForSubmission: string[] = [];
 
@@ -182,8 +183,10 @@ export class AddVinElement extends BaseOnboardingElement {
 
     handlePendingVehiclesSelection(event: CustomEvent) {
         this.selectedPendingVehicles = event.detail.selectedVehicles;
+        this.selectedImeis = event.detail.selectedImeis;
         this.selectedVinsForSubmission = [...this.selectedPendingVehicles];
         console.log("Selected pending vehicles:", this.selectedPendingVehicles);
+        console.log("Selected IMEIs:", this.selectedImeis);
         this.requestUpdate();
     }
 
@@ -364,6 +367,28 @@ export class AddVinElement extends BaseOnboardingElement {
             return this.displayFailure("no vin provided");
         }
 
+        // Claim pending vehicles
+        if (this.selectedImeis.length > 0) {
+            console.log("Claiming pending vehicles:", this.selectedImeis);
+            for (const imei of this.selectedImeis) {
+                try {
+                    const response = await this.api.callApi(
+                        'POST',
+                        `/pending-vehicles/claim/${imei}`,
+                        {},
+                        true, // auth
+                        true, // useOracle
+                        true  // includeTenantId
+                    );
+                    if (!response.success) {
+                        return this.displayFailure(`Failed to claim vehicle with IMEI ${imei}: ${response.error}`);
+                    }
+                } catch (e) {
+                    return this.displayFailure(`Error claiming vehicle with IMEI ${imei}: ${e}`);
+                }
+            }
+        }
+
         // Open the confirmation modal
         this.openConfirmationModal(vinsArray);
     }
@@ -389,6 +414,7 @@ export class AddVinElement extends BaseOnboardingElement {
                 await this.performOnboarding(vehicles);
 
                 // Clear all VIN sources after successful onboarding
+                this.selectedImeis = [];
                 this.selectedPendingVehicles = [];
                 this.selectedVinsForSubmission = [];
                 this.vinsBulk = "";
