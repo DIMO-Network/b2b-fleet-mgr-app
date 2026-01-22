@@ -3,6 +3,7 @@ import {repeat} from 'lit/directives/repeat.js';
 import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import {globalStyles} from "../global-styles.ts";
+import './claim-imei-modal-element';
 
 interface PendingVehicle {
     vin: string;
@@ -150,6 +151,10 @@ export class PendingVehiclesElement extends LitElement {
                        style="width: 40%; min-width: 200px;"
                        .value=${this.searchTerm}
                        @input=${this.onSearchInput}>
+                    <button class="btn btn-primary" @click=${this.openClaimImeiModal} style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.2rem; font-weight: bold;">+</span>
+                        Claim new IMEI
+                    </button>
                 </div>
                 <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
                     ${this.alertText}
@@ -229,6 +234,21 @@ export class PendingVehiclesElement extends LitElement {
         setTimeout(() => {
             modal.loadTelemetryData();
         }, 100);
+    }
+
+    private openClaimImeiModal() {
+        const modal = document.createElement('claim-imei-modal-element') as any;
+        modal.show = true;
+
+        modal.addEventListener('modal-closed', () => {
+            document.body.removeChild(modal);
+        });
+
+        modal.addEventListener('claims-submitted', async () => {
+            await this.loadPendingVehicles();
+        });
+
+        document.body.appendChild(modal);
     }
 
 
