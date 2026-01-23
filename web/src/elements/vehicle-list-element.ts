@@ -58,7 +58,7 @@ export class VehicleListElement extends LitElement {
         this.alertText = "";
         this.loading = false;
         this.currentPage = 1;
-        this.pageSize = 100;
+        this.pageSize = 500;
         this.totalItems = 0;
         this.apiService = ApiService.getInstance();
         this.shouldShowPagination = false;
@@ -154,7 +154,8 @@ export class VehicleListElement extends LitElement {
         return this.items.filter((item) => {
             const vin = item.vin?.toLowerCase() || "";
             const imei = item.imei?.toLowerCase() || "";
-            return vin.includes(term) || imei.includes(term);
+            const tokenId = item.tokenId?.toString() || "";
+            return vin.includes(term) || imei.includes(term) || tokenId.includes(term);
         });
     }
 
@@ -195,7 +196,7 @@ export class VehicleListElement extends LitElement {
                 <div class="onboard-header">ONBOARDED VEHICLES</div>
                 <div class="onboard-toolbar">
                     <input type="text"
-                           placeholder="Search by IMEI or VIN"
+                           placeholder="Search by IMEI, VIN, or Token ID"
                            style="width: 40%; min-width: 200px;"
                            .value=${this.searchTerm}
                            @input=${this.onSearchInput}>
