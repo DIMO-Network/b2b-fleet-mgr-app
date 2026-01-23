@@ -5,6 +5,7 @@ import { globalStyles } from "../global-styles.ts";
 
 import { ApiService } from "@services/api-service";
 import { SettingsService } from "../services/settings-service";
+import { OracleTenantService } from "../services/oracle-tenant-service";
 
 import "../elements/user-profile-card-element.ts";
 import "../elements/owner-vehicles-table-element.ts";
@@ -14,15 +15,6 @@ export class UsersView extends LitElement {
   static styles = [
     globalStyles,
     css`
-      .btn-success {
-        background: #28a745;
-        color: #fff;
-        border-color: #28a745;
-      }
-      .btn-success:hover {
-        background: #218838;
-        border-color: #1e7e34;
-      }
     `,
   ];
 
@@ -288,7 +280,7 @@ export class UsersView extends LitElement {
         </div>
 
         <div class="section-header mt-24">
-          <span>Admin Users</span>
+          <span>Admin Users - ${OracleTenantService.getInstance().getSelectedTenant()?.name || 'No Tenant Selected'}</span>
         </div>
 
         <div class="panel">

@@ -29,6 +29,9 @@ export class TenantSettingsView extends LitElement {
   private success: string = '';
 
   @state()
+  private syncing = false;
+
+  @state()
   private editing = false;
 
   @state()
@@ -125,6 +128,21 @@ export class TenantSettingsView extends LitElement {
     this.success = 'Settings saved successfully';
   }
 
+  private async syncKore() {
+    this.syncing = true;
+    this.error = '';
+    this.success = '';
+
+    const resp = await this.api.callApi('POST', '/tenant/sync-kore', {}, true, true, true);
+    this.syncing = false;
+
+    if (resp.success) {
+      this.success = 'Kore sync started successfully';
+    } else {
+      this.error = resp.error || 'Failed to sync Kore';
+    }
+  }
+
   render() {
     return html`
       <div class="page active" id="page-tenant-settings">
@@ -138,7 +156,7 @@ export class TenantSettingsView extends LitElement {
             <span>Configuration</span>
             ${this.editing ? html`` : html`
               <button class="action-btn secondary" title="Edit" @click=${this.enableEdit}>
-                ✎
+                ✎ Edit
               </button>
             `}
           </div>
@@ -166,9 +184,16 @@ export class TenantSettingsView extends LitElement {
                 <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
                   <fieldset>
                     <label class="form-label">Kore Client ID</label>
-                    <input type="text" style="width: 450px" .value=${this.kore_client_id}
-                      ?disabled=${!this.editing}
-                      @input=${(e: InputEvent) => this.onInput(e, v => this.kore_client_id = v)}>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <input type="text" style="width: 450px" .value=${this.kore_client_id}
+                        ?disabled=${!this.editing}
+                        @input=${(e: InputEvent) => this.onInput(e, v => this.kore_client_id = v)}>
+                      <button type="button" class="btn btn-sm btn-success ${this.syncing ? 'processing' : ''}" 
+                        @click=${this.syncKore} 
+                        ?disabled=${this.syncing || !this.kore_client_id}>
+                        ${this.syncing ? 'Syncing...' : 'Sync SIMs and Fleet'}
+                      </button>
+                    </div>
                   </fieldset>
                   <fieldset>
                     <label class="form-label">Kore Secret</label>

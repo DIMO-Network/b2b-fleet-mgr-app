@@ -152,7 +152,7 @@ export class PendingVehiclesElement extends LitElement {
                        .value=${this.searchTerm}
                        @input=${this.onSearchInput}>
                     <button class="btn btn-primary" @click=${this.openClaimImeiModal} style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 1.2rem; font-weight: bold;">+</span>
+                        <span style="font-size: 1.2rem; font-weight: bold;" title="Please claim your IMEI's every time you purchase or add a new device to your fleet" >+</span>
                         Claim new IMEI
                     </button>
                 </div>

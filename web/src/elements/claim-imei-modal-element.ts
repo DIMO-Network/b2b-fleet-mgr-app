@@ -17,6 +17,17 @@ export class ClaimImeiModalElement extends LitElement {
                 resize: vertical;
                 box-sizing: border-box;
             }
+
+            .helper-text {
+                font-size: 13px;
+                color: #666;
+                margin-bottom: 0.5rem;
+            }
+
+            .instruction-text {
+                font-weight: bold;
+                margin: 0;
+            }
         `
     ]
 
@@ -53,8 +64,9 @@ export class ClaimImeiModalElement extends LitElement {
                     </div>
                     <div class="modal-body">
                         ${this.error ? html`<div class="alert alert-error" style="margin-bottom: 1rem;">${this.error}</div>` : nothing}
+                        <p class="helper-text">Please claim your IMEI's every time you purchase or add a new device to your fleet.</p>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <p style="margin: 0;">Enter one or more IMEIs (one per line):</p>
+                            <p class="instruction-text">Enter one or more IMEIs (one per line):</p>
                             <button type="button" class="btn btn-sm" @click=${() => this.shadowRoot?.querySelector<HTMLInputElement>('#csv-upload')?.click()} ?disabled=${this.processing}>
                                 Upload CSV
                             </button>

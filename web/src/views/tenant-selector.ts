@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import {globalStyles} from "../global-styles.ts";
 import type {Tenant, Oracle} from "@services/oracle-tenant-service.ts";
 import {OracleTenantService} from "@services/oracle-tenant-service.ts";
+import '../elements/add-tenant-modal-element';
 
 @customElement('tenant-selector-view')
 export class TenantSelectorView extends LitElement {
@@ -41,6 +42,20 @@ export class TenantSelectorView extends LitElement {
         background: #1a73e8;
         color: #fff;
         border-radius: 3px;
+      }
+      .add-tenant-card {
+        border-style: dashed;
+        color: #666;
+        justify-content: center;
+        gap: 8px;
+      }
+      .add-tenant-card:hover {
+        color: #000;
+        border-color: #000;
+      }
+      .add-icon {
+        font-size: 24px;
+        font-weight: bold;
       }
     ` ]
 
@@ -102,26 +117,46 @@ export class TenantSelectorView extends LitElement {
             <oracle-selector .selectedOption=${this.oracleId} @option-changed=${this.handleOracleChange}></oracle-selector>
 
             <div class="section-header" style="margin-top: 2em">Tenant Selector</div>
+            <div class="tenant-grid">
+              ${this.tenants.map(t => html`
+                <div class="tenant-card ${this.selectedTenantId === t.id ? 'tenant-selected' : ''}"
+                     @click=${() => this.onSelectTenant(t)}
+                     title="Select ${t.name}">
+                  <span class="tenant-name">${t.name}</span>
+                  ${this.selectedTenantId === t.id ? html`<span class="badge-selected">Selected</span>` : html`<span></span>`}
+                </div>
+              `)}
+              <div class="tenant-card add-tenant-card" @click=${this.openAddTenantModal} title="Add New Tenant">
+                <span class="add-icon">+</span>
+                <span class="tenant-name">Add New Tenant</span>
+              </div>
+            </div>
+            
             ${this.tenants.length === 0 ? html`
-              <div class="panel">
+              <div class="panel" style="margin-top: 1rem;">
                 <div class="panel-body warning">
                   Your account has no tenants configured. Reach out to your organization administrator to add your account 0x address.
                 </div>
               </div>
-            ` : html`
-              <div class="tenant-grid">
-                ${this.tenants.map(t => html`
-                  <div class="tenant-card ${this.selectedTenantId === t.id ? 'tenant-selected' : ''}"
-                       @click=${() => this.onSelectTenant(t)}
-                       title="Select ${t.name}">
-                    <span class="tenant-name">${t.name}</span>
-                    ${this.selectedTenantId === t.id ? html`<span class="badge-selected">Selected</span>` : html`<span></span>`}
-                  </div>
-                `)}
-              </div>
-            `}
+            ` : html``}
         </div>
     `;
+    }
+
+    private openAddTenantModal() {
+        const modal = document.createElement('add-tenant-modal-element') as any;
+        modal.show = true;
+
+        modal.addEventListener('modal-closed', () => {
+            document.body.removeChild(modal);
+        });
+
+        modal.addEventListener('tenant-added', async () => {
+            const list = await this.oracleTenantService.fetchTenants();
+            this.tenants = Array.isArray(list) ? list : (this.oracleTenantService.loadTenants() ?? []);
+        });
+
+        document.body.appendChild(modal);
     }
 
     private onSelectTenant(tenant: Tenant) {

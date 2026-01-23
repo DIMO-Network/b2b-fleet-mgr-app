@@ -134,8 +134,10 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Get("/settings", settingsCtrl.GetSettings) // todo some of these are oracle specific
 
 	oracleApp.Get("/tenants", genericProxyCtrl.Proxy)
+	oracleApp.Post("/tenant", genericProxyCtrl.Proxy)
 	oracleApp.Get("/tenant/settings", genericProxyCtrl.Proxy)
 	oracleApp.Post("/tenant/settings", genericProxyCtrl.Proxy)
+	oracleApp.Post("/tenant/sync-kore", genericProxyCtrl.Proxy)
 
 	return app
 }

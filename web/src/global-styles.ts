@@ -285,6 +285,17 @@ export const globalStyles = css`
         background: #900;
     }
 
+    .btn-success {
+        background: #28a745;
+        color: #fff;
+        border-color: #28a745;
+    }
+
+    .btn-success:hover {
+        background: #218838;
+        border-color: #1e7e34;
+    }
+
     .btn-sm {
         padding: 5px 10px;
         font-size: 13px;
