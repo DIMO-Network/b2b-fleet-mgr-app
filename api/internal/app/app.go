@@ -35,7 +35,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "https://localdev.dimo.org:3008", // localhost development
-		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS,PATCH",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, Tenant-Id",
 		AllowCredentials: true,
 	}))
@@ -90,6 +90,15 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp.Get("/vehicles/export", genericProxyCtrl.Proxy)
 	oracleApp.Get("/vehicle/verify", vehiclesCtrl.GetVehiclesVerificationStatus)
 	oracleApp.Post("/vehicle/verify", vehiclesCtrl.SubmitVehiclesVerification)
+	// fleets
+	oracleApp.Get("/fleet/vehicles", genericProxyCtrl.Proxy)
+	oracleApp.Get("/fleet/groups", genericProxyCtrl.Proxy)
+	oracleApp.Post("/fleet/groups", genericProxyCtrl.Proxy)
+	oracleApp.Get("/fleet/groups/:id", genericProxyCtrl.Proxy)
+	oracleApp.Patch("/fleet/groups/:id", genericProxyCtrl.Proxy)
+	oracleApp.Delete("/fleet/groups/:id", genericProxyCtrl.Proxy)
+	oracleApp.Post("/fleet/vehicles/:imei/group/:group_id", genericProxyCtrl.Proxy)
+	oracleApp.Delete("/fleet/vehicles/:imei/group/:group_id", genericProxyCtrl.Proxy)
 
 	oracleApp.Get("/definitions/top", definitionsCtrl.TopDefinitions)
 

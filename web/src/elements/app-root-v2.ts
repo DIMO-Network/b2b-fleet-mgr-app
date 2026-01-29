@@ -73,6 +73,7 @@ export class AppRootV2 extends LitElement {
             // so the router doesn't error before hash-based navigation kicks in.
             { path: '/', render: () => html`<home-view></home-view>` },
             { path: '/vehicles-fleets', render: () => html`<vehicles-fleets-view></vehicles-fleets-view>` },
+            { path: '/vehicles/:vin', render: ({ vin }) => html`<vehicle-detail-view .vin=${vin}></vehicle-detail-view>` },
             { path: '/users', render: () => html`<users-view></users-view>` },
             { path: '/users/create', render: () => html`<create-user-view></create-user-view>` },
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
@@ -137,6 +138,7 @@ export class AppRootV2 extends LitElement {
         const path = this.currentPath || '/';
         if (path === '/') return 'Home';
         if (path.startsWith('/onboarding')) return 'Onboarding';
+        if (path.startsWith('/vehicles/')) return 'Vehicle Detail';
         if (path.startsWith('/vehicles-fleets')) return 'Vehicles & Fleets';
         if (path.startsWith('/reports')) return 'Reports';
         if (path.startsWith('/users/create')) return 'Create User';
