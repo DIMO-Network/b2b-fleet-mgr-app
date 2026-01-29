@@ -3,6 +3,7 @@ import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
 import { ApiService } from '../services/api-service';
 import {globalStyles} from "../global-styles.ts";
+import './confirm-modal-element';
 
 interface IoElement {
     id: number;
@@ -48,6 +49,9 @@ export class TelemetryModalElement extends LitElement {
 
     @state()
     private removingVin = false
+
+    @state()
+    private showRemoveVinConfirm = false
 
     @state()
     private odometerDisplay: string = "—"
@@ -106,7 +110,7 @@ export class TelemetryModalElement extends LitElement {
                             <button type="button"
                                     class="btn btn-danger"
                                     ?disabled=${this.removingVin || !this.vin}
-                                    @click=${this.deletePendingVehicle}
+                                    @click=${this.showRemoveVinConfirmModal}
                                     style="font-size: 0.875rem; padding: 0.5rem 1rem;">
                                 ${this.removingVin ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
                                 Remove VIN
@@ -188,6 +192,18 @@ export class TelemetryModalElement extends LitElement {
                     </div>
                 </div>
             </div>
+
+            <!-- Remove VIN Confirmation Modal -->
+            <confirm-modal-element
+              .show=${this.showRemoveVinConfirm}
+              .title=${'Remove VIN'}
+              .message=${`Are you sure you want to remove VIN "${this.vin}" from this device? This action cannot be undone.`}
+              .confirmText=${'Remove'}
+              .cancelText=${'Cancel'}
+              .confirmButtonClass=${'btn-danger'}
+              @modal-confirm=${this.handleRemoveVinConfirm}
+              @modal-cancel=${this.handleRemoveVinCancel}
+            ></confirm-modal-element>
         `;
     }
 
@@ -198,6 +214,7 @@ export class TelemetryModalElement extends LitElement {
         this.loading = false;
         this.resetting = false;
         this.removingVin = false;
+        this.showRemoveVinConfirm = false;
         this.immobilizerLoading = false;
         this.immobilizerError = "";
         this.odometerDisplay = "—";
@@ -242,6 +259,19 @@ export class TelemetryModalElement extends LitElement {
         } finally {
             this.resetting = false;
         }
+    }
+
+    private showRemoveVinConfirmModal() {
+        this.showRemoveVinConfirm = true;
+    }
+
+    private handleRemoveVinCancel() {
+        this.showRemoveVinConfirm = false;
+    }
+
+    private handleRemoveVinConfirm() {
+        this.showRemoveVinConfirm = false;
+        this.deletePendingVehicle();
     }
 
     private async deletePendingVehicle() {
