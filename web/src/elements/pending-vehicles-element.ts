@@ -177,10 +177,16 @@ export class PendingVehiclesElement extends LitElement {
                         </tr>
                         </thead>
                         <tbody>
-                        ${repeat(this.items, (item) => item.vin, (item) => html`
+                        ${this.items.length === 0 ? html`
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
+                                No results found, make sure you have <a href="#" @click=${(e: Event) => { e.preventDefault(); this.openClaimImeiModal(); }} style="color: #007bff; text-decoration: underline; cursor: pointer;">claimed</a> your devices
+                            </td>
+                        </tr>
+                        ` : repeat(this.items, (item) => item.vin, (item) => html`
                         <tr>
                             <td>
-                                <input type="checkbox" 
+                                <input type="checkbox"
                                        .checked=${this.selectedPendingVehicles.has(item.vin)}
                                        ?disabled=${!item.vin || item.vin.trim() === ''}
                                        @click=${(e: Event) => {

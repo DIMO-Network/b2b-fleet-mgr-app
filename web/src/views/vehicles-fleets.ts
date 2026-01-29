@@ -259,6 +259,13 @@ export class VehiclesFleetsView extends LitElement {
     }, 500);
   }
 
+  private handleGroupFilterChange(e: Event) {
+    const select = e.target as HTMLSelectElement;
+    this.filter = select.value;
+    this.skip = 0; // Reset to first page when filtering
+    this.loadVehicles();
+  }
+
   private getStatusClass(status: string): string {
     switch (status.toLowerCase()) {
       case 'connected': return 'status-connected';
@@ -373,10 +380,10 @@ export class VehiclesFleetsView extends LitElement {
                         <option value="offline">Offline</option>
                         <option value="never">Never Reported</option>
                     </select>
-                    <select>
+                    <select @change=${this.handleGroupFilterChange} .value=${this.filter}>
                         <option value="">All Groups</option>
                         ${this.fleetGroups.map(group => html`
-                          <option value=${group.id}>${group.name}</option>
+                          <option value=${'group:' + group.id}>${group.name}</option>
                         `)}
                     </select>
                 </div>
