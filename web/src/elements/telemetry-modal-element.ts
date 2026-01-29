@@ -47,6 +47,9 @@ export class TelemetryModalElement extends LitElement {
     private resetting = false
 
     @state()
+    private removingVin = false
+
+    @state()
     private odometerDisplay: string = "—"
 
     @state()
@@ -91,14 +94,22 @@ export class TelemetryModalElement extends LitElement {
                 <div class="modal-content telemetry-modal" @click=${(e: Event) => e.stopPropagation()}>
                     <div class="modal-header">
                         <h3>Telemetry Data - ${this.imei}${this.vin ? ` (${this.vin})` : ''}</h3>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <button type="button" 
-                                    class="btn btn-secondary" 
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <button type="button"
+                                    class="btn btn-secondary"
                                     ?disabled=${this.resetting}
                                     @click=${this.resetTelemetry}
                                     style="font-size: 0.875rem; padding: 0.5rem 1rem;">
                                 ${this.resetting ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
                                 Reset Telemetry
+                            </button>
+                            <button type="button"
+                                    class="btn btn-danger"
+                                    ?disabled=${this.removingVin || !this.vin}
+                                    @click=${this.deletePendingVehicle}
+                                    style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                ${this.removingVin ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
+                                Remove VIN
                             </button>
                             <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                         </div>
@@ -186,6 +197,7 @@ export class TelemetryModalElement extends LitElement {
         this.error = "";
         this.loading = false;
         this.resetting = false;
+        this.removingVin = false;
         this.immobilizerLoading = false;
         this.immobilizerError = "";
         this.odometerDisplay = "—";
@@ -193,7 +205,7 @@ export class TelemetryModalElement extends LitElement {
         this.ignitionDisplay = "—";
         this.engineBlockDisplay = "—";
         this.currentIndex = 0;
-        
+
         // Dispatch event to parent
         this.dispatchEvent(new CustomEvent('modal-closed', {
             bubbles: true,
@@ -209,7 +221,7 @@ export class TelemetryModalElement extends LitElement {
 
         this.resetting = true;
         this.error = "";
-        
+
         try {
             const response = await this.apiService.callApi('DELETE', `/pending-vehicle-telemetry/${this.imei}`, null, true, true);
             if (response.success) {
@@ -229,6 +241,32 @@ export class TelemetryModalElement extends LitElement {
             console.error("Error resetting telemetry data:", err);
         } finally {
             this.resetting = false;
+        }
+    }
+
+    private async deletePendingVehicle() {
+        if (!this.imei) {
+            this.error = "No IMEI provided";
+            return;
+        }
+
+        this.removingVin = true;
+        this.error = "";
+
+        try {
+            const response = await this.apiService.callApi('DELETE', `/pending-vehicle/vin/${this.imei}`, null, true, true);
+            if (response.success) {
+                console.log("Pending vehicle deleted successfully");
+                // Close the modal after successful deletion
+                this.closeModal();
+            } else {
+                this.error = response.error || "Failed to delete pending vehicle";
+            }
+        } catch (err) {
+            this.error = "Failed to delete pending vehicle";
+            console.error("Error deleting pending vehicle:", err);
+        } finally {
+            this.removingVin = false;
         }
     }
 

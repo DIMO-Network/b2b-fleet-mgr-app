@@ -47,28 +47,27 @@ func (gp *GenericProxyController) Proxy(c *fiber.Ctx) error {
 }
 
 // ProxyRequest forwards a request to the target URL and returns the response. uses the method from the original request
-// It handles both GET and POST requests based on whether requestBody is provided
+// It handles all HTTP methods (GET, POST, PUT, PATCH, DELETE) based on the original request
 // If authHeader is not empty, it will be added as an Authorization header to the request
 func ProxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte, logger *zerolog.Logger, authHeader ...string) error {
-	// Perform GET request to the target URL
-	req, err := http.NewRequest(c.Method(), targetURL.String(), nil)
+	// Create request with the original HTTP method
+	var reqBody io.Reader
+	if len(requestBody) > 0 {
+		reqBody = bytes.NewBuffer(requestBody)
+	}
+
+	req, err := http.NewRequest(c.Method(), targetURL.String(), reqBody)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create request",
 		})
 	}
+
 	req.Header.Set("Accept", "application/json")
 	//req.Header.Set("Accept-Encoding", "utf-8")
 	//i think issue is because content is being returned compress and then browser doesn't know to decompress it
 
 	if len(requestBody) > 0 {
-		// Create a new POST request
-		req, err = http.NewRequest("POST", targetURL.String(), bytes.NewBuffer(requestBody))
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Failed to create request",
-			})
-		}
 		req.Header.Set("Content-Type", "application/json")
 	}
 
