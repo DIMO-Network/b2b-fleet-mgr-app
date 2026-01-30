@@ -39,6 +39,9 @@ export class TelemetryModalElement extends LitElement {
     private telemetryData: TelemetryData[] = []
 
     @state()
+    private identityData: TelemetryData[] = []
+
+    @state()
     private loading = false
 
     @state()
@@ -66,6 +69,12 @@ export class TelemetryModalElement extends LitElement {
     private engineBlockDisplay: string = "—"
 
     @state()
+    private ioSearchValue: string = ""
+
+    @state()
+    private ioSearchResult: string = "—"
+
+    @state()
     private immobilizerLoading = false
 
     @state()
@@ -74,6 +83,9 @@ export class TelemetryModalElement extends LitElement {
     // Paging over raw telemetry rows
     @state()
     private currentIndex: number = 0;
+
+    @state()
+    private currentIdentityIndex: number = 0;
 
     private apiService: ApiService;
 
@@ -95,7 +107,8 @@ export class TelemetryModalElement extends LitElement {
 
         return html`
             <div class="modal-overlay" @click=${this.closeModal}>
-                <div class="modal-content telemetry-modal" @click=${(e: Event) => e.stopPropagation()}>
+                <div class="modal-content telemetry-modal" @click=${(e: Event) => e.stopPropagation()} style="width: 90%; max-width: 90%;">
+
                     <div class="modal-header">
                         <h3>Telemetry Data - ${this.imei}${this.vin ? ` (${this.vin})` : ''}</h3>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -151,37 +164,92 @@ export class TelemetryModalElement extends LitElement {
                                     <div><span style="opacity: 0.8;">RPM:</span> <strong>${this.rpmDisplay}</strong></div>
                                     <div><span style="opacity: 0.8;">Ignition:</span> <strong>${this.ignitionDisplay}</strong></div>
                                     <div><span style="opacity: 0.8;">Engine Block:</span> <strong>${this.engineBlockDisplay}</strong></div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input
+                                            type="text"
+                                            placeholder="Search IO"
+                                            .value=${this.ioSearchValue}
+                                            @input=${this.handleIoSearch}
+                                            style="width: 100px; padding: 0.25rem 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.875rem;"
+                                        >
+                                        <strong>${this.ioSearchResult} (decimal)</strong>
+                                    </div>
                                 </div>
-                                ${this.pages.length > 0 ? html`
-                                    <div class="panel" style="margin-top: 8px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 8px;">
+                                    <!-- Telemetry Data Panel -->
+                                    <div class="panel">
                                         <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                                            <div>
-                                                ${this.currentTitle}
+                                            <div style="font-weight: bold;">
+                                                Telemetry Data
                                             </div>
-                                            <div class="pagination" style="margin:0;">
-                                                <button class="pagination-btn" @click=${this.prevPage} ?disabled=${this.currentIndex <= 0} aria-label="Previous">
-                                                    ←
-                                                </button>
-                                                <span>Record ${this.currentIndex + 1} of ${this.pages.length}</span>
-                                                <button class="pagination-btn" @click=${this.nextPage} ?disabled=${this.currentIndex >= this.pages.length - 1} aria-label="Next">
-                                                    →
-                                                </button>
-                                            </div>
+                                            ${this.pages.length > 0 ? html`
+                                                <div class="pagination" style="margin:0;">
+                                                    <button class="pagination-btn" @click=${this.prevPage} ?disabled=${this.currentIndex <= 0} aria-label="Previous">
+                                                        ←
+                                                    </button>
+                                                    <span>Record ${this.currentIndex + 1} of ${this.pages.length}</span>
+                                                    <button class="pagination-btn" @click=${this.nextPage} ?disabled=${this.currentIndex >= this.pages.length - 1} aria-label="Next">
+                                                        →
+                                                    </button>
+                                                </div>
+                                            ` : ''}
                                         </div>
                                         <div class="panel-body" style="display:grid; gap:12px; max-height:50vh; overflow:auto;">
-                                            <div>
-                                                <div class="tile-label" style="margin-bottom:6px;">Header</div>
-                                                <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.pages[this.currentIndex].header)}</pre>
-                                            </div>
-                                            <div>
-                                                <div class="tile-label" style="margin-bottom:6px;">IO Elements</div>
-                                                <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.pages[this.currentIndex].io_elements)}</pre>
-                                            </div>
+                                            ${this.pages.length > 0 ? html`
+                                                <div>
+                                                    <div class="tile-label" style="margin-bottom:6px;">${this.currentTitle}</div>
+                                                </div>
+                                                <div>
+                                                    <div class="tile-label" style="margin-bottom:6px;">Header</div>
+                                                    <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.pages[this.currentIndex].header)}</pre>
+                                                </div>
+                                                <div>
+                                                    <div class="tile-label" style="margin-bottom:6px;">IO Elements</div>
+                                                    <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.pages[this.currentIndex].io_elements)}</pre>
+                                                </div>
+                                            ` : html`
+                                                <div class="no-data">No telemetry data available</div>
+                                            `}
                                         </div>
                                     </div>
-                                ` : html`
-                                    <div class="no-data">No telemetry data available for this vehicle.</div>
-                                `}
+
+                                    <!-- Identity Data Panel -->
+                                    <div class="panel">
+                                        <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                                            <div style="font-weight: bold;">
+                                                Identity Data
+                                            </div>
+                                            ${this.identityPages.length > 0 ? html`
+                                                <div class="pagination" style="margin:0;">
+                                                    <button class="pagination-btn" @click=${this.prevIdentityPage} ?disabled=${this.currentIdentityIndex <= 0} aria-label="Previous">
+                                                        ←
+                                                    </button>
+                                                    <span>Record ${this.currentIdentityIndex + 1} of ${this.identityPages.length}</span>
+                                                    <button class="pagination-btn" @click=${this.nextIdentityPage} ?disabled=${this.currentIdentityIndex >= this.identityPages.length - 1} aria-label="Next">
+                                                        →
+                                                    </button>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                        <div class="panel-body" style="display:grid; gap:12px; max-height:50vh; overflow:auto;">
+                                            ${this.identityPages.length > 0 ? html`
+                                                <div>
+                                                    <div class="tile-label" style="margin-bottom:6px;">${this.currentIdentityTitle}</div>
+                                                </div>
+                                                <div>
+                                                    <div class="tile-label" style="margin-bottom:6px;">Header</div>
+                                                    <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.identityPages[this.currentIdentityIndex].header)}</pre>
+                                                </div>
+                                                <div>
+                                                    <div class="tile-label" style="margin-bottom:6px;">IO Elements</div>
+                                                    <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.identityPages[this.currentIdentityIndex].io_elements)}</pre>
+                                                </div>
+                                            ` : html`
+                                                <div class="no-data">No identity data available</div>
+                                            `}
+                                        </div>
+                                    </div>
+                                </div>
                             `}
                         `}
                     </div>
@@ -210,6 +278,7 @@ export class TelemetryModalElement extends LitElement {
     private closeModal() {
         this.show = false;
         this.telemetryData = [];
+        this.identityData = [];
         this.error = "";
         this.loading = false;
         this.resetting = false;
@@ -221,7 +290,10 @@ export class TelemetryModalElement extends LitElement {
         this.rpmDisplay = "—";
         this.ignitionDisplay = "—";
         this.engineBlockDisplay = "—";
+        this.ioSearchValue = "";
+        this.ioSearchResult = "—";
         this.currentIndex = 0;
+        this.currentIdentityIndex = 0;
 
         // Dispatch event to parent
         this.dispatchEvent(new CustomEvent('modal-closed', {
@@ -347,11 +419,17 @@ export class TelemetryModalElement extends LitElement {
 
         this.loading = true;
         this.error = "";
-        
+
         try {
-            const response = await this.apiService.callApi<TelemetryData[]>('GET', `/pending-vehicle-telemetry/${this.imei}`, null, true, true);
-            if (response.success && response.data) {
-                this.telemetryData = Array.isArray(response.data) ? response.data : [];
+            // Fetch both telemetry and identity data in parallel
+            const [telemetryResponse, identityResponse] = await Promise.all([
+                this.apiService.callApi<TelemetryData[]>('GET', `/pending-vehicle-telemetry/${this.imei}?type=telemetry`, null, true, true),
+                this.apiService.callApi<TelemetryData[]>('GET', `/pending-vehicle-telemetry/${this.imei}?type=identification`, null, true, true)
+            ]);
+
+            // Handle telemetry data
+            if (telemetryResponse.success && telemetryResponse.data) {
+                this.telemetryData = Array.isArray(telemetryResponse.data) ? telemetryResponse.data : [];
                 if (this.telemetryData.length > 0) {
                     const first = this.telemetryData[0];
                     this.updateOdometerDisplay(this.telemetryData);
@@ -361,7 +439,20 @@ export class TelemetryModalElement extends LitElement {
                     this.currentIndex = 0;
                 }
             } else {
-                this.error = response.error || "Failed to load telemetry data";
+                console.error("Failed to load telemetry data:", telemetryResponse.error);
+            }
+
+            // Handle identity data
+            if (identityResponse.success && identityResponse.data) {
+                this.identityData = Array.isArray(identityResponse.data) ? identityResponse.data : [];
+                this.currentIdentityIndex = 0;
+            } else {
+                console.error("Failed to load identity data:", identityResponse.error);
+            }
+
+            // Only set error if both failed
+            if (!telemetryResponse.success && !identityResponse.success) {
+                this.error = "Failed to load telemetry and identity data";
             }
         } catch (err) {
             this.error = "Failed to load telemetry data";
@@ -424,6 +515,16 @@ export class TelemetryModalElement extends LitElement {
         return all;
     }
 
+    // Flatten all incoming identity entries to page over
+    private get identityPages(): { header: unknown; io_elements: unknown }[] {
+        if (!this.identityData || this.identityData.length === 0) return [];
+        const all: { header: unknown; io_elements: unknown }[] = [];
+        for (const item of this.identityData) {
+            all.push(...this.getRawTelemetryRows(item));
+        }
+        return all;
+    }
+
     private get currentTitle(): string {
         const page = this.pages[this.currentIndex];
         if (!page) return 'Telemetry Record';
@@ -431,6 +532,16 @@ export class TelemetryModalElement extends LitElement {
         const header: any = page.header as any;
         const ts = header?.timestamp ?? header?.time ?? null;
         if (ts == null) return 'Telemetry Record';
+        return `Timestamp: ${this.formatTimestamp(ts)}`;
+    }
+
+    private get currentIdentityTitle(): string {
+        const page = this.identityPages[this.currentIdentityIndex];
+        if (!page) return 'Identity Record';
+        // Try to extract header.timestamp
+        const header: any = page.header as any;
+        const ts = header?.timestamp ?? header?.time ?? null;
+        if (ts == null) return 'Identity Record';
         return `Timestamp: ${this.formatTimestamp(ts)}`;
     }
 
@@ -467,6 +578,18 @@ export class TelemetryModalElement extends LitElement {
     private prevPage = () => {
         if (this.currentIndex > 0) {
             this.currentIndex -= 1;
+        }
+    }
+
+    private nextIdentityPage = () => {
+        if (this.currentIdentityIndex < this.identityPages.length - 1) {
+            this.currentIdentityIndex += 1;
+        }
+    }
+
+    private prevIdentityPage = () => {
+        if (this.currentIdentityIndex > 0) {
+            this.currentIdentityIndex -= 1;
         }
     }
 
@@ -576,5 +699,33 @@ export class TelemetryModalElement extends LitElement {
 
         const decimal = this.findIoValueDecimal(item, 405);
         this.engineBlockDisplay = decimal !== null ? String(decimal) : "—";
+    }
+
+    private handleIoSearch(e: Event) {
+        const input = e.target as HTMLInputElement;
+        const value = input.value.trim();
+        this.ioSearchValue = input.value;
+
+        if (value === "") {
+            this.ioSearchResult = "—";
+            return;
+        }
+
+        const ioId = parseInt(value, 10);
+        if (isNaN(ioId)) {
+            this.ioSearchResult = "Invalid ID";
+            return;
+        }
+
+        // Search through all telemetry data for the first match
+        for (const item of this.telemetryData) {
+            const decimal = this.findIoValueDecimal(item, ioId);
+            if (decimal !== null) {
+                this.ioSearchResult = String(decimal);
+                return;
+            }
+        }
+
+        this.ioSearchResult = "Not found";
     }
 }
