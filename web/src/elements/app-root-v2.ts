@@ -52,6 +52,43 @@ export class AppRootV2 extends LitElement {
             .user-wallet.clickable {
                 cursor: pointer;
             }
+
+            .update-modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            }
+
+            .update-modal {
+                background: var(--background-color, #fff);
+                border: 1px solid var(--border-color, #ccc);
+                border-radius: 8px;
+                padding: 24px;
+                max-width: 400px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .update-modal h3 {
+                margin-top: 0;
+                margin-bottom: 12px;
+            }
+
+            .update-modal p {
+                margin-bottom: 20px;
+            }
+
+            .update-modal-actions {
+                display: flex;
+                gap: 12px;
+                justify-content: flex-end;
+            }
         ` ]
 
     @provide({ context: apiServiceContext })
@@ -64,6 +101,12 @@ export class AppRootV2 extends LitElement {
 
     @state()
     private currentPath: string = '/';
+
+    @state()
+    private showUpdateModal: boolean = false;
+
+    private currentCommit: string | null = null;
+    private versionCheckInterval: number | null = null;
 
     constructor() {
         super();
@@ -96,10 +139,17 @@ export class AppRootV2 extends LitElement {
 
         // Ensure oracle in global state and verify access TODO
         this.hasOracleAccess = true;  //await this.oracleTenantService.verifyOracleAccess();
+
+        // Start version checking
+        await this.checkVersion();
+        this.versionCheckInterval = window.setInterval(() => this.checkVersion(), 60000);
     }
 
     disconnectedCallback(): void {
         window.removeEventListener('hashchange', this.boundOnHashChange);
+        if (this.versionCheckInterval !== null) {
+            clearInterval(this.versionCheckInterval);
+        }
         super.disconnectedCallback();
     }
 
@@ -190,6 +240,38 @@ export class AppRootV2 extends LitElement {
         }
     }
 
+    private async checkVersion() {
+        try {
+            const response = await fetch('/version');
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const serverCommit = data.commit;
+
+            // Store the first commit we see
+            if (this.currentCommit === null) {
+                this.currentCommit = serverCommit;
+                sessionStorage.setItem('appCommit', serverCommit);
+                return;
+            }
+
+            // Check if version has changed
+            if (serverCommit !== this.currentCommit) {
+                this.showUpdateModal = true;
+            }
+        } catch (e) {
+            console.error('Failed to check version', e);
+        }
+    }
+
+    private handleRefresh() {
+        window.location.reload();
+    }
+
+    private handleDismissUpdate() {
+        this.showUpdateModal = false;
+    }
+
     render() {
         const userEmail = localStorage.getItem("email") || "";
         const userWalletAddress = this.apiService.getWalletAddress() || "";
@@ -267,8 +349,19 @@ export class AppRootV2 extends LitElement {
                     
                 </main>
             </div>
-            
-            
+
+            ${this.showUpdateModal ? html`
+                <div class="update-modal-overlay">
+                    <div class="update-modal">
+                        <h3>Update Available</h3>
+                        <p>A new version of the application is available. Would you like to refresh to get the latest updates?</p>
+                        <div class="update-modal-actions">
+                            <button class="btn btn-sm" @click=${this.handleDismissUpdate}>Cancel</button>
+                            <button class="btn btn-sm btn-primary" @click=${this.handleRefresh}>Refresh</button>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
     `;
     }
 

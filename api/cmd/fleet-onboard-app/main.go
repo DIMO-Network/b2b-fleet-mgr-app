@@ -18,6 +18,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// CommitHash will be injected at build time via -ldflags
+var CommitHash = "dev"
+
 func main() {
 	logger := zerolog.New(os.Stdout).With().Timestamp().Str("app", "b2b-fleet-mgr-api").Logger()
 	settings, err := shared.LoadConfig[config.Settings]("settings.yaml")
@@ -30,7 +33,7 @@ func main() {
 
 	monApp := createMonitoringServer()
 	group, gCtx := errgroup.WithContext(ctx)
-	webAPI := app.App(&settings, &logger)
+	webAPI := app.App(&settings, &logger, CommitHash)
 
 	logger.Info().Str("port", strconv.Itoa(settings.MonitoringPort)).Msgf("Starting monitoring server %d", settings.MonitoringPort)
 	runFiber(gCtx, monApp, ":"+strconv.Itoa(settings.MonitoringPort), group, false)

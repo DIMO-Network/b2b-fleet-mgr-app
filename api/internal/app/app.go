@@ -15,7 +15,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
+var appCommitHash string
+
+func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *fiber.App {
+	appCommitHash = commitHash
 	// all the fiber logic here, routes, authorization
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -55,6 +58,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 
 	// application routes
 	app.Get("/health", healthCheck)
+	app.Get("/version", getVersion)
 
 	vehiclesCtrl := controllers.NewVehiclesController(settings, logger)
 	identityCtrl := controllers.NewIdentityController(settings, logger)
@@ -164,6 +168,12 @@ func healthCheck(c *fiber.Ctx) error {
 	}
 
 	return nil
+}
+
+func getVersion(c *fiber.Ctx) error {
+	return c.JSON(fiber.Map{
+		"commit": appCommitHash,
+	})
 }
 
 func loadStaticIndex(ctx *fiber.Ctx) error {
