@@ -80,14 +80,14 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	oracleApp := app.Group("/oracle/:oracleID", jwtAuth, oracleIDMiddleware(knownOracles))
 	oracleApp.Get("/permissions", vehiclesCtrl.GetOraclePermissions)
 	// pending vehicles
-	oracleApp.Get("/pending-vehicles", vehiclesCtrl.GetPendingVehicles)
+	oracleApp.Get("/pending-vehicles", genericProxyCtrl.Proxy)
 	oracleApp.Post("/pending-vehicles/claim/:imei", genericProxyCtrl.Proxy)
 	oracleApp.Delete("/pending-vehicle/vin/:imei", genericProxyCtrl.Proxy)
-	oracleApp.Get("/pending-vehicle-telemetry/:imei", vehiclesCtrl.GetPendingVehicleTelemetry)
-	oracleApp.Delete("/pending-vehicle-telemetry/:imei", vehiclesCtrl.ClearPendingVehicleTelemetry)
+	oracleApp.Get("/pending-vehicle-telemetry/:imei", genericProxyCtrl.Proxy)
+	oracleApp.Delete("/pending-vehicle-telemetry/:imei", genericProxyCtrl.Proxy)
 	oracleApp.Post("/pending-vehicle/command/:imei", vehiclesCtrl.SubmitCommand)
 
-	oracleApp.Get("/vehicles", vehiclesCtrl.GetVehicles)
+	oracleApp.Get("/vehicles", genericProxyCtrl.Proxy)
 	oracleApp.Get("/vehicles/export", genericProxyCtrl.Proxy)
 	oracleApp.Get("/vehicle/verify", vehiclesCtrl.GetVehiclesVerificationStatus)
 	oracleApp.Post("/vehicle/verify", vehiclesCtrl.SubmitVehiclesVerification)

@@ -213,11 +213,11 @@ export class TelemetryModalElement extends LitElement {
                                         </div>
                                     </div>
 
-                                    <!-- Identity Data Panel -->
+                                    <!-- Identification Data Panel -->
                                     <div class="panel">
                                         <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                                             <div style="font-weight: bold;">
-                                                Identity Data
+                                                Identification Data
                                             </div>
                                             ${this.identityPages.length > 0 ? html`
                                                 <div class="pagination" style="margin:0;">
@@ -237,12 +237,8 @@ export class TelemetryModalElement extends LitElement {
                                                     <div class="tile-label" style="margin-bottom:6px;">${this.currentIdentityTitle}</div>
                                                 </div>
                                                 <div>
-                                                    <div class="tile-label" style="margin-bottom:6px;">Header</div>
-                                                    <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.identityPages[this.currentIdentityIndex].header)}</pre>
-                                                </div>
-                                                <div>
-                                                    <div class="tile-label" style="margin-bottom:6px;">IO Elements</div>
-                                                    <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.identityPages[this.currentIdentityIndex].io_elements)}</pre>
+                                                    <div class="tile-label" style="margin-bottom:6px;">Identity Information</div>
+                                                    <pre class="telemetry-blob" style="max-height:50vh; overflow:auto;">${this.formatJsonForDisplay(this.identityPages[this.currentIdentityIndex].data)}</pre>
                                                 </div>
                                             ` : html`
                                                 <div class="no-data">No identity data available</div>
@@ -516,13 +512,12 @@ export class TelemetryModalElement extends LitElement {
     }
 
     // Flatten all incoming identity entries to page over
-    private get identityPages(): { header: unknown; io_elements: unknown }[] {
+    private get identityPages(): { data: unknown; receivedAt: string }[] {
         if (!this.identityData || this.identityData.length === 0) return [];
-        const all: { header: unknown; io_elements: unknown }[] = [];
-        for (const item of this.identityData) {
-            all.push(...this.getRawTelemetryRows(item));
-        }
-        return all;
+        return this.identityData.map(item => ({
+            data: item.rawTelemetry,
+            receivedAt: item.receivedAt || ''
+        }));
     }
 
     private get currentTitle(): string {
@@ -538,11 +533,10 @@ export class TelemetryModalElement extends LitElement {
     private get currentIdentityTitle(): string {
         const page = this.identityPages[this.currentIdentityIndex];
         if (!page) return 'Identity Record';
-        // Try to extract header.timestamp
-        const header: any = page.header as any;
-        const ts = header?.timestamp ?? header?.time ?? null;
-        if (ts == null) return 'Identity Record';
-        return `Timestamp: ${this.formatTimestamp(ts)}`;
+        if (page.receivedAt) {
+            return `Received At: ${new Date(page.receivedAt).toLocaleString()}`;
+        }
+        return 'Identity Record';
     }
 
     private formatTimestamp(ts: any): string {
