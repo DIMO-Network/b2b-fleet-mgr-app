@@ -337,9 +337,9 @@ export class TelemetryModalElement extends LitElement {
         this.showRemoveVinConfirm = false;
     }
 
-    private handleRemoveVinConfirm() {
+    private async handleRemoveVinConfirm() {
         this.showRemoveVinConfirm = false;
-        this.deletePendingVehicle();
+        await this.deletePendingVehicle();
     }
 
     private async deletePendingVehicle() {
@@ -352,7 +352,7 @@ export class TelemetryModalElement extends LitElement {
         this.error = "";
 
         try {
-            const response = await this.apiService.callApi('DELETE', `/pending-vehicle/vin/${this.imei}`, null, true, true);
+            const response = await this.apiService.callApi('DELETE', `/pending-vehicle/vin-to-imei/${this.imei}`, null, true, true);
             if (response.success) {
                 console.log("Pending vehicle deleted successfully");
                 // Close the modal after successful deletion

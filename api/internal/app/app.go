@@ -82,7 +82,7 @@ func App(settings *config.Settings, logger *zerolog.Logger) *fiber.App {
 	// pending vehicles
 	oracleApp.Get("/pending-vehicles", genericProxyCtrl.Proxy)
 	oracleApp.Post("/pending-vehicles/claim/:imei", genericProxyCtrl.Proxy)
-	oracleApp.Delete("/pending-vehicle/vin/:imei", genericProxyCtrl.Proxy)
+	oracleApp.Delete("/pending-vehicle/vin-to-imei/:imei", genericProxyCtrl.Proxy)
 	oracleApp.Get("/pending-vehicle-telemetry/:imei", genericProxyCtrl.Proxy)
 	oracleApp.Delete("/pending-vehicle-telemetry/:imei", genericProxyCtrl.Proxy)
 	oracleApp.Post("/pending-vehicle/command/:imei", vehiclesCtrl.SubmitCommand)
