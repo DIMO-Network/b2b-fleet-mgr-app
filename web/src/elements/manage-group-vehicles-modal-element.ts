@@ -92,6 +92,59 @@ export class ManageGroupVehiclesModalElement extends LitElement {
         color: #060;
         font-size: 0.875rem;
       }
+
+      .autocomplete-container {
+        position: relative;
+        flex: 1;
+      }
+
+      .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        max-height: 300px;
+        overflow-y: auto;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
+
+      .autocomplete-item {
+        padding: 0.75rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .autocomplete-item:hover {
+        background-color: #f5f5f5;
+      }
+
+      .autocomplete-item-main {
+        font-weight: 500;
+      }
+
+      .autocomplete-item-secondary {
+        font-size: 0.875rem;
+        color: #666;
+      }
+
+      .autocomplete-item-imei {
+        font-family: monospace;
+        font-size: 0.875rem;
+        color: #999;
+      }
+
+      .autocomplete-empty {
+        padding: 0.75rem;
+        color: #666;
+        text-align: center;
+      }
     `
   ];
 
@@ -122,7 +175,17 @@ export class ManageGroupVehiclesModalElement extends LitElement {
   @state()
   private successMessage: string = '';
 
+  @state()
+  private searchSuggestions: Vehicle[] = [];
+
+  @state()
+  private showSuggestions: boolean = false;
+
+  @state()
+  private isLoadingSuggestions: boolean = false;
+
   private apiService: ApiService;
+  private searchDebounceTimer?: number;
 
   constructor() {
     super();
@@ -142,6 +205,15 @@ export class ManageGroupVehiclesModalElement extends LitElement {
       this.errorMessage = '';
       this.successMessage = '';
       this.newVehicleImei = '';
+      this.showSuggestions = false;
+      this.searchSuggestions = [];
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
     }
   }
 
@@ -168,16 +240,44 @@ export class ManageGroupVehiclesModalElement extends LitElement {
 
             <!-- Add Vehicle Section -->
             <div class="add-vehicle-section">
-              <div style="flex: 1;">
+              <div class="autocomplete-container">
                 <input
                   type="text"
-                  placeholder="Enter IMEI"
+                  placeholder="Search by VIN, IMEI, or Token ID"
                   .value=${this.newVehicleImei}
                   @input=${this.handleImeiInput}
+                  @focus=${this.handleInputFocus}
+                  @blur=${this.handleInputBlur}
                   ?disabled=${this.isAdding}
                   @keypress=${this.handleKeyPress}
                   style="width: 100%;"
                 />
+                ${this.showSuggestions ? html`
+                  <div class="autocomplete-dropdown">
+                    ${this.isLoadingSuggestions ? html`
+                      <div class="autocomplete-empty">Loading suggestions...</div>
+                    ` : this.searchSuggestions.length === 0 ? html`
+                      <div class="autocomplete-empty">No vehicles found</div>
+                    ` : this.searchSuggestions.map(vehicle => html`
+                      <div
+                        class="autocomplete-item"
+                        @mousedown=${(e: Event) => this.handleSuggestionClick(vehicle, e)}
+                      >
+                        <div>
+                          <div class="autocomplete-item-main">
+                            ${vehicle.make} ${vehicle.model} ${vehicle.year}
+                          </div>
+                          <div class="autocomplete-item-secondary">
+                            VIN: ${vehicle.vin}
+                          </div>
+                        </div>
+                        <div class="autocomplete-item-imei">
+                          ${vehicle.imei}
+                        </div>
+                      </div>
+                    `)}
+                  </div>
+                ` : nothing}
               </div>
               <button
                 class="btn btn-primary"
@@ -274,6 +374,76 @@ export class ManageGroupVehiclesModalElement extends LitElement {
     // Clear messages when user types
     this.errorMessage = '';
     this.successMessage = '';
+
+    // Clear existing timer
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+
+    const searchValue = input.value.trim();
+
+    // Show suggestions if there's text
+    if (searchValue.length > 0) {
+      this.showSuggestions = true;
+      // Set new timer for 300ms debounce
+      this.searchDebounceTimer = window.setTimeout(() => {
+        this.loadSearchSuggestions(searchValue);
+      }, 400);
+    } else {
+      this.showSuggestions = false;
+      this.searchSuggestions = [];
+    }
+  }
+
+  private handleInputFocus() {
+    // Show suggestions if there's already text in the input
+    if (this.newVehicleImei.trim().length > 0) {
+      this.showSuggestions = true;
+    }
+  }
+
+  private handleInputBlur() {
+    // Delay hiding to allow click events to register
+    setTimeout(() => {
+      this.showSuggestions = false;
+    }, 200);
+  }
+
+  private handleSuggestionClick(vehicle: Vehicle, e: Event) {
+    e.preventDefault();
+    // Set the IMEI value from the selected vehicle
+    this.newVehicleImei = vehicle.imei;
+    this.showSuggestions = false;
+    this.searchSuggestions = [];
+  }
+
+  private async loadSearchSuggestions(searchText: string) {
+    if (!this.apiService) return;
+
+    this.isLoadingSuggestions = true;
+
+    try {
+      const url = `/fleet/vehicles?skip=0&take=10&search=${encodeURIComponent(searchText)}`;
+
+      const response = await this.apiService.callApi<FleetVehiclesResponse>(
+        'GET',
+        url,
+        null,
+        true, // auth required
+        true  // oracle endpoint
+      );
+
+      if (response.success && response.data) {
+        this.searchSuggestions = response.data.data;
+      } else {
+        this.searchSuggestions = [];
+      }
+    } catch (error: any) {
+      console.error('Error loading search suggestions:', error);
+      this.searchSuggestions = [];
+    } finally {
+      this.isLoadingSuggestions = false;
+    }
   }
 
   private handleKeyPress(e: KeyboardEvent) {
