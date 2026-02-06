@@ -97,6 +97,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Post("/vehicle/verify", vehiclesCtrl.SubmitVehiclesVerification)
 	// fleets
 	oracleApp.Get("/fleet/vehicles", genericProxyCtrl.Proxy)
+	oracleApp.Get("/fleet/vehicles/telemetry-info/:tokenID", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/groups", genericProxyCtrl.Proxy)
 	oracleApp.Post("/fleet/groups", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/groups/:id", genericProxyCtrl.Proxy)

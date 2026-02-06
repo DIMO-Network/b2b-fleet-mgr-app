@@ -4,6 +4,10 @@ import {globalStyles} from "../global-styles.ts";
 import { consume } from '@lit/context';
 import { apiServiceContext } from '../context';
 import { ApiService } from '@services/api-service.ts';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 interface VehicleGroup {
   id: string;
@@ -25,6 +29,22 @@ interface Vehicle {
   groups: VehicleGroup[];
   fuel: boolean;
   engine: string;
+}
+
+interface TelemetryInfo {
+  signalsLatest: {
+    currentLocationCoordinates: {
+      value: {
+        latitude: number;
+        longitude: number;
+      };
+      timestamp: string;
+    };
+    obdIsEngineBlocked: {
+      value: number;
+      timestamp: string;
+    };
+  };
 }
 
 interface FleetVehiclesResponse {
@@ -65,7 +85,7 @@ export class VehiclesFleetsView extends LitElement {
   private skip: number = 0;
 
   @state()
-  private take: number = 50;
+  private take: number = 20;
 
   @state()
   private search: string = '';
@@ -94,7 +114,11 @@ export class VehiclesFleetsView extends LitElement {
   @state()
   private groupToManage: FleetGroup | null = null;
 
+  @state()
+  private exporting: boolean = false;
+
   private searchDebounceTimer?: number;
+  private telemetryLoadAbortController?: AbortController;
 
   async connectedCallback() {
     super.connectedCallback();
@@ -107,10 +131,19 @@ export class VehiclesFleetsView extends LitElement {
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer);
     }
+    // Cancel any ongoing telemetry loading
+    if (this.telemetryLoadAbortController) {
+      this.telemetryLoadAbortController.abort();
+    }
   }
 
   private async loadVehicles() {
     if (!this.apiService) return;
+
+    // Cancel any ongoing telemetry loading
+    if (this.telemetryLoadAbortController) {
+      this.telemetryLoadAbortController.abort();
+    }
 
     const url = `/fleet/vehicles?skip=${this.skip}&take=${this.take}&search=${this.search}&filter=${this.filter}`;
 
@@ -125,8 +158,76 @@ export class VehiclesFleetsView extends LitElement {
     if (response.success && response.data) {
       this.vehicles = response.data.data;
       this.totalCount = response.data.totalCount;
+
+      // Start loading telemetry progressively
+      this.loadTelemetryProgressively();
     } else {
       console.error('Failed to load vehicles:', response.error);
+    }
+  }
+
+  private async loadTelemetryProgressively() {
+    if (!this.apiService || this.vehicles.length === 0) return;
+
+    // Create a new abort controller for this batch of telemetry loading
+    this.telemetryLoadAbortController = new AbortController();
+    const signal = this.telemetryLoadAbortController.signal;
+
+    // Load telemetry sequentially from top to bottom
+    for (let i = 0; i < this.vehicles.length; i++) {
+      // Check if we should abort
+      if (signal.aborted) {
+        break;
+      }
+
+      const vehicle = this.vehicles[i];
+
+      // Skip if already has telemetry data or no token ID
+      if (vehicle.last_telemetry || !vehicle.vehicle_token_id) {
+        continue;
+      }
+
+      try {
+        const response = await this.apiService.callApi<TelemetryInfo>(
+          'GET',
+          `/fleet/vehicles/telemetry-info/${vehicle.vehicle_token_id}`,
+          null,
+          true, // auth required
+          true  // oracle endpoint
+        );
+
+        if (response.success && response.data && !signal.aborted) {
+          const telemetryData = response.data;
+
+          // Extract last telemetry timestamp from currentLocationCoordinates
+          const lastTelemetry = telemetryData.signalsLatest?.currentLocationCoordinates?.timestamp || '';
+
+          // Extract engine blocked status - 0 means not blocked (green), 1 means blocked (red)
+          // Default to 'running' (UNBLOCKED)
+          const engineBlockedValue = telemetryData.signalsLatest?.obdIsEngineBlocked?.value;
+          let engineStatus = 'running'; // Default to running (UNBLOCKED)
+
+          if (engineBlockedValue !== undefined && engineBlockedValue !== null) {
+            engineStatus = engineBlockedValue === 0 ? 'running' : 'blocked';
+          }
+
+          // Update the specific vehicle in the array
+          this.vehicles = this.vehicles.map((v, idx) =>
+            idx === i ? { ...v, last_telemetry: lastTelemetry, engine: engineStatus } : v
+          );
+        } else {
+          // If API call failed, still set default to 'running' (UNBLOCKED)
+          this.vehicles = this.vehicles.map((v, idx) =>
+            idx === i ? { ...v, engine: v.engine || 'running' } : v
+          );
+        }
+      } catch (error) {
+        // Silently fail for individual telemetry loads, but ensure default is 'running'
+        console.debug(`Failed to load telemetry for vehicle ${vehicle.vehicle_token_id}`, error);
+        this.vehicles = this.vehicles.map((v, idx) =>
+          idx === i ? { ...v, engine: v.engine || 'running' } : v
+        );
+      }
     }
   }
 
@@ -148,8 +249,8 @@ export class VehiclesFleetsView extends LitElement {
     }
   }
 
-  private handleVehicleClick(vin: string) {
-    location.hash = `/vehicles/${vin}`;
+  private handleVehicleClick(tokenId: number) {
+    location.hash = `/vehicles/${tokenId}`;
   }
 
   private handleTabClick(tab: 'vehicles-list' | 'fleet-groups') {
@@ -242,6 +343,25 @@ export class VehiclesFleetsView extends LitElement {
     }
   }
 
+  private handleExportCsv = async () => {
+    if (!this.apiService || this.exporting) return;
+
+    this.exporting = true;
+    try {
+      const url = `/vehicles/export?search=${encodeURIComponent(this.search)}&filter=${encodeURIComponent(this.filter)}`;
+      await this.apiService.downloadFile(
+        url,
+        true, // auth
+        true, // useOracle
+        true  // includeTenantId
+      );
+    } catch (error) {
+      console.error('Export CSV failed:', error);
+    } finally {
+      this.exporting = false;
+    }
+  }
+
   private handleSearchInput(e: Event) {
     const input = e.target as HTMLInputElement;
     const value = input.value;
@@ -282,7 +402,28 @@ export class VehiclesFleetsView extends LitElement {
   }
 
   private getEngineClass(engine: string): string {
-    return engine ? `status-${engine.toLowerCase()}` : '';
+    if (engine) return `status-${engine.toLowerCase()}`;
+
+    return 'status-running';
+  }
+
+  private getEngineDisplay(engine: string): string {
+    if (!engine || engine.toLowerCase() === 'running') return 'UNBLOCKED';
+    if (engine.toLowerCase() === 'blocked') return 'BLOCKED';
+    return engine.toUpperCase();
+  }
+
+  private formatLastTelemetry(timestamp: string): string {
+    if (!timestamp) return '—';
+    const date = dayjs(timestamp);
+    const now = dayjs();
+    const diffInDays = now.diff(date, 'day');
+
+    if (diffInDays < 7) {
+      return date.fromNow();
+    } else {
+      return date.format('MMM D, YYYY h:mm A');
+    }
   }
 
   private get currentPage(): number {
@@ -374,18 +515,24 @@ export class VehiclesFleetsView extends LitElement {
                         <option value="inventory">Inventory</option>
                         <option value="customer">Customer Owned</option>
                     </select>
-                    <select>
-                        <option value="">All Connection Status</option>
-                        <option value="connected">Connected</option>
-                        <option value="offline">Offline</option>
-                        <option value="never">Never Reported</option>
-                    </select>
                     <select @change=${this.handleGroupFilterChange} .value=${this.filter}>
                         <option value="">All Groups</option>
                         ${this.fleetGroups.map(group => html`
                           <option value=${'group:' + group.id}>${group.name}</option>
                         `)}
                     </select>
+                    <button class="btn btn-sm ${this.exporting ? 'processing' : ''}" 
+                            style="margin-left: 8px; display: inline-flex; align-items: center; gap: 6px;" 
+                            @click=${this.handleExportCsv}
+                            ?disabled=${this.exporting}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Export CSV
+                    </button>
+                  
                 </div>
 
                 <div class="table-container">
@@ -406,15 +553,15 @@ export class VehiclesFleetsView extends LitElement {
                         <tbody>
                         ${this.vehicles.map(vehicle => html`
                           <tr>
-                            <td class="link" @click=${() => this.handleVehicleClick(vehicle.vin)} style="cursor:pointer">${vehicle.make.toUpperCase()} ${vehicle.model.toUpperCase()} ${vehicle.year}</td>
+                            <td class="link" title="${vehicle.vehicle_token_id}" @click=${() => this.handleVehicleClick(vehicle.vehicle_token_id)} style="cursor:pointer">${vehicle.make.toUpperCase()} ${vehicle.model.toUpperCase()} ${vehicle.year}</td>
                             <td>${vehicle.imei}</td>
                             <td>${vehicle.vin}</td>
                             <td><span class="status ${this.getStatusClass(vehicle.connection_status)}">${vehicle.connection_status}</span></td>
-                            <td>${vehicle.last_telemetry || '—'}</td>
+                            <td title="${vehicle.last_telemetry}">${this.formatLastTelemetry(vehicle.last_telemetry)}</td>
                             <td>${vehicle.inventory ? html`<span class="status ${this.getInventoryClass(vehicle.inventory)}">${vehicle.inventory}</span>` : '—'}</td>
                             <td>${vehicle.groups.length > 0 ? vehicle.groups.map(group => html`<span class="badge" style="background-color: ${group.color}; color: #fff;">${group.name}</span>`) : '—'}</td>
                             <td>${vehicle.fuel ? 'Yes' : 'No'}</td>
-                            <td><span class="status ${this.getEngineClass(vehicle.engine)}">${vehicle.engine}</span></td>
+                            <td><span class="status ${this.getEngineClass(vehicle.engine)}">${this.getEngineDisplay(vehicle.engine)}</span></td>
                           </tr>
                         `)}
                         </tbody>
