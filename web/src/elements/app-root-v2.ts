@@ -116,7 +116,7 @@ export class AppRootV2 extends LitElement {
             // so the router doesn't error before hash-based navigation kicks in.
             { path: '/', render: () => html`<home-view></home-view>` },
             { path: '/vehicles-fleets', render: () => html`<vehicles-fleets-view></vehicles-fleets-view>` },
-            { path: '/vehicles/:vin', render: ({ vin }) => html`<vehicle-detail-view .vin=${vin}></vehicle-detail-view>` },
+            { path: '/vehicles/:tokenID', render: ({ tokenID }) => html`<vehicle-detail-view .tokenID=${tokenID}></vehicle-detail-view>` },
             { path: '/users', render: () => html`<users-view></users-view>` },
             { path: '/users/create', render: () => html`<create-user-view></create-user-view>` },
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
@@ -140,9 +140,11 @@ export class AppRootV2 extends LitElement {
         // Ensure oracle in global state and verify access TODO
         this.hasOracleAccess = true;  //await this.oracleTenantService.verifyOracleAccess();
 
-        // Start version checking
-        await this.checkVersion();
-        this.versionCheckInterval = window.setInterval(() => this.checkVersion(), 60000);
+        // Start version checking only if not in local environment
+        if (!window.location.href.includes('local')) {
+            await this.checkVersion();
+            this.versionCheckInterval = window.setInterval(() => this.checkVersion(), 60000);
+        }
     }
 
     disconnectedCallback(): void {

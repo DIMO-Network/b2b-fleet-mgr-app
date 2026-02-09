@@ -97,6 +97,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Post("/vehicle/verify", vehiclesCtrl.SubmitVehiclesVerification)
 	// fleets
 	oracleApp.Get("/fleet/vehicles", genericProxyCtrl.Proxy)
+	oracleApp.Get("/fleet/vehicles/:tokenID", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/vehicles/telemetry-info/:tokenID", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/groups", genericProxyCtrl.Proxy)
 	oracleApp.Post("/fleet/groups", genericProxyCtrl.Proxy)
@@ -105,6 +106,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Delete("/fleet/groups/:id", genericProxyCtrl.Proxy)
 	oracleApp.Post("/fleet/vehicles/:imei/group/:group_id", genericProxyCtrl.Proxy)
 	oracleApp.Delete("/fleet/vehicles/:imei/group/:group_id", genericProxyCtrl.Proxy)
+	oracleApp.Post("/fleet/vehicles/:imei/inventory", genericProxyCtrl.Proxy)
 
 	oracleApp.Get("/definitions/top", definitionsCtrl.TopDefinitions)
 

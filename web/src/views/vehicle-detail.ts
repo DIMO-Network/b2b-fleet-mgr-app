@@ -37,8 +37,8 @@ interface Vehicle {
 export class VehicleDetailView extends LitElement {
   static styles = [globalStyles, css``];
 
-  @property({ type: String })
-  vin: string = '';
+  @property({ type: Number })
+  tokenID: number = 0;
 
   @consume({ context: apiServiceContext, subscribe: true })
   @state()
@@ -52,19 +52,19 @@ export class VehicleDetailView extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
-    await this.loadVehicleData();
   }
 
-  async updated(changedProperties: Map<string, any>) {
-    super.updated(changedProperties);
-    // Reload if VIN changes
-    if (changedProperties.has('vin') && this.vin) {
+  async updated(changedProperties: Map<string | number | symbol, unknown>) {
+    if (changedProperties.has('tokenID') || changedProperties.has('apiService')) {
       await this.loadVehicleData();
     }
   }
 
   private async loadVehicleData() {
-    if (!this.apiService || !this.vin) return;
+    if (!this.apiService || !this.tokenID){
+      console.error('API service or token ID is missing, cannot load vehicle data', this.tokenID);
+      return;
+    }
 
     try {
       // First, get vehicle info to obtain the token ID
@@ -72,19 +72,16 @@ export class VehicleDetailView extends LitElement {
       // You may need to adjust this based on your actual API
       const vehicleResponse = await this.apiService.callApi<Vehicle>(
         'GET',
-        `/identity/vehicle/vin/${this.vin}`,
+        `/fleet/vehicles/${this.tokenID}`,
         null,
-        true, // auth required
-        false  // not oracle endpoint
+        true,
+        true
       );
 
       if (vehicleResponse.success && vehicleResponse.data) {
         this.vehicle = vehicleResponse.data;
-
-        // Load telemetry if we have a token ID
-        if (this.vehicle.vehicle_token_id) {
-          await this.loadTelemetry(this.vehicle.vehicle_token_id);
-        }
+        // next let's load telemetry
+        await this.loadTelemetry(this.tokenID);
       }
     } catch (error) {
       console.error('Error loading vehicle data:', error);
@@ -118,7 +115,7 @@ export class VehicleDetailView extends LitElement {
       <!-- VEHICLE DETAIL PAGE -->
       <div class="page active" id="page-vehicle-detail">
         <div class="toolbar mb-16">
-          <button class="btn" @click=${this.goBack}">← BACK TO VEHICLES</button>
+          <button class="btn" @click=${this.goBack}>← BACK TO VEHICLES</button>
         </div>
 
         <!-- Header Block -->
@@ -126,9 +123,9 @@ export class VehicleDetailView extends LitElement {
           <div class="panel-body">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
               <div>
-                <h2 style="font-size: 18px; margin-bottom: 8px;" id="detail-vehicle-name">JEEP COMPASS 2021</h2>
+                <h2 style="font-size: 18px; margin-bottom: 8px;" id="detail-vehicle-name">${this.vehicle?.make} ${this.vehicle?.model} ${this.vehicle?.year}</h2>
                 <div style="margin-bottom: 8px;">
-                  <span style="color: #666;">VIN:</span> ${this.vin}
+                  <span style="color: #666;">VIN:</span> ${this.vehicle?.vin}
                 </div>
                 <div>
                   <span class="status status-connected">Connected</span>
