@@ -6,6 +6,7 @@ import {apiServiceContext} from '../context';
 import {ApiService} from '@services/api-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import '../elements/update-inventory-modal-element';
 
 dayjs.extend(relativeTime);
 
@@ -79,6 +80,9 @@ export class VehicleDetailView extends LitElement {
 
   @state()
   private activeActivityTab: 'trips' | 'commands' | 'inventory' = 'trips';
+
+  @state()
+  private showInventoryModal: boolean = false;
 
   async connectedCallback() {
     super.connectedCallback();
@@ -157,7 +161,10 @@ export class VehicleDetailView extends LitElement {
                 </div>
                 <div>
                   <span class="status status-connected">Connected</span>
-                  <span class="status status-${(this.vehicle?.inventory || 'Inventory').toLowerCase()}">${this.vehicle?.inventory || 'Inventory'}</span>
+                  <span class="status status-${(this.vehicle?.inventory || 'Inventory').toLowerCase()}"
+                        style="cursor: pointer;"
+                        @click=${this.openInventoryModal}
+                        title="Click to update inventory status">${this.vehicle?.inventory || 'Inventory'}</span>
                   ${this.vehicle?.groups?.map(group => html`<span class="badge" style="background-color: ${group.color}; color: #fff;">${group.name}</span>`)}
                 </div>
               </div>
@@ -411,7 +418,31 @@ export class VehicleDetailView extends LitElement {
           </div>
         </div>
       </div>
+
+      <!-- Update Inventory Modal -->
+      <update-inventory-modal-element
+        .show=${this.showInventoryModal}
+        .imei=${this.vehicle?.imei || ''}
+        @modal-closed=${this.handleInventoryModalClosed}
+        @inventory-updated=${this.handleInventoryUpdated}
+      ></update-inventory-modal-element>
     `;
+  }
+
+  private openInventoryModal() {
+    this.showInventoryModal = true;
+  }
+
+  private handleInventoryModalClosed() {
+    this.showInventoryModal = false;
+  }
+
+  private async handleInventoryUpdated(event: CustomEvent) {
+    this.showInventoryModal = false;
+    console.log('Inventory updated:', event.detail);
+
+    // Reload vehicle data to get updated inventory status
+    await this.loadVehicleData();
   }
 
   private goBack() {
