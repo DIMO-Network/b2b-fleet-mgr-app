@@ -21,12 +21,14 @@
     "@zerodev/ecdsa-validator": "^5.4.9",
     "@zerodev/sdk": "^5.5.6",
     "events": "^3.3.0",
+    "leaflet": "^1.9.4",
     "lit": "^3.2.1",
     "lodash": "^4.17.21",
     "qs": "^6.14.0",
     "viem": "^2.23.2"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.21",
     "@types/lodash": "^4.17.16",
     "@types/qs": "^6.9.18",
     "@vitejs/plugin-basic-ssl": "^2.0.0",

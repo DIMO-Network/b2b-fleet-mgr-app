@@ -1,9 +1,9 @@
-import { LitElement, css, html } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { globalStyles } from "../global-styles.ts";
-import { consume } from '@lit/context';
-import { apiServiceContext } from '../context';
-import { ApiService } from '@services/api-service.ts';
+import {css, html, LitElement} from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
+import {globalStyles} from "../global-styles.ts";
+import {consume} from '@lit/context';
+import {apiServiceContext} from '../context';
+import {ApiService} from '@services/api-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -25,12 +25,39 @@ interface TelemetryInfo {
   };
 }
 
+interface Group {
+  id: string;
+  name: string;
+  color: string;
+}
+
+interface Command {
+  id: string;
+  command: string;
+  status: string;
+  created_at: string;
+  kore_command_sid: string;
+}
+
+interface InventoryAudit {
+  state: string;
+  note: string;
+  created_at: string;
+}
+
 interface Vehicle {
   vin: string;
+  imei: string;
   vehicle_token_id: number;
+  connection_status: string;
+  device_definition_id: string;
   make: string;
   model: string;
   year: number;
+  inventory: string;
+  groups: Group[];
+  commands: Command[];
+  inventory_audit: InventoryAudit[];
 }
 
 @customElement('vehicle-detail-view')
@@ -45,7 +72,7 @@ export class VehicleDetailView extends LitElement {
   apiService?: ApiService;
 
   @state()
-  private lastTelemetry: string = '';
+  private lastTelemetry: TelemetryInfo | null = null;
 
   @state()
   private vehicle: Vehicle | null = null;
@@ -101,9 +128,7 @@ export class VehicleDetailView extends LitElement {
       );
 
       if (response.success && response.data) {
-        const telemetryData = response.data;
-        // Extract last telemetry timestamp from currentLocationCoordinates
-        this.lastTelemetry = telemetryData.signalsLatest?.currentLocationCoordinates?.timestamp || '';
+        this.lastTelemetry = response.data;
       }
     } catch (error) {
       console.error('Error loading telemetry:', error);
@@ -129,13 +154,13 @@ export class VehicleDetailView extends LitElement {
                 </div>
                 <div>
                   <span class="status status-connected">Connected</span>
-                  <span class="status status-customer">Customer Owned</span>
-                  <span class="badge">Fleet A</span>
+                  <span class="status status-${(this.vehicle?.inventory || 'Inventory').toLowerCase()}">${this.vehicle?.inventory || 'Inventory'}</span>
+                  ${this.vehicle?.groups?.map(group => html`<span class="badge" style="background-color: ${group.color}; color: #fff;">${group.name}</span>`)}
                 </div>
               </div>
               <div style="text-align: right;">
                 <div style="color: #666; font-size: 10px;">LAST TELEMETRY</div>
-                <div title="${this.lastTelemetry}">${this.lastTelemetry ? this.formatLastTelemetry(this.lastTelemetry) : 'Loading...'}</div>
+                <div>${this.lastTelemetry ? this.formatLastTelemetry(this.lastTelemetry.signalsLatest.currentLocationCoordinates.timestamp) : 'Loading...'}</div>
               </div>
             </div>
           </div>
@@ -173,7 +198,7 @@ export class VehicleDetailView extends LitElement {
               </div>
             </div>
             <!-- Inventory vehicle state (hidden by default) -->
-            <div id="vehicle-no-user" style="display: none; color: #666;">
+            <div id="vehicle-no-user" style="display: ${this.vehicle?.inventory === 'Inventory' ? 'block' : 'none'}; color: #666;">
               No user assigned — vehicle is in inventory.
             </div>
           </div>
@@ -186,19 +211,22 @@ export class VehicleDetailView extends LitElement {
             <div class="panel mb-16">
               <div class="panel-header">Location</div>
               <div class="panel-body">
-                <div class="map-placeholder">[MAP EMBED]</div>
+                <fleet-map class="map-placeholder"
+                    .lat="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.latitude ?? 0.0}"
+                    .lng="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.longitude ?? 0.0}">
+                </fleet-map>
                 <div class="mt-16">
                   <div class="detail-row">
                     <span class="detail-label">Latitude</span>
-                    <span class="detail-value">-33.4489</span>
+                    <span class="detail-value">${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.latitude ?? 0.0}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Longitude</span>
-                    <span class="detail-value">-70.6693</span>
+                    <span class="detail-value">${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.longitude ?? 0.0}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Address</span>
-                    <span class="detail-value">Av. Libertador Bernardo O'Higgins 1449, Santiago, Chile</span>
+                    <span class="detail-value">TODO reverse latlng to address</span>
                   </div>
                 </div>
               </div>
@@ -211,11 +239,12 @@ export class VehicleDetailView extends LitElement {
                 <div class="controls-section">
                   <div class="control-status">
                     <div style="font-size: 10px; color: #666; margin-bottom: 4px;">ENGINE STATUS</div>
-                    <div><span class="status status-unblocked">UNBLOCKED</span></div>
-                    <div style="font-size: 10px; color: #666; margin-top: 8px;">Last action: Unblocked on 2025-11-28 14:30</div>
+                    <div><span class="status ${(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.value ? 'status-blocked' : 'status-unblocked')}">
+                      ${(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.value ? 'BLOCKED' : 'UNBLOCKED')}</span></div>
+                    <div style="font-size: 10px; color: #666; margin-top: 8px;">Last update: ${this.formatLastTelemetry(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.timestamp) ?? 'N/A'}</div>
                   </div>
                   <div class="control-buttons">
-                    <button class="btn btn-danger" onclick="confirmBlock()">BLOCK VEHICLE</button>
+                    <button class="btn btn-danger" onclick="confirmBlock()">BLOCK VEHICLE - TODO</button>
                     <button class="btn" disabled>UNBLOCK VEHICLE</button>
                   </div>
                 </div>
@@ -316,7 +345,10 @@ export class VehicleDetailView extends LitElement {
     location.hash = '/vehicles-fleets';
   }
 
-  private formatLastTelemetry(timestamp: string): string {
+  private formatLastTelemetry(timestamp: string | undefined): string {
+    if (timestamp === undefined) {
+      return '-'
+    }
     if (!timestamp) return '—';
     const date = dayjs(timestamp);
     const now = dayjs();
