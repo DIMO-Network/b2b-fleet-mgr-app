@@ -77,6 +77,9 @@ export class VehicleDetailView extends LitElement {
   @state()
   private vehicle: Vehicle | null = null;
 
+  @state()
+  private activeActivityTab: 'trips' | 'commands' | 'inventory' = 'trips';
+
   async connectedCallback() {
     super.connectedCallback();
   }
@@ -293,10 +296,26 @@ export class VehicleDetailView extends LitElement {
               </div>
             </div>
 
-            <!-- Recent Trips -->
+            <!-- Recent Activity -->
             <div class="panel">
               <div class="panel-header">Recent Activity</div>
-              <div class="panel-body" style="padding: 0;">
+              <div class="inner-tabs" style="margin: 0; border-bottom: 1px solid #ddd;">
+                <div
+                  class="inner-tab ${this.activeActivityTab === 'trips' ? 'active' : ''}"
+                  @click=${() => this.activeActivityTab = 'trips'}
+                >Trips</div>
+                <div
+                  class="inner-tab ${this.activeActivityTab === 'commands' ? 'active' : ''}"
+                  @click=${() => this.activeActivityTab = 'commands'}
+                >Commands</div>
+                <div
+                  class="inner-tab ${this.activeActivityTab === 'inventory' ? 'active' : ''}"
+                  @click=${() => this.activeActivityTab = 'inventory'}
+                >Inventory</div>
+              </div>
+
+              <!-- Trips Tab -->
+              <div class="panel-body" style="padding: 0; display: ${this.activeActivityTab === 'trips' ? 'block' : 'none'};">
                 <table>
                   <thead>
                   <tr>
@@ -331,6 +350,60 @@ export class VehicleDetailView extends LitElement {
                     <td>31.2 km</td>
                     <td>35 / 82 km/h</td>
                   </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Commands Tab -->
+              <div class="panel-body" style="padding: 0; display: ${this.activeActivityTab === 'commands' ? 'block' : 'none'};">
+                <table>
+                  <thead>
+                  <tr>
+                    <th>Command</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Command ID</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  ${this.vehicle?.commands && this.vehicle.commands.length > 0 ? this.vehicle.commands.map(cmd => html`
+                    <tr>
+                      <td>${cmd.command.toUpperCase()}</td>
+                      <td><span class="status status-${cmd.status.toLowerCase()}">${cmd.status}</span></td>
+                      <td>${this.formatLastTelemetry(cmd.created_at)}</td>
+                      <td style="font-size: 11px;">${cmd.kore_command_sid}</td>
+                    </tr>
+                  `) : html`
+                    <tr>
+                      <td colspan="4" style="text-align: center; color: #666; padding: 2rem;">No command history available</td>
+                    </tr>
+                  `}
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Inventory Tab -->
+              <div class="panel-body" style="padding: 0; display: ${this.activeActivityTab === 'inventory' ? 'block' : 'none'};">
+                <table>
+                  <thead>
+                  <tr>
+                    <th>State</th>
+                    <th>Note</th>
+                    <th>Created</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  ${this.vehicle?.inventory_audit && this.vehicle.inventory_audit.length > 0 ? this.vehicle.inventory_audit.map(audit => html`
+                    <tr>
+                      <td><span class="status status-${audit.state.toLowerCase()}">${audit.state}</span></td>
+                      <td>${audit.note}</td>
+                      <td>${this.formatLastTelemetry(audit.created_at)}</td>
+                    </tr>
+                  `) : html`
+                    <tr>
+                      <td colspan="3" style="text-align: center; color: #666; padding: 2rem;">No inventory history available</td>
+                    </tr>
+                  `}
                   </tbody>
                 </table>
               </div>

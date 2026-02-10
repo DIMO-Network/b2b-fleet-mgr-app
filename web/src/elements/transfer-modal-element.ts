@@ -284,18 +284,26 @@ export class TransferModalElement extends BaseOnboardingElement {
         // this method does a lot of steps. It also checks the status of the transfer, which should be separated out into own function.
         const result = await this.transferVehicle(this.imei, this.walletAddress)
         if (!result.success) {
-            if (result.error.toLowerCase().includes('timeout')) { 
+            if (result.error.toLowerCase().includes('timeout')) {
                 this.errorMessage = "Check Info for final transfer verification";
             } else {
                 this.errorMessage = result.error;
                 this.processing = false;
                 return;
             }
-            
+
         }
         this.statusMessage = "Transfer completed successfully";
 
-        await delay(1500);
+        // Add inventory state record
+        this.statusMessage = "Recording inventory state change...";
+        const inventoryResult = await this.addInventoryState(this.imei, this.walletAddress);
+        if (!inventoryResult.success) {
+            console.error("Failed to add inventory state:", inventoryResult.error);
+            // Don't fail the whole transfer if inventory tracking fails
+        }
+
+        await delay(500);
         this.processing = false
 
         this.closeModal();
@@ -313,10 +321,30 @@ export class TransferModalElement extends BaseOnboardingElement {
                 error: creatResp.error || "Failed to create account"
             };
         }
-        
+
         return {
             success: true,
             data: creatResp.data
+        };
+    }
+
+    async addInventoryState(imei: string, walletAddress: string): Promise<Result<any, string>> {
+        const payload = {
+            state: "Customer",
+            note: `Transfer to customer ${walletAddress}`
+        };
+
+        const resp = await this.api.callApi<any>('POST', `/fleet/vehicles/${imei}/inventory`, payload, true, true);
+        if (!resp.success) {
+            return {
+                success: false,
+                error: resp.error || "Failed to add inventory state"
+            };
+        }
+
+        return {
+            success: true,
+            data: resp.data
         };
     }
 }

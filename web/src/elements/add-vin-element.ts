@@ -111,6 +111,7 @@ export class AddVinElement extends BaseOnboardingElement {
     @state() private selectedImeis: string[] = [];
     @state() private selectedPendingVehicles: string[] = [];
     @state() private selectedVinsForSubmission: string[] = [];
+    @state() private vinToImeiMap: Map<string, string> = new Map();
 
 	// Predefined grantees (temporary until backend provides these)
 	@state() private availableGrantees: { label: string; value: string }[] = [
@@ -185,6 +186,13 @@ export class AddVinElement extends BaseOnboardingElement {
         this.selectedPendingVehicles = event.detail.selectedVehicles;
         this.selectedImeis = event.detail.selectedImeis;
         this.selectedVinsForSubmission = [...this.selectedPendingVehicles];
+
+        // Build VIN to IMEI mapping
+        this.vinToImeiMap.clear();
+        for (let i = 0; i < this.selectedPendingVehicles.length; i++) {
+            this.vinToImeiMap.set(this.selectedPendingVehicles[i], this.selectedImeis[i]);
+        }
+
         console.log("Selected pending vehicles:", this.selectedPendingVehicles);
         console.log("Selected IMEIs:", this.selectedImeis);
         this.requestUpdate();
@@ -505,6 +513,9 @@ export class AddVinElement extends BaseOnboardingElement {
             const status = await this.onboardVINs(vehicles, sacdInput)
             if (!status) {
                 // Handle failure case if needed
+            } else {
+                // Add inventory state records for successfully minted vehicles
+                await this.addInventoryStatesForVehicles(vehicles);
             }
         } catch (e) {
             this.displayFailure("failed to onboard vins: " + e);
@@ -513,5 +524,40 @@ export class AddVinElement extends BaseOnboardingElement {
 
         await delay(5000)
         this.dispatchItemChanged()
+    }
+
+    private async addInventoryStatesForVehicles(vehicles: VehicleWithDefinition[]) {
+        console.log("Adding inventory states for successfully minted vehicles");
+
+        for (const vehicle of vehicles) {
+            const imei = this.vinToImeiMap.get(vehicle.vin);
+            if (!imei) {
+                console.warn(`No IMEI found for VIN ${vehicle.vin}, skipping inventory state`);
+                continue;
+            }
+
+            try {
+                const payload = {
+                    state: "Inventory",
+                    note: "Vehicle minted"
+                };
+
+                const response = await this.api.callApi<any>(
+                    'POST',
+                    `/fleet/vehicles/${imei}/inventory`,
+                    payload,
+                    true, // auth required
+                    true  // oracle endpoint
+                );
+
+                if (!response.success) {
+                    console.error(`Failed to add inventory state for VIN ${vehicle.vin} (IMEI ${imei}):`, response.error);
+                } else {
+                    console.log(`Successfully added inventory state for VIN ${vehicle.vin} (IMEI ${imei})`);
+                }
+            } catch (error) {
+                console.error(`Error adding inventory state for VIN ${vehicle.vin} (IMEI ${imei}):`, error);
+            }
+        }
     }
 }
