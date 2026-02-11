@@ -7,6 +7,7 @@ import {ApiService} from '@services/api-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import '../elements/update-inventory-modal-element';
+import '../elements/fleet-map';
 
 dayjs.extend(relativeTime);
 
@@ -83,6 +84,9 @@ export class VehicleDetailView extends LitElement {
 
   @state()
   private showInventoryModal: boolean = false;
+
+  @state()
+  private currentAddress: string = '';
 
   async connectedCallback() {
     super.connectedCallback();
@@ -223,7 +227,8 @@ export class VehicleDetailView extends LitElement {
               <div class="panel-body">
                 <fleet-map class="map-placeholder"
                     .lat="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.latitude ?? 0.0}"
-                    .lng="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.longitude ?? 0.0}">
+                    .lng="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.longitude ?? 0.0}"
+                    @address-updated=${this.handleAddressUpdated}>
                 </fleet-map>
                 <div class="mt-16">
                   <div class="detail-row">
@@ -236,7 +241,7 @@ export class VehicleDetailView extends LitElement {
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Address</span>
-                    <span class="detail-value">TODO reverse latlng to address</span>
+                    <span class="detail-value">${this.currentAddress || 'Click on map pointer to get address'}</span>
                   </div>
                 </div>
               </div>
@@ -443,6 +448,10 @@ export class VehicleDetailView extends LitElement {
 
     // Reload vehicle data to get updated inventory status
     await this.loadVehicleData();
+  }
+
+  private handleAddressUpdated(event: CustomEvent) {
+    this.currentAddress = event.detail.address;
   }
 
   private goBack() {
