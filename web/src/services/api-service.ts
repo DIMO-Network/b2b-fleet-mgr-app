@@ -150,12 +150,14 @@ export class ApiService {
     public async callApi<T>(
         method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
         endpoint: string,
-        requestBody: Record<string, any> | null = null,
+        requestBody: Record<string, any> | string | null = null,
         auth: boolean = false,
         useOracle: boolean = true,
         includeTenantId: boolean = true
     ): Promise<ApiResponse<T>> {
-        const body = requestBody ? JSON.stringify(requestBody) : null;
+        const body = requestBody
+            ? (typeof requestBody === 'string' ? requestBody : JSON.stringify(requestBody))
+            : null;
 
         const headers: Record<string, string> = {
             "Accept": "application/json",
@@ -180,9 +182,13 @@ export class ApiService {
             }
 
             console.debug(`HTTP Success [${method} ${endpoint}]:`, result);
+            // If response has a top-level 'data' field, unwrap it to avoid .data.data access pattern
+            const unwrappedData = (result && typeof result === 'object' && 'data' in result)
+                ? result.data
+                : result;
             return {
                 success: true,
-                data: result,
+                data: unwrappedData,
             };
         } catch (error: any) {
             console.error(`Error calling [${method}] ${endpoint}:`, error);

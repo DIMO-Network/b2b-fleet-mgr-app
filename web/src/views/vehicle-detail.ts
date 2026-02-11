@@ -88,6 +88,22 @@ export class VehicleDetailView extends LitElement {
   @state()
   private currentAddress: string = '';
 
+  telemetryQuery = `{
+  signalsLatest(tokenId: 187955) {
+    currentLocationCoordinates {
+    value {
+        latitude
+        longitude
+      }
+      timestamp
+    }
+    obdIsEngineBlocked {
+      value
+      timestamp
+    }
+  }
+}`
+
   async connectedCallback() {
     super.connectedCallback();
   }
@@ -130,10 +146,11 @@ export class VehicleDetailView extends LitElement {
     if (!this.apiService) return;
 
     try {
+      const query = this.telemetryQuery.replace('187955', tokenId.toString());
       const response = await this.apiService.callApi<TelemetryInfo>(
-        'GET',
-        `/fleet/vehicles/telemetry-info/${tokenId}`,
-        null,
+        'POST',
+        `/fleet/vehicles/telemetry/${tokenId}`,
+        query,
         true, // auth required
         true  // oracle endpoint
       );
