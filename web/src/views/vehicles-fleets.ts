@@ -48,7 +48,7 @@ interface TelemetryInfo {
 }
 
 interface FleetVehiclesResponse {
-  data: Vehicle[];
+  items: Vehicle[];
   totalCount: number;
   skip: number;
   take: number;
@@ -156,7 +156,7 @@ export class VehiclesFleetsView extends LitElement {
     );
 
     if (response.success && response.data) {
-      this.vehicles = response.data.data;
+      this.vehicles = response.data.items;
       this.totalCount = response.data.totalCount;
 
       // Start loading telemetry progressively
