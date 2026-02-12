@@ -24,6 +24,32 @@ interface TelemetryInfo {
       value: number;
       timestamp: string;
     };
+    isIgnitionOn: {
+      value: boolean;
+    };
+    speed: {
+      value: number;
+    };
+    powertrainFuelSystemRelativeLevel: {
+      value: number;
+    };
+    powertrainTransmissionTravelledDistance: {
+      value: number;
+      timestamp: string;
+    };
+    powertrainCombustionEngineSpeed: {
+      value: number;
+    };
+    lowVoltageBatteryCurrentVoltage: {
+      value: number;
+    };
+    obdDTCList: {
+      value: string[];
+      timestamp: string;
+    };
+    obdDistanceWithMIL: {
+      value: number;
+    };
   };
 }
 
@@ -91,15 +117,41 @@ export class VehicleDetailView extends LitElement {
   telemetryQuery = `{
   signalsLatest(tokenId: 187955) {
     currentLocationCoordinates {
-    value {
+    	value {
         latitude
         longitude
       }
-      timestamp
+			timestamp
     }
     obdIsEngineBlocked {
       value
       timestamp
+    }
+    isIgnitionOn {
+      value
+    }
+    speed {
+      value
+    }
+    powertrainFuelSystemRelativeLevel {
+      value
+    }
+    powertrainTransmissionTravelledDistance {
+      value
+      timestamp
+    }
+    powertrainCombustionEngineSpeed {
+      value
+    }
+    lowVoltageBatteryCurrentVoltage {
+      value
+    }
+    obdDTCList {
+      value
+      timestamp
+    }
+    obdDistanceWithMIL {
+      value
     }
   }
 }`
@@ -292,35 +344,35 @@ export class VehicleDetailView extends LitElement {
               <div class="panel-body">
                 <div class="detail-row">
                   <span class="detail-label">Ignition</span>
-                  <span class="detail-value" style="color: green;">ON</span>
+                  <span class="detail-value" style="color: ${this.lastTelemetry?.signalsLatest.isIgnitionOn != null ? (this.lastTelemetry.signalsLatest.isIgnitionOn.value ? 'green' : 'red') : '#666'};">${this.lastTelemetry?.signalsLatest.isIgnitionOn?.value != null ? (this.lastTelemetry.signalsLatest.isIgnitionOn.value ? 'ON' : 'OFF') : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Speed</span>
-                  <span class="detail-value">0 km/h</span>
+                  <span class="detail-value">${this.lastTelemetry?.signalsLatest.speed != null ? `${this.lastTelemetry.signalsLatest.speed.value} km/h` : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Fuel Level</span>
-                  <span class="detail-value">72%</span>
+                  <span class="detail-value">${this.lastTelemetry?.signalsLatest.powertrainFuelSystemRelativeLevel != null ? `${Math.round(this.lastTelemetry.signalsLatest.powertrainFuelSystemRelativeLevel.value)}%` : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Odometer</span>
-                  <span class="detail-value">34,521 km</span>
+                  <span class="detail-value">${this.lastTelemetry?.signalsLatest.powertrainTransmissionTravelledDistance != null ? `${this.lastTelemetry.signalsLatest.powertrainTransmissionTravelledDistance.value.toLocaleString()} km` : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">RPM</span>
-                  <span class="detail-value">850</span>
+                  <span class="detail-value">${this.lastTelemetry?.signalsLatest.powertrainCombustionEngineSpeed != null ? this.lastTelemetry.signalsLatest.powertrainCombustionEngineSpeed.value : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Battery Voltage</span>
-                  <span class="detail-value">12.8V</span>
+                  <span class="detail-value">${this.lastTelemetry?.signalsLatest.lowVoltageBatteryCurrentVoltage != null ? `${this.lastTelemetry.signalsLatest.lowVoltageBatteryCurrentVoltage.value.toFixed(1)}V` : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Active DTCs</span>
-                  <span class="detail-value">None</span>
+                  <span class="detail-value">${this.lastTelemetry?.signalsLatest.obdDTCList != null ? (this.lastTelemetry.signalsLatest.obdDTCList.value.length > 0 ? this.lastTelemetry.signalsLatest.obdDTCList.value.join(', ') : 'None') : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Last CAN Update</span>
-                  <span class="detail-value">2025-12-05 12:34:56</span>
+                  <span class="detail-value">${this.formatLastTelemetry(this.lastTelemetry?.signalsLatest.powertrainTransmissionTravelledDistance?.timestamp)}</span>
                 </div>
               </div>
             </div>
