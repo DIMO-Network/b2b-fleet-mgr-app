@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import '../elements/update-inventory-modal-element';
 import '../elements/fleet-map';
+import '../elements/click-to-copy-element';
 
 dayjs.extend(relativeTime);
 
@@ -140,6 +141,9 @@ export class VehicleDetailView extends LitElement {
 
   @state()
   private ownerInfo: AccountInfo | null = null;
+  
+  @state()
+  private ownerWalletAddress: string | null = null;
 
   @state()
   private activeActivityTab: 'trips' | 'commands' | 'inventory' = 'trips';
@@ -149,6 +153,18 @@ export class VehicleDetailView extends LitElement {
 
   @state()
   private currentAddress: string = '';
+
+  @state()
+  private immobilizerLoading: boolean = false;
+
+  @state()
+  private immobilizerError: string = '';
+
+  @state()
+  private showImmobilizerConfirm: boolean = false;
+
+  @state()
+  private immobilizerAction: 'on' | 'off' = 'on';
 
   telemetryQuery = `{
   signalsLatest(tokenId: 187955) {
@@ -320,9 +336,7 @@ export class VehicleDetailView extends LitElement {
       }
 
       // Show wallet address immediately
-      this.ownerInfo = {
-        walletAddress: ownerAddress
-      };
+      this.ownerWalletAddress = ownerAddress
 
       // Then load the full account info in the background
       const accountInfo = await identityService.getAccountInfo(ownerAddress);
@@ -389,7 +403,14 @@ export class VehicleDetailView extends LitElement {
                   <div>
                     <div class="detail-row">
                       <span class="detail-label">Wallet</span>
-                      <span class="detail-value" style="font-size: 11px;">${this.ownerInfo.walletAddress ? this.formatWalletAddress(this.ownerInfo.walletAddress) : 'N/A'}</span>
+                      <click-to-copy-element .valueToCopy="${this.ownerWalletAddress || ''}">
+                        <span 
+                          class="detail-value clickable" 
+                          style="font-size: 11px;"
+                        >
+                          ${this.ownerWalletAddress ? this.formatWalletAddress(this.ownerWalletAddress) : 'N/A'}
+                        </span>
+                      </click-to-copy-element>
                     </div>
                     <div class="detail-row">
                       <span class="detail-label">User Created</span>
@@ -451,9 +472,23 @@ export class VehicleDetailView extends LitElement {
                     <div style="font-size: 10px; color: #666; margin-top: 8px;">Last update: ${this.formatLastTelemetry(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.timestamp) ?? 'N/A'}</div>
                   </div>
                   <div class="control-buttons">
-                    <button class="btn btn-danger" onclick="confirmBlock()">BLOCK VEHICLE - TODO</button>
-                    <button class="btn" disabled>UNBLOCK VEHICLE</button>
+                    <button class="btn btn-danger" 
+                            ?disabled=${this.immobilizerLoading || !!this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked?.value}
+                            @click=${this.immobilizerOn}>
+                      ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
+                      IMMOBILIZER ON
+                    </button>
+                    <button class="btn" 
+                            style="background-color: #16a34a; color: white;"
+                            ?disabled=${this.immobilizerLoading || !this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked?.value}
+                            @click=${this.immobilizerOff}>
+                      ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
+                      IMMOBILIZER OFF
+                    </button>
                   </div>
+                  ${this.immobilizerError ? html`
+                    <div style="color: #dc2626; font-size: 0.875rem; margin-top: 8px;">${this.immobilizerError}</div>
+                  ` : ''}
                 </div>
               </div>
             </div>
@@ -616,6 +651,17 @@ export class VehicleDetailView extends LitElement {
         @modal-closed=${this.handleInventoryModalClosed}
         @inventory-updated=${this.handleInventoryUpdated}
       ></update-inventory-modal-element>
+
+      <!-- Immobilizer Confirmation Modal -->
+      <confirm-modal-element
+        .show=${this.showImmobilizerConfirm}
+        .title=${`Immobilizer ${this.immobilizerAction.toUpperCase()}`}
+        .message=${`Are you sure you want to turn the immobilizer ${this.immobilizerAction} for this vehicle?`}
+        .confirmText=${`Turn ${this.immobilizerAction.toUpperCase()}`}
+        .confirmButtonClass=${this.immobilizerAction === 'on' ? 'btn-danger' : 'btn-success'}
+        @modal-confirm=${this.handleImmobilizerConfirm}
+        @modal-cancel=${this.handleImmobilizerCancel}
+      ></confirm-modal-element>
     `;
   }
 
@@ -637,6 +683,55 @@ export class VehicleDetailView extends LitElement {
 
   private handleAddressUpdated(event: CustomEvent) {
     this.currentAddress = event.detail.address;
+  }
+
+  private async sendImmobilizerCommand(state: 'on' | 'off') {
+    if (!this.vehicle?.imei || !this.apiService) {
+      this.immobilizerError = "No IMEI or API service provided";
+      return;
+    }
+
+    this.immobilizerLoading = true;
+    this.immobilizerError = "";
+
+    try {
+      const response = await this.apiService.callApi(
+        'POST',
+        `/pending-vehicle/command/${this.vehicle.imei}`,
+        { command: `immobilizer/${state}` },
+        true,
+        true
+      );
+      if (response.success) {
+        console.log(`Immobilizer ${state} command sent successfully`);
+      } else {
+        this.immobilizerError = response.error || `Failed to send immobilizer ${state} command`;
+      }
+    } catch (err) {
+      this.immobilizerError = `Failed to send immobilizer ${state} command`;
+      console.error(`Error sending immobilizer ${state} command:`, err);
+    } finally {
+      this.immobilizerLoading = false;
+    }
+  }
+
+  private immobilizerOn() {
+    this.immobilizerAction = 'on';
+    this.showImmobilizerConfirm = true;
+  }
+
+  private immobilizerOff() {
+    this.immobilizerAction = 'off';
+    this.showImmobilizerConfirm = true;
+  }
+
+  private handleImmobilizerConfirm() {
+    this.showImmobilizerConfirm = false;
+    this.sendImmobilizerCommand(this.immobilizerAction);
+  }
+
+  private handleImmobilizerCancel() {
+    this.showImmobilizerConfirm = false;
   }
 
   private goBack() {

@@ -5,6 +5,7 @@ import { apiServiceContext } from '../context';
 import {ApiService} from "@services/api-service.ts";
 import { Router } from '@lit-labs/router';
 import {globalStyles} from "../global-styles.ts";
+import './click-to-copy-element';
 // import {OracleTenantService} from "@services/oracle-tenant-service.ts";
 
 @customElement('app-root-v2')
@@ -219,29 +220,6 @@ export class AppRootV2 extends LitElement {
         return `${start}${ellipsis}${end}`;
     }
 
-    private async copyWalletToClipboard(address: string) {
-        if (!address) return;
-        try {
-            if (navigator.clipboard?.writeText) {
-                await navigator.clipboard.writeText(address);
-            } else {
-                // Fallback for older browsers
-                const ta = document.createElement('textarea');
-                ta.value = address;
-                ta.style.position = 'fixed';
-                ta.style.opacity = '0';
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-            }
-            // Optional: simple feedback
-            console.debug('Wallet address copied to clipboard');
-        } catch (e) {
-            console.error('Failed to copy wallet address', e);
-        }
-    }
-
     private async checkVersion() {
         try {
             const response = await fetch('/version');
@@ -320,11 +298,11 @@ export class AppRootV2 extends LitElement {
                         <div class="header-right">
                             <div class="user-block">
                                 <span class="user-info user-email" title="${userEmail}">${userEmail}</span>
-                                <span
-                                  class="user-info user-wallet clickable"
-                                  title="${userWalletAddress} (click to copy)"
-                                  @click=${() => this.copyWalletToClipboard(userWalletAddress)}
-                                >${walletDisplay}</span>
+                                <click-to-copy-element .valueToCopy="${userWalletAddress}">
+                                    <span
+                                      class="user-info user-wallet clickable"
+                                    >${walletDisplay}</span>
+                                </click-to-copy-element>
                             </div>
                             <button class="btn btn-sm" @click=${this.handleLogout}>LOGOUT</button>
                         </div>
