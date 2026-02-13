@@ -53,6 +53,35 @@ interface TelemetryInfo {
   };
 }
 
+interface TripSignal {
+  name: string;
+  agg: string;
+  value: number;
+}
+
+interface Trip {
+  start: {
+    value: {
+      latitude: number;
+      longitude: number;
+    };
+    timestamp: string;
+  };
+  end: {
+    value: {
+      latitude: number;
+      longitude: number;
+    };
+    timestamp: string;
+  };
+  isOngoing: boolean;
+  signals: TripSignal[];
+}
+
+interface TripsResponse {
+  segments: Trip[];
+}
+
 interface Group {
   id: string;
   name: string;
@@ -106,6 +135,9 @@ export class VehicleDetailView extends LitElement {
   private vehicle: Vehicle | null = null;
 
   @state()
+  private trips: Trip[] = [];
+
+  @state()
   private activeActivityTab: 'trips' | 'commands' | 'inventory' = 'trips';
 
   @state()
@@ -156,6 +188,30 @@ export class VehicleDetailView extends LitElement {
   }
 }`
 
+  tripsQuery = `{
+  segments(
+    tokenId: 189345
+    from: "FROM_DATE"
+    to: "TO_DATE"
+    mechanism: frequencyAnalysis
+    limit: 10
+    config: { minIdleSeconds: 600, minSegmentDurationSeconds: 60 }
+    signalRequests: [
+      { name: "powertrainTransmissionTravelledDistance", agg: FIRST }
+      { name: "powertrainTransmissionTravelledDistance", agg: LAST }
+      { name: "speed", agg: AVG }
+      { name: "speed", agg: MAX }
+      { name: "powertrainCombustionEngineSpeed", agg: AVG }
+      { name: "powertrainCombustionEngineSpeed", agg: MAX }
+    ]
+  ) {
+    start { value {latitude  longitude} timestamp }
+    end { value {latitude  longitude} timestamp }
+    isOngoing
+    signals { name agg value }
+  }
+}`
+
   async connectedCallback() {
     super.connectedCallback();
   }
@@ -186,8 +242,9 @@ export class VehicleDetailView extends LitElement {
 
       if (vehicleResponse.success && vehicleResponse.data) {
         this.vehicle = vehicleResponse.data;
-        // next let's load telemetry
+        // next let's load telemetry and trips
         await this.loadTelemetry(this.tokenID);
+        await this.loadTrips(this.tokenID);
       }
     } catch (error) {
       console.error('Error loading vehicle data:', error);
@@ -212,6 +269,35 @@ export class VehicleDetailView extends LitElement {
       }
     } catch (error) {
       console.error('Error loading telemetry:', error);
+    }
+  }
+
+  private async loadTrips(tokenId: number) {
+    if (!this.apiService) return;
+
+    try {
+      // Get date range for last 30 days
+      const toDate = dayjs().toISOString();
+      const fromDate = dayjs().subtract(30, 'day').toISOString();
+
+      const query = this.tripsQuery
+        .replace('189345', tokenId.toString())
+        .replace('FROM_DATE', fromDate)
+        .replace('TO_DATE', toDate);
+
+      const response = await this.apiService.callApi<TripsResponse>(
+        'POST',
+        `/fleet/vehicles/telemetry/${tokenId}`,
+        query,
+        true, // auth required
+        true  // oracle endpoint
+      );
+
+      if (response.success && response.data) {
+        this.trips = response.data.segments || [];
+      }
+    } catch (error) {
+      console.error('Error loading trips:', error);
     }
   }
 
@@ -407,30 +493,23 @@ export class VehicleDetailView extends LitElement {
                   </tr>
                   </thead>
                   <tbody>
-                  <tr>
-                    <td>Dec 5, 08:15</td>
-                    <td>Dec 5, 09:42</td>
-                    <td>28.4 km</td>
-                    <td>32 / 78 km/h</td>
-                  </tr>
-                  <tr>
-                    <td>Dec 4, 17:30</td>
-                    <td>Dec 4, 18:15</td>
-                    <td>15.2 km</td>
-                    <td>28 / 65 km/h</td>
-                  </tr>
-                  <tr>
-                    <td>Dec 4, 12:00</td>
-                    <td>Dec 4, 12:45</td>
-                    <td>8.7 km</td>
-                    <td>22 / 55 km/h</td>
-                  </tr>
-                  <tr>
-                    <td>Dec 4, 08:00</td>
-                    <td>Dec 4, 09:30</td>
-                    <td>31.2 km</td>
-                    <td>35 / 82 km/h</td>
-                  </tr>
+                  ${this.trips && this.trips.length > 0 ? this.trips.map(trip => {
+                    const distance = this.calculateTripDistance(trip);
+                    const avgSpeed = this.getTripSignalValue(trip, 'speed', 'AVG');
+                    const maxSpeed = this.getTripSignalValue(trip, 'speed', 'MAX');
+                    return html`
+                      <tr>
+                        <td>${this.formatTripTime(trip.start.timestamp)}</td>
+                        <td>${trip.isOngoing ? 'Ongoing' : this.formatTripTime(trip.end.timestamp)}</td>
+                        <td>${distance.toFixed(1)} km</td>
+                        <td>${avgSpeed != null ? Math.round(avgSpeed) : 'N/A'} / ${maxSpeed != null ? Math.round(maxSpeed) : 'N/A'} km/h</td>
+                      </tr>
+                    `;
+                  }) : html`
+                    <tr>
+                      <td colspan="4" style="text-align: center; color: #666; padding: 2rem;">No trip history available</td>
+                    </tr>
+                  `}
                   </tbody>
                 </table>
               </div>
@@ -541,5 +620,23 @@ export class VehicleDetailView extends LitElement {
     } else {
       return date.format('MMM D, YYYY h:mm A');
     }
+  }
+
+  private formatTripTime(timestamp: string): string {
+    return dayjs(timestamp).format('MMM D, HH:mm');
+  }
+
+  private getTripSignalValue(trip: Trip, signalName: string, agg: string): number | null {
+    const signal = trip.signals.find(s => s.name === signalName && s.agg === agg);
+    return signal ? signal.value : null;
+  }
+
+  private calculateTripDistance(trip: Trip): number {
+    const first = this.getTripSignalValue(trip, 'powertrainTransmissionTravelledDistance', 'FIRST');
+    const last = this.getTripSignalValue(trip, 'powertrainTransmissionTravelledDistance', 'LAST');
+    if (first != null && last != null) {
+      return last - first;
+    }
+    return 0;
   }
 }
