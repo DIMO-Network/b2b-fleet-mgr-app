@@ -4,7 +4,7 @@ import { query, state } from "lit/decorators.js";
 import { globalStyles } from "../global-styles.ts";
 
 import { ApiService } from "@services/api-service";
-import { SettingsService } from "../services/settings-service";
+import { IdentityService } from "@services/identity-service";
 import { OracleTenantService } from "../services/oracle-tenant-service";
 
 import "../elements/user-profile-card-element.ts";
@@ -96,33 +96,15 @@ export class UsersView extends LitElement {
     const isWallet = this.isWalletAddress(input);
     this.searchedBy = isWallet ? "wallet" : "email";
 
-    const query = isWallet
-      ? `walletAddress=${encodeURIComponent(input)}`
-      : `email=${encodeURIComponent(input)}`;
+    const identityService = IdentityService.getInstance();
+    const accountInfo = await identityService.getAccountInfo(input);
 
-    const settings = SettingsService.getInstance();
-    if (!settings.privateSettings) await settings.fetchPrivateSettings();
-
-    const accountsApiUrl = settings.privateSettings?.accountsApiUrl;
-    if (!accountsApiUrl) return;
-
-    const endpointUrl = `${accountsApiUrl}/api/account?${query}`;
-
-    const res = await ApiService.getInstance().callApi(
-      "GET",
-      endpointUrl,
-      null,
-      false,
-      false,
-      false
-    );
-
-    if (!res.success || !res.data || (res.data as any)?.error === "User not found") {
+    if (!accountInfo) {
       this.notFound = true;
       return;
     }
 
-    this.accountInfo = res.data;
+    this.accountInfo = accountInfo;
 
     if (isWallet) {
       await this.loadVehiclesPage(0);
@@ -130,27 +112,17 @@ export class UsersView extends LitElement {
   }
 
   private async fetchOwnedVehicles(wallet: string, after?: string) {
-    const base = `/identity/owner/${wallet}?first=${this.vehiclesPageSize}`;
-    const url = after ? `${base}&after=${encodeURIComponent(after)}` : base;
+    const identityService = IdentityService.getInstance();
+    const result = await identityService.getOwnedVehicles(wallet, this.vehiclesPageSize, after);
 
-    const res = await ApiService.getInstance().callApi(
-      "GET",
-      url,
-      null,
-      true,
-      false,
-      false
-    );
-
-    if (!res.success || !res.data) {
+    if (!result) {
       this.ownedVehicles = [];
       this.vehiclesPageInfo = undefined;
       return;
     }
 
-    const vehicles = (res.data as any)?.data?.vehicles;
-    this.ownedVehicles = vehicles?.nodes ?? [];
-    this.vehiclesPageInfo = vehicles?.pageInfo;
+    this.ownedVehicles = result.nodes;
+    this.vehiclesPageInfo = result.pageInfo;
   }
 
   private async loadVehiclesPage(pageIndex: number) {

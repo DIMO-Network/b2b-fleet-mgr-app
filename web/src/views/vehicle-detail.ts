@@ -4,6 +4,7 @@ import {globalStyles} from "../global-styles.ts";
 import {consume} from '@lit/context';
 import {apiServiceContext} from '../context';
 import {ApiService} from '@services/api-service.ts';
+import {AccountInfo, IdentityService} from '@services/identity-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import '../elements/update-inventory-modal-element';
@@ -138,6 +139,9 @@ export class VehicleDetailView extends LitElement {
   private trips: Trip[] = [];
 
   @state()
+  private ownerInfo: AccountInfo | null = null;
+
+  @state()
   private activeActivityTab: 'trips' | 'commands' | 'inventory' = 'trips';
 
   @state()
@@ -242,9 +246,10 @@ export class VehicleDetailView extends LitElement {
 
       if (vehicleResponse.success && vehicleResponse.data) {
         this.vehicle = vehicleResponse.data;
-        // next let's load telemetry and trips
+        // next let's load telemetry, trips, and owner info
         await this.loadTelemetry(this.tokenID);
         await this.loadTrips(this.tokenID);
+        await this.loadOwnerInfo(this.tokenID);
       }
     } catch (error) {
       console.error('Error loading vehicle data:', error);
@@ -301,6 +306,35 @@ export class VehicleDetailView extends LitElement {
     }
   }
 
+  private async loadOwnerInfo(tokenId: number) {
+    try {
+      const identityService = IdentityService.getInstance();
+
+      // First, get just the wallet address quickly
+      const ownerAddress = await identityService.getVehicleOwnerAddress(tokenId);
+
+      if (!ownerAddress) {
+        // No owner found
+        this.ownerInfo = null;
+        return;
+      }
+
+      // Show wallet address immediately
+      this.ownerInfo = {
+        walletAddress: ownerAddress
+      };
+
+      // Then load the full account info in the background
+      const accountInfo = await identityService.getAccountInfo(ownerAddress);
+
+      if (accountInfo) {
+        this.ownerInfo = accountInfo
+      }
+    } catch (error) {
+      console.error('Error loading owner info:', error);
+    }
+  }
+
   render() {
     return html`
       <!-- VEHICLE DETAIL PAGE -->
@@ -339,37 +373,40 @@ export class VehicleDetailView extends LitElement {
         <div class="panel mb-16" id="vehicle-user-panel">
           <div class="panel-header">Owner Information</div>
           <div class="panel-body">
-            <div id="vehicle-user-info">
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
-                <div>
-                  <div class="detail-row">
-                    <span class="detail-label">Owner Email</span>
-                    <span class="detail-value">maria.gonzalez@kaufmann.cl</span>
+            ${this.ownerInfo ? html`
+              <div id="vehicle-user-info">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+                  <div>
+                    <div class="detail-row">
+                      <span class="detail-label">Owner Email</span>
+                      <span class="detail-value">${this.ownerInfo.email || 'Not available'}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Phone</span>
+                      <span class="detail-value">Not available</span>
+                    </div>
                   </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Phone</span>
-                    <span class="detail-value">+56 9 1234 5678</span>
+                  <div>
+                    <div class="detail-row">
+                      <span class="detail-label">Wallet</span>
+                      <span class="detail-value" style="font-size: 11px;">${this.ownerInfo.walletAddress ? this.formatWalletAddress(this.ownerInfo.walletAddress) : 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">User Created</span>
+                      <span class="detail-value">${this.ownerInfo.authenticators?.[0]?.creationDate ? this.formatCreatedDate(this.ownerInfo.authenticators[0].creationDate) : 'Not available'}</span>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div class="detail-row">
-                    <span class="detail-label">Wallet</span>
-                    <span class="detail-value" style="font-size: 11px;">0x7a23...4f8b</span>
+                  <div style="text-align: right;">
+                    <button class="btn btn-sm" @click=${this.viewUserProfile} ?disabled=${this.ownerInfo.walletAddress}>VIEW USER PROFILE →</button>
                   </div>
-                  <div class="detail-row">
-                    <span class="detail-label">User Created</span>
-                    <span class="detail-value">2024-03-15</span>
-                  </div>
-                </div>
-                <div style="text-align: right;">
-                  <button class="btn btn-sm" onclick="viewUserFromVehicle('maria.gonzalez@kaufmann.cl')">VIEW USER PROFILE →</button>
                 </div>
               </div>
-            </div>
-            <!-- Inventory vehicle state (hidden by default) -->
-            <div id="vehicle-no-user" style="display: ${this.vehicle?.inventory === 'Inventory' ? 'block' : 'none'}; color: #666;">
-              No user assigned — vehicle is in inventory.
-            </div>
+            ` : html`
+              <!-- Inventory vehicle state (no owner) -->
+              <div id="vehicle-no-user" style="color: #666;">
+                ${this.vehicle?.inventory === 'Inventory' ? 'No user assigned — vehicle is in inventory.' : 'Loading owner information...'}
+              </div>
+            `}
           </div>
         </div>
 
@@ -638,5 +675,23 @@ export class VehicleDetailView extends LitElement {
       return last - first;
     }
     return 0;
+  }
+
+  private formatWalletAddress(address: string): string {
+    if (!address || address.length < 10) return address;
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  }
+
+  private formatCreatedDate(dateString: string | undefined): string {
+    if (!dateString) return 'N/A';
+    return dayjs(dateString).format('YYYY-MM-DD');
+  }
+
+  private viewUserProfile() {
+    if (this.ownerInfo?.email) {
+      window.location.hash = `/users?search=${encodeURIComponent(this.ownerInfo.email)}`;
+    } else if (this.ownerInfo?.walletAddress) {
+      window.location.hash = `/users?search=${encodeURIComponent(this.ownerInfo.walletAddress)}`;
+    }
   }
 }

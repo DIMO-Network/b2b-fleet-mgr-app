@@ -1,15 +1,8 @@
 import {css, html, nothing} from 'lit'
 import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
-import { ApiService } from '../services/api-service';
+import { IdentityService, VehicleIdentityData } from '../services/identity-service';
 import {globalStyles} from "../global-styles.ts";
-
-interface VehicleIdentityData {
-    data?: {
-        vehicle?: any;
-    };
-    errors?: any[];
-}
 
 @customElement('identity-vehicle-info-modal-element')
 export class IdentityVehicleInfoModalElement extends LitElement {
@@ -32,11 +25,11 @@ export class IdentityVehicleInfoModalElement extends LitElement {
     @state()
     private error = ""
 
-    private apiService: ApiService;
+    private identityService: IdentityService;
 
     constructor() {
         super();
-        this.apiService = ApiService.getInstance();
+        this.identityService = IdentityService.getInstance();
     }
 
     connectedCallback() {
@@ -102,13 +95,13 @@ export class IdentityVehicleInfoModalElement extends LitElement {
 
         this.loading = true;
         this.error = "";
-        
+
         try {
-            const response = await this.apiService.callApi<VehicleIdentityData>('GET', `/identity/vehicle/${this.tokenId}`, null, false, false);
-            if (response.success && response.data) {
-                this.identityData = response.data;
+            const data = await this.identityService.getVehicleIdentity(this.tokenId);
+            if (data) {
+                this.identityData = data;
             } else {
-                this.error = response.error || "Failed to load vehicle identity data";
+                this.error = "Failed to load vehicle identity data";
             }
         } catch (err) {
             this.error = "Failed to load vehicle identity data";
