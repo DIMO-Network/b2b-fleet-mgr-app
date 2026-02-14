@@ -12,7 +12,7 @@ interface Vehicle {
 }
 
 interface FleetVehiclesResponse {
-  data: Vehicle[];
+  items: Vehicle[];
   totalCount: number;
   skip: number;
   take: number;
@@ -356,7 +356,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
       );
 
       if (response.success && response.data) {
-        this.vehicles = response.data.data;
+        this.vehicles = response.data.items;
       } else {
         this.errorMessage = response.error || 'Failed to load vehicles';
       }
@@ -434,7 +434,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
       );
 
       if (response.success && response.data) {
-        this.searchSuggestions = response.data.data;
+        this.searchSuggestions = response.data.items;
       } else {
         this.searchSuggestions = [];
       }

@@ -23,9 +23,7 @@ interface DeviceDefinition {
 }
 
 interface DefinitionResponse {
-    data: {
-        deviceDefinition: DeviceDefinition;
-    };
+    deviceDefinition: DeviceDefinition;
 }
 
 interface TopDefinitionsResponse {
@@ -237,7 +235,7 @@ export class ConfirmOnboardingModalElement extends LitElement {
         try {
             const response = await this.getDefinitionById(definitionId);
             
-            if (response.success && response.data?.data?.deviceDefinition?.model) {
+            if (response.success && response.data?.deviceDefinition?.model) {
                 // Definition is valid
                 this.validDefinitions.add(vin);
                 this.invalidDefinitions.delete(vin);
