@@ -2,6 +2,7 @@ import { LitElement, css, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { globalStyles } from "../global-styles.ts";
 import { ApiService } from "@services/api-service";
+import { IdentityService } from "@services/identity-service";
 
 @customElement("create-user-view")
 export class CreateUserView extends LitElement {
@@ -44,17 +45,7 @@ export class CreateUserView extends LitElement {
   private async fetchAvailablePermissions() {
     this.loadingPermissions = true;
     try {
-      const res = await ApiService.getInstance().callApi<string[]>(
-        "GET",
-        "/account/permissions-available",
-        null,
-        true,
-        true,
-        false
-      );
-      if (res.success && Array.isArray(res.data)) {
-        this.availablePermissions = res.data;
-      }
+      this.availablePermissions = await IdentityService.getInstance().getAvailablePermissions();
     } catch (error) {
       console.error("Failed to fetch permissions:", error);
     } finally {

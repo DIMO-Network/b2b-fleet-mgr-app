@@ -224,6 +224,101 @@ export class IdentityService {
   }
 
   /**
+   * Get available permissions for admin users
+   * @returns List of permissions
+   */
+  async getAvailablePermissions(): Promise<string[]> {
+    try {
+      const response = await this.apiService.callApi<string[]>(
+        'GET',
+        '/account/permissions-available',
+        null,
+        true,  // auth required
+        true,  // oracle endpoint
+        false  // no tenant ID (based on CreateUserView implementation)
+      );
+
+      if (response.success && Array.isArray(response.data)) {
+        return response.data;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error fetching available permissions:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get permissions for the current user
+   * @returns List of permissions
+   */
+  async getUserPermissions(): Promise<string[]> {
+    try {
+      const response = await this.apiService.callApi<string[]>(
+        'GET',
+        '/access',
+        null,
+        true, // auth required
+        true, // oracle endpoint
+        true  // include tenant ID
+      );
+
+      if (response.success && Array.isArray(response.data)) {
+        return response.data;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error fetching user permissions:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get admin user details by wallet address
+   * @param wallet Wallet address
+   * @returns Admin user details
+   */
+  async getAdminUser(wallet: string): Promise<any | null> {
+    try {
+      const response = await this.apiService.callApi<any>(
+        'GET',
+        `/accounts/admin/${wallet}`,
+        null,
+        true, // auth required
+        true, // oracle endpoint
+        true  // include tenant ID
+      );
+
+      if (response.success && response.data) {
+        return response.data;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching admin user:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update admin user permissions and fleet groups
+   * @param data Update data
+   * @returns API response
+   */
+  async updateAdminUser(data: { permissions: string[]; fleetGroupIds: string[] }): Promise<any> {
+    return await this.apiService.callApi(
+      'PUT',
+      '/accounts/admin',
+      data,
+      true, // auth required
+      true, // oracle endpoint
+      true  // include tenant ID
+    );
+  }
+
+  /**
    * Check if a string is a valid Ethereum wallet address
    * @param value String to check
    * @returns True if valid wallet address

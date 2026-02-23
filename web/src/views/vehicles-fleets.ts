@@ -4,6 +4,7 @@ import {globalStyles} from "../global-styles.ts";
 import { consume } from '@lit/context';
 import { apiServiceContext } from '../context';
 import { ApiService } from '@services/api-service.ts';
+import { FleetService } from '@services/fleet-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -232,20 +233,10 @@ export class VehiclesFleetsView extends LitElement {
   }
 
   private async loadFleetGroups() {
-    if (!this.apiService) return;
-
-    const response = await this.apiService.callApi<FleetGroup[]>(
-      'GET',
-      '/fleet/groups',
-      null,
-      true, // auth required
-      true  // oracle endpoint
-    );
-
-    if (response.success && response.data) {
-      this.fleetGroups = response.data;
-    } else {
-      console.error('Failed to load fleet groups:', response.error);
+    try {
+      this.fleetGroups = await FleetService.getInstance().getFleetGroups() as unknown as FleetGroup[];
+    } catch (error) {
+      console.error('Error loading fleet groups:', error);
     }
   }
 

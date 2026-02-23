@@ -3,6 +3,7 @@ import {customElement, state} from 'lit/decorators.js';
 import { provide } from '@lit/context';
 import { apiServiceContext } from '../context';
 import {ApiService} from "@services/api-service.ts";
+import {IdentityService} from "@services/identity-service.ts";
 import { Router } from '@lit-labs/router';
 import {globalStyles} from "../global-styles.ts";
 import './click-to-copy-element';
@@ -69,7 +70,7 @@ export class AppRootV2 extends LitElement {
 
             .update-modal {
                 background: var(--background-color, #fff);
-                border: 1px solid var(--border-color, #ccc);
+                border: 1px solid #000;
                 border-radius: 8px;
                 padding: 24px;
                 max-width: 400px;
@@ -106,6 +107,9 @@ export class AppRootV2 extends LitElement {
     @state()
     private showUpdateModal: boolean = false;
 
+    @state()
+    private permissions: string[] = [];
+
     private currentCommit: string | null = null;
     private versionCheckInterval: number | null = null;
 
@@ -120,6 +124,7 @@ export class AppRootV2 extends LitElement {
             { path: '/vehicles/:tokenID', render: ({ tokenID }) => html`<vehicle-detail-view .tokenID=${tokenID}></vehicle-detail-view>` },
             { path: '/users', render: () => html`<users-view></users-view>` },
             { path: '/users/create', render: () => html`<create-user-view></create-user-view>` },
+            { path: '/users/edit/:walletAddress', render: ({ walletAddress }) => html`<edit-user-view .walletAddress=${walletAddress}></edit-user-view>` },
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
             { path: '/onboarding', render: () => html`<onboarding-view></onboarding-view>` },
             { path: '/tenant-selector', render: () => html`<tenant-selector-view></tenant-selector-view>` },
@@ -140,6 +145,8 @@ export class AppRootV2 extends LitElement {
 
         // Ensure oracle in global state and verify access TODO
         this.hasOracleAccess = true;  //await this.oracleTenantService.verifyOracleAccess();
+
+        await this.fetchUserPermissions();
 
         // Start version checking only if not in local environment
         if (!window.location.href.includes('local')) {
@@ -183,6 +190,14 @@ export class AppRootV2 extends LitElement {
         await this.router.goto(path);
     }
 
+    private async fetchUserPermissions() {
+        try {
+            this.permissions = await IdentityService.getInstance().getUserPermissions();
+        } catch (e) {
+            console.error('Failed to fetch user permissions', e);
+        }
+    }
+
     private isActive(targetPath: string): boolean {
         return this.currentPath === targetPath;
     }
@@ -195,6 +210,7 @@ export class AppRootV2 extends LitElement {
         if (path.startsWith('/vehicles-fleets')) return 'Vehicles & Fleets';
         if (path.startsWith('/reports')) return 'Reports';
         if (path.startsWith('/users/create')) return 'Create User';
+        if (path.startsWith('/users/edit')) return 'Edit User';
         if (path.startsWith('/users')) return 'Users';
         if (path.startsWith('/tenant-selector')) return 'Tenant Selector';
         if (path.startsWith('/tenant-settings')) return 'Tenant Settings';
@@ -268,9 +284,11 @@ export class AppRootV2 extends LitElement {
                         <div class="nav-item ${this.isActive('/') ? 'active' : ''}" data-page="home">
                             <a data-page="home" href="#/" aria-current="${this.isActive('/') ? 'page' : 'false'}">Home</a>
                         </div>
-                        <div class="nav-item ${this.isActive('/onboarding') ? 'active' : ''}">
-                            <a data-page="onboarding" href="#/onboarding" aria-current="${this.isActive('/onboarding') ? 'page' : 'false'}">Onboarding</a>
-                        </div>
+                        ${this.permissions.includes('onboard_vehicles') ? html`
+                            <div class="nav-item ${this.isActive('/onboarding') ? 'active' : ''}">
+                                <a data-page="onboarding" href="#/onboarding" aria-current="${this.isActive('/onboarding') ? 'page' : 'false'}">Onboarding</a>
+                            </div>
+                        ` : ''}
                         <div class="nav-item ${this.isActive('/vehicles-fleets') ? 'active' : ''}">
                             <a data-page="vehicles" href="#/vehicles-fleets" aria-current="${this.isActive('/vehicles-fleets') ? 'page' : 'false'}">Vehicles & Fleets</a>
                         </div>
@@ -280,9 +298,11 @@ export class AppRootV2 extends LitElement {
                         <div class="nav-item ${this.isActive('/reports') ? 'active' : ''}">
                             <a data-page="reports" href="#/reports" aria-current="${this.isActive('/reports') ? 'page' : 'false'}">Reports</a>
                         </div>
-                        <div class="nav-item ${this.isActive('/users') ? 'active' : ''}">
-                            <a data-page="users" href="#/users" aria-current="${this.isActive('/users') ? 'page' : 'false'}">Users</a>
-                        </div>
+                        ${this.permissions.includes('manage_admin_users') ? html`
+                            <div class="nav-item ${this.isActive('/users') ? 'active' : ''}">
+                                <a data-page="users" href="#/users" aria-current="${this.isActive('/users') ? 'page' : 'false'}">Users</a>
+                            </div>
+                        ` : ''}
                         <div class="nav-divider"></div>
                         <div class="nav-item ${this.isActive('/tenant-settings') ? 'active' : ''}">
                             <a data-page="tenant-settings" href="#/tenant-settings" aria-current="${this.isActive('/tenant-settings') ? 'page' : 'false'}">Settings</a>

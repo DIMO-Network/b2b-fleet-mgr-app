@@ -9,6 +9,7 @@ import { OracleTenantService } from "../services/oracle-tenant-service";
 
 import "../elements/user-profile-card-element.ts";
 import "../elements/owner-vehicles-table-element.ts";
+import "./edit-user.ts";
 
 @customElement("users-view")
 export class UsersView extends LitElement {
@@ -269,6 +270,7 @@ export class UsersView extends LitElement {
                           <th>Email</th>
                           <th>Wallet Address</th>
                           <th>Permissions</th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -283,6 +285,11 @@ export class UsersView extends LitElement {
                                 ${(admin.permissions || []).map(
                                   (p: string) => html`<span class="badge">${p}</span>`
                                 )}
+                              </td>
+                              <td>
+                                <button class="btn btn-sm" @click=${() => window.location.hash = `/users/edit/${admin.walletAddress}`}>
+                                  EDIT
+                                </button>
                               </td>
                             </tr>
                           `
