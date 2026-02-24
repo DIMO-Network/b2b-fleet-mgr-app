@@ -147,6 +147,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Get("/accounts/admin", genericProxyCtrl.Proxy)
 	oracleApp.Get("/accounts/admin/:wallet", genericProxyCtrl.Proxy)
 	oracleApp.Put("/accounts/admin", genericProxyCtrl.Proxy)
+	oracleApp.Delete("/accounts/admin/:wallet", genericProxyCtrl.Proxy)
 	oracleApp.Post("/accounts/admin/grant", genericProxyCtrl.Proxy)
 	oracleApp.Get("/account/permissions-available", genericProxyCtrl.Proxy)
 

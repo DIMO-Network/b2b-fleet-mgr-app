@@ -129,6 +129,7 @@ export class EditUserView extends LitElement {
       const fleetGroupIds = this.selectedPermissions.includes('view_all_fleets') ? [] : this.selectedFleetGroupIds;
 
       const res = await this.identityService.updateAdminUser({
+        walletAddress: this.walletAddress,
         permissions: this.selectedPermissions,
         fleetGroupIds: fleetGroupIds
       });

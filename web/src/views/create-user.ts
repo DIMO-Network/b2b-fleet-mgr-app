@@ -160,6 +160,9 @@ export class CreateUserView extends LitElement {
                 />
                 <label for="isAdmin" class="form-label" style="margin-bottom: 0;">Is Admin</label>
               </div>
+              <div style="font-size: 12px; color: #666; margin-top: -8px; margin-bottom: 12px; margin-left: 22px;">
+                Check this box for users that need to access this tool
+              </div>
 
               ${this.isAdmin
                 ? html`

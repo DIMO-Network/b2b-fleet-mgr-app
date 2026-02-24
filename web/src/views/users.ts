@@ -42,6 +42,8 @@ export class UsersView extends LitElement {
 
   @state() private adminUsers: any[] = [];
   @state() private adminUsersLoading = false;
+  @state() private showDeleteConfirm = false;
+  @state() private userToDelete: any = null;
 
   @query("#user-search-input")
   private searchInput!: HTMLInputElement;
@@ -70,6 +72,35 @@ export class UsersView extends LitElement {
     } finally {
       this.adminUsersLoading = false;
     }
+  }
+
+  private handleDeleteClick(user: any) {
+    this.userToDelete = user;
+    this.showDeleteConfirm = true;
+  }
+
+  private async handleConfirmDelete() {
+    if (!this.userToDelete) return;
+    
+    try {
+      const res = await IdentityService.getInstance().deleteAdminUser(this.userToDelete.walletAddress);
+      if (res.success) {
+        await this.fetchAdminUsers();
+      } else {
+        alert(res.error || "Failed to delete admin user.");
+      }
+    } catch (error) {
+      console.error("Error deleting admin user:", error);
+      alert("An unexpected error occurred.");
+    } finally {
+      this.showDeleteConfirm = false;
+      this.userToDelete = null;
+    }
+  }
+
+  private handleCancelDelete() {
+    this.showDeleteConfirm = false;
+    this.userToDelete = null;
   }
 
   private isWalletAddress(value: string): boolean {
@@ -290,6 +321,9 @@ export class UsersView extends LitElement {
                                 <button class="btn btn-sm" @click=${() => window.location.hash = `/users/edit/${admin.walletAddress}`}>
                                   EDIT
                                 </button>
+                                <button class="btn btn-sm btn-danger" @click=${() => this.handleDeleteClick(admin)}>
+                                  DELETE
+                                </button>
                               </td>
                             </tr>
                           `
@@ -301,6 +335,16 @@ export class UsersView extends LitElement {
           </div>
         </div>
       </div>
+
+      <confirm-modal-element
+        .show=${this.showDeleteConfirm}
+        .title=${"Delete Admin User"}
+        .message=${`Are you sure you want to delete admin user with wallet ${this.userToDelete?.walletAddress}? This will revoke all their admin permissions and access to this tool.`}
+        .confirmText=${"Delete"}
+        .confirmButtonClass=${"btn-danger"}
+        @modal-confirm=${this.handleConfirmDelete}
+        @modal-cancel=${this.handleCancelDelete}
+      ></confirm-modal-element>
     `;
   }
 }

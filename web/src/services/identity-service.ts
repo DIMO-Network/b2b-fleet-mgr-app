@@ -257,7 +257,7 @@ export class IdentityService {
     try {
       const response = await this.apiService.callApi<string[]>(
         'GET',
-        '/access',
+        '/permissions',
         null,
         true, // auth required
         true, // oracle endpoint
@@ -307,11 +307,27 @@ export class IdentityService {
    * @param data Update data
    * @returns API response
    */
-  async updateAdminUser(data: { permissions: string[]; fleetGroupIds: string[] }): Promise<any> {
+  async updateAdminUser(data: { walletAddress: string; permissions: string[]; fleetGroupIds: string[] }): Promise<any> {
     return await this.apiService.callApi(
       'PUT',
       '/accounts/admin',
       data,
+      true, // auth required
+      true, // oracle endpoint
+      true  // include tenant ID
+    );
+  }
+
+  /**
+   * Delete an admin user
+   * @param wallet Wallet address of the admin user to delete
+   * @returns API response
+   */
+  async deleteAdminUser(wallet: string): Promise<any> {
+    return await this.apiService.callApi(
+      'DELETE',
+      `/accounts/admin/${wallet}`,
+      null,
       true, // auth required
       true, // oracle endpoint
       true  // include tenant ID
