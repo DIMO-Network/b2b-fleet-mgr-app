@@ -10,7 +10,26 @@ dayjs.extend(relativeTime);
 @customElement('reports-view')
 export class ReportsView extends LitElement {
   static styles = [ globalStyles,
-    css`` ]
+    css`
+      .polling-effect {
+        background-color: #f0f9ff;
+        transition: background-color 0.5s ease;
+      }
+      .spinner {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    ` ]
 
   @state()
   private reports: FleetReport[] = [];
@@ -39,6 +58,20 @@ export class ReportsView extends LitElement {
   @state()
   private downloadingReportId: string | null = null;
 
+  @state()
+  private selectedFleetGroupIds: string[] = [];
+
+  @state()
+  private pollingReportIds: Set<string> = new Set();
+
+  @state()
+  private statusUpdateEffectIds: Set<string> = new Set();
+
+  private pollingIntervals: Map<string, number> = new Map();
+
+  @state()
+  private submitting: boolean = false;
+
   async connectedCallback() {
     super.connectedCallback();
     this.setDefaultDates();
@@ -47,6 +80,12 @@ export class ReportsView extends LitElement {
       this.fetchTemplates(),
       this.fetchFleetGroups()
     ]);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.pollingIntervals.forEach(interval => window.clearInterval(interval));
+    this.pollingIntervals.clear();
   }
 
   private setDefaultDates() {
@@ -124,6 +163,91 @@ export class ReportsView extends LitElement {
     this.selectedTemplate = template;
   }
 
+  private handleFleetGroupChange(e: Event) {
+    const select = e.target as HTMLSelectElement;
+    this.selectedFleetGroupIds = Array.from(select.selectedOptions).map(opt => opt.value);
+  }
+
+  private async handleRunReport() {
+    if (!this.selectedTemplate || this.submitting) return;
+
+    this.submitting = true;
+    try {
+      // POST data format based on issue description
+      // startDate and endDate should be ISO strings representing start/end of day
+      const data = {
+        startDate: dayjs(this.startDate).startOf('day').toISOString(),
+        endDate: dayjs(this.endDate).endOf('day').toISOString(),
+        fleetGroupIds: this.selectedFleetGroupIds,
+        reportName: this.selectedTemplate
+      };
+
+      const result = await FleetService.getInstance().runReport(data);
+
+      if (result && result.reportId) {
+        // Add new row to the table (pending state)
+        const newReport: FleetReport = {
+          id: result.reportId,
+          reportName: this.selectedTemplate,
+          status: result.status || 'pending',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        this.reports = [newReport, ...this.reports];
+        
+        // Start polling for this report
+        this.startPolling(result.reportId);
+      }
+    } catch (error) {
+      console.error('Failed to run report:', error);
+    } finally {
+      this.submitting = false;
+    }
+  }
+
+  private startPolling(reportId: string) {
+    if (this.pollingIntervals.has(reportId)) return;
+
+    this.pollingReportIds.add(reportId);
+    this.pollingReportIds = new Set(this.pollingReportIds);
+
+    const interval = window.setInterval(async () => {
+      // Show status update effect
+      this.statusUpdateEffectIds.add(reportId);
+      this.statusUpdateEffectIds = new Set(this.statusUpdateEffectIds);
+      
+      // Remove effect after 1 second
+      setTimeout(() => {
+        this.statusUpdateEffectIds.delete(reportId);
+        this.statusUpdateEffectIds = new Set(this.statusUpdateEffectIds);
+      }, 1000);
+
+      const statusUpdate = await FleetService.getInstance().getReportStatus(reportId);
+      
+      if (statusUpdate) {
+        // Update the report in the list
+        this.reports = this.reports.map(r => r.id === reportId ? statusUpdate : r);
+
+        if (statusUpdate.status === 'completed') {
+          this.stopPolling(reportId);
+        }
+      }
+    }, 5000);
+
+    this.pollingIntervals.set(reportId, interval);
+  }
+
+  private stopPolling(reportId: string) {
+    const interval = this.pollingIntervals.get(reportId);
+    if (interval) {
+      window.clearInterval(interval);
+      this.pollingIntervals.delete(reportId);
+    }
+    this.pollingReportIds.delete(reportId);
+    this.pollingReportIds = new Set(this.pollingReportIds);
+  }
+
   private async handleDownloadCsv(reportId: string) {
     if (this.downloadingReportId) return;
 
@@ -165,33 +289,40 @@ export class ReportsView extends LitElement {
                         <th>Fleet Group(s)</th>
                         <th>Date Range</th>
                         <th>Last Run</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
                     ${this.loading ? html`
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
                                 Loading reports...
                             </td>
                         </tr>
                     ` : this.reports.length === 0 ? html`
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
                                 No reports found.
                             </td>
                         </tr>
                     ` : this.reports.map(report => html`
-                        <tr class="report-row">
-                            <td class="link">${report.reportName}</td>
+                        <tr class="report-row ${this.statusUpdateEffectIds.has(report.id) ? 'polling-effect' : ''}">
+                            <td class="link">
+                                ${report.status === 'pending' ? html`<span class="spinner"></span>` : ''}
+                                ${report.reportName}
+                            </td>
                             <td>—</td>
                             <td>—</td>
                             <td title="${report.createdAt}">${this.formatLastRun(report.createdAt)}</td>
                             <td>
+                                <span class="status status-${report.status.toLowerCase()}">${report.status.toUpperCase()}</span>
+                            </td>
+                            <td>
                                 <button 
                                     class="btn btn-sm ${this.downloadingReportId === report.id ? 'processing' : ''}" 
                                     @click=${(e: Event) => { e.stopPropagation(); this.handleDownloadCsv(report.id); }}
-                                    ?disabled=${!!this.downloadingReportId}
+                                    ?disabled=${!!this.downloadingReportId || report.status !== 'completed'}
                                 >
                                     CSV
                                 </button>
@@ -295,10 +426,10 @@ export class ReportsView extends LitElement {
                         <div class="form-row" style="align-items: flex-start;">
                             <div class="form-group" style="flex:1; display: flex; flex-direction: column;">
                                 <label class="form-label">Fleet Groups (ctrl+click to select multiple)</label>
-                                <select multiple style="width: 100%; flex: 1; min-height: 120px;">
+                                <select multiple style="width: 100%; flex: 1; min-height: 120px;" @change="${this.handleFleetGroupChange}">
                                     ${this.fleetGroups.map(group => html`
                                         <option value="${group.id}" ?disabled=${!group.has_access}>
-                                            ${group.name} ${!group.has_access ? ' (No Access)' : ''}
+                                            ${group.name} - ${group.vehicle_count} ${!group.has_access ? ' (No Access)' : ''}
                                         </option>
                                     `)}
                                 </select>
@@ -330,10 +461,13 @@ export class ReportsView extends LitElement {
 <!--                                </div>-->
                             </div>
                             <div style="display: flex; gap: 8px;">
-                                <button class="btn btn-primary" onclick="runReport()">RUN REPORT</button>
-<!--                                <button class="btn" id="download-csv-btn" disabled>DOWNLOAD CSV</button>-->
-<!--                                <button class="btn">SCHEDULE</button>-->
-<!--                                <button class="btn">SAVE</button>-->
+                                <button 
+                                    class="btn btn-primary ${this.submitting ? 'processing' : ''}" 
+                                    @click="${this.handleRunReport}"
+                                    ?disabled="${this.submitting || !this.selectedTemplate || this.selectedFleetGroupIds.length === 0}"
+                                >
+                                    RUN REPORT
+                                </button>
                             </div>
                         </div>
                     </div>

@@ -112,6 +112,65 @@ export class FleetService {
   }
 
   /**
+   * Run a new report
+   * @param data Report configuration
+   * @returns Report ID and initial status
+   */
+  async runReport(data: {
+    startDate: string;
+    endDate: string;
+    fleetGroupIds: string[];
+    reportName: string;
+  }): Promise<{ reportId: string; status: string } | null> {
+    try {
+      const response = await this.apiService.callApi<{ reportId: string; status: string }>(
+        'POST',
+        '/fleet/reports',
+        data,
+        true, // auth required
+        true, // oracle endpoint
+        true  // include tenant ID
+      );
+
+      if (response.success && response.data) {
+        return response.data;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error running report:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get report status and details
+   * @param reportId Report ID
+   * @returns Report details
+   */
+  async getReportStatus(reportId: string): Promise<FleetReport | null> {
+    try {
+      const response = await this.apiService.callApi<FleetReport>(
+        'GET',
+        `/fleet/reports/${reportId}`,
+        null,
+        true, // auth required
+        true, // oracle endpoint
+        true  // include tenant ID
+      );
+
+      if (response.success && response.data) {
+        return response.data;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching report status:', error);
+      return null;
+    }
+  }
+
+  /**
    * Download a report CSV
    * @param reportId ID of the report to download
    */
