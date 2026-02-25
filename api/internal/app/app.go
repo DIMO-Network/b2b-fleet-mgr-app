@@ -109,6 +109,12 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Delete("/fleet/vehicles/:imei/group/:group_id", genericProxyCtrl.Proxy)
 	oracleApp.Post("/fleet/vehicles/:imei/inventory", genericProxyCtrl.Proxy)
 
+	// report
+	oracleApp.Post("/fleet/reports", genericProxyCtrl.Proxy)
+	oracleApp.Get("/fleet/reports/:id", genericProxyCtrl.Proxy)
+	oracleApp.Get("/fleet/reports", genericProxyCtrl.Proxy)
+	oracleApp.Get("/fleet/report-templates", genericProxyCtrl.Proxy)
+
 	oracleApp.Get("/definitions/top", definitionsCtrl.TopDefinitions)
 
 	// Mint new vehicle
