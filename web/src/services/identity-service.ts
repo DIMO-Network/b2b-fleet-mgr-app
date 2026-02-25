@@ -276,6 +276,36 @@ export class IdentityService {
   }
 
   /**
+   * Get all admin users for the current tenant with paging and search
+   * @param skip Number of items to skip
+   * @param take Number of items to take
+   * @param search Search query
+   * @returns Paginated admin users
+   */
+  async getAdminUsers(skip: number = 0, take: number = 10, search: string = ''): Promise<{ items: any[]; totalCount: number; skip: number; take: number } | null> {
+    try {
+      const url = `/accounts/admin?skip=${skip}&take=${take}&search=${encodeURIComponent(search)}`;
+      const response = await this.apiService.callApi<{ items: any[]; totalCount: number; skip: number; take: number }>(
+        'GET',
+        url,
+        null,
+        true, // auth required
+        true, // oracle endpoint
+        true  // include tenant ID
+      );
+
+      if (response.success && response.data) {
+        return response.data;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
+      return null;
+    }
+  }
+
+  /**
    * Get admin user details by wallet address
    * @param wallet Wallet address
    * @returns Admin user details
