@@ -215,7 +215,7 @@ export class VehicleDetailView extends LitElement {
     to: "TO_DATE"
     mechanism: frequencyAnalysis
     limit: 10
-    config: { minIdleSeconds: 600, minSegmentDurationSeconds: 60 }
+    config: { minSegmentDurationSeconds: 60 }
     signalRequests: [
       { name: "powertrainTransmissionTravelledDistance", agg: FIRST }
       { name: "powertrainTransmissionTravelledDistance", agg: LAST }
