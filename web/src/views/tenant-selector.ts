@@ -57,7 +57,7 @@ export class TenantSelectorView extends LitElement {
         font-size: 24px;
         font-weight: bold;
       }
-    ` ]
+    ` ];
 
     @state()
     private oracleId: string | undefined;
@@ -167,7 +167,7 @@ export class TenantSelectorView extends LitElement {
         // sleep for 500ms
         setTimeout(() => {
             window.location.href = '/#/onboarding';
-        }, 500)
+        }, 500);
     }
 
 

@@ -1,4 +1,4 @@
-import {css, html, LitElement, nothing} from 'lit'
+import {css, html, LitElement, nothing} from 'lit';
 import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import {globalStyles} from "../global-styles.ts";
@@ -13,7 +13,7 @@ export class AddTenantModalElement extends LitElement {
                 margin-top: 0.5rem;
             }
         `
-    ]
+    ];
 
     @property({type: Boolean})
     public show = false;

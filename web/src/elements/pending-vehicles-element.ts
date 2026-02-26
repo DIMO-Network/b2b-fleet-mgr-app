@@ -1,4 +1,4 @@
-import {css, html, LitElement} from 'lit'
+import {css, html, LitElement} from 'lit';
 import {repeat} from 'lit/directives/repeat.js';
 import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
@@ -19,7 +19,7 @@ interface PendingVehiclesResponse {
 @customElement('pending-vehicles-element')
 export class PendingVehiclesElement extends LitElement {
     static styles = [ globalStyles,
-        css`` ]
+        css`` ];
 
     static properties = {
         items: {type: Array},
@@ -28,7 +28,7 @@ export class PendingVehiclesElement extends LitElement {
         currentPage: {type: Number},
         pageSize: {type: Number},
         totalItems: {type: Number},
-    }
+    };
 
     @property({attribute: true})
     private items: PendingVehicle[];
@@ -216,7 +216,7 @@ export class PendingVehiclesElement extends LitElement {
                     <span style="margin-left: auto; color: #666;">Showing ${this.items.length} of ${this.totalItems} items</span>
                 </div>
             </div>
-        `
+        `;
     }
 
     private openTelemetryModal(imei: string, vin?: string) {
@@ -310,7 +310,7 @@ export class PendingVehiclesElement extends LitElement {
 			this.currentPage = 1;
 			this.loadPendingVehicles();
 		}, 500);
-	}
+	};
 
     // Public method to get selected vehicles
     public getSelectedVehicles(): string[] {

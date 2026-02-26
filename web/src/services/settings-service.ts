@@ -141,18 +141,18 @@ export class SettingsService {
     }
 
     loadPublicSettings(): PublicSettings | undefined {
-        return this.loadFromLocalStorage(PUBLIC_SETTINGS_KEY)
+        return this.loadFromLocalStorage(PUBLIC_SETTINGS_KEY);
     }
 
     loadPrivateSettings(): PrivateSettings | undefined {
-        return this.loadFromLocalStorage(PRIVATE_SETTINGS_KEY)
+        return this.loadFromLocalStorage(PRIVATE_SETTINGS_KEY);
     }
 
     loadAccountInfo(): AccountInfo | undefined {
-        return this.loadFromLocalStorage(ACCOUNT_INFO_KEY)
+        return this.loadFromLocalStorage(ACCOUNT_INFO_KEY);
     }
 
     loadSharingInfo(): SharingInfo | undefined {
-        return this.loadFromLocalStorage(SHARING_INFO_KEY)
+        return this.loadFromLocalStorage(SHARING_INFO_KEY);
     }
 }

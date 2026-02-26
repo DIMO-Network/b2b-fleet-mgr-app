@@ -1,4 +1,4 @@
-import {css, html, nothing} from 'lit'
+import {css, html, nothing} from 'lit';
 import {SettingsService} from "@services/settings-service";
 import {customElement, property, state} from "lit/decorators.js";
 import {repeat} from "lit/directives/repeat.js";
@@ -33,7 +33,7 @@ const PERMISSIONS_MAP: Record<number, string> = {
     [Permission.CURRENT_LOCATION]: "CURRENT_LOCATION",
     [Permission.COMMANDS]: "COMMANDS",
     [Permission.NONLOCATION_TELEMETRY]: "NONLOCATION_TELEMETRY",
-}
+};
 
 const sacdPermissionValue = (sacdPerms: Permissions): bigint => {
     const permissionMap = [
@@ -62,7 +62,7 @@ const defaultPermissions = {
     [Permission.RAW_DATA]: false,
     [Permission.APPROXIMATE_LOCATION]: false,
     [Permission.MAX]: false,
-}
+};
 
 @customElement('add-vin-element')
 export class AddVinElement extends BaseOnboardingElement {
@@ -81,7 +81,7 @@ export class AddVinElement extends BaseOnboardingElement {
                 gap: 6px;
                 margin: 0;
             }
-        ` ]
+        ` ];
 
     @property({attribute: false})
     private vinsBulk: string | null;
@@ -149,7 +149,7 @@ export class AddVinElement extends BaseOnboardingElement {
     }
 
     togglePermission(permission: number) {
-        const value = this.sacdPermissions?.[permission as Permission]
+        const value = this.sacdPermissions?.[permission as Permission];
         this.sacdPermissions![permission as Permission] = !value || false;
     }
 
@@ -168,7 +168,7 @@ export class AddVinElement extends BaseOnboardingElement {
                 this.sacdGrantee = this.selectedGrantees[0] as any;
             }
         }
-    }
+    };
 
     private handleGranteeToggle = (value: string) => {
         const idx = this.selectedGrantees.indexOf(value);
@@ -180,7 +180,7 @@ export class AddVinElement extends BaseOnboardingElement {
         } else {
             this.selectedGrantees = [...this.selectedGrantees, value];
         }
-    }
+    };
 
     handlePendingVehiclesSelection(event: CustomEvent) {
         this.selectedPendingVehicles = event.detail.selectedVehicles;
@@ -358,7 +358,7 @@ export class AddVinElement extends BaseOnboardingElement {
         this.alertText = "";
         this.processingMessage = "";
         this.processing = false; // Don't set processing yet, modal will handle it
-        let vinsArray: string[] = []
+        let vinsArray: string[] = [];
 
         console.log("submitting vin(s)");
 
@@ -464,15 +464,15 @@ export class AddVinElement extends BaseOnboardingElement {
                 this.settings.sharingInfo = {
                     ...this.settings.sharingInfo,
                     enabled: false
-                }
+                };
 
                 this.settings.saveSharingInfo();
             } else {
                 // create a SACD expiration 40 years in the future.
                 const expiration = new Date();
-                expiration.setFullYear(expiration.getFullYear() + 40)
-                const expirationTimestamp = Math.round(expiration.getTime() / 1000)
-                const perms = sacdPermissionValue(this.sacdPermissions!)
+                expiration.setFullYear(expiration.getFullYear() + 40);
+                const expirationTimestamp = Math.round(expiration.getTime() / 1000);
+                const perms = sacdPermissionValue(this.sacdPermissions!);
                 // Build SACD array; append the one from "Use below" if checked, then loop over the selected grantees and append them
                 sacdInput = [];
                 if (this.useBelow && this.sacdGrantee) {
@@ -497,20 +497,20 @@ export class AddVinElement extends BaseOnboardingElement {
                     enabled: true,
                     grantee: this.sacdGrantee!,
                     permissions: this.sacdPermissions,
-                }
+                };
 
-                this.settings.saveSharingInfo()
+                this.settings.saveSharingInfo();
 
-                console.debug('SACD', sacdInput)
+                console.debug('SACD', sacdInput);
             }
 
             // Save owner settings
             this.settings.sharingInfo = {
                 ...this.settings.sharingInfo,
-            }
-            this.settings.saveSharingInfo()
+            };
+            this.settings.saveSharingInfo();
 
-            const status = await this.onboardVINs(vehicles, sacdInput)
+            const status = await this.onboardVINs(vehicles, sacdInput);
             if (!status) {
                 // Handle failure case if needed
             } else {
@@ -522,8 +522,8 @@ export class AddVinElement extends BaseOnboardingElement {
             throw e; // Re-throw so caller can handle if needed
         }
 
-        await delay(5000)
-        this.dispatchItemChanged()
+        await delay(5000);
+        this.dispatchItemChanged();
     }
 
     private async addInventoryStatesForVehicles(vehicles: VehicleWithDefinition[]) {

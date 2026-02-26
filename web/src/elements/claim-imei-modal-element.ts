@@ -1,4 +1,4 @@
-import {css, html, LitElement, nothing} from 'lit'
+import {css, html, LitElement, nothing} from 'lit';
 import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import {globalStyles} from "../global-styles.ts";
@@ -29,7 +29,7 @@ export class ClaimImeiModalElement extends LitElement {
                 margin: 0;
             }
         `
-    ]
+    ];
 
     @property({type: Boolean})
     public show = false;
@@ -186,7 +186,7 @@ export class ClaimImeiModalElement extends LitElement {
         this.error = "";
 
         let successCount = 0;
-        let errors: string[] = [];
+        const errors: string[] = [];
 
         for (const imei of imeis) {
             try {

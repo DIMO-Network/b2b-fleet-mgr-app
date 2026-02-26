@@ -1,4 +1,4 @@
-import {LitElement} from 'lit'
+import {LitElement} from 'lit';
 import { property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import {SigningService} from "@services/signing-service.ts";
@@ -34,15 +34,15 @@ export interface VehicleWithDefinition {
 
 export interface SacdInput {
     grantee: `0x${string}`;
-    permissions: BigInt;
-    expiration: BigInt;
+    permissions: bigint;
+    expiration: bigint;
     source: string
 }
 
 export interface VinUserOperationData {
     vin: string;
     imei: string;
-    userOperation: Object;
+    userOperation: object;
     hash: string;
     signature?: string;
 }
@@ -92,7 +92,7 @@ export class BaseOnboardingElement extends LitElement {
         this.processingMessage = "";
         this.api = ApiService.getInstance();
         this.signingService = SigningService.getInstance();
-        this.onboardResult = []
+        this.onboardResult = [];
     }
 
 
@@ -111,9 +111,9 @@ export class BaseOnboardingElement extends LitElement {
     }
 
     updateResult(result : VinsOnboardingResult) {
-        const statusesByVin: Record<string, VinOnboardingStatus> = {}
+        const statusesByVin: Record<string, VinOnboardingStatus> = {};
         for (const item of result.statuses) {
-            statusesByVin[item.vin] = item
+            statusesByVin[item.vin] = item;
         }
 
         const newResult: VinOnboardingStatus[] = [];
@@ -123,26 +123,26 @@ export class BaseOnboardingElement extends LitElement {
                 vin: item.vin,
                 status: statusesByVin[item.vin]?.status || "Unknown",
                 details: statusesByVin[item.vin]?.details || "Unknown"
-            })
+            });
         }
 
-        this.onboardResult = newResult
+        this.onboardResult = newResult;
     }
 
     async verifyVehicles(vehicles: VehicleWithDefinition[]) {
         const payload = {
             vins: vehicles.map(v => ({vin: v.vin, countryCode: 'USA', definition: v.definition}))
-        }
+        };
 
         const submitStatus = await this.api.callApi('POST', '/vehicle/verify', payload, true);
         if (!submitStatus.success) {
             return false;
         }
 
-        let success = true
+        let success = true;
         const vinsList = vehicles.map(v => v.vin);
         for (const attempt of range(10)) {
-            success = true
+            success = true;
             const query = qs.stringify({vins: vinsList.join(',')}, {arrayFormat: 'comma'});
             const status = await this.api.callApi<VinsOnboardingResult>('GET', `/vehicle/verify?${query}`, null, true);
 
@@ -157,7 +157,7 @@ export class BaseOnboardingElement extends LitElement {
                 }
             }
 
-            this.updateResult(status.data)
+            this.updateResult(status.data);
 
             if (success) {
                 break;
@@ -190,14 +190,14 @@ export class BaseOnboardingElement extends LitElement {
                 const signature = await this.signingService.signTypedData(d.typedData);
                 if (!signature.success || !signature.signature) {
                     console.error(`Signature failed: ${signature.error} ${d.typedData}`);
-                    continue
+                    continue;
                 }
                 result.push({
                     ...d,
                     signature: signature.signature
-                })
+                });
             } else {
-                result.push(d)
+                result.push(d);
             }
         }
 
@@ -207,9 +207,9 @@ export class BaseOnboardingElement extends LitElement {
     async submitMintingData(mintingData: VinMintData[], sacd: SacdInput[] | null) {
         const payload: {vinMintingData: VinMintData[], sacd?: SacdInput[]} = {
             vinMintingData: mintingData
-        }
+        };
         if (sacd !== null && sacd.length > 0) {
-            payload.sacd = sacd
+            payload.sacd = sacd;
         }
 
         const mintResponse = await this.api.callApi('POST', '/vehicle/mint', payload, true);
@@ -217,9 +217,9 @@ export class BaseOnboardingElement extends LitElement {
             return false;
         }
 
-        let success = true
+        let success = true;
         for (const attempt of range(30)) {
-            success = true
+            success = true;
             const query = qs.stringify({vins: mintingData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
             const status = await this.api.callApi<VinsOnboardingResult>('GET', `/vehicle/mint/status?${query}`, null, true);
 
@@ -234,7 +234,7 @@ export class BaseOnboardingElement extends LitElement {
                 }
             }
 
-            this.updateResult(status.data)
+            this.updateResult(status.data);
 
             if (success) {
                 break;
@@ -251,13 +251,13 @@ export class BaseOnboardingElement extends LitElement {
     async onboardVINs(vehicles: VehicleWithDefinition[], sacd: SacdInput[] | null): Promise<boolean> {
         let allVinsValid = true;
         for (const vehicle of vehicles) {
-            const validVin = vehicle.vin?.length === 17
-            allVinsValid = allVinsValid && validVin
+            const validVin = vehicle.vin?.length === 17;
+            allVinsValid = allVinsValid && validVin;
             this.onboardResult.push({
                 vin: vehicle.vin,
                 status: "Unknown",
                 details: validVin ? "Valid VIN" : "Invalid VIN"
-            })
+            });
         }
 
         if (!allVinsValid) {
@@ -268,13 +268,13 @@ export class BaseOnboardingElement extends LitElement {
         const verified = await this.verifyVehicles(vehicles);
         if (!verified) {
             this.displayFailure("Failed to verify at least one VIN");
-            return false
+            return false;
         }
 
         const mintData = await this.getMintingData(vehicles);
         if (mintData.length === 0) {
             this.displayFailure("Failed to fetch minting data");
-            return false
+            return false;
         }
 
         const signedMintData = await this.signMintingData(mintData);
@@ -285,7 +285,7 @@ export class BaseOnboardingElement extends LitElement {
             return false;
         }
 
-        return true
+        return true;
     }
     
     async getTransferData(imei: string, targetWallet: string): Promise<Result<VinUserOperationData, string>> {
@@ -385,28 +385,28 @@ export class BaseOnboardingElement extends LitElement {
         }
 
         this.dispatchStatusUpdate("Signing transfer data...");
-        const signedDisconnectData = await this.signTransferData(transferData.data)
+        const signedDisconnectData = await this.signTransferData(transferData.data);
         if (!signedDisconnectData.success) {
             return {
                 success: false,
                 error: signedDisconnectData.error
-            }
+            };
         }
 
         this.dispatchStatusUpdate("Submitting transfer to blockchain...");
-        const submitResponse = await this.submitTransferData(signedDisconnectData.data)
+        const submitResponse = await this.submitTransferData(signedDisconnectData.data);
         if (!submitResponse.success) {
             return {
                 success:false,
                 error: submitResponse.error
-            }
+            };
         }
 
         this.dispatchStatusUpdate("Transfer completed successfully");
         return {
             success: true,
             data: undefined
-        }
+        };
     }
 
     async getDisconnectData(vins: string[]): Promise<Result<VinUserOperationData[], string>> {
@@ -440,7 +440,7 @@ export class BaseOnboardingElement extends LitElement {
             result.push({
                 ...d,
                 signature: signature.signature
-            })
+            });
         }
 
         return {
@@ -452,7 +452,7 @@ export class BaseOnboardingElement extends LitElement {
     async submitDisconnectData(disconnectData: VinUserOperationData[]): Promise<Result<void, string>> {
         const payload: {vinDisconnectData: VinUserOperationData[]} = {
             vinDisconnectData: disconnectData,
-        }
+        };
 
         const mintResponse = await this.api.callApi('POST', '/vehicle/disconnect', payload, true);
         if (!mintResponse.success || !mintResponse.data) {
@@ -462,9 +462,9 @@ export class BaseOnboardingElement extends LitElement {
             };
         }
 
-        let success = true
+        let success = true;
         for (const attempt of range(30)) {
-            success = true
+            success = true;
             const query = qs.stringify({vins: disconnectData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
             const status = await this.api.callApi<VinsStatusResult>('GET', `/vehicle/disconnect/status?${query}`, null, true);
 
@@ -502,17 +502,17 @@ export class BaseOnboardingElement extends LitElement {
     }
 
     async disconnectVins(vins: string[]): Promise<Result<void, string>> {
-        const disconnectData = await this.getDisconnectData(vins)
+        const disconnectData = await this.getDisconnectData(vins);
         if (!disconnectData.success) {
             return { success: false, error: disconnectData.error };
         }
 
-        const signedDisconnectData = await this.signDisconnectData(disconnectData.data)
+        const signedDisconnectData = await this.signDisconnectData(disconnectData.data);
         if (!signedDisconnectData.success) {
             return { success: false, error: signedDisconnectData.error };
         }
 
-        const disconnectStatus = await this.submitDisconnectData(signedDisconnectData.data)
+        const disconnectStatus = await this.submitDisconnectData(signedDisconnectData.data);
         if (!disconnectStatus.success) {
             return { success: false, error: disconnectStatus.error };
         }
@@ -551,7 +551,7 @@ export class BaseOnboardingElement extends LitElement {
             result.push({
                 ...d,
                 signature: signature.signature
-            })
+            });
         }
 
         return {
@@ -563,7 +563,7 @@ export class BaseOnboardingElement extends LitElement {
     async submitDeleteData(deleteData: VinUserOperationData[]): Promise<Result<void, string>> {
         const payload: {vinDeleteData: VinUserOperationData[]} = {
             vinDeleteData: deleteData,
-        }
+        };
 
         const deleteResponse = await this.api.callApi('POST', '/vehicle/delete', payload, true);
         if (!deleteResponse.success || !deleteResponse.data) {
@@ -573,9 +573,9 @@ export class BaseOnboardingElement extends LitElement {
             };
         }
 
-        let success = true
+        let success = true;
         for (const attempt of range(30)) {
-            success = true
+            success = true;
             const query = qs.stringify({vins: deleteData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
             const status = await this.api.callApi<VinsStatusResult>('GET', `/vehicle/delete/status?${query}`, null, true);
 
@@ -613,17 +613,17 @@ export class BaseOnboardingElement extends LitElement {
     }
 
     async deleteVins(vins: string[]): Promise<Result<void, string>> {
-        const deleteData = await this.getDeleteData(vins)
+        const deleteData = await this.getDeleteData(vins);
         if (!deleteData.success) {
             return { success: false, error: deleteData.error };
         }
 
-        const signedDeleteData = await this.signDeleteData(deleteData.data)
+        const signedDeleteData = await this.signDeleteData(deleteData.data);
         if (!signedDeleteData.success) {
             return { success: false, error: signedDeleteData.error };
         }
 
-        const deleteStatus = await this.submitDeleteData(signedDeleteData.data)
+        const deleteStatus = await this.submitDeleteData(signedDeleteData.data);
         if (!deleteStatus.success) {
             return { success: false, error: deleteStatus.error };
         }

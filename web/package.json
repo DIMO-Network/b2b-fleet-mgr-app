@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsc && vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint src --fix"
   },
   "dependencies": {
     "@dimo-network/transactions": "^0.1.79",
@@ -28,11 +29,16 @@
     "viem": "^2.23.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.21.0",
     "@types/leaflet": "^1.9.21",
     "@types/lodash": "^4.17.16",
     "@types/qs": "^6.9.18",
     "@vitejs/plugin-basic-ssl": "^2.0.0",
+    "eslint": "^9.21.0",
+    "eslint-plugin-lit": "^1.15.0",
+    "globals": "^15.15.0",
     "typescript": "^5.8.2",
+    "typescript-eslint": "^8.24.1",
     "vite": "^6.4.1",
     "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-mkcert": "^1.17.8",

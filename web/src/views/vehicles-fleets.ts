@@ -58,7 +58,7 @@ interface FleetVehiclesResponse {
 @customElement('vehicles-fleets-view')
 export class VehiclesFleetsView extends LitElement {
   static styles = [ globalStyles,
-    css`` ]
+    css`` ];
 
   @consume({ context: apiServiceContext, subscribe: true })
   @state()
@@ -336,7 +336,7 @@ export class VehiclesFleetsView extends LitElement {
     } finally {
       this.exporting = false;
     }
-  }
+  };
 
   private handleSearchInput(e: Event) {
     const input = e.target as HTMLInputElement;
@@ -437,8 +437,8 @@ export class VehiclesFleetsView extends LitElement {
       pages.push(1);
 
       // Calculate range around current page
-      let startPage = Math.max(2, this.currentPage - 1);
-      let endPage = Math.min(this.totalPages - 1, this.currentPage + 1);
+      const startPage = Math.max(2, this.currentPage - 1);
+      const endPage = Math.min(this.totalPages - 1, this.currentPage + 1);
 
       // Add ellipsis and pages
       if (startPage > 2) {

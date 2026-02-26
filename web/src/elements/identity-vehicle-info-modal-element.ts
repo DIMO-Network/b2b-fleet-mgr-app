@@ -1,4 +1,4 @@
-import {css, html, nothing} from 'lit'
+import {css, html, nothing} from 'lit';
 import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
 import { IdentityService, VehicleIdentityData } from '../services/identity-service';
@@ -8,22 +8,22 @@ import {globalStyles} from "../global-styles.ts";
 export class IdentityVehicleInfoModalElement extends LitElement {
     static styles = [ globalStyles,
         css``
-    ]
+    ];
 
     @property({attribute: true, type: Boolean})
-    public show = false
+    public show = false;
 
     @property({attribute: true})
-    public tokenId = ""
+    public tokenId = "";
 
     @state()
-    private identityData: VehicleIdentityData | null = null
+    private identityData: VehicleIdentityData | null = null;
 
     @state()
-    private loading = false
+    private loading = false;
 
     @state()
-    private error = ""
+    private error = "";
 
     private identityService: IdentityService;
 

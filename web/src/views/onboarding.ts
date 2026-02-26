@@ -5,7 +5,7 @@ import {globalStyles} from "../global-styles.ts";
 @customElement('onboarding-view')
 export class OnboardingView extends LitElement {
     static styles = [ globalStyles,
-        css`` ]
+        css`` ];
 
   render() {
     return html`

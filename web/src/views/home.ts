@@ -5,7 +5,7 @@ import {globalStyles} from "../global-styles.ts";
 @customElement('home-view')
 export class HomeView extends LitElement {
   static styles = [ globalStyles,
-    css`` ]
+    css`` ];
 
   render() {
     return html`

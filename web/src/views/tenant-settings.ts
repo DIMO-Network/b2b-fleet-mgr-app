@@ -81,18 +81,18 @@ export class TenantSettingsView extends LitElement {
     this.editing = true;
     this.success = '';
     this.error = '';
-  }
+  };
 
   private cancelEdit = () => {
     this.editing = false;
     this.success = '';
     this.error = '';
     this.populateEditFieldsFromData();
-  }
+  };
 
   private onInput = (e: InputEvent, setter: (v: string) => void) => {
     setter((e.target as HTMLInputElement).value);
-  }
+  };
 
   private async save() {
     if (!this.data) return;

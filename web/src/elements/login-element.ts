@@ -1,4 +1,4 @@
-import {html, LitElement, css} from 'lit'
+import {html, LitElement, css} from 'lit';
 import {SettingsService} from "@services/settings-service";
 
 export class LoginElement extends LitElement {
@@ -7,7 +7,7 @@ export class LoginElement extends LitElement {
         token: {type: String},
         alertText: {type: String},
         loginUrl: {type: String},
-    }
+    };
     private loginBaseUrl: string;
     private loginUrl: string;
     private settings: SettingsService;
@@ -25,8 +25,8 @@ export class LoginElement extends LitElement {
         super.connectedCallback();
 
         const settings = await this.settings.fetchPublicSettings();
-        this.clientId = settings?.clientId || ""
-        this.loginBaseUrl = settings?.loginUrl || ""
+        this.clientId = settings?.clientId || "";
+        this.loginBaseUrl = settings?.loginUrl || "";
 
         if (this.clientId.length === 42) {
             this.setupLoginUrl();
@@ -35,7 +35,7 @@ export class LoginElement extends LitElement {
 
     static styles = css`
     #todo
-    `
+    `;
 
     render() {
         return html`

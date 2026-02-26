@@ -1,10 +1,10 @@
-import {css, html, nothing, LitElement} from 'lit'
-import {customElement, property} from 'lit/decorators.js'
-import {globalStyles} from '../global-styles.ts'
+import {css, html, nothing, LitElement} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
+import {globalStyles} from '../global-styles.ts';
 
 @customElement('error-modal-element')
 export class ErrorModalElement extends LitElement {
-  static styles = [ globalStyles, css`` ]
+  static styles = [ globalStyles, css`` ];
 
   @property({type: Boolean})
   show: boolean = false;
@@ -40,7 +40,7 @@ export class ErrorModalElement extends LitElement {
   private close = () => {
     this.show = false;
     this.dispatchEvent(new CustomEvent('modal-closed', { bubbles: true, composed: true }));
-  }
+  };
 }
 
 declare global {

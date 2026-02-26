@@ -1,4 +1,4 @@
-import {css, html, LitElement} from 'lit'
+import {css, html, LitElement} from 'lit';
 import {repeat} from 'lit/directives/repeat.js';
 import {customElement, property, state} from "lit/decorators.js";
 import {Vehicle} from "@datatypes//vehicle.ts";
@@ -13,7 +13,7 @@ interface VehiclesResponse {
 @customElement('vehicle-list-element')
 export class VehicleListElement extends LitElement {
     static styles = [ globalStyles,
-        css`` ]
+        css`` ];
 
     static properties = {
         items: {type: Array},
@@ -22,7 +22,7 @@ export class VehicleListElement extends LitElement {
         currentPage: {type: Number},
         pageSize: {type: Number},
         totalItems: {type: Number},
-    }
+    };
 
     @property({attribute: true})
     private items: Vehicle[];
@@ -115,7 +115,7 @@ export class VehicleListElement extends LitElement {
     private handleItemChanged = async () => {
         // Refresh the list when any row dispatches an item update event
         await this.loadVehicles();
-    }
+    };
 
     private async goToPage(page: number) {
         if (page < 1) return;
@@ -167,7 +167,7 @@ export class VehicleListElement extends LitElement {
         this.searchDebounce = window.setTimeout(() => {
             this.requestUpdate();
         }, 600);
-    }
+    };
 
     private handleExportCSV = async () => {
         if (this.exporting) return;
@@ -188,7 +188,7 @@ export class VehicleListElement extends LitElement {
         } finally {
             this.exporting = false;
         }
-    }
+    };
 
     render() {
         return html`
@@ -250,6 +250,6 @@ export class VehicleListElement extends LitElement {
                     <span style="margin-left: auto; color: #666;">Showing ${this.filteredItems.length} of ${this.totalItems} items</span>
                 </div>
             </div>
-        `
+        `;
     }
 }

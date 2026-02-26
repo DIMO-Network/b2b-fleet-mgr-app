@@ -100,7 +100,7 @@ export class AppRootV2 extends LitElement {
                 gap: 12px;
                 justify-content: flex-end;
             }
-        ` ]
+        ` ];
 
     @provide({ context: apiServiceContext })
     apiService = ApiService.getInstance(); // app-level singleton
@@ -400,7 +400,7 @@ export class AppRootV2 extends LitElement {
             // If same hash, manually invoke router to refresh view if needed.
             await this.router.goto(path || '/');
         }
-    }
+    };
 
     // Oracle persistence is handled by OracleTenantService
 

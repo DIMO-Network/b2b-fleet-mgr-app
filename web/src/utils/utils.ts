@@ -20,7 +20,7 @@ export function isLocalhost() {
  * @param {string} signResult.v - The recovery ID as a hex string (typically `"00"` or `"01"`).
  * @returns {`0x${string}`} The full Ethereum signature as a 0x-prefixed hex string.
  */
-// @ts-ignore FIXME: something is wrong with types, the Signature type from `viem` uses `v` as bigint, not string
+// @ts-expect-error FIXME: something is wrong with types, the Signature type from `viem` uses `v` as bigint, not string
 export function formatEthereumSignature(signResult) {
     const { r, s, v } = signResult;
     const vHex = (parseInt(v, 16) + 27).toString(16).padStart(2, '0');

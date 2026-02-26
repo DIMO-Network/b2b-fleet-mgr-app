@@ -10,7 +10,7 @@ export class OracleSelector extends LitElement {
     selectedOption: string;
 
     @property()
-    options: Oracle[] = []
+    options: Oracle[] = [];
 
     private oracleTenantService = OracleTenantService.getInstance();
 

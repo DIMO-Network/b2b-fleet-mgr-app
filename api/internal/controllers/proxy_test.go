@@ -77,7 +77,7 @@ func TestProxyRequest_HTTPMethods(t *testing.T) {
 				// Send a mock response
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+				_ = json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 			}))
 			defer targetServer.Close()
 
@@ -146,7 +146,7 @@ func TestProxyRequest_HeaderForwarding(t *testing.T) {
 		receivedCustomHeader = r.Header.Get("X-Custom-Header")
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	}))
 	defer targetServer.Close()
 
@@ -198,7 +198,7 @@ func TestProxyRequest_AuthHeader(t *testing.T) {
 		receivedAuth = r.Header.Get("Authorization")
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	}))
 	defer targetServer.Close()
 

@@ -1,4 +1,4 @@
-import {css, html, nothing} from 'lit'
+import {css, html, nothing} from 'lit';
 import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
 import { ApiService } from '../services/api-service';
@@ -25,60 +25,60 @@ interface TelemetryData {
 export class TelemetryModalElement extends LitElement {
     static styles = [ globalStyles,
         css``
-    ]
+    ];
     @property({attribute: true, type: Boolean})
-    public show = false
+    public show = false;
 
     @property({attribute: true})
-    public imei = ""
+    public imei = "";
 
     @property({attribute: true})
-    public vin = ""
+    public vin = "";
 
     @state()
-    private telemetryData: TelemetryData[] = []
+    private telemetryData: TelemetryData[] = [];
 
     @state()
-    private identityData: TelemetryData[] = []
+    private identityData: TelemetryData[] = [];
 
     @state()
-    private loading = false
+    private loading = false;
 
     @state()
-    private error = ""
+    private error = "";
 
     @state()
-    private resetting = false
+    private resetting = false;
 
     @state()
-    private removingVin = false
+    private removingVin = false;
 
     @state()
-    private showRemoveVinConfirm = false
+    private showRemoveVinConfirm = false;
 
     @state()
-    private odometerDisplay: string = "—"
+    private odometerDisplay: string = "—";
 
     @state()
-    private rpmDisplay: string = "—"
+    private rpmDisplay: string = "—";
 
     @state()
-    private ignitionDisplay: string = "—"
+    private ignitionDisplay: string = "—";
 
     @state()
-    private engineBlockDisplay: string = "—"
+    private engineBlockDisplay: string = "—";
 
     @state()
-    private ioSearchValue: string = ""
+    private ioSearchValue: string = "";
 
     @state()
-    private ioSearchResult: string = "—"
+    private ioSearchResult: string = "—";
 
     @state()
-    private immobilizerLoading = false
+    private immobilizerLoading = false;
 
     @state()
-    private immobilizerError = ""
+    private immobilizerError = "";
 
     // Paging over raw telemetry rows
     @state()
@@ -567,25 +567,25 @@ export class TelemetryModalElement extends LitElement {
         if (this.currentIndex < this.pages.length - 1) {
             this.currentIndex += 1;
         }
-    }
+    };
 
     private prevPage = () => {
         if (this.currentIndex > 0) {
             this.currentIndex -= 1;
         }
-    }
+    };
 
     private nextIdentityPage = () => {
         if (this.currentIdentityIndex < this.identityPages.length - 1) {
             this.currentIdentityIndex += 1;
         }
-    }
+    };
 
     private prevIdentityPage = () => {
         if (this.currentIdentityIndex > 0) {
             this.currentIdentityIndex -= 1;
         }
-    }
+    };
 
     private formatJsonForDisplay(data: unknown): string {
         try {

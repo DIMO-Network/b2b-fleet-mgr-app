@@ -1,4 +1,4 @@
-import {css, html, nothing} from 'lit'
+import {css, html, nothing} from 'lit';
 import {customElement, property, state} from "lit/decorators.js";
 // import {ApiService} from "@services/api-service.ts";
 import './session-timer';
@@ -51,38 +51,38 @@ export class TransferModalElement extends BaseOnboardingElement {
             margin-top: 8px;
           }
         `
-    ]
+    ];
     @property({attribute: true, type: Boolean})
-    public show = false
+    public show = false;
 
     @property({attribute: true})
-    public vehicleVin = ""
+    public vehicleVin = "";
 
     @property({attribute: true})
-    public imei = ""
+    public imei = "";
 
     @state()
-    private walletAddress = ""
+    private walletAddress = "";
 
     @state()
-    private email = ""
+    private email = "";
 
     @state()
-    private errorMessage = ""
+    private errorMessage = "";
 
     @state()
-    private statusMessage = ""
+    private statusMessage = "";
 
     @state()
-    private isCheckingAccount = false
+    private isCheckingAccount = false;
 
     @state()
-    private accountNotFound: boolean | null = null
+    private accountNotFound: boolean | null = null;
 
     @state()
-    private accountFound: boolean = false
+    private accountFound: boolean = false;
 
-    private accountCheckTimeout?: number
+    private accountCheckTimeout?: number;
 
     constructor() {
         super();
@@ -100,7 +100,7 @@ export class TransferModalElement extends BaseOnboardingElement {
 
     private handleStatusUpdate = (event: CustomEvent<{ status: string }>) => {
         this.statusMessage = event.detail.status;
-    }
+    };
 
     // Use shadow DOM; shared modal styles come from globalStyles
 
@@ -212,7 +212,7 @@ export class TransferModalElement extends BaseOnboardingElement {
 
     private handleEmailInput = (e: InputEvent) => {
         this.email = (e.target as HTMLInputElement).value;
-    }
+    };
 
     private handleWalletInput = (e: InputEvent) => {
         const value = (e.target as HTMLInputElement).value;
@@ -234,7 +234,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         this.accountCheckTimeout = window.setTimeout(() => {
             this.lookupAccount(trimmed);
         }, 400);
-    }
+    };
 
     private async lookupAccount(walletAddress: string) {
         this.isCheckingAccount = true;
@@ -277,12 +277,12 @@ export class TransferModalElement extends BaseOnboardingElement {
         if (this.walletAddress == "") {
             alert("Please enter a wallet address");
             this.processing = false;
-            return
+            return;
         }
 
         console.log("Target Wallet to transfer to", this.walletAddress);
         // this method does a lot of steps. It also checks the status of the transfer, which should be separated out into own function.
-        const result = await this.transferVehicle(this.imei, this.walletAddress)
+        const result = await this.transferVehicle(this.imei, this.walletAddress);
         if (!result.success) {
             if (result.error.toLowerCase().includes('timeout')) {
                 this.errorMessage = "Check Info for final transfer verification";
@@ -304,7 +304,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         }
 
         await delay(500);
-        this.processing = false
+        this.processing = false;
 
         this.closeModal();
     }
@@ -313,7 +313,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         const payload = {
             email: email,
             deployAccount: true
-        }
+        };
         const creatResp = await this.api.callApi<AccountData>('POST', '/account', payload, true, true, false);
         if (!creatResp.success || !creatResp.data) {
             return {

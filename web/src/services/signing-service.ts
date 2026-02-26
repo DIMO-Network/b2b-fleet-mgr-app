@@ -48,7 +48,7 @@ export class SigningService {
             return {
                 success: false,
                 error: "Signing service not configured"
-            }
+            };
         }
 
         const {turnkeyApiUrl, turnkeyOrgId, turnkeyRpId} = settings;
@@ -60,7 +60,7 @@ export class SigningService {
             return {
                 success: false,
                 error: "Failed to get turnkey client"
-            }
+            };
         }
 
         const wallet = await this.getTurnkeyWallet(turnkeyClient, subOrganizationId);
@@ -95,7 +95,7 @@ export class SigningService {
             return {
                 success: true,
                 signature: signature,
-            }
+            };
         } catch (error: any) {
             console.error("Error message:", error.message);
             console.error("Stack trace:", error.stack);
@@ -103,7 +103,7 @@ export class SigningService {
             return {
                 success: false,
                 error: error.message || "An unexpected error occurred",
-            }
+            };
         }
     }
 
@@ -115,7 +115,7 @@ export class SigningService {
             return {
                 success: false,
                 error: "Signing service not configured"
-            }
+            };
         }
 
         const {turnkeyApiUrl, turnkeyOrgId, turnkeyRpId} = settings;
@@ -127,7 +127,7 @@ export class SigningService {
             return {
                 success: false,
                 error: "Failed to get turnkey client"
-            }
+            };
         }
 
         const wallet = await this.getTurnkeyWallet(turnkeyClient, subOrganizationId);
@@ -161,7 +161,7 @@ export class SigningService {
             return {
                 success: true,
                 signature: signature,
-            }
+            };
         } catch (error: any) {
             console.error("Error message:", error.message);
             console.error("Stack trace:", error.stack);
@@ -169,7 +169,7 @@ export class SigningService {
             return {
                 success: false,
                 error: error.message || "An unexpected error occurred",
-            }
+            };
         }
     }
 
@@ -182,7 +182,7 @@ export class SigningService {
             return {
                 success: false,
                 error: "Signing service not configured"
-            }
+            };
         }
 
         const { turnkeyOrgId } = settings;
@@ -199,7 +199,7 @@ export class SigningService {
                 token: credentialBundle,
                 expiresAt: (nowInSeconds + SESSION_TIME_S) * 1000,
             }
-        }
+        };
         console.debug("Turnkey session:", turnkeySession);
         this.storeSession(turnkeySession);
     }
@@ -251,7 +251,7 @@ export class SigningService {
                 token: credentialBundle,
                 expiresAt: (nowInSeconds + SESSION_TIME_S) * 1000,
             }
-        }
+        };
         console.debug("Turnkey session:", turnkeySession);
         this.storeSession(turnkeySession);
 
@@ -282,10 +282,10 @@ export class SigningService {
             return wallet;
         }
 
-        const wallets = await turnkeyClient.getWallets({organizationId: subOrgId})
+        const wallets = await turnkeyClient.getWallets({organizationId: subOrgId});
         wallets.wallets.forEach(wallet => {
             console.debug("Sub-Organization Wallet:", wallet);
-        })
+        });
 
         const account = await turnkeyClient.getWalletAccounts({
             organizationId: subOrgId,

@@ -1,4 +1,4 @@
-import {css, html, nothing} from 'lit'
+import {css, html, nothing} from 'lit';
 import {customElement, property, state} from "lit/decorators.js";
 import {Vehicle} from "@datatypes//vehicle.ts";
 
@@ -26,19 +26,19 @@ const ConnectionStatusMap:  Record<ConnectionStatus, string> = {
     [ConnectionStatus.DISCONNECTION_FAILED]: "Disconnection failed",
     [ConnectionStatus.DISCONNECTED]: "Disconnected",
     [ConnectionStatus.TRANSFERRED]: "Transferred",
-}
+};
 
 @customElement('vehicle-list-item-element')
 export class VehicleListItemElement extends BaseOnboardingElement {
     static styles = [ globalStyles,
-        css`` ]
+        css`` ];
 
     @property({attribute: true})
-    public item?: Vehicle
+    public item?: Vehicle;
 
     @state()
-    private connectionProcessing = false
-    private deletionProcessing = false
+    private connectionProcessing = false;
+    private deletionProcessing = false;
 
     constructor() {
         super();
@@ -78,7 +78,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       type="button"
                       ?hidden=${!this.item.imei}
                       @click=${this.openTelemetryModal}
-                      title="Telemetry & Command"
+                      title="Telemetry &amp; Command"
                       class="action-btn secondary"
                   >
                       ⚡
@@ -93,11 +93,11 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
                   <!--
-                  <button ?hidden=${!this.canConnect(this.item)}
+                  <button ?hidden
                           type="button"
-                          ?disabled=${this.processing}
-                          class=${this.connectionProcessing ? 'processing action-btn secondary' : 'action-btn'}
-                          @click=${this.connectVehicle}
+                          ?disabled
+                          class="action-btn"
+                          @click
                   >connect
                   </button>
                   -->
@@ -139,39 +139,39 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   </button>
               </td>
             </tr>
-          ` : nothing
+          ` : nothing;
     }
 
     getConnectionStatus(item: Vehicle): ConnectionStatus {
         if (!item.isCurrentUserOwner && item.tokenId !== 0) {
-            return ConnectionStatus.TRANSFERRED
+            return ConnectionStatus.TRANSFERRED;
         }
 
         if (["inQueue", "inProgress"].includes(item.disconnectionStatus)) {
-            return ConnectionStatus.DISCONNECTING
+            return ConnectionStatus.DISCONNECTING;
         }
 
         if (["inQueue", "inProgress"].includes(item.connectionStatus)) {
-            return ConnectionStatus.CONNECTING
+            return ConnectionStatus.CONNECTING;
         }
 
         if (item.disconnectionStatus === "failed") {
-            return ConnectionStatus.DISCONNECTION_FAILED
+            return ConnectionStatus.DISCONNECTION_FAILED;
         }
 
         if (item.disconnectionStatus === "succeeded") {
-            return ConnectionStatus.DISCONNECTED
+            return ConnectionStatus.DISCONNECTED;
         }
 
         if (item.connectionStatus === "failed") {
-            return ConnectionStatus.CONNECTION_FAILED
+            return ConnectionStatus.CONNECTION_FAILED;
         }
 
         if (item.connectionStatus === "succeeded") {
-            return ConnectionStatus.CONNECTED
+            return ConnectionStatus.CONNECTED;
         }
 
-        return ConnectionStatus.UNKNOWN
+        return ConnectionStatus.UNKNOWN;
     }
 
     getConnectionCSSClass(item: Vehicle): string {
@@ -183,15 +183,15 @@ export class VehicleListItemElement extends BaseOnboardingElement {
     }
 
     canConnect(item: Vehicle): boolean {
-        return [ConnectionStatus.UNKNOWN, ConnectionStatus.DISCONNECTED, ConnectionStatus.CONNECTION_FAILED].includes(this.getConnectionStatus(item))
+        return [ConnectionStatus.UNKNOWN, ConnectionStatus.DISCONNECTED, ConnectionStatus.CONNECTION_FAILED].includes(this.getConnectionStatus(item));
     }
 
     canDisconnect(item: Vehicle): boolean {
-        return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item))
+        return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item));
     }
 
     canDelete(item: Vehicle): boolean {
-        return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item))
+        return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item));
     }
 
     private dispatchItemChanged() {
@@ -207,28 +207,28 @@ export class VehicleListItemElement extends BaseOnboardingElement {
             return;
         }
         console.log("connect vehicle:");
-        console.log(this.item)
+        console.log(this.item);
         if (this.item.vin == "") {
             alert("vin is empty!" + this.item.vin);
-            return
+            return;
         }
 
         if (!confirm("Are you sure you want to re-connect the vehicle?")) {
             return;
         }
 
-        this.processing = true
-        this.connectionProcessing = true
+        this.processing = true;
+        this.connectionProcessing = true;
         const success = await this.onboardVINs([{vin: this.item.vin, definition: this.item.definition.id}], null);
         if (success) {
-            await delay(5000)
-            this.processing = false
-            this.connectionProcessing = false
-            this.dispatchItemChanged()
+            await delay(5000);
+            this.processing = false;
+            this.connectionProcessing = false;
+            this.dispatchItemChanged();
         } else {
-            this.processing = false
-            this.connectionProcessing = false
-            this.openErrorModal('Vehicle connect failed', 'Connect Failed')
+            this.processing = false;
+            this.connectionProcessing = false;
+            this.openErrorModal('Vehicle connect failed', 'Connect Failed');
         }
     }
 
@@ -241,18 +241,18 @@ export class VehicleListItemElement extends BaseOnboardingElement {
             return;
         }
 
-        this.processing = true
-        this.connectionProcessing = true
-        const result = await this.disconnectVins([this.item.vin])
+        this.processing = true;
+        this.connectionProcessing = true;
+        const result = await this.disconnectVins([this.item.vin]);
         if (result.success) {
-            await delay(5000)
-            this.processing = false
-            this.connectionProcessing = false
-            this.dispatchItemChanged()
+            await delay(5000);
+            this.processing = false;
+            this.connectionProcessing = false;
+            this.dispatchItemChanged();
         } else {
-            this.processing = false
-            this.connectionProcessing = false
-            this.openErrorModal(result.error || 'Vehicle disconnect failed')
+            this.processing = false;
+            this.connectionProcessing = false;
+            this.openErrorModal(result.error || 'Vehicle disconnect failed');
         }
     }
 
@@ -265,18 +265,18 @@ export class VehicleListItemElement extends BaseOnboardingElement {
             return;
         }
 
-        this.processing = true
-        this.deletionProcessing = true
-        const result = await this.deleteVins([this.item.vin])
+        this.processing = true;
+        this.deletionProcessing = true;
+        const result = await this.deleteVins([this.item.vin]);
         if (result.success) {
-            await delay(5000)
-            this.processing = false
-            this.deletionProcessing = false
-            this.dispatchItemChanged()
+            await delay(5000);
+            this.processing = false;
+            this.deletionProcessing = false;
+            this.dispatchItemChanged();
         } else {
-            this.processing = false
-            this.deletionProcessing = false
-            this.openErrorModal(result.error || 'Vehicle delete failed', 'Delete Failed')
+            this.processing = false;
+            this.deletionProcessing = false;
+            this.openErrorModal(result.error || 'Vehicle delete failed', 'Delete Failed');
         }
     }
 
@@ -290,17 +290,17 @@ export class VehicleListItemElement extends BaseOnboardingElement {
             return;
         }
 
-        this.processing = true
-        this.deletionProcessing = true
-        const result = await this.api.callApi('DELETE', `/vehicle/force/${this.item.imei}`, null, true, true)
+        this.processing = true;
+        this.deletionProcessing = true;
+        const result = await this.api.callApi('DELETE', `/vehicle/force/${this.item.imei}`, null, true, true);
         if (result.success) {
-            this.processing = false
-            this.deletionProcessing = false
-            this.dispatchItemChanged()
+            this.processing = false;
+            this.deletionProcessing = false;
+            this.dispatchItemChanged();
         } else {
-            this.processing = false
-            this.deletionProcessing = false
-            this.openErrorModal(result.error || 'Vehicle force delete failed', 'Force Delete Failed')
+            this.processing = false;
+            this.deletionProcessing = false;
+            this.openErrorModal(result.error || 'Vehicle force delete failed', 'Force Delete Failed');
         }
     }
 
@@ -309,11 +309,11 @@ export class VehicleListItemElement extends BaseOnboardingElement {
             return;
         }
 
-        this.processing = true
-        await this.api.callApi('DELETE', `/vehicle/reset-onboarding/${imei}`, null, true, true)
-        await delay(1000)
-        this.processing = false
-        this.dispatchItemChanged()
+        this.processing = true;
+        await this.api.callApi('DELETE', `/vehicle/reset-onboarding/${imei}`, null, true, true);
+        await delay(1000);
+        this.processing = false;
+        this.dispatchItemChanged();
     }
 
     private openTransferModal() {
@@ -328,7 +328,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         // Add event listener for modal close
         modal.addEventListener('modal-closed', () => {
             document.body.removeChild(modal);
-            this.dispatchItemChanged()
+            this.dispatchItemChanged();
         });
 
         // Add to body

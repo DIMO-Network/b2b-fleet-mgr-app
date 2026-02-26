@@ -30,7 +30,7 @@ export class ReportsView extends LitElement {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
-    ` ]
+    ` ];
 
   @state()
   private reports: FleetReport[] = [];
@@ -117,11 +117,12 @@ export class ReportsView extends LitElement {
         this.endDate = now.format('YYYY-MM-DD');
         this.startDate = now.startOf('month').format('YYYY-MM-DD');
         break;
-      case 'Last Month':
+      case 'Last Month': {
         const lastMonth = now.subtract(1, 'month');
         this.startDate = lastMonth.startOf('month').format('YYYY-MM-DD');
         this.endDate = lastMonth.endOf('month').format('YYYY-MM-DD');
         break;
+      }
     }
   }
 

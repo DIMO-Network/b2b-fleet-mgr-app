@@ -206,7 +206,7 @@ export class VehicleDetailView extends LitElement {
       value
     }
   }
-}`
+}`;
 
   tripsQuery = `{
   segments(
@@ -230,7 +230,7 @@ export class VehicleDetailView extends LitElement {
     isOngoing
     signals { name agg value }
   }
-}`
+}`;
 
   async connectedCallback() {
     super.connectedCallback();
@@ -336,13 +336,13 @@ export class VehicleDetailView extends LitElement {
       }
 
       // Show wallet address immediately
-      this.ownerWalletAddress = ownerAddress
+      this.ownerWalletAddress = ownerAddress;
 
       // Then load the full account info in the background
       const accountInfo = await identityService.getAccountInfo(ownerAddress);
 
       if (accountInfo) {
-        this.ownerInfo = accountInfo
+        this.ownerInfo = accountInfo;
       }
     } catch (error) {
       console.error('Error loading owner info:', error);
@@ -740,7 +740,7 @@ export class VehicleDetailView extends LitElement {
 
   private formatLastTelemetry(timestamp: string | undefined): string {
     if (timestamp === undefined) {
-      return '-'
+      return '-';
     }
     if (!timestamp) return '—';
     const date = dayjs(timestamp);

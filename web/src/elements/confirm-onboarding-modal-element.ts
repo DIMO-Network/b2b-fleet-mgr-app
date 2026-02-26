@@ -1,4 +1,4 @@
-import {html, nothing, LitElement, css} from 'lit'
+import {html, nothing, LitElement, css} from 'lit';
 import {customElement, property, state} from "lit/decorators.js";
 import {repeat} from "lit/directives/repeat.js";
 import {VehicleWithDefinition} from "@elements/base-onboarding-element.ts";
@@ -34,34 +34,34 @@ interface TopDefinitionsResponse {
 export class ConfirmOnboardingModalElement extends LitElement {
     static styles = [ globalStyles,
         css``
-    ]
+    ];
 
     @property({attribute: true, type: Boolean})
-    public show = false
+    public show = false;
 
     @property({attribute: false})
-    public vins: string[] = []
+    public vins: string[] = [];
 
     @state()
-    private vehicleDefinitions: Map<string, string> = new Map()
+    private vehicleDefinitions: Map<string, string> = new Map();
 
     @state()
-    private decodingVins: Set<string> = new Set()
+    private decodingVins: Set<string> = new Set();
 
     @state()
-    private invalidVins: Set<string> = new Set()
+    private invalidVins: Set<string> = new Set();
 
     @state()
-    private validatingVins: Set<string> = new Set()
+    private validatingVins: Set<string> = new Set();
 
     @state()
-    private validDefinitions: Set<string> = new Set()
+    private validDefinitions: Set<string> = new Set();
 
     @state()
-    private invalidDefinitions: Set<string> = new Set()
+    private invalidDefinitions: Set<string> = new Set();
 
     @state()
-    private topDefinitions: string[] = []
+    private topDefinitions: string[] = [];
 
     private apiService: ApiService;
     private validationTimers: Map<string, number> = new Map();
@@ -353,7 +353,7 @@ export class ConfirmOnboardingModalElement extends LitElement {
         const payload = {
             vin: vin,
             countryCode: countryCode
-        }
+        };
         return await this.apiService.callApi<DecodeVinResponse>('POST', '/definitions/decodevin', payload, true, false);
     }
 

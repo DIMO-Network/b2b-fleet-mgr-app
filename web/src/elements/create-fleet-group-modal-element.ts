@@ -1,6 +1,5 @@
 import { html, nothing, LitElement, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { ApiService } from '@services/api-service.ts';
 import { FleetService, FleetGroup } from '@services/fleet-service.ts';
 import { globalStyles } from '../global-styles.ts';
 
@@ -29,11 +28,8 @@ export class CreateFleetGroupModalElement extends LitElement {
   @state()
   private nameError: string = '';
 
-  private apiService: ApiService;
-
   constructor() {
     super();
-    this.apiService = ApiService.getInstance();
   }
 
   updated(changedProperties: Map<string, any>) {
