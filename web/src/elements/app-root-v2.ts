@@ -23,6 +23,15 @@ export class AppRootV2 extends LitElement {
                 gap: 8px;
             }
 
+            .nav-item.disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            .nav-item.disabled a {
+                pointer-events: none;
+            }
+
             .switch-tenant-btn {
                 white-space: normal; /* allow breaking at space to fit nicely */
                 text-align: center;
@@ -284,25 +293,36 @@ export class AppRootV2 extends LitElement {
                         <div class="nav-item ${this.isActive('/') ? 'active' : ''}" data-page="home">
                             <a data-page="home" href="#/" aria-current="${this.isActive('/') ? 'page' : 'false'}">Home</a>
                         </div>
-                        ${this.permissions.includes('onboard_vehicles') ? html`
-                            <div class="nav-item ${this.isActive('/onboarding') ? 'active' : ''}">
-                                <a data-page="onboarding" href="#/onboarding" aria-current="${this.isActive('/onboarding') ? 'page' : 'false'}">Onboarding</a>
-                            </div>
-                        ` : ''}
+                        <div class="nav-item ${this.isActive('/onboarding') ? 'active' : ''} ${!this.permissions.includes('onboard_vehicles') ? 'disabled' : ''}" 
+                             title="${!this.permissions.includes('onboard_vehicles') ? 'You don\'t have access' : ''}">
+                            <a data-page="onboarding" 
+                               href="#/onboarding" 
+                               aria-current="${this.isActive('/onboarding') ? 'page' : 'false'}"
+                               tabindex="${!this.permissions.includes('onboard_vehicles') ? '-1' : '0'}"
+                               aria-disabled="${!this.permissions.includes('onboard_vehicles') ? 'true' : 'false'}">Onboarding</a>
+                        </div>
                         <div class="nav-item ${this.isActive('/vehicles-fleets') ? 'active' : ''}">
                             <a data-page="vehicles" href="#/vehicles-fleets" aria-current="${this.isActive('/vehicles-fleets') ? 'page' : 'false'}">Vehicles & Fleets</a>
                         </div>
                         
                         <div class="nav-item hidden" data-page="vehicle-detail" id="nav-vehicle-detail">Vehicle Detail</div>
                         <div class="nav-divider"></div>
-                        <div class="nav-item ${this.isActive('/reports') ? 'active' : ''}">
-                            <a data-page="reports" href="#/reports" aria-current="${this.isActive('/reports') ? 'page' : 'false'}">Reports</a>
+                        <div class="nav-item ${this.isActive('/reports') ? 'active' : ''} ${!this.permissions.includes('reports') ? 'disabled' : ''}"
+                             title="${!this.permissions.includes('reports') ? 'You don\'t have access' : ''}">
+                            <a data-page="reports" 
+                               href="#/reports" 
+                               aria-current="${this.isActive('/reports') ? 'page' : 'false'}"
+                               tabindex="${!this.permissions.includes('reports') ? '-1' : '0'}"
+                               aria-disabled="${!this.permissions.includes('reports') ? 'true' : 'false'}">Reports</a>
                         </div>
-                        ${this.permissions.includes('manage_admin_users') ? html`
-                            <div class="nav-item ${this.isActive('/users') ? 'active' : ''}">
-                                <a data-page="users" href="#/users" aria-current="${this.isActive('/users') ? 'page' : 'false'}">Users</a>
-                            </div>
-                        ` : ''}
+                        <div class="nav-item ${this.isActive('/users') ? 'active' : ''} ${!this.permissions.includes('manage_admin_users') ? 'disabled' : ''}"
+                             title="${!this.permissions.includes('manage_admin_users') ? 'You don\'t have access' : ''}">
+                            <a data-page="users" 
+                               href="#/users" 
+                               aria-current="${this.isActive('/users') ? 'page' : 'false'}"
+                               tabindex="${!this.permissions.includes('manage_admin_users') ? '-1' : '0'}"
+                               aria-disabled="${!this.permissions.includes('manage_admin_users') ? 'true' : 'false'}">Users</a>
+                        </div>
                         <div class="nav-divider"></div>
                         <div class="nav-item ${this.isActive('/tenant-settings') ? 'active' : ''}">
                             <a data-page="tenant-settings" href="#/tenant-settings" aria-current="${this.isActive('/tenant-settings') ? 'page' : 'false'}">Settings</a>
@@ -369,7 +389,7 @@ export class AppRootV2 extends LitElement {
         // Delegate anchor clicks to ensure hash navigation triggers our router.
         const target = e.target as HTMLElement | null;
         const anchor = target?.closest?.('a[href^="#"]') as HTMLAnchorElement | null;
-        if (!anchor) return;
+        if (!anchor || anchor.closest('.nav-item.disabled')) return;
         // Prevent the browser default and set the hash ourselves to guarantee a hashchange.
         e.preventDefault();
         const hash = anchor.getAttribute('href') || '#/';

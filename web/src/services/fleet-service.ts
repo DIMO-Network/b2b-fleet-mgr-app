@@ -14,6 +14,12 @@ export interface FleetReport {
   id: string;
   reportName: string;
   status: string;
+  params?: {
+    startDate: string;
+    endDate: string;
+    fleetGroupIds: string[];
+    reportName: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

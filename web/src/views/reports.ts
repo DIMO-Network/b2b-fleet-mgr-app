@@ -1,7 +1,8 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import {globalStyles} from "../global-styles.ts";
-import { FleetService, FleetReport, FleetGroup } from '../services/fleet-service';
+import { FleetService, FleetReport, FleetGroup } from '@services/fleet-service.ts';
+import { IdentityService } from '@services/identity-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -72,9 +73,14 @@ export class ReportsView extends LitElement {
   @state()
   private submitting: boolean = false;
 
+  @state()
+  private hasAccess: boolean = true;
+
   async connectedCallback() {
     super.connectedCallback();
     this.setDefaultDates();
+    await this.checkAccess();
+    if (!this.hasAccess) return;
     await Promise.all([
       this.fetchReports(),
       this.fetchTemplates(),
@@ -159,6 +165,16 @@ export class ReportsView extends LitElement {
     }
   }
 
+  private async checkAccess() {
+    try {
+      const permissions = await IdentityService.getInstance().getUserPermissions();
+      this.hasAccess = permissions.includes('reports');
+    } catch (e) {
+      console.error('Failed to check reports access:', e);
+      this.hasAccess = false;
+    }
+  }
+
   private handleTemplateSelect(template: string) {
     this.selectedTemplate = template;
   }
@@ -190,6 +206,12 @@ export class ReportsView extends LitElement {
           id: result.reportId,
           reportName: this.selectedTemplate,
           status: result.status || 'pending',
+          params: {
+            startDate: data.startDate,
+            endDate: data.endDate,
+            fleetGroupIds: data.fleetGroupIds,
+            reportName: data.reportName
+          },
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
@@ -274,7 +296,48 @@ export class ReportsView extends LitElement {
     }
   }
 
+  private getFleetGroupDisplay(report: FleetReport): string {
+    if (!report.params?.fleetGroupIds || report.params.fleetGroupIds.length === 0) {
+      return '—';
+    }
+
+    const groupNames = report.params.fleetGroupIds.map(id => {
+      const group = this.fleetGroups.find(g => g.id === id);
+      return group ? group.name : id;
+    });
+
+    return groupNames.join(', ');
+  }
+
+  private getDateRangeDisplay(report: FleetReport): string {
+    if (!report.params?.startDate || !report.params?.endDate) {
+      return '—';
+    }
+
+    const start = dayjs(report.params.startDate);
+    const end = dayjs(report.params.endDate);
+
+    // If same year
+    if (start.year() === end.year()) {
+      return `${start.format('MMM D')} - ${end.format('MMM D, YYYY')}`;
+    }
+
+    return `${start.format('MMM D, YYYY')} - ${end.format('MMM D, YYYY')}`;
+  }
+
   render() {
+    if (!this.hasAccess) {
+      return html`
+        <div class="page active" id="page-reports">
+            <div class="access-denied-notice" style="text-align: center; padding: 48px; background: #fff; border: 1px solid #000; border-radius: 8px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">🚫</div>
+                <h3>Access Denied</h3>
+                <p>You do not have the required permissions to access the Reports section.</p>
+            </div>
+        </div>
+      `;
+    }
+
     return html`
         <!-- REPORTS PAGE -->
         <div class="page active" id="page-reports">
@@ -312,8 +375,8 @@ export class ReportsView extends LitElement {
                                 ${report.status === 'pending' ? html`<span class="spinner"></span>` : ''}
                                 ${report.reportName}
                             </td>
-                            <td>—</td>
-                            <td>—</td>
+                            <td>${this.getFleetGroupDisplay(report)}</td>
+                            <td>${this.getDateRangeDisplay(report)}</td>
                             <td title="${report.createdAt}">${this.formatLastRun(report.createdAt)}</td>
                             <td>
                                 <span class="status status-${report.status.toLowerCase()}">${report.status.toUpperCase()}</span>
