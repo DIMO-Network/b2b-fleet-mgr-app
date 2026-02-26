@@ -1,16 +1,8 @@
 import { html, nothing, LitElement, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { ApiService } from '@services/api-service.ts';
+import { FleetService, FleetGroup } from '@services/fleet-service.ts';
 import { globalStyles } from '../global-styles.ts';
-
-interface FleetGroup {
-  id: string;
-  name: string;
-  color: string;
-  vehicle_count: number;
-  created_at: string;
-  updated_at: string;
-}
 
 @customElement('create-fleet-group-modal-element')
 export class CreateFleetGroupModalElement extends LitElement {
@@ -222,16 +214,9 @@ export class CreateFleetGroupModalElement extends LitElement {
         color: this.groupColor
       };
 
-      const method = isEditMode ? 'PATCH' : 'POST';
-      const endpoint = isEditMode ? `/fleet/groups/${this.editGroup!.id}` : '/fleet/groups';
-
-      const response = await this.apiService.callApi(
-        method,
-        endpoint,
-        payload,
-        true, // auth required
-        true  // oracle endpoint
-      );
+      const response = isEditMode 
+        ? await FleetService.getInstance().updateFleetGroup(this.editGroup!.id, payload)
+        : await FleetService.getInstance().createFleetGroup(payload);
 
       if (response.success) {
         // Success - dispatch event and close

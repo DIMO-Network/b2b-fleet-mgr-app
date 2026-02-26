@@ -4,7 +4,7 @@ import {globalStyles} from "../global-styles.ts";
 import { consume } from '@lit/context';
 import { apiServiceContext } from '../context';
 import { ApiService } from '@services/api-service.ts';
-import { FleetService } from '@services/fleet-service.ts';
+import { FleetService, FleetGroup } from '@services/fleet-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -53,15 +53,6 @@ interface FleetVehiclesResponse {
   totalCount: number;
   skip: number;
   take: number;
-}
-
-interface FleetGroup {
-  id: string;
-  name: string;
-  color: string;
-  vehicle_count: number;
-  created_at: string;
-  updated_at: string;
 }
 
 @customElement('vehicles-fleets-view')
@@ -310,13 +301,7 @@ export class VehiclesFleetsView extends LitElement {
     this.showDeleteConfirmModal = false;
 
     try {
-      const response = await this.apiService.callApi(
-        'DELETE',
-        `/fleet/groups/${this.groupToDelete.id}`,
-        null,
-        true, // auth required
-        true  // oracle endpoint
-      );
+      const response = await FleetService.getInstance().deleteFleetGroup(this.groupToDelete.id);
 
       if (response.success) {
         console.log('Group deleted successfully');
@@ -509,7 +494,7 @@ export class VehiclesFleetsView extends LitElement {
                     <select @change=${this.handleGroupFilterChange} .value=${this.filter}>
                         <option value="">All Groups</option>
                         ${this.fleetGroups.map(group => html`
-                          <option value=${'group:' + group.id}>${group.name}</option>
+                          <option value=${'group:' + group.id} ?disabled=${!group.has_access}>${group.name}</option>
                         `)}
                     </select>
                     <button class="btn btn-sm ${this.exporting ? 'processing' : ''}" 

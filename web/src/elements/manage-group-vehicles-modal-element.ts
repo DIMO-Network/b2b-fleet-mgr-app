@@ -1,6 +1,7 @@
 import { html, nothing, LitElement, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { ApiService } from '@services/api-service.ts';
+import { FleetService, FleetGroup } from '@services/fleet-service.ts';
 import { globalStyles } from '../global-styles.ts';
 
 interface Vehicle {
@@ -16,12 +17,6 @@ interface FleetVehiclesResponse {
   totalCount: number;
   skip: number;
   take: number;
-}
-
-interface FleetGroup {
-  id: string;
-  name: string;
-  color: string;
 }
 
 @customElement('manage-group-vehicles-modal-element')
@@ -461,13 +456,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
 
     try {
       const imei = this.newVehicleImei.trim();
-      const response = await this.apiService.callApi<Vehicle>(
-        'POST',
-        `/fleet/vehicles/${imei}/group/${this.group.id}`,
-        null,
-        true, // auth required
-        true  // oracle endpoint
-      );
+      const response = await FleetService.getInstance().addVehicleToGroup(imei, this.group.id);
 
       if (response.success && response.data) {
         // Add the vehicle to the list
@@ -505,13 +494,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
     this.requestUpdate();
 
     try {
-      const response = await this.apiService.callApi(
-        'DELETE',
-        `/fleet/vehicles/${imei}/group/${this.group.id}`,
-        null,
-        true, // auth required
-        true  // oracle endpoint
-      );
+      const response = await FleetService.getInstance().removeVehicleFromGroup(imei, this.group.id);
 
       if (response.success) {
         // Remove the vehicle from the list

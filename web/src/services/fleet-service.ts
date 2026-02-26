@@ -60,6 +60,89 @@ export class FleetService {
   }
 
   /**
+   * Create a new fleet group
+   * @param data Group details
+   * @returns Success and created group
+   */
+  async createFleetGroup(data: { name: string; color: string }): Promise<any> {
+    return this.apiService.callApi(
+      'POST',
+      '/fleet/groups',
+      data,
+      true, // auth required
+      true, // oracle endpoint
+      true  // include tenant ID
+    );
+  }
+
+  /**
+   * Update an existing fleet group
+   * @param id Group ID
+   * @param data Updated details
+   * @returns Success and updated group
+   */
+  async updateFleetGroup(id: string, data: { name: string; color: string }): Promise<any> {
+    return this.apiService.callApi(
+      'PATCH',
+      `/fleet/groups/${id}`,
+      data,
+      true, // auth required
+      true, // oracle endpoint
+      true  // include tenant ID
+    );
+  }
+
+  /**
+   * Delete a fleet group
+   * @param id Group ID
+   * @returns Success status
+   */
+  async deleteFleetGroup(id: string): Promise<any> {
+    return this.apiService.callApi(
+      'DELETE',
+      `/fleet/groups/${id}`,
+      null,
+      true, // auth required
+      true, // oracle endpoint
+      true  // include tenant ID
+    );
+  }
+
+  /**
+   * Add a vehicle to a fleet group
+   * @param imei Vehicle IMEI
+   * @param groupId Group ID
+   * @returns Success status
+   */
+  async addVehicleToGroup(imei: string, groupId: string): Promise<any> {
+    return this.apiService.callApi(
+      'POST',
+      `/fleet/vehicles/${imei}/group/${groupId}`,
+      null,
+      true, // auth required
+      true, // oracle endpoint
+      true  // include tenant ID
+    );
+  }
+
+  /**
+   * Remove a vehicle from a fleet group
+   * @param imei Vehicle IMEI
+   * @param groupId Group ID
+   * @returns Success status
+   */
+  async removeVehicleFromGroup(imei: string, groupId: string): Promise<any> {
+    return this.apiService.callApi(
+      'DELETE',
+      `/fleet/vehicles/${imei}/group/${groupId}`,
+      null,
+      true, // auth required
+      true, // oracle endpoint
+      true  // include tenant ID
+    );
+  }
+
+  /**
    * Get all reports for the current tenant
    * @returns List of fleet reports
    */

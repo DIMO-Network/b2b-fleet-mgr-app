@@ -211,11 +211,11 @@ export class EditUserView extends LitElement {
                           id="fleet-${fleet.id}"
                           .checked=${this.selectedFleetGroupIds.includes(fleet.id)}
                           @change=${() => this.handleFleetToggle(fleet.id)}
-                          ?disabled=${this.submitting || hasViewAllFleets}
+                          ?disabled=${this.submitting || hasViewAllFleets || !fleet.has_access}
                         />
                         <label for="fleet-${fleet.id}" class="fleet-info">
                           <span class="fleet-color" style="background-color: ${fleet.color}"></span>
-                          <span>${fleet.name}</span>
+                          <span>${fleet.name} ${!fleet.has_access ? html`<span style="color: #dc2626; font-size: 11px;">(No Access)</span>` : ''}</span>
                           <span class="fleet-count">(${fleet.vehicle_count} vehicles)</span>
                         </label>
                       </div>
