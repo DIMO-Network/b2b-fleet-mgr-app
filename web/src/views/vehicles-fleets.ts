@@ -109,6 +109,9 @@ export class VehiclesFleetsView extends LitElement {
   @state()
   private exporting: boolean = false;
 
+  @state()
+  private errorMessage: string = '';
+
   private searchDebounceTimer?: number;
   private telemetryLoadAbortController?: AbortController;
 
@@ -130,6 +133,7 @@ export class VehiclesFleetsView extends LitElement {
   }
 
   private async loadVehicles() {
+    this.errorMessage = '';
     if (!this.apiService) return;
 
     // Cancel any ongoing telemetry loading
@@ -155,6 +159,7 @@ export class VehiclesFleetsView extends LitElement {
       this.loadTelemetryProgressively();
     } else {
       console.error('Failed to load vehicles:', response.error);
+      this.errorMessage = response.error || 'Failed to load vehicles';
     }
   }
 
@@ -212,10 +217,14 @@ export class VehiclesFleetsView extends LitElement {
           this.vehicles = this.vehicles.map((v, idx) =>
             idx === i ? { ...v, engine: v.engine || 'running' } : v
           );
+          if (response.error) {
+            this.errorMessage = response.error;
+          }
         }
-      } catch (error) {
+      } catch (error: any) {
         // Silently fail for individual telemetry loads, but ensure default is 'running'
         console.debug(`Failed to load telemetry for vehicle ${vehicle.vehicle_token_id}`, error);
+        this.errorMessage = error.message || `Failed to load telemetry for vehicle ${vehicle.vehicle_token_id}`;
         this.vehicles = this.vehicles.map((v, idx) =>
           idx === i ? { ...v, engine: v.engine || 'running' } : v
         );
@@ -463,6 +472,7 @@ export class VehiclesFleetsView extends LitElement {
   render() {
     return html`
         <div class="page active" id="page-vehicles">
+            ${this.errorMessage ? html`<div class="alert alert-error">${this.errorMessage}</div>` : ''}
             <div class="inner-tabs">
                 <div
                   class="inner-tab ${this.activeTab === 'vehicles-list' ? 'active' : ''}"

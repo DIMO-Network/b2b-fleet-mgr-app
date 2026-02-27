@@ -152,6 +152,9 @@ export class VehicleDetailView extends LitElement {
   private showInventoryModal: boolean = false;
 
   @state()
+  private errorMessage: string = '';
+
+  @state()
   private currentAddress: string = '';
 
   @state()
@@ -243,6 +246,7 @@ export class VehicleDetailView extends LitElement {
   }
 
   private async loadVehicleData() {
+    this.errorMessage = '';
     if (!this.apiService || !this.tokenID){
       console.error('API service or token ID is missing, cannot load vehicle data', this.tokenID);
       return;
@@ -266,9 +270,12 @@ export class VehicleDetailView extends LitElement {
         await this.loadTelemetry(this.tokenID);
         await this.loadTrips(this.tokenID);
         await this.loadOwnerInfo(this.tokenID);
+      } else {
+        this.errorMessage = vehicleResponse.error || 'Failed to load vehicle data';
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading vehicle data:', error);
+      this.errorMessage = error.message || 'Error loading vehicle data';
     }
   }
 
@@ -287,9 +294,12 @@ export class VehicleDetailView extends LitElement {
 
       if (response.success && response.data) {
         this.lastTelemetry = response.data;
+      } else {
+        this.errorMessage = response.error || 'Failed to load telemetry';
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading telemetry:', error);
+      this.errorMessage = error.message || 'Error loading telemetry';
     }
   }
 
@@ -316,9 +326,12 @@ export class VehicleDetailView extends LitElement {
 
       if (response.success && response.data) {
         this.trips = response.data.segments || [];
+      } else {
+        this.errorMessage = response.error || 'Failed to load trips';
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading trips:', error);
+      this.errorMessage = error.message || 'Error loading trips';
     }
   }
 
@@ -353,6 +366,7 @@ export class VehicleDetailView extends LitElement {
     return html`
       <!-- VEHICLE DETAIL PAGE -->
       <div class="page active" id="page-vehicle-detail">
+        ${this.errorMessage ? html`<div class="alert alert-error">${this.errorMessage}</div>` : ''}
         <div class="toolbar mb-16">
           <button class="btn" @click=${this.goBack}>← BACK TO VEHICLES</button>
         </div>
