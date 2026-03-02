@@ -19,6 +19,7 @@ export interface FleetReport {
     endDate: string;
     fleetGroupIds: string[];
     reportName: string;
+    timezone?: string;
   };
   createdAt: string;
   updatedAt: string;
@@ -210,6 +211,7 @@ export class FleetService {
     endDate: string;
     fleetGroupIds: string[];
     reportName: string;
+    timezone: string;
   }): Promise<{ reportId: string; status: string } | null> {
     try {
       const response = await this.apiService.callApi<{ reportId: string; status: string }>(

@@ -190,13 +190,17 @@ export class ReportsView extends LitElement {
 
     this.submitting = true;
     try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      console.log('Running report using timezone:', timezone);
+
       // POST data format based on issue description
       // startDate and endDate should be ISO strings representing start/end of day
       const data = {
         startDate: dayjs(this.startDate).startOf('day').toISOString(),
         endDate: dayjs(this.endDate).endOf('day').toISOString(),
         fleetGroupIds: this.selectedFleetGroupIds,
-        reportName: this.selectedTemplate
+        reportName: this.selectedTemplate,
+        timezone: timezone
       };
 
       const result = await FleetService.getInstance().runReport(data);
@@ -211,7 +215,8 @@ export class ReportsView extends LitElement {
             startDate: data.startDate,
             endDate: data.endDate,
             fleetGroupIds: data.fleetGroupIds,
-            reportName: data.reportName
+            reportName: data.reportName,
+            timezone: data.timezone
           },
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
