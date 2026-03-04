@@ -23,7 +23,7 @@ interface TelemetryInfo {
       timestamp: string;
     };
     obdIsEngineBlocked: {
-      value: number;
+      value: number | null;
       timestamp: string;
     };
     isIgnitionOn: {
@@ -474,38 +474,40 @@ export class VehicleDetailView extends LitElement {
               </div>
             </div>
 
-            <!-- Vehicle Controls -->
-            <div class="panel">
-              <div class="panel-header">Vehicle Controls</div>
-              <div class="panel-body">
-                <div class="controls-section">
-                  <div class="control-status">
-                    <div style="font-size: 10px; color: #666; margin-bottom: 4px;">ENGINE STATUS</div>
-                    <div><span class="status ${(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.value ? 'status-blocked' : 'status-unblocked')}">
-                      ${(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.value ? 'BLOCKED' : 'UNBLOCKED')}</span></div>
-                    <div style="font-size: 10px; color: #666; margin-top: 8px;">Last update: ${this.formatLastTelemetry(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.timestamp) ?? 'N/A'}</div>
+            ${this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked?.value != null ? html`
+              <!-- Vehicle Controls -->
+              <div class="panel">
+                <div class="panel-header">Vehicle Controls</div>
+                <div class="panel-body">
+                  <div class="controls-section">
+                    <div class="control-status">
+                      <div style="font-size: 10px; color: #666; margin-bottom: 4px;">ENGINE STATUS</div>
+                      <div><span class="status ${(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.value ? 'status-blocked' : 'status-unblocked')}">
+                        ${(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.value ? 'BLOCKED' : 'UNBLOCKED')}</span></div>
+                      <div style="font-size: 10px; color: #666; margin-top: 8px;">Last update: ${this.formatLastTelemetry(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.timestamp) ?? 'N/A'}</div>
+                    </div>
+                    <div class="control-buttons">
+                      <button class="btn btn-danger" 
+                              ?disabled=${this.immobilizerLoading || !!this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked?.value}
+                              @click=${this.immobilizerOn}>
+                        ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
+                        IMMOBILIZER ON
+                      </button>
+                      <button class="btn" 
+                              style="background-color: #16a34a; color: white;"
+                              ?disabled=${this.immobilizerLoading || !this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked?.value}
+                              @click=${this.immobilizerOff}>
+                        ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
+                        IMMOBILIZER OFF
+                      </button>
+                    </div>
+                    ${this.immobilizerError ? html`
+                      <div style="color: #dc2626; font-size: 0.875rem; margin-top: 8px;">${this.immobilizerError}</div>
+                    ` : ''}
                   </div>
-                  <div class="control-buttons">
-                    <button class="btn btn-danger" 
-                            ?disabled=${this.immobilizerLoading || !!this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked?.value}
-                            @click=${this.immobilizerOn}>
-                      ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
-                      IMMOBILIZER ON
-                    </button>
-                    <button class="btn" 
-                            style="background-color: #16a34a; color: white;"
-                            ?disabled=${this.immobilizerLoading || !this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked?.value}
-                            @click=${this.immobilizerOff}>
-                      ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
-                      IMMOBILIZER OFF
-                    </button>
-                  </div>
-                  ${this.immobilizerError ? html`
-                    <div style="color: #dc2626; font-size: 0.875rem; margin-top: 8px;">${this.immobilizerError}</div>
-                  ` : ''}
                 </div>
               </div>
-            </div>
+            ` : ''}
           </div>
 
           <!-- Right Column -->
