@@ -46,7 +46,7 @@ interface TelemetryInfo {
       value: number;
     };
     obdDTCList: {
-      value: string[];
+      value: string[] | string | null | undefined;
       timestamp: string;
     };
     obdDistanceWithMIL: {
@@ -542,7 +542,7 @@ export class VehicleDetailView extends LitElement {
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Active DTCs</span>
-                  <span class="detail-value">${this.lastTelemetry?.signalsLatest.obdDTCList != null ? (this.lastTelemetry.signalsLatest.obdDTCList.value.length > 0 ? this.lastTelemetry.signalsLatest.obdDTCList.value.join(', ') : 'None') : 'N/A'}</span>
+                  <span class="detail-value">${this.formatObdDtcList(this.lastTelemetry?.signalsLatest.obdDTCList?.value)}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Last CAN Update</span>
@@ -791,6 +791,13 @@ export class VehicleDetailView extends LitElement {
   private formatWalletAddress(address: string): string {
     if (!address || address.length < 10) return address;
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  }
+
+  private formatObdDtcList(value: string[] | string | null | undefined): string {
+    if (value == null) return 'N/A';
+    if (Array.isArray(value)) return value.length > 0 ? value.join(', ') : 'None';
+    if (typeof value === 'string') return value.trim().length > 0 ? value : 'None';
+    return 'N/A';
   }
 
   private formatCreatedDate(dateString: string | undefined): string {
