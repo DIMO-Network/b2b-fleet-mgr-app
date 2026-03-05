@@ -68,10 +68,13 @@ export class TenantSelectorView extends LitElement {
 
     private oracleTenantService = OracleTenantService.getInstance();
 
-  constructor() {
-    super();
+    constructor() {
+      super();
       this.oracleId = this.oracleTenantService.getOracle()?.oracleId;
-  }
+      this.tenants = this.oracleTenantService.loadTenants() ?? [];
+      const selected = this.oracleTenantService.getSelectedTenant();
+      this.selectedTenantId = selected?.id ?? null;
+    }
 
     async connectedCallback() {
         super.connectedCallback();

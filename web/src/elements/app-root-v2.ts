@@ -185,10 +185,10 @@ export class AppRootV2 extends LitElement {
     private hasOracleAccess: boolean = true;
 
     @state()
-    private selectedTenant: Tenant | undefined;
+    private selectedTenant: Tenant | undefined = OracleTenantService.getInstance().getSelectedTenant();
 
     @state()
-    private currentPath: string = '/';
+    private currentPath: string = location.hash?.slice(1) || '/';
 
     @state()
     private showUpdateModal: boolean = false;
