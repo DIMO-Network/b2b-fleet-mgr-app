@@ -44,6 +44,13 @@ export interface VehicleIdentityData {
       model?: string;
       year?: number;
     };
+    aftermarketDevice?: {
+      serial?: string;
+      imei?: string;
+      manufacturer?: {
+        name?: string;
+      };
+    };
     [key: string]: any;
   };
   errors?: any[];
@@ -76,10 +83,51 @@ export class IdentityService {
    */
   async getVehicleIdentity(tokenId: number | string): Promise<VehicleIdentityData | null> {
     try {
+      const normalizedTokenId = Number(tokenId);
+      if (!Number.isFinite(normalizedTokenId)) {
+        return null;
+      }
+
+      const query = `{
+        vehicle(tokenId: ${normalizedTokenId}) {
+          id
+          owner
+          sacds(first:20) {
+            nodes {
+              grantee
+              permissions
+            }
+          }
+          earnings {
+            totalTokens
+          }
+          mintedAt
+          syntheticDevice {
+            connection {
+              name
+              address
+            }
+          }
+          definition {
+            id
+            make
+            model
+            year
+          }
+          aftermarketDevice {
+            serial
+            imei
+            manufacturer {
+              name
+            }
+          }
+        }
+      }`;
+
       const response = await this.apiService.callApi<VehicleIdentityData>(
-        'GET',
-        `/identity/vehicle/${tokenId}`,
-        null,
+        'POST',
+        '/identity/proxy',
+        { query },
         false, // no auth
         false  // not oracle endpoint
       );

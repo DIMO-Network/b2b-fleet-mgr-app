@@ -103,3 +103,36 @@ func (i *IdentityController) GetOwnerBy0x(c *fiber.Ctx) error {
 	c.Set("Content-Type", "application/json")
 	return c.Send(data)
 }
+
+type identityProxyReq struct {
+	Query string `json:"query"`
+}
+
+// ProxyGraphQLQuery
+// @Summary Proxy an arbitrary identity GraphQL query
+// @Description Proxies frontend-provided GraphQL query to identity API and returns raw response
+// @Tags Identity
+// @Accept json
+// @Produce json
+// @Param request body identityProxyReq true "GraphQL query payload"
+// @Success 200
+// @Router /identity/proxy [post]
+func (i *IdentityController) ProxyGraphQLQuery(c *fiber.Ctx) error {
+	var req identityProxyReq
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+
+	if req.Query == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "query is required")
+	}
+
+	data, err := i.identityAPI.Query(req.Query)
+	if err != nil {
+		i.logger.Err(err).Msg("Failed to proxy identity GraphQL query")
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to execute identity query")
+	}
+
+	c.Set("Content-Type", "application/json")
+	return c.Send(data)
+}

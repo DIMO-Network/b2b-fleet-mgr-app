@@ -4,7 +4,7 @@ import {globalStyles} from "../global-styles.ts";
 import {consume} from '@lit/context';
 import {apiServiceContext} from '../context';
 import {ApiService} from '@services/api-service.ts';
-import {AccountInfo, IdentityService} from '@services/identity-service.ts';
+import {AccountInfo, IdentityService, VehicleIdentityData} from '@services/identity-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import '../elements/update-inventory-modal-element';
@@ -137,6 +137,9 @@ export class VehicleDetailView extends LitElement {
   private vehicle: Vehicle | null = null;
 
   @state()
+  private vehicleIdentity: VehicleIdentityData | null = null;
+
+  @state()
   private trips: Trip[] = [];
 
   @state()
@@ -218,7 +221,7 @@ export class VehicleDetailView extends LitElement {
     to: "TO_DATE"
     mechanism: frequencyAnalysis
     limit: 10
-    config: { minSegmentDurationSeconds: 60 }
+    config: { minSegmentDurationSeconds: 240 }
     signalRequests: [
       { name: "powertrainTransmissionTravelledDistance", agg: FIRST }
       { name: "powertrainTransmissionTravelledDistance", agg: LAST }
@@ -245,42 +248,72 @@ export class VehicleDetailView extends LitElement {
     }
   }
 
-  private async loadVehicleData() {
+  private async loadVehicleData(): Promise<[Vehicle | null, string | null]> {
     this.errorMessage = '';
-    if (!this.apiService || !this.tokenID){
-      console.error('API service or token ID is missing, cannot load vehicle data', this.tokenID);
-      return;
+    this.vehicle = null;
+    this.vehicleIdentity = null;
+    this.lastTelemetry = null;
+    this.trips = [];
+    this.ownerInfo = null;
+    this.ownerWalletAddress = null;
+    if (!this.apiService || !this.tokenID) {
+      const error = 'API service or token ID is missing';
+      console.error(error, this.tokenID);
+      this.errorMessage = error;
+      return [null, error];
     }
 
+    const [vehicle, vehicleError] = await this.loadVehicle(this.tokenID);
+    if (!vehicle) {
+      this.vehicle = null;
+      this.errorMessage = vehicleError || 'Failed to load vehicle data';
+      return [null, this.errorMessage];
+    }
+
+    const [[telemetry, telemetryError], [vehicleIdentity, identityError]] = await Promise.all([
+      this.loadTelemetry(this.tokenID),
+      this.loadVehicleIdentity(this.tokenID)
+    ]);
+
+    this.vehicle = vehicle;
+    this.vehicleIdentity = vehicleIdentity;
+    this.lastTelemetry = telemetry;
+
+    const errors = [vehicleError, telemetryError, identityError].filter((err): err is string => !!err);
+    this.errorMessage = errors.length > 0 ? errors.join(' | ') : '';
+
+    // Continue loading auxiliary sections even if telemetry/identity are unavailable.
+    await this.loadTrips(this.tokenID);
+    await this.loadOwnerInfo(this.tokenID);
+
+    return [this.vehicle, this.errorMessage || null];
+  }
+
+  private async loadVehicle(tokenId: number): Promise<[Vehicle | null, string | null]> {
+    if (!this.apiService) return [null, 'API service is missing'];
+
     try {
-      // First, get vehicle info to obtain the token ID
-      // Assuming there's an endpoint to get vehicle by VIN
-      // You may need to adjust this based on your actual API
       const vehicleResponse = await this.apiService.callApi<Vehicle>(
         'GET',
-        `/fleet/vehicles/${this.tokenID}`,
+        `/fleet/vehicles/${tokenId}`,
         null,
         true,
         true
       );
 
-      if (vehicleResponse.success && vehicleResponse.data) {
-        this.vehicle = vehicleResponse.data;
-        // next let's load telemetry, trips, and owner info
-        await this.loadTelemetry(this.tokenID);
-        await this.loadTrips(this.tokenID);
-        await this.loadOwnerInfo(this.tokenID);
-      } else {
-        this.errorMessage = vehicleResponse.error || 'Failed to load vehicle data';
+      if (!vehicleResponse.success || !vehicleResponse.data) {
+        return [null, vehicleResponse.error || 'Failed to load vehicle data'];
       }
+
+      return [vehicleResponse.data, null];
     } catch (error: any) {
       console.error('Error loading vehicle data:', error);
-      this.errorMessage = error.message || 'Error loading vehicle data';
+      return [null, error.message || 'Error loading vehicle data'];
     }
   }
 
-  private async loadTelemetry(tokenId: number) {
-    if (!this.apiService) return;
+  private async loadTelemetry(tokenId: number): Promise<[TelemetryInfo | null, string | null]> {
+    if (!this.apiService) return [null, 'API service is missing'];
 
     try {
       const query = this.telemetryQuery.replace('187955', tokenId.toString());
@@ -292,14 +325,28 @@ export class VehicleDetailView extends LitElement {
         true  // oracle endpoint
       );
 
-      if (response.success && response.data) {
-        this.lastTelemetry = response.data;
-      } else {
-        this.errorMessage = response.error || 'Failed to load telemetry';
+      if (!response.success || !response.data) {
+        return [null, response.error || 'Failed to load telemetry'];
       }
+
+      return [response.data, null];
     } catch (error: any) {
       console.error('Error loading telemetry:', error);
-      this.errorMessage = error.message || 'Error loading telemetry';
+      return [null, error.message || 'Error loading telemetry'];
+    }
+  }
+
+  private async loadVehicleIdentity(tokenId: number): Promise<[VehicleIdentityData | null, string | null]> {
+    try {
+      const identityService = IdentityService.getInstance();
+      const identityData = await identityService.getVehicleIdentity(tokenId);
+      if (!identityData) {
+        return [null, 'Failed to load vehicle identity'];
+      }
+      return [identityData, null];
+    } catch (error: any) {
+      console.error('Error loading vehicle identity:', error);
+      return [null, error.message || 'Error loading vehicle identity'];
     }
   }
 
@@ -327,11 +374,11 @@ export class VehicleDetailView extends LitElement {
       if (response.success && response.data) {
         this.trips = response.data.segments || [];
       } else {
-        this.errorMessage = response.error || 'Failed to load trips';
+        this.errorMessage = this.appendError(this.errorMessage, response.error || 'Failed to load trips');
       }
     } catch (error: any) {
       console.error('Error loading trips:', error);
-      this.errorMessage = error.message || 'Error loading trips';
+      this.errorMessage = this.appendError(this.errorMessage, error.message || 'Error loading trips');
     }
   }
 
@@ -359,7 +406,15 @@ export class VehicleDetailView extends LitElement {
       }
     } catch (error) {
       console.error('Error loading owner info:', error);
+      const message = error instanceof Error ? error.message : 'Error loading owner info';
+      this.errorMessage = this.appendError(this.errorMessage, message);
     }
+  }
+
+  private appendError(currentError: string, nextError: string | null | undefined): string {
+    if (!nextError) return currentError;
+    if (!currentError) return nextError;
+    return `${currentError} | ${nextError}`;
   }
 
   render() {
@@ -379,6 +434,7 @@ export class VehicleDetailView extends LitElement {
                 <h2 style="font-size: 18px; margin-bottom: 8px;" id="detail-vehicle-name">${this.vehicle?.make} ${this.vehicle?.model} ${this.vehicle?.year}</h2>
                 <div style="margin-bottom: 8px;">
                   <span style="color: #666;">VIN:</span> ${this.vehicle?.vin}
+                  <span style="color: #666; margin-left: 16px;">Minted At:</span> ${this.formatMintedAt(this.vehicleIdentity?.vehicle?.mintedAt)}
                 </div>
                 <div>
                   <span class="status status-connected">Connected</span>
@@ -392,6 +448,8 @@ export class VehicleDetailView extends LitElement {
               <div style="text-align: right;">
                 <div style="color: #666; font-size: 10px;">LAST TELEMETRY</div>
                 <div>${this.lastTelemetry ? this.formatLastTelemetry(this.lastTelemetry.signalsLatest.currentLocationCoordinates.timestamp) : 'Loading...'}</div>
+                <div style="color: #666; font-size: 10px; margin-top: 12px;">HARDWARE</div>
+                <div>${this.renderHardwareDetails()}</div>
               </div>
             </div>
           </div>
@@ -469,6 +527,10 @@ export class VehicleDetailView extends LitElement {
                   <div class="detail-row">
                     <span class="detail-label">Address</span>
                     <span class="detail-value">${this.currentAddress || 'Click on map pointer to get address'}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Last Location Update</span>
+                    <span class="detail-value">${this.formatLastTelemetry(this.lastTelemetry?.signalsLatest.currentLocationCoordinates?.timestamp)}</span>
                   </div>
                 </div>
               </div>
@@ -791,6 +853,24 @@ export class VehicleDetailView extends LitElement {
   private formatWalletAddress(address: string): string {
     if (!address || address.length < 10) return address;
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  }
+
+  private renderHardwareDetails(): string {
+    const aftermarketDevice = this.vehicleIdentity?.vehicle?.aftermarketDevice;
+    if (!aftermarketDevice) {
+      return `Smart5 | IMEI: ${this.vehicle?.imei || 'N/A'}`;
+    }
+
+    const serial = aftermarketDevice.serial || 'N/A';
+    const imei = aftermarketDevice.imei || 'N/A';
+    const manufacturer = aftermarketDevice.manufacturer?.name || 'N/A';
+    return `Serial: ${serial} | IMEI: ${imei} | Manufacturer: ${manufacturer}`;
+  }
+
+  private formatMintedAt(timestamp: string | undefined): string {
+    if (!timestamp) return 'N/A';
+    const date = dayjs(timestamp);
+    return date.isValid() ? date.format('YYYY-MM-DD HH:mm') : 'N/A';
   }
 
   private formatObdDtcList(value: string[] | string | null | undefined): string {

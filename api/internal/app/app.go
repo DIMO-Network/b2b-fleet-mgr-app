@@ -76,6 +76,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	app.Get("/public/settings", settingsCtrl.GetPublicSettings)
 	app.Get("/public/oracles", settingsCtrl.GetOracles)
 	app.Get("/identity/vehicle/:tokenID", identityCtrl.GetVehicleByTokenID)
+	app.Post("/identity/proxy", identityCtrl.ProxyGraphQLQuery)
 	app.Get("/identity/definition/:id", identityCtrl.GetDefinitionByID)
 	app.Get("/identity/owner/:owner", identityCtrl.GetOwnerBy0x)
 	app.Post("/definitions/decodevin", jwtAuth, definitionsCtrl.DecodeVIN)

@@ -17,6 +17,7 @@ type IdentityAPI interface {
 	GetDefinitionByID(id string) ([]byte, error)
 	GetVehicleByTokenID(id string) ([]byte, error)
 	GetOwnerBy0x(owner string, first int, after string) ([]byte, error)
+	Query(graphqlQuery string) ([]byte, error)
 }
 
 type identityAPIService struct {

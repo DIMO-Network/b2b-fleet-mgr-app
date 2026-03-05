@@ -129,14 +129,14 @@ export class BaseOnboardingElement extends LitElement {
         this.onboardResult = newResult;
     }
 
-    async verifyVehicles(vehicles: VehicleWithDefinition[]) {
+    async verifyVehicles(vehicles: VehicleWithDefinition[]): Promise<[boolean, string | null]> {
         const payload = {
             vins: vehicles.map(v => ({vin: v.vin, countryCode: 'USA', definition: v.definition}))
         };
 
         const submitStatus = await this.api.callApi('POST', '/vehicle/verify', payload, true);
         if (!submitStatus.success) {
-            return false;
+            return [false, submitStatus.error || 'Failed to submit vehicle verification'];
         }
 
         let success = true;
@@ -147,7 +147,7 @@ export class BaseOnboardingElement extends LitElement {
             const status = await this.api.callApi<VinsOnboardingResult>('GET', `/vehicle/verify?${query}`, null, true);
 
             if (!status.success || !status.data) {
-                return false;
+                return [false, status.error || 'Failed to check vehicle verification status'];
             }
 
             for (const s of status.data.statuses) {
@@ -168,18 +168,22 @@ export class BaseOnboardingElement extends LitElement {
             }
         }
 
-        return success;
+        if (!success) {
+            return [false, 'Vehicle verification timed out'];
+        }
+
+        return [true, null];
     }
 
-    async getMintingData(vehicles: VehicleWithDefinition[]) {
+    async getMintingData(vehicles: VehicleWithDefinition[]): Promise<[VinMintData[], string | null]> {
         const vinsList = vehicles.map(v => v.vin);
         const query = qs.stringify({ vins: vinsList.join(',')});
         const mintData = await this.api.callApi<VinsMintDataResult>('GET', `/vehicle/mint?${query}`, null, true);
         if (!mintData.success || !mintData.data) {
-            return [];
+            return [[], mintData.error || 'Failed to fetch minting data'];
         }
 
-        return mintData.data.vinMintingData;
+        return [mintData.data.vinMintingData, null];
     }
 
     // signMintingData adds the signature from frontend signer to the mintingData objects. If enableOracleOwner is true, does not add signature
@@ -204,7 +208,7 @@ export class BaseOnboardingElement extends LitElement {
         return result;
     }
 
-    async submitMintingData(mintingData: VinMintData[], sacd: SacdInput[] | null) {
+    async submitMintingData(mintingData: VinMintData[], sacd: SacdInput[] | null): Promise<[boolean, string | null]> {
         const payload: {vinMintingData: VinMintData[], sacd?: SacdInput[]} = {
             vinMintingData: mintingData
         };
@@ -214,7 +218,7 @@ export class BaseOnboardingElement extends LitElement {
 
         const mintResponse = await this.api.callApi('POST', '/vehicle/mint', payload, true);
         if (!mintResponse.success || !mintResponse.data) {
-            return false;
+            return [false, mintResponse.error || 'Failed to submit minting data'];
         }
 
         let success = true;
@@ -224,7 +228,7 @@ export class BaseOnboardingElement extends LitElement {
             const status = await this.api.callApi<VinsOnboardingResult>('GET', `/vehicle/mint/status?${query}`, null, true);
 
             if (!status.success || !status.data) {
-                return false;
+                return [false, status.error || 'Failed to check minting status'];
             }
 
             for (const s of status.data.statuses) {
@@ -245,7 +249,11 @@ export class BaseOnboardingElement extends LitElement {
             }
         }
 
-        return success;
+        if (!success) {
+            return [false, 'Minting operation timed out'];
+        }
+
+        return [true, null];
     }
 
     async onboardVINs(vehicles: VehicleWithDefinition[], sacd: SacdInput[] | null): Promise<boolean> {
@@ -265,27 +273,31 @@ export class BaseOnboardingElement extends LitElement {
             return false;
         }
 
-        const verified = await this.verifyVehicles(vehicles);
+        const [verified, verifyError] = await this.verifyVehicles(vehicles);
         if (!verified) {
-            this.displayFailure("Failed to verify at least one VIN");
+            this.displayFailure(this.withApiError("Failed to verify at least one VIN", verifyError));
             return false;
         }
 
-        const mintData = await this.getMintingData(vehicles);
+        const [mintData, mintDataError] = await this.getMintingData(vehicles);
         if (mintData.length === 0) {
-            this.displayFailure("Failed to fetch minting data");
+            this.displayFailure(this.withApiError("Failed to fetch minting data", mintDataError));
             return false;
         }
 
         const signedMintData = await this.signMintingData(mintData);
-        const minted = await this.submitMintingData(signedMintData, sacd);
+        const [minted, mintError] = await this.submitMintingData(signedMintData, sacd);
 
         if (!minted) {
-            this.displayFailure("Failed to onboard at least one VIN");
+            this.displayFailure(this.withApiError("Failed to onboard at least one VIN", mintError));
             return false;
         }
 
         return true;
+    }
+
+    private withApiError(baseMessage: string, apiError: string | null): string {
+        return apiError ? `${baseMessage}: ${apiError}` : baseMessage;
     }
     
     async getTransferData(imei: string, targetWallet: string): Promise<Result<VinUserOperationData, string>> {
