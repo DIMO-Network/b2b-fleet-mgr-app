@@ -131,9 +131,9 @@ export class TenantSelectorView extends LitElement {
                 <span class="tenant-name">Add New Tenant</span>
               </div>
             </div>
-            
+
             ${this.tenants.length === 0 ? html`
-              <div class="panel" style="margin-top: 1rem;">
+              <div class="panel" style="margin-top: 1rem; width: 50%">
                 <div class="panel-body warning">
                   Your account has no tenants configured. Reach out to your organization administrator to add your account 0x address.
                 </div>
@@ -166,7 +166,7 @@ export class TenantSelectorView extends LitElement {
       this.dispatchEvent(new CustomEvent('tenant-changed', { detail: { tenant }, bubbles: true, composed: true }));
         // sleep for 500ms
         setTimeout(() => {
-            window.location.href = '/#/onboarding';
+            window.location.href = '/#/';
         }, 500);
     }
 

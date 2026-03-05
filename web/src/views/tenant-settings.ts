@@ -2,22 +2,14 @@ import {LitElement, css, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 import {globalStyles} from '../global-styles.ts';
 import {ApiService} from '@services/api-service.ts';
-
-interface TenantSettingsDto {
-  id: string;
-  name: string;
-  kore_client_id: string;
-  has_kore_secret: boolean;
-  command_password: string;
-  dimo_client_id: string;
-  has_dimo_secret: boolean;
-}
+import {TenantSettings, SettingsService} from '@services/settings-service.ts';
 
 @customElement('tenant-settings-view')
 export class TenantSettingsView extends LitElement {
   static styles = [ globalStyles, css`` ];
 
   private api = ApiService.getInstance();
+  private settingsService = SettingsService.getInstance();
 
   @state()
   private loading = false;
@@ -35,7 +27,7 @@ export class TenantSettingsView extends LitElement {
   private editing = false;
 
   @state()
-  private data: TenantSettingsDto | null = null;
+  private data: TenantSettings | null = null;
 
   // editable fields (separate to allow cancel)
   @state() private tenantId: string = '';
@@ -55,14 +47,14 @@ export class TenantSettingsView extends LitElement {
     this.loading = true;
     this.error = '';
     this.success = '';
-    const resp = await this.api.callApi<TenantSettingsDto>('GET', '/tenant/settings', null, true, true, true);
+    const data = await this.settingsService.fetchTenantSettings();
     this.loading = false;
-    if (!resp.success || !resp.data) {
-      this.error = resp.error || 'Failed to load tenant settings';
+    if (!data) {
+      this.error = 'Failed to load tenant settings';
       this.data = null;
       return;
     }
-    this.data = resp.data;
+    this.data = data;
     this.populateEditFieldsFromData();
   }
 
@@ -113,7 +105,7 @@ export class TenantSettingsView extends LitElement {
       payload['dimo_secret'] = this.dimo_secret_input.trim();
     }
 
-    const resp = await this.api.callApi<TenantSettingsDto>('POST', '/tenant/settings', payload, true, true, true);
+    const resp = await this.api.callApi<TenantSettings>('POST', '/tenant/settings', payload, true, true, true);
     this.loading = false;
 
     if (!resp.success || !resp.data) {
@@ -123,6 +115,8 @@ export class TenantSettingsView extends LitElement {
 
     // Update local state with response
     this.data = resp.data;
+    this.settingsService.tenantSettings = resp.data;
+    this.settingsService.saveTenantSettings();
     //this.populateEditFieldsFromData();
     this.editing = false;
     this.success = 'Settings saved successfully';

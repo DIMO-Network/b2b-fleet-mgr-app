@@ -7,7 +7,8 @@ import {IdentityService} from "@services/identity-service.ts";
 import { Router } from '@lit-labs/router';
 import {globalStyles} from "../global-styles.ts";
 import './click-to-copy-element';
-// import {OracleTenantService} from "@services/oracle-tenant-service.ts";
+import {OracleTenantService, Tenant} from "@services/oracle-tenant-service.ts";
+import '../views/tenant-selector.ts';
 
 @customElement('app-root-v2')
 export class AppRootV2 extends LitElement {
@@ -100,15 +101,91 @@ export class AppRootV2 extends LitElement {
                 gap: 12px;
                 justify-content: flex-end;
             }
+
+            .tenant-selector-container {
+                padding-top: 5rem;
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                min-height: 100vh;
+                background: #f8f9fa;
+            }
+
+            .tenant-switcher {
+                position: relative;
+                display: inline-block;
+            }
+
+            .tenant-display {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                cursor: pointer;
+                font-weight: 500;
+                color: var(--primary-color, #1a73e8);
+                padding: 4px 8px;
+                border-radius: 4px;
+            }
+
+            .tenant-display:hover {
+                background: rgba(26, 115, 232, 0.05);
+            }
+
+            .chevron {
+                border: solid currentColor;
+                border-width: 0 2px 2px 0;
+                display: inline-block;
+                padding: 3px;
+                transform: rotate(45deg);
+                margin-bottom: 2px;
+            }
+
+            .dropdown-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                min-width: 150px;
+                z-index: 1000;
+                margin-top: 4px;
+            }
+
+            .dropdown-item {
+                padding: 10px 16px;
+                cursor: pointer;
+                color: #333;
+                text-decoration: none;
+                display: block;
+            }
+
+            .dropdown-item:hover {
+                background: #f5f5f5;
+            }
+
+            .header-title-container {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .header-title {
+                margin-right: 0 !important;
+            }
         ` ];
 
     @provide({ context: apiServiceContext })
     apiService = ApiService.getInstance(); // app-level singleton
 
-    //private oracleTenantService = OracleTenantService.getInstance();
+    private oracleTenantService = OracleTenantService.getInstance();
 
     @state()
     private hasOracleAccess: boolean = true;
+
+    @state()
+    private selectedTenant: Tenant | undefined;
 
     @state()
     private currentPath: string = '/';
@@ -145,6 +222,7 @@ export class AppRootV2 extends LitElement {
         super.connectedCallback();
         // Start listening for hash changes as early as possible
         window.addEventListener('hashchange', this.boundOnHashChange);
+        window.addEventListener('click', this.closeMenus);
         // Sync the current hash immediately
         if (!location.hash) {
             // Normalize to hash-based routing on first load
@@ -166,6 +244,7 @@ export class AppRootV2 extends LitElement {
 
     disconnectedCallback(): void {
         window.removeEventListener('hashchange', this.boundOnHashChange);
+        window.removeEventListener('click', this.closeMenus);
         if (this.versionCheckInterval !== null) {
             clearInterval(this.versionCheckInterval);
         }
@@ -196,8 +275,39 @@ export class AppRootV2 extends LitElement {
         // Debug aid
         // console.debug('[app-root-v2] onHashChange ->', path);
         this.currentPath = path;
+
+        this.selectedTenant = this.oracleTenantService.getSelectedTenant();
+        if (!this.selectedTenant && path !== '/tenant-selector') {
+            location.hash = '/tenant-selector';
+            return;
+        }
+
         await this.router.goto(path);
     }
+
+    private handleTenantChanged(e: CustomEvent<{ tenant: Tenant }>) {
+        this.selectedTenant = e.detail.tenant;
+        // Navigation is handled by the TenantSelectorView but we update our state to trigger re-render
+    }
+
+    @state()
+    private showTenantMenu: boolean = false;
+
+    private toggleTenantMenu(e: MouseEvent) {
+        e.stopPropagation();
+        this.showTenantMenu = !this.showTenantMenu;
+    }
+
+    private handleSwitchTenant() {
+        this.showTenantMenu = false;
+        this.oracleTenantService.setSelectedTenant(null);
+        this.selectedTenant = undefined;
+        location.hash = '/tenant-selector';
+    }
+
+    private closeMenus = () => {
+        this.showTenantMenu = false;
+    };
 
     private async fetchUserPermissions() {
         try {
@@ -278,16 +388,27 @@ export class AppRootV2 extends LitElement {
     }
 
     render() {
+        const isStandalone = !this.selectedTenant || this.currentPath === '/tenant-selector';
+
+        if (isStandalone) {
+            return html`
+                <div class="tenant-selector-container" @tenant-changed=${this.handleTenantChanged}>
+                    ${this.router.outlet()}
+                </div>
+                ${this.renderUpdateModal()}
+            `;
+        }
+
         const userEmail = localStorage.getItem("email") || "";
         const userWalletAddress = this.apiService.getWalletAddress() || "";
         const walletDisplay = this.truncateWalletToEmail(userWalletAddress, userEmail);
+
         return html`
             <div class="app-container">
                 <!-- Sidebar -->
                 <aside class="sidebar">
                     <div class="sidebar-header" @click=${this.onSidebarClick}>
                         <img src="/assets/dimo-logo-d.png" alt="DIMO" class="logo" />
-                        <a class="btn btn-sm switch-tenant-btn" href="#/tenant-selector">Switch Tenant</a>
                     </div>
                     <nav class="sidebar-nav" @click=${this.onSidebarClick}>
                         <div class="nav-item ${this.isActive('/') ? 'active' : ''}" data-page="home">
@@ -334,7 +455,20 @@ export class AppRootV2 extends LitElement {
                 <main class="main-area">
                     <!-- Top Header -->
                     <header class="top-header">
-                        <div class="header-title" id="page-title">${this.getPageTitle()}</div>
+                        <div class="header-title-container">
+                            <div class="header-title" id="page-title">${this.getPageTitle()}</div>
+                            <div class="tenant-switcher">
+                                <div class="tenant-display" @click=${this.toggleTenantMenu}>
+                                    ${this.selectedTenant?.name}
+                                    <span class="chevron" style="margin-left: 8px;"></span>
+                                </div>
+                                ${this.showTenantMenu ? html`
+                                    <div class="dropdown-menu">
+                                        <div class="dropdown-item" @click=${this.handleSwitchTenant}>Switch Tenant</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
                         <div class="header-right">
                             <div class="user-block">
                                 <span class="user-info user-email" title="${userEmail}">${userEmail}</span>
@@ -370,19 +504,24 @@ export class AppRootV2 extends LitElement {
                 </main>
             </div>
 
-            ${this.showUpdateModal ? html`
-                <div class="update-modal-overlay">
-                    <div class="update-modal">
-                        <h3>Update Available</h3>
-                        <p>A new version of the application is available. Would you like to refresh to get the latest updates?</p>
-                        <div class="update-modal-actions">
-                            <button class="btn btn-sm" @click=${this.handleDismissUpdate}>Cancel</button>
-                            <button class="btn btn-sm btn-primary" @click=${this.handleRefresh}>Refresh</button>
-                        </div>
+            ${this.renderUpdateModal()}
+    `;
+    }
+
+    private renderUpdateModal() {
+        if (!this.showUpdateModal) return '';
+        return html`
+            <div class="update-modal-overlay">
+                <div class="update-modal">
+                    <h3>Update Available</h3>
+                    <p>A new version of the application is available. Would you like to refresh to get the latest updates?</p>
+                    <div class="update-modal-actions">
+                        <button class="btn btn-sm" @click=${this.handleDismissUpdate}>Cancel</button>
+                        <button class="btn btn-sm btn-primary" @click=${this.handleRefresh}>Refresh</button>
                     </div>
                 </div>
-            ` : ''}
-    `;
+            </div>
+        `;
     }
 
     private onSidebarClick = async (e: MouseEvent) => {
