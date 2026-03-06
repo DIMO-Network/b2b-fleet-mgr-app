@@ -285,9 +285,11 @@ export class AppRootV2 extends LitElement {
         await this.router.goto(path);
     }
 
-    private handleTenantChanged(e: CustomEvent<{ tenant: Tenant }>) {
+    private async handleTenantChanged(e: CustomEvent<{ tenant: Tenant }>) {
         this.selectedTenant = e.detail.tenant;
         // Navigation is handled by the TenantSelectorView but we update our state to trigger re-render
+        // Re-fetch permissions for the newly selected tenant
+        await this.fetchUserPermissions();
     }
 
     @state()
@@ -302,6 +304,7 @@ export class AppRootV2 extends LitElement {
         this.showTenantMenu = false;
         this.oracleTenantService.setSelectedTenant(null);
         this.selectedTenant = undefined;
+        this.permissions = []; // Clear permissions when switching tenant
         location.hash = '/tenant-selector';
     }
 
