@@ -26,6 +26,9 @@ export interface VehicleIdentityData {
       nodes?: Array<{
         grantee?: string;
         permissions?: string;
+        source?: string;
+        expiresAt?: string;
+        createdAt?: string;
       }>;
     };
     earnings?: {
@@ -92,10 +95,13 @@ export class IdentityService {
         vehicle(tokenId: ${normalizedTokenId}) {
           id
           owner
-          sacds(first:20) {
+          sacds(first: 15) {
             nodes {
               grantee
               permissions
+              source
+              expiresAt
+              createdAt
             }
           }
           earnings {

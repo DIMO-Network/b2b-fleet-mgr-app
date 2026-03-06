@@ -720,6 +720,39 @@ export class VehicleDetailView extends LitElement {
             </div>
           </div>
         </div>
+
+        <!-- Vehicle Sharing -->
+        <div class="panel">
+          <div class="panel-header">Vehicle Sharing</div>
+          <div class="panel-body" style="padding: 0;">
+            <table>
+              <thead>
+              <tr>
+                <th>Grantee</th>
+                <th>Permissions</th>
+                <th>Source</th>
+                <th>Created At</th>
+                <th>Expires At</th>
+              </tr>
+              </thead>
+              <tbody>
+              ${this.vehicleIdentity?.vehicle?.sacds?.nodes && this.vehicleIdentity.vehicle.sacds.nodes.length > 0 ? this.vehicleIdentity.vehicle.sacds.nodes.map(sacd => html`
+                <tr>
+                  <td style="font-size: 11px;"><click-to-copy-element .valueToCopy="${sacd.grantee || ''}">${this.formatWalletAddress(sacd.grantee || '')}</click-to-copy-element></td>
+                  <td>${sacd.permissions}</td>
+                  <td>${sacd.source}</td>
+                  <td>${sacd.createdAt ? dayjs(sacd.createdAt).format('MMM D, YYYY') : 'N/A'}</td>
+                  <td>${sacd.expiresAt ? dayjs(sacd.expiresAt).format('MMM D, YYYY') : 'N/A'}</td>
+                </tr>
+              `) : html`
+                <tr>
+                  <td colspan="5" style="text-align: center; color: #666; padding: 2rem;">No sharing information available</td>
+                </tr>
+              `}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- Update Inventory Modal -->
