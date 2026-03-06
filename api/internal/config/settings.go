@@ -37,16 +37,16 @@ func (s *Settings) IsProduction() bool {
 
 func (s *Settings) GetOracles() []Oracle {
 	return []Oracle{
-// 		{
-// 			Name:     "Stellantis",
-// 			OracleID: "motorq",
-// 			URL:      s.MotorqOracleAPIURL,
-// 		},
-// 		{
-// 			Name:     "Staex",
-// 			OracleID: "staex",
-// 			URL:      s.StaexOracleAPIURL,
-// 		},
+		// 		{
+		// 			Name:     "Stellantis",
+		// 			OracleID: "motorq",
+		// 			URL:      s.MotorqOracleAPIURL,
+		// 		},
+		// 		{
+		// 			Name:     "Staex",
+		// 			OracleID: "staex",
+		// 			URL:      s.StaexOracleAPIURL,
+		// 		},
 		{
 			Name:           "Ruptela",
 			OracleID:       "kaufmann",
