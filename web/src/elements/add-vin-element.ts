@@ -114,11 +114,9 @@ export class AddVinElement extends BaseOnboardingElement {
     @state() private vinToImeiMap: Map<string, string> = new Map();
 
 	// Predefined grantees (temporary until backend provides these)
-	@state() private availableGrantees: { label: string; value: string }[] = [
-		{ label: "Kaufmann", value: "0xCa977Abb7eb2706DC1072f266503830D6A8745A8" },
-	];
+	@state() private availableGrantees: { label: string; value: string }[] = [];
     // select both by default, in future could persist choice in local storage
-	@state() private selectedGrantees: string[] = ["0xCa977Abb7eb2706DC1072f266503830D6A8745A8"];
+	@state() private selectedGrantees: string[] = [];
 	@state() private useBelow: boolean = false;
 
     private settings: SettingsService;
@@ -130,7 +128,7 @@ export class AddVinElement extends BaseOnboardingElement {
         this.settings = SettingsService.getInstance();
         this.alertText = "";
 
-        this.enableSacd = false;
+        this.enableSacd = true;
         this.sacdGrantee = "";
         this.sacdPermissions = defaultPermissions;
     }
@@ -141,9 +139,25 @@ export class AddVinElement extends BaseOnboardingElement {
         if (this.email === undefined || this.email === "") {
             this.displayFailure("email was not set, please make sure you allow sharing email on Login");
         }
-        await this.settings.fetchAccountInfo({ email: this.email! }); // load account info
+        
+        await Promise.all([
+            this.settings.fetchAccountInfo({ email: this.email! }),
+            this.settings.fetchTenantSettings()
+        ]);
 
-        this.enableSacd = this.settings.sharingInfo?.enabled || false;
+        // Prefill grantees from tenant settings
+        const ts = this.settings.tenantSettings;
+        if (ts) {
+            const grantees = [];
+            if (ts.dimo_client_id) {
+                grantees.push({ label: ts.name, value: ts.dimo_client_id });
+            }
+            this.availableGrantees = grantees;
+            // Select all by default
+            this.selectedGrantees = grantees.map(g => g.value);
+        }
+
+        this.enableSacd = this.settings.sharingInfo?.enabled || true;
         this.sacdGrantee = this.settings.sharingInfo?.grantee || "";
         this.sacdPermissions = this.settings.sharingInfo?.permissions as Permissions || defaultPermissions;
     }

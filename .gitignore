@@ -53,3 +53,4 @@ yarn-error.log*
 
 **/vendor
 .output.txt
+.planning/

@@ -33,10 +33,21 @@ export interface SharingInfo {
     ownerEmailAddress?: string
 }
 
+export interface TenantSettings {
+    id: string;
+    name: string;
+    kore_client_id: string;
+    has_kore_secret: boolean;
+    command_password: string;
+    dimo_client_id: string;
+    has_dimo_secret: boolean;
+}
+
 const PRIVATE_SETTINGS_KEY = "appPrivateSettings";
 const PUBLIC_SETTINGS_KEY = "appPublicSettings";
 const ACCOUNT_INFO_KEY = "accountInfo";
 const SHARING_INFO_KEY = "sharingInfo";
+const TENANT_SETTINGS_KEY = "tenantSettings";
 
 export class SettingsService {
     static instance = new SettingsService();
@@ -46,6 +57,7 @@ export class SettingsService {
     privateSettings?: PrivateSettings;
     accountInfo?: AccountInfo;
     sharingInfo?: SharingInfo;
+    tenantSettings?: TenantSettings;
     // Tenant/oracle state is now managed by OracleTenantService
 
     private apiService = ApiService.getInstance();
@@ -59,6 +71,7 @@ export class SettingsService {
         this.privateSettings = this.loadPrivateSettings();
         this.accountInfo = this.loadAccountInfo();
         this.sharingInfo = this.loadSharingInfo();
+        this.tenantSettings = this.loadTenantSettings();
     }
 
     async fetchPrivateSettings() {
@@ -119,6 +132,18 @@ export class SettingsService {
         return null;
     }
 
+    async fetchTenantSettings() {
+        const response = await this.apiService.callApi<TenantSettings>("GET", "/tenant/settings", null, true, true, true);
+
+        if (response.success) {
+            this.tenantSettings = response.data!;
+            this.saveTenantSettings();
+            return this.tenantSettings;
+        }
+
+        return null;
+    }
+
     savePublicSettings() {
         localStorage.setItem(PUBLIC_SETTINGS_KEY, JSON.stringify(this.publicSettings));
     }
@@ -133,6 +158,10 @@ export class SettingsService {
 
     saveSharingInfo() {
         localStorage.setItem(SHARING_INFO_KEY, JSON.stringify(this.sharingInfo));
+    }
+
+    saveTenantSettings() {
+        localStorage.setItem(TENANT_SETTINGS_KEY, JSON.stringify(this.tenantSettings));
     }
 
     loadFromLocalStorage(key: string) {
@@ -154,5 +183,9 @@ export class SettingsService {
 
     loadSharingInfo(): SharingInfo | undefined {
         return this.loadFromLocalStorage(SHARING_INFO_KEY);
+    }
+
+    loadTenantSettings(): TenantSettings | undefined {
+        return this.loadFromLocalStorage(TENANT_SETTINGS_KEY);
     }
 }
