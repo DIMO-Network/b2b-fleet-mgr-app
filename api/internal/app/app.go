@@ -146,10 +146,10 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Delete("/vehicle/force/:imei", genericProxyCtrl.Proxy)
 
 	// user profiles
-    oracleApp.Get("/user-profiles", genericProxyCtrl.Proxy)
-    oracleApp.Post("/user-profiles", genericProxyCtrl.Proxy)
-    oracleApp.Get("/user-profiles/:wallet", genericProxyCtrl.Proxy)
-    oracleApp.Patch("/user-profiles/:wallet", genericProxyCtrl.Proxy)
+	oracleApp.Get("/user-profiles", genericProxyCtrl.Proxy)
+	oracleApp.Post("/user-profiles", genericProxyCtrl.Proxy)
+	oracleApp.Get("/user-profiles/:wallet", genericProxyCtrl.Proxy)
+	oracleApp.Patch("/user-profiles/:wallet", genericProxyCtrl.Proxy)
 
 	// accounts
 	oracleApp.Get("/account", accountsCtrl.GetAccount)
