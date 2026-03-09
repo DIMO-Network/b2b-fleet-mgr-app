@@ -1,15 +1,9 @@
 import { LitElement, css, html } from "lit";
-import { customElement } from "lit/decorators.js";
-import { query, state } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import { globalStyles } from "../global-styles.ts";
 
-import { IdentityService } from "@services/identity-service";
-
-import "../elements/user-profile-card-element.ts";
-import "../elements/owner-vehicles-table-element.ts";
 import "../elements/admin-users-table-element.ts";
 import "../elements/all-users-table-element.ts";
-import "./edit-user.ts";
 
 @customElement("users-view")
 export class UsersView extends LitElement {
@@ -19,38 +13,7 @@ export class UsersView extends LitElement {
     `,
   ];
 
-  private readonly vehiclesPageSize = 25;
-
-  @state() private searchValue?: string;
-  @state() private searchedBy?: "email" | "wallet";
-
-  @state() private ownedVehicles: any[] = [];
-
-  @state() private vehiclesPageInfo?: { hasNextPage: boolean; endCursor?: string };
-
-  // cursor chain & caches for paging
-  @state() private vehiclesCursors: (string | undefined)[] = [undefined];
-  @state() private vehiclesPageCache = new Map<number, any[]>();
-  @state() private vehiclesPageInfoCache = new Map<
-    number,
-    { hasNextPage: boolean; endCursor?: string }
-  >();
-
   @state() private activeTab: "admin" | "all" = "all";
-
-  private async fetchOwnedVehicles(wallet: string, after?: string) {
-    const identityService = IdentityService.getInstance();
-    const result = await identityService.getOwnedVehicles(wallet, this.vehiclesPageSize, after);
-
-    if (!result) {
-      this.ownedVehicles = [];
-      this.vehiclesPageInfo = undefined;
-      return;
-    }
-
-    this.ownedVehicles = result.nodes;
-    this.vehiclesPageInfo = result.pageInfo;
-  }
 
   render() {
     return html`
