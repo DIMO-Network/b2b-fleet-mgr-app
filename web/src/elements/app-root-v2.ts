@@ -211,6 +211,7 @@ export class AppRootV2 extends LitElement {
             { path: '/users', render: () => html`<users-view></users-view>` },
             { path: '/users/create', render: () => html`<create-user-view></create-user-view>` },
             { path: '/users/edit/:walletAddress', render: ({ walletAddress }) => html`<edit-user-view .walletAddress=${walletAddress}></edit-user-view>` },
+            { path: '/users/profile/:wallet', render: ({ wallet }) => html`<user-detail-view .wallet=${wallet}></user-detail-view>` },
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
             { path: '/onboarding', render: () => html`<onboarding-view></onboarding-view>` },
             { path: '/tenant-selector', render: () => html`<tenant-selector-view></tenant-selector-view>` },
@@ -333,6 +334,7 @@ export class AppRootV2 extends LitElement {
         if (path.startsWith('/reports')) return 'Reports';
         if (path.startsWith('/users/create')) return 'Create User';
         if (path.startsWith('/users/edit')) return 'Edit User';
+        if (path.startsWith('/users/profile')) return 'User Profile';
         if (path.startsWith('/users')) return 'Users';
         if (path.startsWith('/tenant-selector')) return 'Tenant Selector';
         if (path.startsWith('/tenant-settings')) return 'Tenant Settings';
