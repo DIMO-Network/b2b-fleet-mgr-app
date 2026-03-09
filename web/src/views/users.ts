@@ -40,7 +40,7 @@ export class UsersView extends LitElement {
     { hasNextPage: boolean; endCursor?: string }
   >();
 
-  @state() private activeTab: "admin" | "all" = "admin";
+  @state() private activeTab: "admin" | "all" = "all";
 
   @query("#user-search-input")
   private searchInput!: HTMLInputElement;

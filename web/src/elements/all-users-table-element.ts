@@ -141,7 +141,14 @@ export class AllUsersTable extends LitElement {
                             <td style="font-family: monospace; font-size: 13px;">
                               ${user.wallet || "-"}
                             </td>
-                            <td>${user.email || "-"}</td>
+                            <td>
+                              ${user.email
+                                ? html`<span
+                                    class="link"
+                                    @click=${() => (window.location.hash = `/users/profile/${user.wallet}`)}
+                                  >${user.email}</span>`
+                                : "-"}
+                            </td>
                             <td>${user.first_name || "-"}</td>
                             <td>${user.last_name || "-"}</td>
                             <td>${user.government_id_number || "-"}</td>
