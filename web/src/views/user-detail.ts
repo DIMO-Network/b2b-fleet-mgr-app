@@ -19,6 +19,7 @@ interface UserProfile {
 interface VehicleRow {
   tokenId: number;
   mintedAt: string;
+  owner?: string;
   definition?: { make: string; model: string; year: number };
   vin?: string;
   licensePlate?: string;
@@ -44,8 +45,6 @@ export class UserDetailView extends LitElement {
         flex: 0 0 480px;
       }
       .vehicles-panel {
-        flex: 1;
-        min-width: 0;
       }
       .field-row {
         display: flex;
@@ -114,10 +113,13 @@ export class UserDetailView extends LitElement {
   // cursor chain: index 0 = undefined (first page), index N = cursor for page N
   @state() private vehiclesCursors: (string | undefined)[] = [undefined];
 
+  // shared vehicles state
+  @state() private sharedVehicles: VehicleRow[] = [];
+
   async connectedCallback() {
     super.connectedCallback();
     await this.fetchProfile();
-    this.fetchVehicles(0); // fire and forget alongside profile render
+    this.fetchAllVehicles(0);
   }
 
   private async fetchProfile() {
@@ -146,16 +148,17 @@ export class UserDetailView extends LitElement {
     }
   }
 
-  private async fetchVehicles(pageIndex: number) {
+  private async fetchAllVehicles(pageIndex: number) {
     this.vehiclesLoading = true;
     try {
       const cursor = this.vehiclesCursors[pageIndex];
       const afterClause = cursor ? `, after: "${cursor}"` : "";
       const query = `{
-        vehicles(first: ${this.vehiclesPageSize}${afterClause}, filterBy: { owner: "${this.wallet}" }) {
+        vehicles(first: ${this.vehiclesPageSize}${afterClause}, filterBy: { privileged: "${this.wallet}" }) {
           nodes {
             tokenId
             mintedAt
+            owner
             definition {
               make
               model
@@ -178,13 +181,13 @@ export class UserDetailView extends LitElement {
         false
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const vehiclesData = (identityResult.data as any)?.vehicles;
       const nodes: VehicleRow[] = vehiclesData?.nodes ?? [];
       const pageInfo = vehiclesData?.pageInfo;
 
       this.vehiclesHasNextPage = pageInfo?.hasNextPage ?? false;
 
-      // Store the next cursor if we haven't seen this page before
       if (pageInfo?.endCursor && this.vehiclesCursors.length === pageIndex + 1) {
         this.vehiclesCursors = [...this.vehiclesCursors, pageInfo.endCursor];
       }
@@ -193,6 +196,7 @@ export class UserDetailView extends LitElement {
 
       if (nodes.length === 0) {
         this.vehicles = [];
+        this.sharedVehicles = [];
         return;
       }
 
@@ -221,11 +225,15 @@ export class UserDetailView extends LitElement {
         })
       );
 
-      this.vehicles = enriched;
+      // Split by ownership: owned vs shared
+      const walletLower = this.wallet.toLowerCase();
+      this.vehicles = enriched.filter((v) => v.owner?.toLowerCase() === walletLower);
+      this.sharedVehicles = enriched.filter((v) => v.owner?.toLowerCase() !== walletLower);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to fetch vehicles:", error);
       this.vehicles = [];
+      this.sharedVehicles = [];
     } finally {
       this.vehiclesLoading = false;
     }
@@ -327,7 +335,7 @@ export class UserDetailView extends LitElement {
   private renderVehiclesPanel() {
     return html`
       <div class="panel vehicles-panel">
-        <div class="panel-header">Vehicles</div>
+        <div class="panel-header">Vehicles Owned</div>
         <div class="panel-body">
           ${this.vehiclesLoading
             ? html`<div>Loading vehicles...</div>`
@@ -373,24 +381,60 @@ export class UserDetailView extends LitElement {
                     </tbody>
                   </table>
                 </div>
-                <div class="pagination mt-16">
-                  <button
-                    class="pagination-btn"
-                    ?disabled=${this.vehiclesPageIndex === 0}
-                    @click=${() => this.fetchVehicles(this.vehiclesPageIndex - 1)}
-                  >
-                    PREV
-                  </button>
-                  <span style="margin: 0 8px; font-size: 14px;">
-                    Page ${this.vehiclesPageIndex + 1}
-                  </span>
-                  <button
-                    class="pagination-btn"
-                    ?disabled=${!this.vehiclesHasNextPage}
-                    @click=${() => this.fetchVehicles(this.vehiclesPageIndex + 1)}
-                  >
-                    NEXT
-                  </button>
+              `}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderSharedVehiclesPanel() {
+    return html`
+      <div class="panel vehicles-panel">
+        <div class="panel-header">Vehicles Shared With</div>
+        <div class="panel-body">
+          ${this.vehiclesLoading
+            ? html`<div>Loading vehicles...</div>`
+            : this.sharedVehicles.length === 0
+            ? html`<div>No shared vehicles found.</div>`
+            : html`
+                <div class="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Token ID</th>
+                        <th>MMY</th>
+                        <th>VIN</th>
+                        <th>License</th>
+                        <th>Minted On</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${this.sharedVehicles.map(
+                        (v) => html`
+                          <tr>
+                            <td style="font-family: monospace;">
+                              <span
+                                class="link"
+                                @click=${() => (window.location.hash = `/vehicles/${v.tokenId}`)}
+                              >${v.tokenId}</span>
+                            </td>
+                            <td>
+                              ${v.definition
+                                ? `${v.definition.year} ${v.definition.make} ${v.definition.model}`
+                                : "-"}
+                            </td>
+                            <td style="font-family: monospace; font-size: 13px;">
+                              ${v.vin || "-"}
+                            </td>
+                            <td>${v.licensePlate || "-"}</td>
+                            <td style="font-size: 13px;">
+                              ${this.formatDate(v.mintedAt)}
+                            </td>
+                          </tr>
+                        `
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               `}
         </div>
@@ -472,7 +516,29 @@ export class UserDetailView extends LitElement {
             </div>
           </div>
 
-          ${this.renderVehiclesPanel()}
+          <div style="display: flex; flex-direction: column; gap: 24px; flex: 1; min-width: 0;">
+            ${this.renderVehiclesPanel()}
+            ${this.renderSharedVehiclesPanel()}
+            <div class="pagination">
+              <button
+                class="pagination-btn"
+                ?disabled=${this.vehiclesPageIndex === 0 || this.vehiclesLoading}
+                @click=${() => this.fetchAllVehicles(this.vehiclesPageIndex - 1)}
+              >
+                PREV
+              </button>
+              <span style="margin: 0 8px; font-size: 14px;">
+                Page ${this.vehiclesPageIndex + 1}
+              </span>
+              <button
+                class="pagination-btn"
+                ?disabled=${!this.vehiclesHasNextPage || this.vehiclesLoading}
+                @click=${() => this.fetchAllVehicles(this.vehiclesPageIndex + 1)}
+              >
+                NEXT
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     `;
