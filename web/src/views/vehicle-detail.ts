@@ -149,6 +149,9 @@ export class VehicleDetailView extends LitElement {
   private ownerWalletAddress: string | null = null;
 
   @state()
+  private selectedWeekIndex: number = 0;
+
+  @state()
   private activeActivityTab: 'trips' | 'commands' | 'inventory' = 'trips';
 
   @state()
@@ -350,13 +353,27 @@ export class VehicleDetailView extends LitElement {
     }
   }
 
+  private getWeekIntervals(): { label: string; from: string; to: string }[] {
+    const intervals = [];
+    for (let i = 0; i < 6; i++) {
+      const to = dayjs().subtract(i * 7, 'day');
+      const from = to.subtract(7, 'day');
+      const label = i === 0
+        ? 'This week'
+        : `${from.format('MMM D')} – ${to.format('MMM D')}`;
+      intervals.push({ label, from: from.toISOString(), to: to.toISOString() });
+    }
+    return intervals;
+  }
+
   private async loadTrips(tokenId: number) {
     if (!this.apiService) return;
 
     try {
-      // Get date range for last 30 days
-      const toDate = dayjs().toISOString();
-      const fromDate = dayjs().subtract(30, 'day').toISOString();
+      const intervals = this.getWeekIntervals();
+      const selected = intervals[this.selectedWeekIndex];
+      const fromDate = selected.from;
+      const toDate = selected.to;
 
       const query = this.tripsQuery
         .replace('189345', tokenId.toString())
@@ -372,7 +389,10 @@ export class VehicleDetailView extends LitElement {
       );
 
       if (response.success && response.data) {
-        this.trips = response.data.segments || [];
+        const segments = response.data.segments || [];
+        this.trips = segments.sort((a, b) =>
+          new Date(b.start.timestamp).getTime() - new Date(a.start.timestamp).getTime()
+        );
       } else {
         this.errorMessage = this.appendError(this.errorMessage, response.error || 'Failed to load trips');
       }
@@ -632,7 +652,18 @@ export class VehicleDetailView extends LitElement {
               </div>
 
               <!-- Trips Tab -->
-              <div class="panel-body" style="padding: 0; display: ${this.activeActivityTab === 'trips' ? 'block' : 'none'};">
+              <div class="panel-body" style="display: ${this.activeActivityTab === 'trips' ? 'block' : 'none'};">
+                <div style="margin-bottom: 12px;">
+                  <select
+                    style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;"
+                    .value=${String(this.selectedWeekIndex)}
+                    @change=${this.handleWeekChange}
+                  >
+                    ${this.getWeekIntervals().map((interval, i) => html`
+                      <option value=${i} ?selected=${i === this.selectedWeekIndex}>${interval.label}</option>
+                    `)}
+                  </select>
+                </div>
                 <table>
                   <thead>
                   <tr>
@@ -790,6 +821,12 @@ export class VehicleDetailView extends LitElement {
 
     // Reload vehicle data to get updated inventory status
     await this.loadVehicleData();
+  }
+
+  private async handleWeekChange(e: Event) {
+    const select = e.target as HTMLSelectElement;
+    this.selectedWeekIndex = Number(select.value);
+    await this.loadTrips(this.tokenID);
   }
 
   private handleAddressUpdated(event: CustomEvent) {
