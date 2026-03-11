@@ -4,6 +4,7 @@ export * from "./reports.ts";
 export * from "./users.ts";
 export * from "./user-detail.ts";
 export * from "./create-user.ts";
+export * from "./edit-user.ts";
 export * from "./vehicles-fleets.ts";
 export * from "./vehicle-detail.ts";
 export * from "./tenant-selector.ts";
