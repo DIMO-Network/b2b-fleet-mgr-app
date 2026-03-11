@@ -223,9 +223,10 @@ export class AppRootV2 extends LitElement {
 
     async connectedCallback() {
         super.connectedCallback();
-        // Restore saved locale
+        // Restore saved locale, falling back to browser language
         const savedLocale = localStorage.getItem('locale');
-        if (savedLocale === 'es') {
+        const locale = savedLocale ?? (navigator.language.startsWith('es') ? 'es' : 'en');
+        if (locale === 'es') {
             await setLocale('es');
         }
         // Start listening for hash changes as early as possible
@@ -241,7 +242,10 @@ export class AppRootV2 extends LitElement {
         // Ensure oracle in global state and verify access TODO
         this.hasOracleAccess = true;  //await this.oracleTenantService.verifyOracleAccess();
 
-        await this.fetchUserPermissions();
+        // Only fetch permissions if a tenant is already selected (the endpoint requires it)
+        if (this.selectedTenant) {
+            await this.fetchUserPermissions();
+        }
 
         // Start version checking only if not in local environment
         if (!window.location.href.includes('local')) {
@@ -480,6 +484,14 @@ export class AppRootV2 extends LitElement {
                                     </div>
                                 ` : ''}
                             </div>
+                            <select
+                              style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; background: #fff;"
+                              .value=${getLocale()}
+                              @change=${this.handleLocaleChange}
+                            >
+                              <option value="en">English</option>
+                              <option value="es">Español</option>
+                            </select>
                         </div>
                         <div class="header-right">
                             <div class="user-block">
@@ -490,14 +502,6 @@ export class AppRootV2 extends LitElement {
                                     >${walletDisplay}</span>
                                 </click-to-copy-element>
                             </div>
-                            <select
-                              style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; background: #fff;"
-                              .value=${getLocale()}
-                              @change=${this.handleLocaleChange}
-                            >
-                              <option value="en">English</option>
-                              <option value="es">Español</option>
-                            </select>
                             <button class="btn btn-sm" @click=${this.handleLogout}>${msg('LOGOUT')}</button>
                         </div>
                     </header>
@@ -565,8 +569,9 @@ export class AppRootV2 extends LitElement {
 
     private async handleLocaleChange(e: Event) {
         const locale = (e.target as HTMLSelectElement).value as 'en' | 'es';
-        await setLocale(locale);
         localStorage.setItem('locale', locale);
+        await setLocale(locale);
+        window.location.reload();
     }
 
     private handleLogout() {
