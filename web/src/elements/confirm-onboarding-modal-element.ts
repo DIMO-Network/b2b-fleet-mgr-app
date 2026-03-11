@@ -1,4 +1,5 @@
 import {html, nothing, LitElement, css} from 'lit';
+import {msg, str} from '@lit/localize';
 import {customElement, property, state} from "lit/decorators.js";
 import {repeat} from "lit/directives/repeat.js";
 import {VehicleWithDefinition} from "@elements/base-onboarding-element.ts";
@@ -111,20 +112,20 @@ export class ConfirmOnboardingModalElement extends LitElement {
             <div class="modal-overlay" @click=${this.closeModal}>
                 <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
                     <div class="modal-header">
-                        <h3>Confirm Vehicle Onboarding</h3>
+                        <h3>${msg('Confirm Vehicle Onboarding')}</h3>
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>
                     <div class="modal-body">
-                        <p>Review and optionally update the vehicle definitions before onboarding:</p>
+                        <p>${msg('Review and optionally update the vehicle definitions before onboarding:')}</p>
                         <div style="margin-top: 1rem;">
                             ${repeat(this.vins, (vin) => vin, (vin, index) => html`
                                 <div style="margin-bottom: 1rem; padding: 1rem; border: 1px solid #ddd; border-radius: 4px;">
                                     <div style="margin-bottom: 0.5rem;">
-                                        <strong>Vehicle ${index + 1}</strong>
+                                        <strong>${msg(str`Vehicle ${index + 1}`)}</strong>
                                     </div>
                                     <div style="margin-bottom: 0.5rem;">
                                         <label style="display: block; font-size: 0.9rem; color: #666;">
-                                            VIN:
+                                            ${msg('VIN:')}
                                         </label>
                                         <div style="font-family: monospace; padding: 0.5rem; background: #f5f5f5; border-radius: 4px;">
                                             ${vin}
@@ -133,18 +134,18 @@ export class ConfirmOnboardingModalElement extends LitElement {
                                     <div>
                                         <label style="display: block; margin-bottom: 0.25rem;">
                                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                <span>Definition (required):</span>
+                                                <span>${msg('Definition (required):')}</span>
                                                 ${this.decodingVins.has(vin) ? html`
                                                     <span style="font-size: 0.9rem; color: #666;">
                                                         <span class="spinner" style="display: inline-block; width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: #333; border-radius: 50%; animation: spin 0.8s linear infinite;"></span>
-                                                        Decoding...
+                                                        ${msg('Decoding...')}
                                                     </span>
                                                 ` : nothing}
                                             </div>
                                             <div style="position: relative; display: flex; align-items: center; gap: 0.5rem;">
                                                 <input 
                                                     type="text" 
-                                                    placeholder="make_model_year" 
+                                                    .placeholder=${msg('make_model_year')} 
                                                     list="definitions-datalist-${vin}"
                                                     .value=${this.vehicleDefinitions.get(vin) || ''}
                                                     @input=${(e: InputEvent) => this.handleDefinitionInput(vin, e)}
@@ -168,11 +169,11 @@ export class ConfirmOnboardingModalElement extends LitElement {
                                         </label>
                                         ${this.invalidVins.has(vin) ? html`
                                             <div style="color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem;">
-                                                This field is required
+                                                ${msg('This field is required')}
                                             </div>
                                         ` : this.invalidDefinitions.has(vin) ? html`
                                             <div style="color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem;">
-                                                This definition does not exist
+                                                ${msg('This definition does not exist')}
                                             </div>
                                         ` : nothing}
                                     </div>
@@ -182,10 +183,10 @@ export class ConfirmOnboardingModalElement extends LitElement {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @click=${this.closeModal}>
-                            Cancel
+                            ${msg('Cancel')}
                         </button>
                         <button type="button" class="btn btn-primary" @click=${this.confirmOnboarding}>
-                            Confirm Onboarding
+                            ${msg('Confirm Onboarding')}
                         </button>
                     </div>
                 </div>

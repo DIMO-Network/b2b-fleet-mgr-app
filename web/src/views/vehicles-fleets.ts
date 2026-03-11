@@ -1,5 +1,6 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { msg, str } from '@lit/localize';
 import {globalStyles} from "../global-styles.ts";
 import { consume } from '@lit/context';
 import { apiServiceContext } from '../context';
@@ -159,7 +160,7 @@ export class VehiclesFleetsView extends LitElement {
       this.loadTelemetryProgressively();
     } else {
       console.error('Failed to load vehicles:', response.error);
-      this.errorMessage = response.error || 'Failed to load vehicles';
+      this.errorMessage = response.error || msg('Failed to load vehicles');
     }
   }
 
@@ -478,12 +479,12 @@ export class VehiclesFleetsView extends LitElement {
                   class="inner-tab ${this.activeTab === 'vehicles-list' ? 'active' : ''}"
                   data-subtab="vehicles-list"
                   @click=${() => this.handleTabClick('vehicles-list')}
-                >Vehicles</div>
+                >${msg('Vehicles')}</div>
                 <div
                   class="inner-tab ${this.activeTab === 'fleet-groups' ? 'active' : ''}"
                   data-subtab="fleet-groups"
                   @click=${() => this.handleTabClick('fleet-groups')}
-                >Fleet Groups</div>
+                >${msg('Fleet Groups')}</div>
             </div>
 
             <!-- Vehicles List Sub-tab -->
@@ -492,17 +493,17 @@ export class VehiclesFleetsView extends LitElement {
                     <input
                       type="text"
                       class="search-box"
-                      placeholder="Search by VIN, IMEI, or Nickname..."
+                      .placeholder=${msg('Search by VIN, IMEI, or Nickname...')}
                       @input=${this.handleSearchInput}
                       .value=${this.search}
                     >
                     <select>
-                        <option value="">All Inventory Status</option>
-                        <option value="inventory">Inventory</option>
-                        <option value="customer">Customer Owned</option>
+                        <option value="">${msg('All Inventory Status')}</option>
+                        <option value="inventory">${msg('Inventory')}</option>
+                        <option value="customer">${msg('Customer Owned')}</option>
                     </select>
                     <select @change=${this.handleGroupFilterChange} .value=${this.filter}>
-                        <option value="">All Groups</option>
+                        <option value="">${msg('All Groups')}</option>
                         ${this.fleetGroups.map(group => html`
                           <option value=${'group:' + group.id} ?disabled=${!group.has_access}>${group.name}</option>
                         `)}
@@ -516,7 +517,7 @@ export class VehiclesFleetsView extends LitElement {
                             <polyline points="7 10 12 15 17 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
-                        Export CSV
+                        ${msg('Export CSV')}
                     </button>
                   
                 </div>
@@ -525,15 +526,15 @@ export class VehiclesFleetsView extends LitElement {
                     <table>
                         <thead>
                         <tr>
-                            <th>Vehicle</th>
-                            <th>IMEI</th>
-                            <th>VIN</th>
-                            <th>Status</th>
-                            <th>Last Telemetry</th>
-                            <th>Inventory</th>
-                            <th>Groups</th>
-                            <th>Fuel</th>
-                            <th>Engine</th>
+                            <th>${msg('Vehicle')}</th>
+                            <th>${msg('IMEI')}</th>
+                            <th>${msg('VIN')}</th>
+                            <th>${msg('Status')}</th>
+                            <th>${msg('Last Telemetry')}</th>
+                            <th>${msg('Inventory')}</th>
+                            <th>${msg('Groups')}</th>
+                            <th>${msg('Fuel')}</th>
+                            <th>${msg('Engine')}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -546,7 +547,7 @@ export class VehiclesFleetsView extends LitElement {
                             <td title="${vehicle.last_telemetry}">${this.formatLastTelemetry(vehicle.last_telemetry)}</td>
                             <td>${vehicle.inventory ? html`<span class="status ${this.getInventoryClass(vehicle.inventory)}">${vehicle.inventory}</span>` : '—'}</td>
                             <td>${vehicle.groups.length > 0 ? vehicle.groups.map(group => html`<span class="badge" style="background-color: ${group.color}; color: #fff;">${group.name}</span>`) : '—'}</td>
-                            <td>${vehicle.fuel ? 'Yes' : 'No'}</td>
+                            <td>${vehicle.fuel ? msg('Yes') : msg('No')}</td>
                             <td><span class="status ${this.getEngineClass(vehicle.engine)}">${this.getEngineDisplay(vehicle.engine)}</span></td>
                           </tr>
                         `)}
@@ -564,7 +565,7 @@ export class VehiclesFleetsView extends LitElement {
                           >${pageNum}</button>`
                     )}
                     <span style="margin-left: 16px; color: #666;">
-                      Showing ${this.showingStart}-${this.showingEnd} of ${this.totalCount} vehicles
+                      ${msg(str`Showing ${this.showingStart}-${this.showingEnd} of ${this.totalCount} vehicles`)}
                     </span>
                 </div>
             </div>
@@ -572,13 +573,13 @@ export class VehiclesFleetsView extends LitElement {
             <!-- Fleet Groups Sub-tab -->
             <div id="subtab-fleet-groups" style="display: ${this.activeTab === 'fleet-groups' ? 'block' : 'none'}">
                 <div class="toolbar">
-                    <button class="btn btn-primary" @click=${this.openCreateGroupModal}>+ CREATE GROUP</button>
+                    <button class="btn btn-primary" @click=${this.openCreateGroupModal}>${msg('+ CREATE GROUP')}</button>
                 </div>
 
                 <div class="group-list">
                     ${this.fleetGroups.length === 0 ? html`
                         <div style="text-align: center; padding: 2rem; color: #666;">
-                            No fleet groups yet. Click "CREATE GROUP" to add one.
+                            ${msg('No fleet groups yet. Click "CREATE GROUP" to add one.')}
                         </div>
                     ` : this.fleetGroups.map(group => html`
                         <div class="group-item">
@@ -587,12 +588,12 @@ export class VehiclesFleetsView extends LitElement {
                                     <span style="display: inline-block; width: 12px; height: 12px; background-color: ${group.color}; border-radius: 50%; border: 1px solid #ddd;"></span>
                                     ${group.name}
                                 </span>
-                                <span class="group-stats">${group.vehicle_count} vehicle${group.vehicle_count !== 1 ? 's' : ''}</span>
+                                <span class="group-stats">${msg(str`${group.vehicle_count} vehicle${group.vehicle_count !== 1 ? 's' : ''}`)}</span>
                             </div>
                             <div>
-                                <button class="btn btn-sm" @click=${() => this.handleEditClick(group)}>EDIT</button>
-                                <button class="btn btn-sm" @click=${() => this.handleManageVehiclesClick(group)}>MANAGE VEHICLES</button>
-                                <button class="btn btn-sm btn-danger" @click=${() => this.handleDeleteClick(group)}>DELETE</button>
+                                <button class="btn btn-sm" @click=${() => this.handleEditClick(group)}>${msg('EDIT')}</button>
+                                <button class="btn btn-sm" @click=${() => this.handleManageVehiclesClick(group)}>${msg('MANAGE VEHICLES')}</button>
+                                <button class="btn btn-sm btn-danger" @click=${() => this.handleDeleteClick(group)}>${msg('DELETE')}</button>
                             </div>
                         </div>
                     `)}
@@ -612,10 +613,10 @@ export class VehiclesFleetsView extends LitElement {
         <!-- Delete Confirmation Modal -->
         <confirm-modal-element
           .show=${this.showDeleteConfirmModal}
-          .title=${'Delete Fleet Group'}
-          .message=${this.groupToDelete ? `Are you sure you want to delete "${this.groupToDelete.name}"? This action cannot be undone.` : ''}
-          .confirmText=${'Delete'}
-          .cancelText=${'Cancel'}
+          .title=${msg('Delete Fleet Group')}
+          .message=${this.groupToDelete ? msg(str`Are you sure you want to delete "${this.groupToDelete.name}"? This action cannot be undone.`) : ''}
+          .confirmText=${msg('Delete')}
+          .cancelText=${msg('Cancel')}
           .confirmButtonClass=${'btn-danger'}
           @modal-confirm=${this.handleDeleteConfirm}
           @modal-cancel=${this.handleDeleteCancel}

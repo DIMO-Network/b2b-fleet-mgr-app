@@ -1,4 +1,5 @@
 import { html, nothing, LitElement, css } from 'lit';
+import {msg} from '@lit/localize';
 import { customElement, property, state } from 'lit/decorators.js';
 import { ApiService } from '@services/api-service.ts';
 import { FleetService, FleetGroup } from '@services/fleet-service.ts';
@@ -221,7 +222,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
       <div class="modal-overlay" @click=${this.closeModal}>
         <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
           <div class="modal-header">
-            <h3>Manage Vehicles - ${this.group.name}</h3>
+            <h3>${msg('Manage Vehicles')} - ${this.group.name}</h3>
             <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
           </div>
           <div class="modal-body">
@@ -238,7 +239,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
               <div class="autocomplete-container">
                 <input
                   type="text"
-                  placeholder="Search by VIN, IMEI, or Token ID"
+                  .placeholder=${msg('Search by VIN, IMEI, or Token ID')}
                   .value=${this.newVehicleImei}
                   @input=${this.handleImeiInput}
                   @focus=${this.handleInputFocus}
@@ -250,9 +251,9 @@ export class ManageGroupVehiclesModalElement extends LitElement {
                 ${this.showSuggestions ? html`
                   <div class="autocomplete-dropdown">
                     ${this.isLoadingSuggestions ? html`
-                      <div class="autocomplete-empty">Loading suggestions...</div>
+                      <div class="autocomplete-empty">${msg('Loading suggestions...')}</div>
                     ` : this.searchSuggestions.length === 0 ? html`
-                      <div class="autocomplete-empty">No vehicles found</div>
+                      <div class="autocomplete-empty">${msg('No vehicles found')}</div>
                     ` : this.searchSuggestions.map(vehicle => html`
                       <div
                         class="autocomplete-item"
@@ -263,7 +264,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
                             ${vehicle.make} ${vehicle.model} ${vehicle.year}
                           </div>
                           <div class="autocomplete-item-secondary">
-                            VIN: ${vehicle.vin}
+                            ${msg('VIN:')} ${vehicle.vin}
                           </div>
                         </div>
                         <div class="autocomplete-item-imei">
@@ -279,23 +280,23 @@ export class ManageGroupVehiclesModalElement extends LitElement {
                 @click=${this.handleAddVehicle}
                 ?disabled=${this.isAdding || !this.newVehicleImei.trim()}
               >
-                ${this.isAdding ? 'Adding...' : 'Add Vehicle'}
+                ${this.isAdding ? msg('Adding...') : msg('Add Vehicle')}
               </button>
             </div>
 
             <!-- Vehicles Table -->
             ${this.isLoading ? html`
-              <div class="empty-state">Loading vehicles...</div>
+              <div class="empty-state">${msg('Loading vehicles...')}</div>
             ` : this.vehicles.length === 0 ? html`
-              <div class="empty-state">No vehicles in this group yet.</div>
+              <div class="empty-state">${msg('No vehicles in this group yet.')}</div>
             ` : html`
               <table class="vehicles-table">
                 <thead>
                   <tr>
-                    <th>IMEI</th>
-                    <th>VIN</th>
-                    <th>Vehicle</th>
-                    <th style="width: 100px;">Actions</th>
+                    <th>${msg('IMEI')}</th>
+                    <th>${msg('VIN')}</th>
+                    <th>${msg('Vehicle')}</th>
+                    <th style="width: 100px;">${msg('Actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -310,7 +311,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
                           @click=${() => this.handleRemoveVehicle(vehicle.imei)}
                           ?disabled=${this.removingImeis.has(vehicle.imei)}
                         >
-                          ${this.removingImeis.has(vehicle.imei) ? 'Removing...' : 'Remove'}
+                          ${this.removingImeis.has(vehicle.imei) ? msg('Removing...') : msg('Remove')}
                         </button>
                       </td>
                     </tr>
@@ -325,7 +326,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
               class="btn btn-primary"
               @click=${this.closeModal}
             >
-              Done
+              ${msg('Done')}
             </button>
           </div>
         </div>
@@ -353,11 +354,11 @@ export class ManageGroupVehiclesModalElement extends LitElement {
       if (response.success && response.data) {
         this.vehicles = response.data.items;
       } else {
-        this.errorMessage = response.error || 'Failed to load vehicles';
+        this.errorMessage = response.error || msg('Failed to load vehicles');
       }
     } catch (error: any) {
       console.error('Error loading vehicles:', error);
-      this.errorMessage = error.message || 'An unexpected error occurred';
+      this.errorMessage = error.message || msg('An unexpected error occurred');
     } finally {
       this.isLoading = false;
     }
@@ -462,7 +463,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
         // Add the vehicle to the list
         this.vehicles = [...this.vehicles, response.data];
         this.newVehicleImei = '';
-        this.successMessage = 'Vehicle added successfully';
+        this.successMessage = msg('Vehicle added successfully');
 
         // Dispatch event to refresh parent view
         this.dispatchEvent(new CustomEvent('vehicles-updated', {
@@ -475,11 +476,11 @@ export class ManageGroupVehiclesModalElement extends LitElement {
           this.successMessage = '';
         }, 3000);
       } else {
-        this.errorMessage = response.error || 'Failed to add vehicle';
+        this.errorMessage = response.error || msg('Failed to add vehicle');
       }
     } catch (error: any) {
       console.error('Error adding vehicle:', error);
-      this.errorMessage = error.message || 'An unexpected error occurred';
+      this.errorMessage = error.message || msg('An unexpected error occurred');
     } finally {
       this.isAdding = false;
     }
@@ -499,7 +500,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
       if (response.success) {
         // Remove the vehicle from the list
         this.vehicles = this.vehicles.filter(v => v.imei !== imei);
-        this.successMessage = 'Vehicle removed successfully';
+        this.successMessage = msg('Vehicle removed successfully');
 
         // Dispatch event to refresh parent view
         this.dispatchEvent(new CustomEvent('vehicles-updated', {
@@ -512,11 +513,11 @@ export class ManageGroupVehiclesModalElement extends LitElement {
           this.successMessage = '';
         }, 3000);
       } else {
-        this.errorMessage = response.error || 'Failed to remove vehicle';
+        this.errorMessage = response.error || msg('Failed to remove vehicle');
       }
     } catch (error: any) {
       console.error('Error removing vehicle:', error);
-      this.errorMessage = error.message || 'An unexpected error occurred';
+      this.errorMessage = error.message || msg('An unexpected error occurred');
     } finally {
       this.removingImeis.delete(imei);
       this.requestUpdate();

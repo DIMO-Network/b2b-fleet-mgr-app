@@ -1,4 +1,5 @@
 import {css, html, nothing} from 'lit';
+import {msg} from '@lit/localize';
 import {SettingsService} from "@services/settings-service";
 import {customElement, property, state} from "lit/decorators.js";
 import {repeat} from "lit/directives/repeat.js";
@@ -137,7 +138,7 @@ export class AddVinElement extends BaseOnboardingElement {
         super.connectedCallback();
         await this.settings.fetchPrivateSettings();
         if (this.email === undefined || this.email === "") {
-            this.displayFailure("email was not set, please make sure you allow sharing email on Login");
+            this.displayFailure(msg("email was not set, please make sure you allow sharing email on Login"));
         }
         
         await Promise.all([
@@ -248,13 +249,13 @@ export class AddVinElement extends BaseOnboardingElement {
 
             <div class="onboard-section">
                 <div class="panel mb-16">
-                    <div class="panel-header">Developer Sharing & OTP</div>
+                    <div class="panel-header">${msg('Developer Sharing & OTP')}</div>
                     <div class="panel-body">
                         <div class="form-row" style="margin: 0 0 8px 0;">
                             <div class="form-group" style="margin: 0;">
                                 <label class="form-label" style="display:flex; align-items:center; gap:8px;">
                                     <input type="checkbox" .checked="${this.enableSacd}" @click=${this.toggleEnableSacd}>
-                                    Share vehicles with Developer
+                                    ${msg('Share vehicles with Developer')}
                                 </label>
                             </div>
                         </div>
@@ -263,7 +264,7 @@ export class AddVinElement extends BaseOnboardingElement {
                             <div class="panel-body">
                                 <form class="grid" style="gap: 12px;">
                                     <fieldset>
-                                        <legend class="form-label">Select Developer Grantees</legend>
+                                        <legend class="form-label">${msg('Select Developer Grantees')}</legend>
                                         <div class="grantee-list">
                                             ${repeat(this.availableGrantees, (g) => g.value, (g) => html`
                                                 <label class="checkbox grantee-item">
@@ -277,13 +278,13 @@ export class AddVinElement extends BaseOnboardingElement {
                                     <fieldset>
                                         <label class="checkbox">
                                             <input type="checkbox" .checked=${this.useBelow} @click=${this.toggleUseBelow}>
-                                            <span>Use below:</span>
+                                            <span>${msg('Use below:')}</span>
                                         </label>
                                     </fieldset>
 
                                     <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
                                         <fieldset>
-                                            <label class="form-label">Developer License 0x Client ID</label>
+                                            <label class="form-label">${msg('Developer License 0x Client ID')}</label>
                                             <input type="text" placeholder="0x" maxlength="42"
                                                    .value=${this.sacdGrantee}
                                                    @input="${(e: InputEvent) => this.sacdGrantee = (e.target as HTMLInputElement).value}"
@@ -291,7 +292,7 @@ export class AddVinElement extends BaseOnboardingElement {
                                         </fieldset>
 
                                         <fieldset>
-                                            <legend class="form-label">Permissions</legend>
+                                            <legend class="form-label">${msg('Permissions')}</legend>
                                             <div class="grid" style="grid-template-columns: 1fr; gap: 6px;">
                                                 ${repeat(range(1, Permission.MAX), (item) => item, (item) => html`
                                                     <label class="checkbox">
@@ -310,18 +311,18 @@ export class AddVinElement extends BaseOnboardingElement {
                             <div class="form-group" style="margin: 0; display:flex; align-items:center; gap:12px;">
                                 <label class="checkbox" style="margin:0;">
                                     <input type="checkbox" .checked="${this.otpLogin}" @click="${this.toggleOtpLogin}" />
-                                    <span>Use OTP</span>
+                                    <span>${msg('Use OTP')}</span>
                                 </label>
                                 ${ this.otpLogin ? html`
                                     <button class=${this.processing ? 'btn btn-primary processing' : 'btn btn-primary'} @click=${() => this.initOtpLogin()} ?disabled=${this.processing}>
-                                        Sign In
+                                        ${msg('Sign In')}
                                     </button>` : nothing }
                             </div>
                         </div>
 
                         <div class="form-row" style="margin-top: 8px;">
                             <button type="button" @click=${this._submitVINs} ?disabled=${(this.otpLogin && !this.otpLoggedIn) || this.processing} class=${this.processing ? 'btn btn-primary processing' : 'btn btn-primary'}>
-                                Onboard Vehicles
+                                ${msg('Onboard Vehicles')}
                             </button>
                         </div>
                     </div>
@@ -329,7 +330,7 @@ export class AddVinElement extends BaseOnboardingElement {
             </div>
             <div class="onboard-section">
                 <div class="panel">
-                    <div class="panel-header">Onboard Result</div>
+                    <div class="panel-header">${msg('Onboard Result')}</div>
                     <div class="panel-body">
                         <div class="alert alert-success" ?hidden=${this.processingMessage === "" || this.alertText.length > 0}>
                             ${this.processingMessage}
@@ -340,14 +341,14 @@ export class AddVinElement extends BaseOnboardingElement {
                                 <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Result</th>
-                                    <th>VIN</th>
-                                    <th>Details</th>
+                                    <th>${msg('Result')}</th>
+                                    <th>${msg('VIN')}</th>
+                                    <th>${msg('Details')}</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr ?hidden=${this.onboardResult.length > 0}>
-                            <td colspan="4" style="text-align: center; color: #666; padding: 24px;">No vehicles pending onboard</td>
+                            <td colspan="4" style="text-align: center; color: #666; padding: 24px;">${msg('No vehicles pending onboard')}</td>
                         </tr>
                         ${repeat(this.onboardResult, (item) => item.vin, (item, index) => html`
                     <tr>
@@ -386,7 +387,7 @@ export class AddVinElement extends BaseOnboardingElement {
         }
 
         if (vinsArray.length === 0) {
-            return this.displayFailure("no vin provided");
+            return this.displayFailure(msg("no vin provided"));
         }
 
         // Claim pending vehicles
@@ -450,7 +451,7 @@ export class AddVinElement extends BaseOnboardingElement {
                     await pendingVehiclesElement.loadPendingVehicles();
                 }
             } catch (e) {
-                this.displayFailure("failed to onboard vins: " + e);
+                this.displayFailure(msg("failed to onboard vins: ") + e);
             }
 
             this.processing = false;
@@ -532,7 +533,7 @@ export class AddVinElement extends BaseOnboardingElement {
                 await this.addInventoryStatesForVehicles(vehicles);
             }
         } catch (e) {
-            this.displayFailure("failed to onboard vins: " + e);
+            this.displayFailure(msg("failed to onboard vins: ") + e);
             throw e; // Re-throw so caller can handle if needed
         }
 

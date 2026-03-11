@@ -1,4 +1,5 @@
 import { LitElement, html } from 'lit';
+import {msg} from '@lit/localize';
 import { customElement, property } from 'lit/decorators.js';
 import type { Oracle } from "@services/oracle-tenant-service.ts";
 import { OracleTenantService } from "@services/oracle-tenant-service.ts";
@@ -63,7 +64,7 @@ export class OracleSelector extends LitElement {
     render() {
         return html`
             <div>
-            <label for="oracle-select">Select Connection Oracle:</label>
+            <label for="oracle-select">${msg('Select Connection Oracle:')}</label>
                 <select id="oracle-select" @change=${this.handleChange}>
                     ${repeat(this.options, (option) => option.oracleId, (option) => html`
                         <option value=${option.oracleId} ?selected=${option.oracleId === this.selectedOption}>

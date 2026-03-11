@@ -1,4 +1,5 @@
 import {css, html, nothing} from 'lit';
+import {msg, str} from '@lit/localize';
 import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
 import { ApiService } from '../services/api-service';
@@ -110,7 +111,7 @@ export class TelemetryModalElement extends LitElement {
                 <div class="modal-content telemetry-modal" @click=${(e: Event) => e.stopPropagation()} style="width: 90%; max-width: 90%;">
 
                     <div class="modal-header">
-                        <h3>Telemetry Data - ${this.imei}${this.vin ? ` (${this.vin})` : ''}</h3>
+                        <h3>${msg('Telemetry Data')} - ${this.imei}${this.vin ? ` (${this.vin})` : ''}</h3>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <button type="button"
                                     class="btn btn-secondary"
@@ -118,7 +119,7 @@ export class TelemetryModalElement extends LitElement {
                                     @click=${this.resetTelemetry}
                                     style="font-size: 0.875rem; padding: 0.5rem 1rem;">
                                 ${this.resetting ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
-                                Reset Telemetry
+                                ${msg('Reset Telemetry')}
                             </button>
                             <button type="button"
                                     class="btn btn-danger"
@@ -126,7 +127,7 @@ export class TelemetryModalElement extends LitElement {
                                     @click=${this.showRemoveVinConfirmModal}
                                     style="font-size: 0.875rem; padding: 0.5rem 1rem;">
                                 ${this.removingVin ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
-                                Remove VIN
+                                ${msg('Remove VIN')}
                             </button>
                             <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                         </div>
@@ -138,7 +139,7 @@ export class TelemetryModalElement extends LitElement {
                                 @click=${this.immobilizerOn}
                                 style="font-size: 0.875rem; padding: 0.5rem 1rem; background-color: #dc2626; color: white; border: none; border-radius: 0.375rem; cursor: pointer;">
                             ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
-                            Immobilizer On
+                            ${msg('Immobilizer On')}
                         </button>
                         <button type="button" 
                                 class="btn btn-success" 
@@ -146,7 +147,7 @@ export class TelemetryModalElement extends LitElement {
                                 @click=${this.immobilizerOff}
                                 style="font-size: 0.875rem; padding: 0.5rem 1rem; background-color: #16a34a; color: white; border: none; border-radius: 0.375rem; cursor: pointer;">
                             ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
-                            Immobilizer Off
+                            ${msg('Immobilizer Off')}
                         </button>
                         ${this.immobilizerError ? html`
                             <div style="color: #dc2626; font-size: 0.875rem;">${this.immobilizerError}</div>
@@ -154,25 +155,25 @@ export class TelemetryModalElement extends LitElement {
                     </div>
                     <div class="modal-body">
                         ${this.loading ? html`
-                            <div class="loading-message">Loading telemetry data...</div>
+                            <div class="loading-message">${msg('Loading telemetry data...')}</div>
                         ` : html`
                             ${this.error ? html`
                                 <div class="alert alert-error">${this.error}</div>
                             ` : html`
                                 <div class="telemetry-metrics" style="display: flex; align-items: baseline; gap: 2rem; margin-bottom: 0.5rem;">
-                                    <div><span style="opacity: 0.8;">Odometer:</span> <strong>${this.odometerDisplay}</strong></div>
-                                    <div><span style="opacity: 0.8;">RPM:</span> <strong>${this.rpmDisplay}</strong></div>
-                                    <div><span style="opacity: 0.8;">Ignition:</span> <strong>${this.ignitionDisplay}</strong></div>
-                                    <div><span style="opacity: 0.8;">Engine Block:</span> <strong>${this.engineBlockDisplay}</strong></div>
+                                    <div><span style="opacity: 0.8;">${msg('Odometer:')}</span> <strong>${this.odometerDisplay}</strong></div>
+                                    <div><span style="opacity: 0.8;">${msg('RPM:')}</span> <strong>${this.rpmDisplay}</strong></div>
+                                    <div><span style="opacity: 0.8;">${msg('Ignition:')}</span> <strong>${this.ignitionDisplay}</strong></div>
+                                    <div><span style="opacity: 0.8;">${msg('Engine Block:')}</span> <strong>${this.engineBlockDisplay}</strong></div>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <input
                                             type="text"
-                                            placeholder="Search IO"
+                                            .placeholder=${msg('Search IO')}
                                             .value=${this.ioSearchValue}
                                             @input=${this.handleIoSearch}
                                             style="width: 100px; padding: 0.25rem 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.875rem;"
                                         >
-                                        <strong>${this.ioSearchResult} (decimal)</strong>
+                                        <strong>${this.ioSearchResult} ${msg('(decimal)')}</strong>
                                     </div>
                                 </div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 8px;">
@@ -180,14 +181,14 @@ export class TelemetryModalElement extends LitElement {
                                     <div class="panel">
                                         <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                                             <div style="font-weight: bold;">
-                                                Telemetry Data
+                                                ${msg('Telemetry Data')}
                                             </div>
                                             ${this.pages.length > 0 ? html`
                                                 <div class="pagination" style="margin:0;">
                                                     <button class="pagination-btn" @click=${this.prevPage} ?disabled=${this.currentIndex <= 0} aria-label="Previous">
                                                         ←
                                                     </button>
-                                                    <span>Record ${this.currentIndex + 1} of ${this.pages.length}</span>
+                                                    <span>${msg(str`Record ${this.currentIndex + 1} of ${this.pages.length}`)}</span>
                                                     <button class="pagination-btn" @click=${this.nextPage} ?disabled=${this.currentIndex >= this.pages.length - 1} aria-label="Next">
                                                         →
                                                     </button>
@@ -200,15 +201,15 @@ export class TelemetryModalElement extends LitElement {
                                                     <div class="tile-label" style="margin-bottom:6px;">${this.currentTitle}</div>
                                                 </div>
                                                 <div>
-                                                    <div class="tile-label" style="margin-bottom:6px;">Header</div>
+                                                    <div class="tile-label" style="margin-bottom:6px;">${msg('Header')}</div>
                                                     <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.pages[this.currentIndex].header)}</pre>
                                                 </div>
                                                 <div>
-                                                    <div class="tile-label" style="margin-bottom:6px;">IO Elements</div>
+                                                    <div class="tile-label" style="margin-bottom:6px;">${msg('IO Elements')}</div>
                                                     <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.pages[this.currentIndex].io_elements)}</pre>
                                                 </div>
                                             ` : html`
-                                                <div class="no-data">No telemetry data available</div>
+                                                <div class="no-data">${msg('No telemetry data available')}</div>
                                             `}
                                         </div>
                                     </div>
@@ -217,14 +218,14 @@ export class TelemetryModalElement extends LitElement {
                                     <div class="panel">
                                         <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                                             <div style="font-weight: bold;">
-                                                Identification Data
+                                                ${msg('Identification Data')}
                                             </div>
                                             ${this.identityPages.length > 0 ? html`
                                                 <div class="pagination" style="margin:0;">
                                                     <button class="pagination-btn" @click=${this.prevIdentityPage} ?disabled=${this.currentIdentityIndex <= 0} aria-label="Previous">
                                                         ←
                                                     </button>
-                                                    <span>Record ${this.currentIdentityIndex + 1} of ${this.identityPages.length}</span>
+                                                    <span>${msg(str`Record ${this.currentIdentityIndex + 1} of ${this.identityPages.length}`)}</span>
                                                     <button class="pagination-btn" @click=${this.nextIdentityPage} ?disabled=${this.currentIdentityIndex >= this.identityPages.length - 1} aria-label="Next">
                                                         →
                                                     </button>
@@ -237,11 +238,11 @@ export class TelemetryModalElement extends LitElement {
                                                     <div class="tile-label" style="margin-bottom:6px;">${this.currentIdentityTitle}</div>
                                                 </div>
                                                 <div>
-                                                    <div class="tile-label" style="margin-bottom:6px;">Identity Information</div>
+                                                    <div class="tile-label" style="margin-bottom:6px;">${msg('Identity Information')}</div>
                                                     <pre class="telemetry-blob" style="max-height:50vh; overflow:auto;">${this.formatJsonForDisplay(this.identityPages[this.currentIdentityIndex].data)}</pre>
                                                 </div>
                                             ` : html`
-                                                <div class="no-data">No identity data available</div>
+                                                <div class="no-data">${msg('No identity data available')}</div>
                                             `}
                                         </div>
                                     </div>
@@ -251,7 +252,7 @@ export class TelemetryModalElement extends LitElement {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="action-btn secondary" @click=${this.closeModal}>
-                            Close
+                            ${msg('Close')}
                         </button>
                     </div>
                 </div>
@@ -260,10 +261,10 @@ export class TelemetryModalElement extends LitElement {
             <!-- Remove VIN Confirmation Modal -->
             <confirm-modal-element
               .show=${this.showRemoveVinConfirm}
-              .title=${'Remove VIN'}
-              .message=${`Are you sure you want to remove VIN "${this.vin}" from this device? This action cannot be undone.`}
-              .confirmText=${'Remove'}
-              .cancelText=${'Cancel'}
+              .title=${msg('Remove VIN')}
+              .message=${msg('Are you sure you want to remove VIN from this device? This action cannot be undone.')}
+              .confirmText=${msg('Remove')}
+              .cancelText=${msg('Cancel')}
               .confirmButtonClass=${'btn-danger'}
               @modal-confirm=${this.handleRemoveVinConfirm}
               @modal-cancel=${this.handleRemoveVinCancel}
@@ -300,7 +301,7 @@ export class TelemetryModalElement extends LitElement {
 
     private async resetTelemetry() {
         if (!this.imei) {
-            this.error = "No IMEI provided";
+            this.error = msg("No IMEI provided");
             return;
         }
 
@@ -319,10 +320,10 @@ export class TelemetryModalElement extends LitElement {
                 this.currentIndex = 0;
                 console.log("Telemetry data reset successfully");
             } else {
-                this.error = response.error || "Failed to reset telemetry data";
+                this.error = response.error || msg("Failed to reset telemetry data");
             }
         } catch (err) {
-            this.error = "Failed to reset telemetry data";
+            this.error = msg("Failed to reset telemetry data");
             console.error("Error resetting telemetry data:", err);
         } finally {
             this.resetting = false;
@@ -344,7 +345,7 @@ export class TelemetryModalElement extends LitElement {
 
     private async deletePendingVehicle() {
         if (!this.imei) {
-            this.error = "No IMEI provided";
+            this.error = msg("No IMEI provided");
             return;
         }
 
@@ -358,10 +359,10 @@ export class TelemetryModalElement extends LitElement {
                 // Close the modal after successful deletion
                 this.closeModal();
             } else {
-                this.error = response.error || "Failed to delete pending vehicle";
+                this.error = response.error || msg("Failed to delete pending vehicle");
             }
         } catch (err) {
-            this.error = "Failed to delete pending vehicle";
+            this.error = msg("Failed to delete pending vehicle");
             console.error("Error deleting pending vehicle:", err);
         } finally {
             this.removingVin = false;
@@ -370,7 +371,7 @@ export class TelemetryModalElement extends LitElement {
 
     private async sendImmobilizerCommand(state: 'on' | 'off') {
         if (!this.imei) {
-            this.immobilizerError = "No IMEI provided";
+            this.immobilizerError = msg("No IMEI provided");
             return;
         }
 
@@ -409,7 +410,7 @@ export class TelemetryModalElement extends LitElement {
     // Method to load telemetry data (to be called from parent)
     public async loadTelemetryData() {
         if (!this.imei) {
-            this.error = "No IMEI provided";
+            this.error = msg("No IMEI provided");
             return;
         }
 
@@ -448,10 +449,10 @@ export class TelemetryModalElement extends LitElement {
 
             // Only set error if both failed
             if (!telemetryResponse.success && !identityResponse.success) {
-                this.error = "Failed to load telemetry and identity data";
+                this.error = msg("Failed to load telemetry and identity data");
             }
         } catch (err) {
-            this.error = "Failed to load telemetry data";
+            this.error = msg("Failed to load telemetry data");
             console.error("Error loading telemetry data:", err);
         } finally {
             this.loading = false;
@@ -522,21 +523,21 @@ export class TelemetryModalElement extends LitElement {
 
     private get currentTitle(): string {
         const page = this.pages[this.currentIndex];
-        if (!page) return 'Telemetry Record';
+        if (!page) return msg('Telemetry Record');
         // Try to extract header.timestamp
         const header: any = page.header as any;
         const ts = header?.timestamp ?? header?.time ?? null;
-        if (ts == null) return 'Telemetry Record';
+        if (ts == null) return msg('Telemetry Record');
         return `Timestamp: ${this.formatTimestamp(ts)}`;
     }
 
     private get currentIdentityTitle(): string {
         const page = this.identityPages[this.currentIdentityIndex];
-        if (!page) return 'Identity Record';
+        if (!page) return msg('Identity Record');
         if (page.receivedAt) {
             return `Received At: ${new Date(page.receivedAt).toLocaleString()}`;
         }
-        return 'Identity Record';
+        return msg('Identity Record');
     }
 
     private formatTimestamp(ts: any): string {
@@ -707,7 +708,7 @@ export class TelemetryModalElement extends LitElement {
 
         const ioId = parseInt(value, 10);
         if (isNaN(ioId)) {
-            this.ioSearchResult = "Invalid ID";
+            this.ioSearchResult = msg("Invalid ID");
             return;
         }
 
@@ -720,6 +721,6 @@ export class TelemetryModalElement extends LitElement {
             }
         }
 
-        this.ioSearchResult = "Not found";
+        this.ioSearchResult = msg("Not found");
     }
 }

@@ -7,12 +7,15 @@
     "dev": "tsc && vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint src --fix"
+    "lint": "eslint src --fix",
+    "localize:extract": "lit-localize extract",
+    "localize:build": "lit-localize build"
   },
   "dependencies": {
     "@dimo-network/transactions": "^0.1.79",
     "@lit-labs/router": "^0.1.4",
     "@lit/context": "^1.1.5",
+    "@lit/localize": "^0.12.2",
     "@turnkey/crypto": "^2.8.4",
     "@turnkey/encoding": "^0.6.0",
     "@turnkey/http": "^3.15.0",
@@ -30,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@lit/localize-tools": "^0.8.1",
     "@types/leaflet": "^1.9.21",
     "@types/lodash": "^4.17.16",
     "@types/qs": "^6.9.18",

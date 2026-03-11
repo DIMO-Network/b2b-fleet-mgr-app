@@ -1,4 +1,5 @@
 import {LitElement} from 'lit';
+import {msg} from '@lit/localize';
 import { property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import {SigningService} from "@services/signing-service.ts";
@@ -269,19 +270,19 @@ export class BaseOnboardingElement extends LitElement {
         }
 
         if (!allVinsValid) {
-            this.displayFailure("Some of the VINs are not valid");
+            this.displayFailure(msg("Some of the VINs are not valid"));
             return false;
         }
 
         const [verified, verifyError] = await this.verifyVehicles(vehicles);
         if (!verified) {
-            this.displayFailure(this.withApiError("Failed to verify at least one VIN", verifyError));
+            this.displayFailure(this.withApiError(msg("Failed to verify at least one VIN"), verifyError));
             return false;
         }
 
         const [mintData, mintDataError] = await this.getMintingData(vehicles);
         if (mintData.length === 0) {
-            this.displayFailure(this.withApiError("Failed to fetch minting data", mintDataError));
+            this.displayFailure(this.withApiError(msg("Failed to fetch minting data"), mintDataError));
             return false;
         }
 
@@ -289,7 +290,7 @@ export class BaseOnboardingElement extends LitElement {
         const [minted, mintError] = await this.submitMintingData(signedMintData, sacd);
 
         if (!minted) {
-            this.displayFailure(this.withApiError("Failed to onboard at least one VIN", mintError));
+            this.displayFailure(this.withApiError(msg("Failed to onboard at least one VIN"), mintError));
             return false;
         }
 
@@ -387,7 +388,7 @@ export class BaseOnboardingElement extends LitElement {
 
     // transferVehicle coordinates all of the necessary calls to get the data to sign, signing it and submitting the trx to transfer a vehicle
     async transferVehicle(imei: string, targetWallet: string) : Promise<Result<void, string>> {
-        this.dispatchStatusUpdate("Fetching transfer data...");
+        this.dispatchStatusUpdate(msg("Fetching transfer data..."));
         const transferData = await this.getTransferData(imei, targetWallet);
         if (!transferData.success) {
             return {
@@ -396,7 +397,7 @@ export class BaseOnboardingElement extends LitElement {
             };
         }
 
-        this.dispatchStatusUpdate("Signing transfer data...");
+        this.dispatchStatusUpdate(msg("Signing transfer data..."));
         const signedDisconnectData = await this.signTransferData(transferData.data);
         if (!signedDisconnectData.success) {
             return {
@@ -405,7 +406,7 @@ export class BaseOnboardingElement extends LitElement {
             };
         }
 
-        this.dispatchStatusUpdate("Submitting transfer to blockchain...");
+        this.dispatchStatusUpdate(msg("Submitting transfer to blockchain..."));
         const submitResponse = await this.submitTransferData(signedDisconnectData.data);
         if (!submitResponse.success) {
             return {
@@ -414,7 +415,7 @@ export class BaseOnboardingElement extends LitElement {
             };
         }
 
-        this.dispatchStatusUpdate("Transfer completed successfully");
+        this.dispatchStatusUpdate(msg("Transfer completed successfully"));
         return {
             success: true,
             data: undefined

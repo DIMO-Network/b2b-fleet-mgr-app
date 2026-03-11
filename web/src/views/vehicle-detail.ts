@@ -1,4 +1,5 @@
 import {css, html, LitElement} from 'lit';
+import {msg} from '@lit/localize';
 import {customElement, property, state} from 'lit/decorators.js';
 import {globalStyles} from "../global-styles.ts";
 import {consume} from '@lit/context';
@@ -269,7 +270,7 @@ export class VehicleDetailView extends LitElement {
     const [vehicle, vehicleError] = await this.loadVehicle(this.tokenID);
     if (!vehicle) {
       this.vehicle = null;
-      this.errorMessage = vehicleError || 'Failed to load vehicle data';
+      this.errorMessage = vehicleError || msg('Failed to load vehicle data');
       return [null, this.errorMessage];
     }
 
@@ -305,7 +306,7 @@ export class VehicleDetailView extends LitElement {
       );
 
       if (!vehicleResponse.success || !vehicleResponse.data) {
-        return [null, vehicleResponse.error || 'Failed to load vehicle data'];
+        return [null, vehicleResponse.error || msg('Failed to load vehicle data')];
       }
 
       return [vehicleResponse.data, null];
@@ -329,7 +330,7 @@ export class VehicleDetailView extends LitElement {
       );
 
       if (!response.success || !response.data) {
-        return [null, response.error || 'Failed to load telemetry'];
+        return [null, response.error || msg('Failed to load telemetry')];
       }
 
       return [response.data, null];
@@ -344,7 +345,7 @@ export class VehicleDetailView extends LitElement {
       const identityService = IdentityService.getInstance();
       const identityData = await identityService.getVehicleIdentity(tokenId);
       if (!identityData) {
-        return [null, 'Failed to load vehicle identity'];
+        return [null, msg('Failed to load vehicle identity')];
       }
       return [identityData, null];
     } catch (error: any) {
@@ -359,7 +360,7 @@ export class VehicleDetailView extends LitElement {
       const to = dayjs().subtract(i * 7, 'day');
       const from = to.subtract(7, 'day');
       const label = i === 0
-        ? 'This week'
+        ? msg('This week')
         : `${from.format('MMM D')} – ${to.format('MMM D')}`;
       intervals.push({ label, from: from.toISOString(), to: to.toISOString() });
     }
@@ -394,7 +395,7 @@ export class VehicleDetailView extends LitElement {
           new Date(b.start.timestamp).getTime() - new Date(a.start.timestamp).getTime()
         );
       } else {
-        this.errorMessage = this.appendError(this.errorMessage, response.error || 'Failed to load trips');
+        this.errorMessage = this.appendError(this.errorMessage, response.error || msg('Failed to load trips'));
       }
     } catch (error: any) {
       console.error('Error loading trips:', error);
@@ -443,7 +444,7 @@ export class VehicleDetailView extends LitElement {
       <div class="page active" id="page-vehicle-detail">
         ${this.errorMessage ? html`<div class="alert alert-error">${this.errorMessage}</div>` : ''}
         <div class="toolbar mb-16">
-          <button class="btn" @click=${this.goBack}>← BACK TO VEHICLES</button>
+          <button class="btn" @click=${this.goBack}>${msg('← BACK TO VEHICLES')}</button>
         </div>
 
         <!-- Header Block -->
@@ -453,22 +454,22 @@ export class VehicleDetailView extends LitElement {
               <div>
                 <h2 style="font-size: 18px; margin-bottom: 8px;" id="detail-vehicle-name">${this.vehicle?.make} ${this.vehicle?.model} ${this.vehicle?.year}</h2>
                 <div style="margin-bottom: 8px;">
-                  <span style="color: #666;">VIN:</span> ${this.vehicle?.vin}
-                  <span style="color: #666; margin-left: 16px;">Minted At:</span> ${this.formatMintedAt(this.vehicleIdentity?.vehicle?.mintedAt)}
+                  <span style="color: #666;">${msg('VIN:')}</span> ${this.vehicle?.vin}
+                  <span style="color: #666; margin-left: 16px;">${msg('Minted At:')}</span> ${this.formatMintedAt(this.vehicleIdentity?.vehicle?.mintedAt)}
                 </div>
                 <div>
-                  <span class="status status-connected">Connected</span>
+                  <span class="status status-connected">${msg('Connected')}</span>
                   <span class="status status-${(this.vehicle?.inventory || 'Inventory').toLowerCase()}"
                         style="cursor: pointer;"
                         @click=${this.openInventoryModal}
-                        title="Click to update inventory status">${this.vehicle?.inventory || 'Inventory'}</span>
+                        title="${msg('Click to update inventory status')}">${this.vehicle?.inventory || msg('Inventory')}</span>
                   ${this.vehicle?.groups?.map(group => html`<span class="badge" style="background-color: ${group.color}; color: #fff;">${group.name}</span>`)}
                 </div>
               </div>
               <div style="text-align: right;">
-                <div style="color: #666; font-size: 10px;">LAST TELEMETRY</div>
-                <div>${this.lastTelemetry ? this.formatLastTelemetry(this.lastTelemetry.signalsLatest.currentLocationCoordinates.timestamp) : 'Loading...'}</div>
-                <div style="color: #666; font-size: 10px; margin-top: 12px;">HARDWARE</div>
+                <div style="color: #666; font-size: 10px;">${msg('LAST TELEMETRY')}</div>
+                <div>${this.lastTelemetry ? this.formatLastTelemetry(this.lastTelemetry.signalsLatest.currentLocationCoordinates.timestamp) : msg('Loading...')}</div>
+                <div style="color: #666; font-size: 10px; margin-top: 12px;">${msg('HARDWARE')}</div>
                 <div>${this.renderHardwareDetails()}</div>
               </div>
             </div>
@@ -477,24 +478,24 @@ export class VehicleDetailView extends LitElement {
 
         <!-- User Information Panel -->
         <div class="panel mb-16" id="vehicle-user-panel">
-          <div class="panel-header">Owner Information</div>
+          <div class="panel-header">${msg('Owner Information')}</div>
           <div class="panel-body">
             ${this.ownerInfo ? html`
               <div id="vehicle-user-info">
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
                   <div>
                     <div class="detail-row">
-                      <span class="detail-label">Owner Email</span>
-                      <span class="detail-value">${this.ownerInfo.email || 'Not available'}</span>
+                      <span class="detail-label">${msg('Owner Email')}</span>
+                      <span class="detail-value">${this.ownerInfo.email || msg('Not available')}</span>
                     </div>
                     <div class="detail-row">
-                      <span class="detail-label">Phone</span>
-                      <span class="detail-value">Not available</span>
+                      <span class="detail-label">${msg('Phone')}</span>
+                      <span class="detail-value">${msg('Not available')}</span>
                     </div>
                   </div>
                   <div>
                     <div class="detail-row">
-                      <span class="detail-label">Wallet</span>
+                      <span class="detail-label">${msg('Wallet')}</span>
                       <click-to-copy-element .valueToCopy="${this.ownerWalletAddress || ''}">
                         <span 
                           class="detail-value clickable" 
@@ -505,19 +506,19 @@ export class VehicleDetailView extends LitElement {
                       </click-to-copy-element>
                     </div>
                     <div class="detail-row">
-                      <span class="detail-label">User Created</span>
-                      <span class="detail-value">${this.ownerInfo.authenticators?.[0]?.creationDate ? this.formatCreatedDate(this.ownerInfo.authenticators[0].creationDate) : 'Not available'}</span>
+                      <span class="detail-label">${msg('User Created')}</span>
+                      <span class="detail-value">${this.ownerInfo.authenticators?.[0]?.creationDate ? this.formatCreatedDate(this.ownerInfo.authenticators[0].creationDate) : msg('Not available')}</span>
                     </div>
                   </div>
                   <div style="text-align: right;">
-                    <button class="btn btn-sm" @click=${this.viewUserProfile} ?disabled=${this.ownerInfo.walletAddress}>VIEW USER PROFILE →</button>
+                    <button class="btn btn-sm" @click=${this.viewUserProfile} ?disabled=${this.ownerInfo.walletAddress}>${msg('VIEW USER PROFILE →')}</button>
                   </div>
                 </div>
               </div>
             ` : html`
               <!-- Inventory vehicle state (no owner) -->
               <div id="vehicle-no-user" style="color: #666;">
-                ${this.vehicle?.inventory === 'Inventory' ? 'No user assigned — vehicle is in inventory.' : 'Loading owner information...'}
+                ${this.vehicle?.inventory === 'Inventory' ? msg('No user assigned — vehicle is in inventory.') : msg('Loading owner information...')}
               </div>
             `}
           </div>
@@ -528,7 +529,7 @@ export class VehicleDetailView extends LitElement {
           <div>
             <!-- Location -->
             <div class="panel mb-16">
-              <div class="panel-header">Location</div>
+              <div class="panel-header">${msg('Location')}</div>
               <div class="panel-body">
                 <fleet-map class="map-placeholder"
                     .lat="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.latitude ?? 0.0}"
@@ -537,19 +538,19 @@ export class VehicleDetailView extends LitElement {
                 </fleet-map>
                 <div class="mt-16">
                   <div class="detail-row">
-                    <span class="detail-label">Latitude</span>
+                    <span class="detail-label">${msg('Latitude')}</span>
                     <span class="detail-value">${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.latitude ?? 0.0}</span>
                   </div>
                   <div class="detail-row">
-                    <span class="detail-label">Longitude</span>
+                    <span class="detail-label">${msg('Longitude')}</span>
                     <span class="detail-value">${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.longitude ?? 0.0}</span>
                   </div>
                   <div class="detail-row">
-                    <span class="detail-label">Address</span>
-                    <span class="detail-value">${this.currentAddress || 'Click on map pointer to get address'}</span>
+                    <span class="detail-label">${msg('Address')}</span>
+                    <span class="detail-value">${this.currentAddress || msg('Click on map pointer to get address')}</span>
                   </div>
                   <div class="detail-row">
-                    <span class="detail-label">Last Location Update</span>
+                    <span class="detail-label">${msg('Last Location Update')}</span>
                     <span class="detail-value">${this.formatLastTelemetry(this.lastTelemetry?.signalsLatest.currentLocationCoordinates?.timestamp)}</span>
                   </div>
                 </div>
@@ -559,28 +560,28 @@ export class VehicleDetailView extends LitElement {
             ${this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked?.value != null ? html`
               <!-- Vehicle Controls -->
               <div class="panel">
-                <div class="panel-header">Vehicle Controls</div>
+                <div class="panel-header">${msg('Vehicle Controls')}</div>
                 <div class="panel-body">
                   <div class="controls-section">
                     <div class="control-status">
-                      <div style="font-size: 10px; color: #666; margin-bottom: 4px;">ENGINE STATUS</div>
+                      <div style="font-size: 10px; color: #666; margin-bottom: 4px;">${msg('ENGINE STATUS')}</div>
                       <div><span class="status ${(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.value ? 'status-blocked' : 'status-unblocked')}">
-                        ${(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.value ? 'BLOCKED' : 'UNBLOCKED')}</span></div>
-                      <div style="font-size: 10px; color: #666; margin-top: 8px;">Last update: ${this.formatLastTelemetry(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.timestamp) ?? 'N/A'}</div>
+                        ${(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.value ? msg('BLOCKED') : msg('UNBLOCKED'))}</span></div>
+                      <div style="font-size: 10px; color: #666; margin-top: 8px;">${msg('Last update:')} ${this.formatLastTelemetry(this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked.timestamp) ?? 'N/A'}</div>
                     </div>
                     <div class="control-buttons">
                       <button class="btn btn-danger" 
                               ?disabled=${this.immobilizerLoading || !!this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked?.value}
                               @click=${this.immobilizerOn}>
                         ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
-                        IMMOBILIZER ON
+                        ${msg('IMMOBILIZER ON')}
                       </button>
-                      <button class="btn" 
+                      <button class="btn"
                               style="background-color: #16a34a; color: white;"
                               ?disabled=${this.immobilizerLoading || !this.lastTelemetry?.signalsLatest?.obdIsEngineBlocked?.value}
                               @click=${this.immobilizerOff}>
                         ${this.immobilizerLoading ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
-                        IMMOBILIZER OFF
+                        ${msg('IMMOBILIZER OFF')}
                       </button>
                     </div>
                     ${this.immobilizerError ? html`
@@ -596,38 +597,38 @@ export class VehicleDetailView extends LitElement {
           <div>
             <!-- CAN / Telemetry -->
             <div class="panel mb-16">
-              <div class="panel-header">CAN / Telemetry Snapshot</div>
+              <div class="panel-header">${msg('CAN / Telemetry Snapshot')}</div>
               <div class="panel-body">
                 <div class="detail-row">
-                  <span class="detail-label">Ignition</span>
+                  <span class="detail-label">${msg('Ignition')}</span>
                   <span class="detail-value" style="color: ${this.lastTelemetry?.signalsLatest.isIgnitionOn != null ? (this.lastTelemetry.signalsLatest.isIgnitionOn.value ? 'green' : 'red') : '#666'};">${this.lastTelemetry?.signalsLatest.isIgnitionOn?.value != null ? (this.lastTelemetry.signalsLatest.isIgnitionOn.value ? 'ON' : 'OFF') : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Speed</span>
+                  <span class="detail-label">${msg('Speed')}</span>
                   <span class="detail-value">${this.lastTelemetry?.signalsLatest.speed != null ? `${this.lastTelemetry.signalsLatest.speed.value} km/h` : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Fuel Level</span>
+                  <span class="detail-label">${msg('Fuel Level')}</span>
                   <span class="detail-value">${this.lastTelemetry?.signalsLatest.powertrainFuelSystemRelativeLevel != null ? `${Math.round(this.lastTelemetry.signalsLatest.powertrainFuelSystemRelativeLevel.value)}%` : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Odometer</span>
+                  <span class="detail-label">${msg('Odometer')}</span>
                   <span class="detail-value">${this.lastTelemetry?.signalsLatest.powertrainTransmissionTravelledDistance != null ? `${this.lastTelemetry.signalsLatest.powertrainTransmissionTravelledDistance.value.toLocaleString()} km` : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">RPM</span>
+                  <span class="detail-label">${msg('RPM')}</span>
                   <span class="detail-value">${this.lastTelemetry?.signalsLatest.powertrainCombustionEngineSpeed != null ? this.lastTelemetry.signalsLatest.powertrainCombustionEngineSpeed.value : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Battery Voltage</span>
+                  <span class="detail-label">${msg('Battery Voltage')}</span>
                   <span class="detail-value">${this.lastTelemetry?.signalsLatest.lowVoltageBatteryCurrentVoltage != null ? `${this.lastTelemetry.signalsLatest.lowVoltageBatteryCurrentVoltage.value.toFixed(1)}V` : 'N/A'}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Active DTCs</span>
+                  <span class="detail-label">${msg('Active DTCs')}</span>
                   <span class="detail-value">${this.formatObdDtcList(this.lastTelemetry?.signalsLatest.obdDTCList?.value)}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Last CAN Update</span>
+                  <span class="detail-label">${msg('Last CAN Update')}</span>
                   <span class="detail-value">${this.formatLastTelemetry(this.lastTelemetry?.signalsLatest.powertrainTransmissionTravelledDistance?.timestamp)}</span>
                 </div>
               </div>
@@ -635,20 +636,20 @@ export class VehicleDetailView extends LitElement {
 
             <!-- Recent Activity -->
             <div class="panel">
-              <div class="panel-header">Recent Activity</div>
+              <div class="panel-header">${msg('Recent Activity')}</div>
               <div class="inner-tabs" style="margin: 0; border-bottom: 1px solid #ddd;">
                 <div
                   class="inner-tab ${this.activeActivityTab === 'trips' ? 'active' : ''}"
                   @click=${() => this.activeActivityTab = 'trips'}
-                >Trips</div>
+                >${msg('Trips')}</div>
                 <div
                   class="inner-tab ${this.activeActivityTab === 'commands' ? 'active' : ''}"
                   @click=${() => this.activeActivityTab = 'commands'}
-                >Commands</div>
+                >${msg('Commands')}</div>
                 <div
                   class="inner-tab ${this.activeActivityTab === 'inventory' ? 'active' : ''}"
                   @click=${() => this.activeActivityTab = 'inventory'}
-                >Inventory</div>
+                >${msg('Inventory')}</div>
               </div>
 
               <!-- Trips Tab -->
@@ -667,10 +668,10 @@ export class VehicleDetailView extends LitElement {
                 <table>
                   <thead>
                   <tr>
-                    <th>Start</th>
-                    <th>End</th>
-                    <th>Distance</th>
-                    <th>Avg/Max Speed</th>
+                    <th>${msg('Start')}</th>
+                    <th>${msg('End')}</th>
+                    <th>${msg('Distance')}</th>
+                    <th>${msg('Avg/Max Speed')}</th>
                   </tr>
                   </thead>
                   <tbody>
@@ -681,14 +682,14 @@ export class VehicleDetailView extends LitElement {
                     return html`
                       <tr>
                         <td>${this.formatTripTime(trip.start.timestamp)}</td>
-                        <td>${trip.isOngoing ? 'Ongoing' : this.formatTripTime(trip.end.timestamp)}</td>
+                        <td>${trip.isOngoing ? msg('Ongoing') : this.formatTripTime(trip.end.timestamp)}</td>
                         <td>${distance.toFixed(1)} km</td>
                         <td>${avgSpeed != null ? Math.round(avgSpeed) : 'N/A'} / ${maxSpeed != null ? Math.round(maxSpeed) : 'N/A'} km/h</td>
                       </tr>
                     `;
                   }) : html`
                     <tr>
-                      <td colspan="4" style="text-align: center; color: #666; padding: 2rem;">No trip history available</td>
+                      <td colspan="4" style="text-align: center; color: #666; padding: 2rem;">${msg('No trip history available')}</td>
                     </tr>
                   `}
                   </tbody>
@@ -700,10 +701,10 @@ export class VehicleDetailView extends LitElement {
                 <table>
                   <thead>
                   <tr>
-                    <th>Command</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th>Command ID</th>
+                    <th>${msg('Command')}</th>
+                    <th>${msg('Status')}</th>
+                    <th>${msg('Created')}</th>
+                    <th>${msg('Command ID')}</th>
                   </tr>
                   </thead>
                   <tbody>
@@ -716,7 +717,7 @@ export class VehicleDetailView extends LitElement {
                     </tr>
                   `) : html`
                     <tr>
-                      <td colspan="4" style="text-align: center; color: #666; padding: 2rem;">No command history available</td>
+                      <td colspan="4" style="text-align: center; color: #666; padding: 2rem;">${msg('No command history available')}</td>
                     </tr>
                   `}
                   </tbody>
@@ -728,9 +729,9 @@ export class VehicleDetailView extends LitElement {
                 <table>
                   <thead>
                   <tr>
-                    <th>State</th>
-                    <th>Note</th>
-                    <th>Created</th>
+                    <th>${msg('State')}</th>
+                    <th>${msg('Note')}</th>
+                    <th>${msg('Created')}</th>
                   </tr>
                   </thead>
                   <tbody>
@@ -742,7 +743,7 @@ export class VehicleDetailView extends LitElement {
                     </tr>
                   `) : html`
                     <tr>
-                      <td colspan="3" style="text-align: center; color: #666; padding: 2rem;">No inventory history available</td>
+                      <td colspan="3" style="text-align: center; color: #666; padding: 2rem;">${msg('No inventory history available')}</td>
                     </tr>
                   `}
                   </tbody>
@@ -754,16 +755,16 @@ export class VehicleDetailView extends LitElement {
 
         <!-- Vehicle Sharing -->
         <div class="panel">
-          <div class="panel-header">Vehicle Sharing</div>
+          <div class="panel-header">${msg('Vehicle Sharing')}</div>
           <div class="panel-body" style="padding: 0;">
             <table>
               <thead>
               <tr>
-                <th>Grantee</th>
-                <th>Permissions</th>
-                <th>Source</th>
-                <th>Created At</th>
-                <th>Expires At</th>
+                <th>${msg('Grantee')}</th>
+                <th>${msg('Permissions')}</th>
+                <th>${msg('Source')}</th>
+                <th>${msg('Created At')}</th>
+                <th>${msg('Expires At')}</th>
               </tr>
               </thead>
               <tbody>
@@ -777,7 +778,7 @@ export class VehicleDetailView extends LitElement {
                 </tr>
               `) : html`
                 <tr>
-                  <td colspan="5" style="text-align: center; color: #666; padding: 2rem;">No sharing information available</td>
+                  <td colspan="5" style="text-align: center; color: #666; padding: 2rem;">${msg('No sharing information available')}</td>
                 </tr>
               `}
               </tbody>
@@ -835,7 +836,7 @@ export class VehicleDetailView extends LitElement {
 
   private async sendImmobilizerCommand(state: 'on' | 'off') {
     if (!this.vehicle?.imei || !this.apiService) {
-      this.immobilizerError = "No IMEI or API service provided";
+      this.immobilizerError = msg("No IMEI or API service provided");
       return;
     }
 

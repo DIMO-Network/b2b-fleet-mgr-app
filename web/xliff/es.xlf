@@ -1,0 +1,2023 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+<file target-language="es" source-language="en" original="lit-localize-inputs" datatype="plaintext">
+<body>
+<trans-unit id="s097b8b53f3d7f13e">
+  <source>Add New Tenant</source>
+  <target>Agregar Nuevo Inquilino</target>
+</trans-unit>
+<trans-unit id="sef49aec68fd1dc66">
+  <source>Name</source>
+  <target>Nombre</target>
+</trans-unit>
+<trans-unit id="s64f1b498f33d3ec6">
+  <source>Enter tenant name</source>
+  <target>Ingrese el nombre del inquilino</target>
+</trans-unit>
+<trans-unit id="s8fabab3bc3958515">
+  <source>give your tenant a name that makes sense to you eg. your business name</source>
+  <target>asigne a su inquilino un nombre que tenga sentido para usted, ej. el nombre de su empresa</target>
+</trans-unit>
+<trans-unit id="s8de10c3a43129c02">
+  <source>Dimo Client Id</source>
+  <target>DIMO Client Id</target>
+</trans-unit>
+<trans-unit id="s6eef3a2dd9e99210">
+  <source>Enter DIMO Client ID</source>
+  <target>Ingrese el DIMO Client ID</target>
+</trans-unit>
+<trans-unit id="s77b9cdebbca53dbe">
+  <source>Dimo Secret</source>
+  <target>DIMO Secret</target>
+</trans-unit>
+<trans-unit id="se561f4a91de13844">
+  <source>Enter DIMO Secret</source>
+  <target>Ingrese el DIMO Secret</target>
+</trans-unit>
+<trans-unit id="se3708fc8648a5ddd">
+  <source>user must have or create a new dimo developer account at the dimo console</source>
+  <target>el usuario debe tener o crear una nueva cuenta de desarrollador DIMO en la consola de DIMO</target>
+</trans-unit>
+<trans-unit id="s16a24e14fe11d2fa">
+  <source>Adding...</source>
+  <target>Agregando...</target>
+</trans-unit>
+<trans-unit id="s7cf0cf5ccfcab24e">
+  <source>Failed to add tenant</source>
+  <target>Error al agregar inquilino</target>
+</trans-unit>
+<trans-unit id="sdabfef8968aeb5fa">
+  <source>An unexpected error occurred</source>
+  <target>Ocurrió un error inesperado</target>
+</trans-unit>
+<trans-unit id="s8f6cf89b3e3324b0">
+  <source>email was not set, please make sure you allow sharing email on Login</source>
+  <target>el correo electrónico no fue configurado, asegúrese de permitir compartir el correo al iniciar sesión</target>
+</trans-unit>
+<trans-unit id="s43b9a3f5b0edba4a">
+  <source>Developer Sharing &amp; OTP</source>
+  <target>Compartir con Desarrollador &amp; OTP</target>
+</trans-unit>
+<trans-unit id="s71176fa2fc28ff49">
+  <source>Share vehicles with Developer</source>
+  <target>Compartir vehículos con Desarrollador</target>
+</trans-unit>
+<trans-unit id="s8220fdd710c1b28c">
+  <source>Select Developer Grantees</source>
+  <target>Seleccionar Beneficiarios del Desarrollador</target>
+</trans-unit>
+<trans-unit id="sa72c8baa798e7df9">
+  <source>Use below:</source>
+  <target>Usar a continuación:</target>
+</trans-unit>
+<trans-unit id="s1f2a7c84b9784d52">
+  <source>Developer License 0x Client ID</source>
+  <target>Licencia de Desarrollador 0x Client ID</target>
+</trans-unit>
+<trans-unit id="se8dca0132c66ae03">
+  <source>Permissions</source>
+  <target>Permisos</target>
+</trans-unit>
+<trans-unit id="s6b28de40b64d4995">
+  <source>Use OTP</source>
+  <target>Usar OTP</target>
+</trans-unit>
+<trans-unit id="s5e94738a2eeb8943">
+  <source>Sign In</source>
+  <target>Iniciar Sesión</target>
+</trans-unit>
+<trans-unit id="sed4f34f40f3609a9">
+  <source>Onboard Vehicles</source>
+  <target>Registrar Vehículos</target>
+</trans-unit>
+<trans-unit id="s7f0235d2ac159249">
+  <source>Onboard Result</source>
+  <target>Resultado de Registro</target>
+</trans-unit>
+<trans-unit id="s890e983a7be64da4">
+  <source>Result</source>
+  <target>Resultado</target>
+</trans-unit>
+<trans-unit id="s7bf84419e9ebac2a">
+  <source>VIN</source>
+  <target>VIN</target>
+</trans-unit>
+<trans-unit id="s355b21b89ce5d9c5">
+  <source>Details</source>
+  <target>Detalles</target>
+</trans-unit>
+<trans-unit id="s6a89b6010b80a7b7">
+  <source>No vehicles pending onboard</source>
+  <target>No hay vehículos pendientes de registro</target>
+</trans-unit>
+<trans-unit id="sde4b4a5d868acd46">
+  <source>no vin provided</source>
+  <target>no se proporcionó VIN</target>
+</trans-unit>
+<trans-unit id="s8ae8b89fd5e195c6">
+  <source>failed to onboard vins: </source>
+  <target>error al registrar VINs: </target>
+</trans-unit>
+<trans-unit id="s21d83df228901500">
+  <source>Failed to delete admin user.</source>
+  <target>Error al eliminar usuario administrador.</target>
+</trans-unit>
+<trans-unit id="s62d9da7ce0def73c">
+  <source>An unexpected error occurred.</source>
+  <target>Ocurrió un error inesperado.</target>
+</trans-unit>
+<trans-unit id="s5d8474f515ec77b3">
+  <source>No Tenant Selected</source>
+  <target>Ningún Inquilino Seleccionado</target>
+</trans-unit>
+<trans-unit id="s4bdf85b3b7899924">
+  <source>Admin Users</source>
+  <target>Usuarios Administradores</target>
+</trans-unit>
+<trans-unit id="s843885ab933dbeb4">
+  <source>Search admin users...</source>
+  <target>Buscar usuarios administradores...</target>
+</trans-unit>
+<trans-unit id="s666854dc11c7d9aa">
+  <source>Loading admin users...</source>
+  <target>Cargando usuarios administradores...</target>
+</trans-unit>
+<trans-unit id="s606bd855868f374d">
+  <source>No admin users found.</source>
+  <target>No se encontraron usuarios administradores.</target>
+</trans-unit>
+<trans-unit id="sd1f44f1a8bc20e67">
+  <source>Email</source>
+  <target>Correo electrónico</target>
+</trans-unit>
+<trans-unit id="s162d0ad3cf873da4">
+  <source>Wallet Address</source>
+  <target>Dirección de Wallet</target>
+</trans-unit>
+<trans-unit id="s77fe2a6cc9029fb1">
+  <source>EDIT</source>
+  <target>EDITAR</target>
+</trans-unit>
+<trans-unit id="s5cd15819e278608a">
+  <source>DELETE</source>
+  <target>ELIMINAR</target>
+</trans-unit>
+<trans-unit id="s99767f199881ae10">
+  <source>PREV</source>
+  <target>ANT</target>
+</trans-unit>
+<trans-unit id="s9a432c4a88f578b4">
+  <source>Delete Admin User</source>
+  <target>Eliminar Usuario Administrador</target>
+</trans-unit>
+<trans-unit id="sdd563194e0779b85">
+  <source>Are you sure you want to delete this admin user? This will revoke all their admin permissions and access to this tool.</source>
+  <target>¿Está seguro de que desea eliminar este usuario administrador? Esto revocará todos sus permisos de administrador y acceso a esta herramienta.</target>
+</trans-unit>
+<trans-unit id="sdc673e73b5c13aea">
+  <source>Delete</source>
+  <target>Eliminar</target>
+</trans-unit>
+<trans-unit id="s1df0cb73b3272f74">
+  <source>All Users</source>
+  <target>Todos los Usuarios</target>
+</trans-unit>
+<trans-unit id="s69dc88cf778145a5">
+  <source>Search users...</source>
+  <target>Buscar usuarios...</target>
+</trans-unit>
+<trans-unit id="sb79b345ef0ba51ef">
+  <source>Loading users...</source>
+  <target>Cargando usuarios...</target>
+</trans-unit>
+<trans-unit id="sf91abb3323905dc0">
+  <source>No users found.</source>
+  <target>No se encontraron usuarios.</target>
+</trans-unit>
+<trans-unit id="s1b1521dbc2eeda0c">
+  <source>Wallet</source>
+  <target>Wallet</target>
+</trans-unit>
+<trans-unit id="s2c57913ffd36d298">
+  <source>First Name</source>
+  <target>Nombre</target>
+</trans-unit>
+<trans-unit id="s95a75a2392af5780">
+  <source>Last Name</source>
+  <target>Apellido</target>
+</trans-unit>
+<trans-unit id="s0c7688dc60e18451">
+  <source>Gov ID Number</source>
+  <target>Número de ID Gubernamental</target>
+</trans-unit>
+<trans-unit id="s6abb1cd87fe0114e">
+  <source>Home</source>
+  <target>Inicio</target>
+</trans-unit>
+<trans-unit id="sb7efe2955d7a41f8">
+  <source>Onboarding</source>
+  <target>Registro</target>
+</trans-unit>
+<trans-unit id="sd1fea71e9aa585cc">
+  <source>Vehicle Detail</source>
+  <target>Detalle del Vehículo</target>
+</trans-unit>
+<trans-unit id="s19f581401e6efd5f">
+  <source>Vehicles &amp; Fleets</source>
+  <target>Vehículos &amp; Flotas</target>
+</trans-unit>
+<trans-unit id="s884bcdca26998a48">
+  <source>Reports</source>
+  <target>Reportes</target>
+</trans-unit>
+<trans-unit id="s53ad3455d9523b54">
+  <source>Create User</source>
+  <target>Crear Usuario</target>
+</trans-unit>
+<trans-unit id="s5cd31f4a88adf180">
+  <source>Edit User</source>
+  <target>Editar Usuario</target>
+</trans-unit>
+<trans-unit id="s691d6163aaabb69b">
+  <source>User Profile</source>
+  <target>Perfil de Usuario</target>
+</trans-unit>
+<trans-unit id="s586d6bd2eca2da93">
+  <source>Users</source>
+  <target>Usuarios</target>
+</trans-unit>
+<trans-unit id="s11e377e27c486cf2">
+  <source>Tenant Settings</source>
+  <target>Configuración del Inquilino</target>
+</trans-unit>
+<trans-unit id="s2b2bb4b6d7521f6a">
+  <source>You don't have access</source>
+  <target>No tiene acceso</target>
+</trans-unit>
+<trans-unit id="s9d8b8aa2b404c2c8">
+  <source>Settings</source>
+  <target>Configuración</target>
+</trans-unit>
+<trans-unit id="s8bcbeee82b54e3ab">
+  <source>Switch Tenant</source>
+  <target>Cambiar Inquilino</target>
+</trans-unit>
+<trans-unit id="s8f4438c4d8f826cb">
+  <source>LOGOUT</source>
+  <target>CERRAR SESIÓN</target>
+</trans-unit>
+<trans-unit id="se72ac00e0a7304ba">
+  <source>Access Denied</source>
+  <target>Acceso Denegado</target>
+</trans-unit>
+<trans-unit id="sec686d49d3917cca">
+  <source>You do not have access to the selected oracle. Please pick a different Oracle.</source>
+  <target>No tiene acceso al oracle seleccionado. Por favor seleccione un Oracle diferente.</target>
+</trans-unit>
+<trans-unit id="s6811b9e936c485bf">
+  <source>Update Available</source>
+  <target>Actualización Disponible</target>
+</trans-unit>
+<trans-unit id="s85bb874ec55db41c">
+  <source>A new version of the application is available. Would you like to refresh to get the latest updates?</source>
+  <target>Una nueva versión de la aplicación está disponible. ¿Desea actualizar para obtener las últimas actualizaciones?</target>
+</trans-unit>
+<trans-unit id="s7b7163270e57e8b4">
+  <source>Refresh</source>
+  <target>Actualizar</target>
+</trans-unit>
+<trans-unit id="s895e99844ca92670">
+  <source>Some of the VINs are not valid</source>
+  <target>Algunos de los VINs no son válidos</target>
+</trans-unit>
+<trans-unit id="s67236903271479c3">
+  <source>Failed to verify at least one VIN</source>
+  <target>Error al verificar al menos un VIN</target>
+</trans-unit>
+<trans-unit id="s7889df92d8adce7f">
+  <source>Failed to fetch minting data</source>
+  <target>Error al obtener datos de acuñación</target>
+</trans-unit>
+<trans-unit id="s484c770275ea96db">
+  <source>Failed to onboard at least one VIN</source>
+  <target>Error al registrar al menos un VIN</target>
+</trans-unit>
+<trans-unit id="s6feef4a78777c89a">
+  <source>Fetching transfer data...</source>
+  <target>Obteniendo datos de transferencia...</target>
+</trans-unit>
+<trans-unit id="s424a1015eff5ade1">
+  <source>Signing transfer data...</source>
+  <target>Firmando datos de transferencia...</target>
+</trans-unit>
+<trans-unit id="s2be6be4c50aa72ed">
+  <source>Submitting transfer to blockchain...</source>
+  <target>Enviando transferencia a blockchain...</target>
+</trans-unit>
+<trans-unit id="sbe6a8bad5911da04">
+  <source>Transfer completed successfully</source>
+  <target>Transferencia completada exitosamente</target>
+</trans-unit>
+<trans-unit id="s1177b219a5e3c92f">
+  <source>Claim New IMEI</source>
+  <target>Reclamar Nuevo IMEI</target>
+</trans-unit>
+<trans-unit id="sa997d925c694c59d">
+  <source>Please claim your IMEI's every time you purchase or add a new device to your fleet.</source>
+  <target>Por favor reclame sus IMEIs cada vez que compre o agregue un nuevo dispositivo a su flota.</target>
+</trans-unit>
+<trans-unit id="se1568af2f62db3b2">
+  <source>Enter one or more IMEIs (one per line):</source>
+  <target>Ingrese uno o más IMEIs (uno por línea):</target>
+</trans-unit>
+<trans-unit id="s529857138984b12c">
+  <source>Upload CSV</source>
+  <target>Subir CSV</target>
+</trans-unit>
+<trans-unit id="s5837bff27fb01af4">
+  <source>Enter IMEIs here...</source>
+  <target>Ingrese IMEIs aquí...</target>
+</trans-unit>
+<trans-unit id="sd15b4f4616e597ad">
+  <source>Claiming...</source>
+  <target>Reclamando...</target>
+</trans-unit>
+<trans-unit id="sb3d4f79d9d8b71e5">
+  <source>Submit</source>
+  <target>Enviar</target>
+</trans-unit>
+<trans-unit id="s8846d6affb71728f">
+  <source>Failed to read file</source>
+  <target>Error al leer archivo</target>
+</trans-unit>
+<trans-unit id="s4435a4a2458c2e83">
+  <source>The CSV file is empty</source>
+  <target>El archivo CSV está vacío</target>
+</trans-unit>
+<trans-unit id="s781666b2baece061">
+  <source>Could not find 'imei' or 'IMEI' column in CSV and it has multiple columns.</source>
+  <target>No se encontró la columna 'imei' o 'IMEI' en el CSV y tiene múltiples columnas.</target>
+</trans-unit>
+<trans-unit id="s5369c18c779a2c8d">
+  <source>No IMEIs found in the CSV file</source>
+  <target>No se encontraron IMEIs en el archivo CSV</target>
+</trans-unit>
+<trans-unit id="sd717a4f05eaf9b75">
+  <source>Please enter at least one IMEI</source>
+  <target>Por favor ingrese al menos un IMEI</target>
+</trans-unit>
+<trans-unit id="sf86d7772b9da4247">
+  <source>Confirm Action</source>
+  <target>Confirmar Acción</target>
+</trans-unit>
+<trans-unit id="s4bea2bd4fd7c752a">
+  <source>Are you sure you want to proceed?</source>
+  <target>¿Está seguro de que desea continuar?</target>
+</trans-unit>
+<trans-unit id="sb85774dc5d18ff0f">
+  <source>Confirm</source>
+  <target>Confirmar</target>
+</trans-unit>
+<trans-unit id="s84399fda8df166f8">
+  <source>Confirm Vehicle Onboarding</source>
+  <target>Confirmar Registro de Vehículos</target>
+</trans-unit>
+<trans-unit id="s65480c812ea72845">
+  <source>Review and optionally update the vehicle definitions before onboarding:</source>
+  <target>Revise y opcionalmente actualice las definiciones de vehículos antes del registro:</target>
+</trans-unit>
+<trans-unit id="sf42f57c4c03e3f59">
+  <source>Vehicle <x id="0" equiv-text="${index + 1}"/></source>
+  <target>Vehículo <x id="0" equiv-text="${index + 1}"/></target>
+</trans-unit>
+<trans-unit id="s9287c8087b755f30">
+  <source>VIN:</source>
+  <target>VIN:</target>
+</trans-unit>
+<trans-unit id="s8492be16503be576">
+  <source>Definition (required):</source>
+  <target>Definición (requerida):</target>
+</trans-unit>
+<trans-unit id="s518bb2f864dd6a9e">
+  <source>Decoding...</source>
+  <target>Decodificando...</target>
+</trans-unit>
+<trans-unit id="s9b16f99b17c2462b">
+  <source>make_model_year</source>
+  <target>marca_modelo_año</target>
+</trans-unit>
+<trans-unit id="s13f20cb257e12fac">
+  <source>This field is required</source>
+  <target>Este campo es requerido</target>
+</trans-unit>
+<trans-unit id="s599d5c77bb435291">
+  <source>This definition does not exist</source>
+  <target>Esta definición no existe</target>
+</trans-unit>
+<trans-unit id="s2ceb11be2290bb1b">
+  <source>Cancel</source>
+  <target>Cancelar</target>
+</trans-unit>
+<trans-unit id="s4cb3d569372cf980">
+  <source>Confirm Onboarding</source>
+  <target>Confirmar Registro</target>
+</trans-unit>
+<trans-unit id="s59e3514836f5d046">
+  <source>Edit Fleet Group</source>
+  <target>Editar Grupo de Flota</target>
+</trans-unit>
+<trans-unit id="sdb0c7a7a6f6f9202">
+  <source>Create Fleet Group</source>
+  <target>Crear Grupo de Flota</target>
+</trans-unit>
+<trans-unit id="s2d9356347ff7c77f">
+  <source>Group Name</source>
+  <target>Nombre del Grupo</target>
+</trans-unit>
+<trans-unit id="sfff979285ccb41a1">
+  <source>Enter group name</source>
+  <target>Ingrese el nombre del grupo</target>
+</trans-unit>
+<trans-unit id="s22143dd9cd43ea0b">
+  <source>Group Color</source>
+  <target>Color del Grupo</target>
+</trans-unit>
+<trans-unit id="s4ab2d3cc63bec077">
+  <source>Preview:</source>
+  <target>Vista previa:</target>
+</trans-unit>
+<trans-unit id="s3bd128de03e7e2c3">
+  <source>Updating...</source>
+  <target>Actualizando...</target>
+</trans-unit>
+<trans-unit id="s99775221d3003db4">
+  <source>Creating...</source>
+  <target>Creando...</target>
+</trans-unit>
+<trans-unit id="s0b55a57f473ab8af">
+  <source>Update Group</source>
+  <target>Actualizar Grupo</target>
+</trans-unit>
+<trans-unit id="s416a540b16275f2e">
+  <source>Create Group</source>
+  <target>Crear Grupo</target>
+</trans-unit>
+<trans-unit id="sc7641c9aab0c2232">
+  <source>Group name is required</source>
+  <target>El nombre del grupo es requerido</target>
+</trans-unit>
+<trans-unit id="sc4d6d7415e991063">
+  <source>Invalid color format. Please use hex format (e.g., #FF5733)</source>
+  <target>Formato de color inválido. Por favor use formato hexadecimal (ej., #FF5733)</target>
+</trans-unit>
+<trans-unit id="s33860cb8689b5ccd">
+  <source>Failed to update group</source>
+  <target>Error al actualizar grupo</target>
+</trans-unit>
+<trans-unit id="s4ba5fefbcb97193c">
+  <source>Failed to create group</source>
+  <target>Error al crear grupo</target>
+</trans-unit>
+<trans-unit id="s5f343a43e7ea9f91">
+  <source>Error</source>
+  <target>Error</target>
+</trans-unit>
+<trans-unit id="s091d3d07b5b3076f">
+  <source>OK</source>
+  <target>OK</target>
+</trans-unit>
+<trans-unit id="s83a53009df1fa369">
+  <source>Vehicle Identity Information</source>
+  <target>Información de Identidad del Vehículo</target>
+</trans-unit>
+<trans-unit id="s5c62901f813043ad">
+  <source>Loading vehicle identity data...</source>
+  <target>Cargando datos de identidad del vehículo...</target>
+</trans-unit>
+<trans-unit id="sb59430280ba9084e">
+  <source>No identity data available for this vehicle.</source>
+  <target>No hay datos de identidad disponibles para este vehículo.</target>
+</trans-unit>
+<trans-unit id="s25cb5419188d649f">
+  <source>No Token ID provided</source>
+  <target>No se proporcionó Token ID</target>
+</trans-unit>
+<trans-unit id="sbec4786cfa04ffb9">
+  <source>Failed to load vehicle identity data</source>
+  <target>Error al cargar datos de identidad del vehículo</target>
+</trans-unit>
+<trans-unit id="s3e59be15dabe6ed4">
+  <source>Login with DIMO!</source>
+  <target>¡Iniciar sesión con DIMO!</target>
+</trans-unit>
+<trans-unit id="s69fd5563bef86af5">
+  <source>It appears there is no ClientID configured</source>
+  <target>Parece que no hay un ClientID configurado</target>
+</trans-unit>
+<trans-unit id="seff2ded76874a89e">
+  <source>If you don't have a Client ID please go to the</source>
+  <target>Si no tiene un Client ID por favor vaya a la</target>
+</trans-unit>
+<trans-unit id="s62911ca5ccabd9c1">
+  <source>DIMO Developer Console</source>
+  <target>Consola de Desarrollador DIMO</target>
+</trans-unit>
+<trans-unit id="s95ac73bea698cb77">
+  <source>Manage Vehicles</source>
+  <target>Administrar Vehículos</target>
+</trans-unit>
+<trans-unit id="s8e5ad79ea8462df0">
+  <source>Search by VIN, IMEI, or Token ID</source>
+  <target>Buscar por VIN, IMEI o Token ID</target>
+</trans-unit>
+<trans-unit id="s9465e9729b32f8b8">
+  <source>Loading suggestions...</source>
+  <target>Cargando sugerencias...</target>
+</trans-unit>
+<trans-unit id="sae95d83acb6d6f63">
+  <source>No vehicles found</source>
+  <target>No se encontraron vehículos</target>
+</trans-unit>
+<trans-unit id="sbac39e796a1d5604">
+  <source>Add Vehicle</source>
+  <target>Agregar Vehículo</target>
+</trans-unit>
+<trans-unit id="se7ffd9006295f21a">
+  <source>Loading vehicles...</source>
+  <target>Cargando vehículos...</target>
+</trans-unit>
+<trans-unit id="s529d68cf3d1700e7">
+  <source>No vehicles in this group yet.</source>
+  <target>Aún no hay vehículos en este grupo.</target>
+</trans-unit>
+<trans-unit id="se06ad64a9de6df0f">
+  <source>Vehicle</source>
+  <target>Vehículo</target>
+</trans-unit>
+<trans-unit id="s6210b400a0196334">
+  <source>Removing...</source>
+  <target>Eliminando...</target>
+</trans-unit>
+<trans-unit id="s0379fc73608ab971">
+  <source>Done</source>
+  <target>Listo</target>
+</trans-unit>
+<trans-unit id="s5d152b55bcbee66e">
+  <source>Vehicle added successfully</source>
+  <target>Vehículo agregado exitosamente</target>
+</trans-unit>
+<trans-unit id="s0ded753bec2fd522">
+  <source>Failed to add vehicle</source>
+  <target>Error al agregar vehículo</target>
+</trans-unit>
+<trans-unit id="s2fba89f316e1fcd8">
+  <source>Vehicle removed successfully</source>
+  <target>Vehículo eliminado exitosamente</target>
+</trans-unit>
+<trans-unit id="s5f484e92d6be400b">
+  <source>Failed to remove vehicle</source>
+  <target>Error al eliminar vehículo</target>
+</trans-unit>
+<trans-unit id="s8ec8c33cb201266f">
+  <source>Select Connection Oracle:</source>
+  <target>Seleccionar Oracle de Conexión:</target>
+</trans-unit>
+<trans-unit id="s0e78ece707dfe16c">
+  <source>Enter OTP</source>
+  <target>Ingresar OTP</target>
+</trans-unit>
+<trans-unit id="sdfb91f542398ddf6">
+  <source>Please enter the 6 digit code sent to your email.</source>
+  <target>Por favor ingrese el código de 6 dígitos enviado a su correo electrónico.</target>
+</trans-unit>
+<trans-unit id="s12d31c3ac9b2687e">
+  <source>Resend</source>
+  <target>Reenviar</target>
+</trans-unit>
+<trans-unit id="s18aa70d87ab246ff">
+  <source>Owned Vehicles</source>
+  <target>Vehículos Propios</target>
+</trans-unit>
+<trans-unit id="sf2fc9bc53669e04c">
+  <source>No vehicles are associated with this wallet.</source>
+  <target>No hay vehículos asociados con esta wallet.</target>
+</trans-unit>
+<trans-unit id="s392f667420703599">
+  <source>Coming soon</source>
+  <target>Próximamente</target>
+</trans-unit>
+<trans-unit id="safec7f1a369755f0">
+  <source>Prev</source>
+  <target>Ant</target>
+</trans-unit>
+<trans-unit id="s443b8b806fa639dd">
+  <source>Failed to load pending vehicles</source>
+  <target>Error al cargar vehículos pendientes</target>
+</trans-unit>
+<trans-unit id="sb0dcafc51f88f7bb">
+  <source>PENDING TO ONBOARD VEHICLES</source>
+  <target>VEHÍCULOS PENDIENTES DE REGISTRO</target>
+</trans-unit>
+<trans-unit id="s8b4996bbba86682a">
+  <source>Search by IMEI or VIN</source>
+  <target>Buscar por IMEI o VIN</target>
+</trans-unit>
+<trans-unit id="s74b31022385d5341">
+  <source>Please claim your IMEI's every time you purchase or add a new device to your fleet</source>
+  <target>Por favor reclame sus IMEIs cada vez que compre o agregue un nuevo dispositivo a su flota</target>
+</trans-unit>
+<trans-unit id="s3bce12db754e774f">
+  <source>Claim new IMEI</source>
+  <target>Reclamar nuevo IMEI</target>
+</trans-unit>
+<trans-unit id="s956b4150ca5bbb80">
+  <source>First Seen</source>
+  <target>Primera Vez Visto</target>
+</trans-unit>
+<trans-unit id="sa442044b586ec8bf">
+  <source>Action</source>
+  <target>Acción</target>
+</trans-unit>
+<trans-unit id="sfd4aadec2ada796a">
+  <source>No results found, make sure you have</source>
+  <target>No se encontraron resultados, asegúrese de haber</target>
+</trans-unit>
+<trans-unit id="s57dbd78a7e35f70e">
+  <source>claimed</source>
+  <target>reclamado</target>
+</trans-unit>
+<trans-unit id="s8a50412ffe1501e9">
+  <source>your devices</source>
+  <target>sus dispositivos</target>
+</trans-unit>
+<trans-unit id="s383de319c4012f21">
+  <source>N/A</source>
+  <target>N/D</target>
+</trans-unit>
+<trans-unit id="sfb4d1841b3be16e0">
+  <source>TELEMETRY</source>
+  <target>TELEMETRÍA</target>
+</trans-unit>
+<trans-unit id="s386dc9b2b4144188">
+  <source>PREVIOUS</source>
+  <target>ANTERIOR</target>
+</trans-unit>
+<trans-unit id="sfa236dc6043a5fe8">
+  <source>NEXT</source>
+  <target>SIGUIENTE</target>
+</trans-unit>
+<trans-unit id="s8f0a9bb16286a254">
+  <source>No Active Passkey Session</source>
+  <target>No Hay Sesión Activa de Passkey</target>
+</trans-unit>
+<trans-unit id="s19a03ad8abb60cf5">
+  <source>Passkey expires in: <x id="0" equiv-text="${minutes}"/> min and <x id="1" equiv-text="${seconds}"/> secs</source>
+  <target>Passkey expira en: <x id="0" equiv-text="${minutes}"/> min y <x id="1" equiv-text="${seconds}"/> segs</target>
+</trans-unit>
+<trans-unit id="sae2f92d2c1360a28">
+  <source>Telemetry Data</source>
+  <target>Datos de Telemetría</target>
+</trans-unit>
+<trans-unit id="s0092936335f3350f">
+  <source>Reset Telemetry</source>
+  <target>Restablecer Telemetría</target>
+</trans-unit>
+<trans-unit id="s68bf36946864c310">
+  <source>Remove VIN</source>
+  <target>Eliminar VIN</target>
+</trans-unit>
+<trans-unit id="sd23fb26e6824808f">
+  <source>Immobilizer On</source>
+  <target>Inmovilizador Activado</target>
+</trans-unit>
+<trans-unit id="s66d80a9af61db873">
+  <source>Immobilizer Off</source>
+  <target>Inmovilizador Desactivado</target>
+</trans-unit>
+<trans-unit id="s83be56299e68063e">
+  <source>Loading telemetry data...</source>
+  <target>Cargando datos de telemetría...</target>
+</trans-unit>
+<trans-unit id="sccb653c8576e94a6">
+  <source>Odometer:</source>
+  <target>Odómetro:</target>
+</trans-unit>
+<trans-unit id="s2be5092c2717a104">
+  <source>RPM:</source>
+  <target>RPM:</target>
+</trans-unit>
+<trans-unit id="s3e5f59ee5ecb0834">
+  <source>Ignition:</source>
+  <target>Encendido:</target>
+</trans-unit>
+<trans-unit id="s676dd1f8d5e24944">
+  <source>Engine Block:</source>
+  <target>Bloqueo de Motor:</target>
+</trans-unit>
+<trans-unit id="s0f8072bb7331db4b">
+  <source>Search IO</source>
+  <target>Buscar IO</target>
+</trans-unit>
+<trans-unit id="sff3c26372122156d">
+  <source>(decimal)</source>
+  <target>(decimal)</target>
+</trans-unit>
+<trans-unit id="s9d3ec532a393026d">
+  <source>Record <x id="0" equiv-text="${this.currentIndex + 1}"/> of <x id="1" equiv-text="${this.pages.length}"/></source>
+  <target>Registro <x id="0" equiv-text="${this.currentIndex + 1}"/> de <x id="1" equiv-text="${this.pages.length}"/></target>
+</trans-unit>
+<trans-unit id="s75d83fc3f0cfab40">
+  <source>Header</source>
+  <target>Encabezado</target>
+</trans-unit>
+<trans-unit id="sfa4f071fdd299e92">
+  <source>IO Elements</source>
+  <target>Elementos IO</target>
+</trans-unit>
+<trans-unit id="sd5783322f3c60518">
+  <source>No telemetry data available</source>
+  <target>No hay datos de telemetría disponibles</target>
+</trans-unit>
+<trans-unit id="sf3982633a998f691">
+  <source>Identification Data</source>
+  <target>Datos de Identificación</target>
+</trans-unit>
+<trans-unit id="sea38edebcd45d5e1">
+  <source>Identity Information</source>
+  <target>Información de Identidad</target>
+</trans-unit>
+<trans-unit id="s0ff0546994bb4ba7">
+  <source>No identity data available</source>
+  <target>No hay datos de identidad disponibles</target>
+</trans-unit>
+<trans-unit id="s5e8250fb85d64c23">
+  <source>Close</source>
+  <target>Cerrar</target>
+</trans-unit>
+<trans-unit id="s2d870bacb58e540e">
+  <source>Are you sure you want to remove VIN from this device? This action cannot be undone.</source>
+  <target>¿Está seguro de que desea eliminar el VIN de este dispositivo? Esta acción no se puede deshacer.</target>
+</trans-unit>
+<trans-unit id="sea4f08110bb8f15d">
+  <source>Remove</source>
+  <target>Eliminar</target>
+</trans-unit>
+<trans-unit id="sf4208bc57c03bebd">
+  <source>No IMEI provided</source>
+  <target>No se proporcionó IMEI</target>
+</trans-unit>
+<trans-unit id="sfd4e03bfca6b24fb">
+  <source>Failed to reset telemetry data</source>
+  <target>Error al restablecer datos de telemetría</target>
+</trans-unit>
+<trans-unit id="sfce4234dff6e2947">
+  <source>Failed to delete pending vehicle</source>
+  <target>Error al eliminar vehículo pendiente</target>
+</trans-unit>
+<trans-unit id="s9cef4f0964a3bc87">
+  <source>Failed to load telemetry and identity data</source>
+  <target>Error al cargar datos de telemetría e identidad</target>
+</trans-unit>
+<trans-unit id="s22bddef599ab3628">
+  <source>Failed to load telemetry data</source>
+  <target>Error al cargar datos de telemetría</target>
+</trans-unit>
+<trans-unit id="s499ec110694c55a5">
+  <source>Telemetry Record</source>
+  <target>Registro de Telemetría</target>
+</trans-unit>
+<trans-unit id="s0a1a9f6108c6d0e0">
+  <source>Identity Record</source>
+  <target>Registro de Identidad</target>
+</trans-unit>
+<trans-unit id="sb15935a9f7ee1fed">
+  <source>Invalid ID</source>
+  <target>ID Inválido</target>
+</trans-unit>
+<trans-unit id="s0a11c2ffb8309d1a">
+  <source>Not found</source>
+  <target>No encontrado</target>
+</trans-unit>
+<trans-unit id="s091c5c43ffc9e1ae">
+  <source>Transfer Vehicle</source>
+  <target>Transferir Vehículo</target>
+</trans-unit>
+<trans-unit id="s8db58dfea7cb01f0">
+  <source>Transfer by Wallet Address</source>
+  <target>Transferir por Dirección de Wallet</target>
+</trans-unit>
+<trans-unit id="sd9ee05f2fa9bccd7">
+  <source>Wallet 0x Address (for existing accounts)</source>
+  <target>Dirección 0x de Wallet (para cuentas existentes)</target>
+</trans-unit>
+<trans-unit id="sb78a66c8b3d23215">
+  <source>Checking...</source>
+  <target>Verificando...</target>
+</trans-unit>
+<trans-unit id="se4cee96e7709528e">
+  <source>The wallet address does not exist.</source>
+  <target>La dirección de wallet no existe.</target>
+</trans-unit>
+<trans-unit id="s21f68e65dbf5b5a4">
+  <source>Processing...</source>
+  <target>Procesando...</target>
+</trans-unit>
+<trans-unit id="sf4306063f69b8590">
+  <source>Transfer by Wallet</source>
+  <target>Transferir por Wallet</target>
+</trans-unit>
+<trans-unit id="s091d3407b5b2f824">
+  <source>OR</source>
+  <target>O</target>
+</trans-unit>
+<trans-unit id="s6b6aa40896f2f508">
+  <source>Transfer by Email (new accounts)</source>
+  <target>Transferir por Correo (cuentas nuevas)</target>
+</trans-unit>
+<trans-unit id="s1e2e135dac5ba993">
+  <source>Email Address</source>
+  <target>Dirección de Correo</target>
+</trans-unit>
+<trans-unit id="s75e98404c877a843">
+  <source>Transfer by Email</source>
+  <target>Transferir por Correo</target>
+</trans-unit>
+<trans-unit id="s843bb7ff5e8fe2da">
+  <source>User will receive an email with an OTP code to login to the App. This will not work for existing accounts.</source>
+  <target>El usuario recibirá un correo con un código OTP para iniciar sesión en la App. Esto no funcionará para cuentas existentes.</target>
+</trans-unit>
+<trans-unit id="sfa1eef635795b63c">
+  <source>Processing transfer for IMEI: </source>
+  <target>Procesando transferencia para IMEI: </target>
+</trans-unit>
+<trans-unit id="sde0d52620c4f0d88">
+  <source>Creating account for email: </source>
+  <target>Creando cuenta para correo: </target>
+</trans-unit>
+<trans-unit id="s4b4e1072c660fb23">
+  <source>Account created with wallet address: </source>
+  <target>Cuenta creada con dirección de wallet: </target>
+</trans-unit>
+<trans-unit id="s412d59fc1a1b3087">
+  <source>Please enter a wallet address</source>
+  <target>Por favor ingrese una dirección de wallet</target>
+</trans-unit>
+<trans-unit id="s82162228afe9e738">
+  <source>Check Info for final transfer verification</source>
+  <target>Verifique la información para la verificación final de transferencia</target>
+</trans-unit>
+<trans-unit id="s238a02fdbce1b187">
+  <source>Recording inventory state change...</source>
+  <target>Registrando cambio de estado de inventario...</target>
+</trans-unit>
+<trans-unit id="s7bf37ab2a7b802cc">
+  <source>Failed to create account</source>
+  <target>Error al crear cuenta</target>
+</trans-unit>
+<trans-unit id="s9b7f299c18dc9703">
+  <source>Failed to add inventory state</source>
+  <target>Error al agregar estado de inventario</target>
+</trans-unit>
+<trans-unit id="sd8e49265fe5a495a">
+  <source>Update Inventory Status</source>
+  <target>Actualizar Estado de Inventario</target>
+</trans-unit>
+<trans-unit id="s1f0d05eb8a0e0f3f">
+  <source>Inventory</source>
+  <target>Inventario</target>
+</trans-unit>
+<trans-unit id="s97d7909785070c19">
+  <source>Customer</source>
+  <target>Cliente</target>
+</trans-unit>
+<trans-unit id="s6686fcc6d2c8f0bd">
+  <source>Note</source>
+  <target>Nota</target>
+</trans-unit>
+<trans-unit id="sd6d43310e06106d1">
+  <source>Enter a note (optional)</source>
+  <target>Ingrese una nota (opcional)</target>
+</trans-unit>
+<trans-unit id="s8c379fa73cf75fe6">
+  <source>Update Status</source>
+  <target>Actualizar Estado</target>
+</trans-unit>
+<trans-unit id="s938ed6127cdcd858">
+  <source>IMEI is required</source>
+  <target>Se requiere IMEI</target>
+</trans-unit>
+<trans-unit id="s52a042edd8b15454">
+  <source>Failed to update inventory status</source>
+  <target>Error al actualizar estado de inventario</target>
+</trans-unit>
+<trans-unit id="s871b1fe6d1846958">
+  <source>Phone Number</source>
+  <target>Número de Teléfono</target>
+</trans-unit>
+<trans-unit id="s6777491c1a3b144c">
+  <source>Account Created</source>
+  <target>Cuenta Creada</target>
+</trans-unit>
+<trans-unit id="s45d712a07291a8f1">
+  <source>Auth Methods</source>
+  <target>Métodos de Autenticación</target>
+</trans-unit>
+<trans-unit id="se5bd9ff649bb7e07">
+  <source>Passkey</source>
+  <target>Passkey</target>
+</trans-unit>
+<trans-unit id="s3c05fa34487c7a9e">
+  <source>Account Status</source>
+  <target>Estado de la Cuenta</target>
+</trans-unit>
+<trans-unit id="sa45a194b58837e4f">
+  <source>Active</source>
+  <target>Activo</target>
+</trans-unit>
+<trans-unit id="s4409ada9c5c2a7f8">
+  <source>Inactive</source>
+  <target>Inactivo</target>
+</trans-unit>
+<trans-unit id="sd23937b02cb5d454">
+  <source>Failed to load vehicles</source>
+  <target>Error al cargar vehículos</target>
+</trans-unit>
+<trans-unit id="s2be0bbc641502dc1">
+  <source>Failed to export CSV</source>
+  <target>Error al exportar CSV</target>
+</trans-unit>
+<trans-unit id="s3c47b78e40d9ace6">
+  <source>ONBOARDED VEHICLES</source>
+  <target>VEHÍCULOS REGISTRADOS</target>
+</trans-unit>
+<trans-unit id="s147b1acf45c9ced8">
+  <source>Search by IMEI, VIN, or Token ID</source>
+  <target>Buscar por IMEI, VIN o Token ID</target>
+</trans-unit>
+<trans-unit id="s8b409dc1f261b173">
+  <source>Export CSV</source>
+  <target>Exportar CSV</target>
+</trans-unit>
+<trans-unit id="s74185329ba1871db">
+  <source>Make Model Year</source>
+  <target>Marca Modelo Año</target>
+</trans-unit>
+<trans-unit id="s023d3ed0d9fed8d9">
+  <source>IMEI</source>
+  <target>IMEI</target>
+</trans-unit>
+<trans-unit id="s2ce8f2cf598eb0ab">
+  <source>Token ID</source>
+  <target>Token ID</target>
+</trans-unit>
+<trans-unit id="sad3e3c8146fc920f">
+  <source>Status</source>
+  <target>Estado</target>
+</trans-unit>
+<trans-unit id="s8af61807443f32a4">
+  <source>Actions</source>
+  <target>Acciones</target>
+</trans-unit>
+<trans-unit id="sf3ff78cc329d3528">
+  <source>Previous</source>
+  <target>Anterior</target>
+</trans-unit>
+<trans-unit id="s2e192b19ed15fcf6">
+  <source>Page</source>
+  <target>Página</target>
+</trans-unit>
+<trans-unit id="s08b06007b5567108">
+  <source>of</source>
+  <target>de</target>
+</trans-unit>
+<trans-unit id="s0fbf6dc6a1966408">
+  <source>Next</source>
+  <target>Siguiente</target>
+</trans-unit>
+<trans-unit id="s40664bffa760c01c">
+  <source>Showing</source>
+  <target>Mostrando</target>
+</trans-unit>
+<trans-unit id="s3e7884bf4f412c6f">
+  <source>items</source>
+  <target>elementos</target>
+</trans-unit>
+<trans-unit id="sc592307ea80f16b9">
+  <source>Unknown</source>
+  <target>Desconocido</target>
+</trans-unit>
+<trans-unit id="sfc003381f593d943">
+  <source>Connecting...</source>
+  <target>Conectando...</target>
+</trans-unit>
+<trans-unit id="s4b208d14f1ac4376">
+  <source>Connection failed</source>
+  <target>Conexión fallida</target>
+</trans-unit>
+<trans-unit id="s82a4e28ab5b56670">
+  <source>Connected</source>
+  <target>Conectado</target>
+</trans-unit>
+<trans-unit id="s12b0e6f385c33c21">
+  <source>Disconnecting...</source>
+  <target>Desconectando...</target>
+</trans-unit>
+<trans-unit id="sf0dd3332f37c2b9c">
+  <source>Disconnection failed</source>
+  <target>Desconexión fallida</target>
+</trans-unit>
+<trans-unit id="sfc2c3bd345c0128a">
+  <source>Disconnected</source>
+  <target>Desconectado</target>
+</trans-unit>
+<trans-unit id="sa5f7052fbe45d40d">
+  <source>Transferred</source>
+  <target>Transferido</target>
+</trans-unit>
+<trans-unit id="s6a3912feda823e1e">
+  <source>View Identity Info</source>
+  <target>Ver Info de Identidad</target>
+</trans-unit>
+<trans-unit id="scd5c110c0a3a3797">
+  <source>Telemetry &amp; Command</source>
+  <target>Telemetría &amp; Comando</target>
+</trans-unit>
+<trans-unit id="s5926cb82738c446b">
+  <source>disconnect</source>
+  <target>desconectar</target>
+</trans-unit>
+<trans-unit id="sf3fe6b5fdb85d50a">
+  <source>delete</source>
+  <target>eliminar</target>
+</trans-unit>
+<trans-unit id="s2af6c6f4ff6889e6">
+  <source>transfer</source>
+  <target>transferir</target>
+</trans-unit>
+<trans-unit id="s60e54ecb8549eb61">
+  <source>reset onboarding</source>
+  <target>restablecer registro</target>
+</trans-unit>
+<trans-unit id="s616bb2c8fed325c7">
+  <source>force delete</source>
+  <target>eliminar forzado</target>
+</trans-unit>
+<trans-unit id="s3262afdc2333010e">
+  <source>vin is empty!</source>
+  <target>¡el VIN está vacío!</target>
+</trans-unit>
+<trans-unit id="s9e9c06c47513d361">
+  <source>Are you sure you want to re-connect the vehicle?</source>
+  <target>¿Está seguro de que desea reconectar el vehículo?</target>
+</trans-unit>
+<trans-unit id="s7d32c3d09009bb5e">
+  <source>Vehicle connect failed</source>
+  <target>Error al conectar vehículo</target>
+</trans-unit>
+<trans-unit id="s6a7c0918e3abe6f6">
+  <source>Connect Failed</source>
+  <target>Error de Conexión</target>
+</trans-unit>
+<trans-unit id="s208ff236d16dca19">
+  <source>Are you sure you want to disconnect the vehicle?</source>
+  <target>¿Está seguro de que desea desconectar el vehículo?</target>
+</trans-unit>
+<trans-unit id="sba87ad3312890738">
+  <source>Vehicle disconnect failed</source>
+  <target>Error al desconectar vehículo</target>
+</trans-unit>
+<trans-unit id="s6e21b7074a7aa5ea">
+  <source>Are you sure you want to delete the vehicle?</source>
+  <target>¿Está seguro de que desea eliminar el vehículo?</target>
+</trans-unit>
+<trans-unit id="s5113554741b0e7d7">
+  <source>Vehicle delete failed</source>
+  <target>Error al eliminar vehículo</target>
+</trans-unit>
+<trans-unit id="s1e9160456cf320df">
+  <source>Delete Failed</source>
+  <target>Error al Eliminar</target>
+</trans-unit>
+<trans-unit id="sb3d938104578866c">
+  <source>Are you sure you want to FORCE delete this vehicle? This will abandon all the vehicle history attached to their NFT. Only do this if you are unable to get access to vehicle NFT.</source>
+  <target>¿Está seguro de que desea FORZAR la eliminación de este vehículo? Esto abandonará todo el historial del vehículo adjunto a su NFT. Solo haga esto si no puede acceder al NFT del vehículo.</target>
+</trans-unit>
+<trans-unit id="s46b8e31db0d98f7c">
+  <source>Vehicle force delete failed</source>
+  <target>Error al forzar eliminación del vehículo</target>
+</trans-unit>
+<trans-unit id="s8405cb72d831fbb4">
+  <source>Force Delete Failed</source>
+  <target>Error al Forzar Eliminación</target>
+</trans-unit>
+<trans-unit id="s22ff40785c781ed0">
+  <source>Disconnect Failed</source>
+  <target>Error al Desconectar</target>
+</trans-unit>
+<trans-unit id="s32664ada4b9d8e48">
+  <source>An unexpected error occurred while disconnecting the vehicle.</source>
+  <target>Ocurrió un error inesperado al desconectar el vehículo.</target>
+</trans-unit>
+<trans-unit id="s239708c2cf30d3a8">
+  <source>An unexpected error occurred while deleting the vehicle.</source>
+  <target>Ocurrió un error inesperado al eliminar el vehículo.</target>
+</trans-unit>
+<trans-unit id="sd8da4920ce15ced6">
+  <source>User created successfully!</source>
+  <target>¡Usuario creado exitosamente!</target>
+</trans-unit>
+<trans-unit id="sefc97b33adb81144">
+  <source>Failed to create user.</source>
+  <target>Error al crear usuario.</target>
+</trans-unit>
+<trans-unit id="s00ab64e9e14cebd2">
+  <source>Create New User</source>
+  <target>Crear Nuevo Usuario</target>
+</trans-unit>
+<trans-unit id="sc30957ee63a1f7de">
+  <source>Is Admin</source>
+  <target>Es Administrador</target>
+</trans-unit>
+<trans-unit id="sde2bf271d39ab023">
+  <source>Check this box for users that need to access this tool</source>
+  <target>Marque esta casilla para usuarios que necesitan acceder a esta herramienta</target>
+</trans-unit>
+<trans-unit id="se347b99e80bebeab">
+  <source>For existing accounts only provide 0x, not email.</source>
+  <target>Para cuentas existentes solo proporcione 0x, no correo electrónico.</target>
+</trans-unit>
+<trans-unit id="s6d3efe9c3d836a5f">
+  <source>Loading permissions...</source>
+  <target>Cargando permisos...</target>
+</trans-unit>
+<trans-unit id="sba80a8e62489dbe7">
+  <source>User not found.</source>
+  <target>Usuario no encontrado.</target>
+</trans-unit>
+<trans-unit id="s4251b576e271f408">
+  <source>Failed to load user data.</source>
+  <target>Error al cargar datos del usuario.</target>
+</trans-unit>
+<trans-unit id="s30d5d085ff8b4e51">
+  <source>User updated successfully!</source>
+  <target>¡Usuario actualizado exitosamente!</target>
+</trans-unit>
+<trans-unit id="sb5c039b25f7c4d09">
+  <source>Failed to update user.</source>
+  <target>Error al actualizar usuario.</target>
+</trans-unit>
+<trans-unit id="s85b3fc77a7f5c9e4">
+  <source>Loading user data...</source>
+  <target>Cargando datos del usuario...</target>
+</trans-unit>
+<trans-unit id="sde416bd4957e0c49">
+  <source>Edit Admin User</source>
+  <target>Editar Usuario Administrador</target>
+</trans-unit>
+<trans-unit id="s7c80b5e2f0a97784">
+  <source>Controlled Fleets</source>
+  <target>Flotas Controladas</target>
+</trans-unit>
+<trans-unit id="sd9ad2aa6822595d5">
+  <source>Disabled because 'view_all_fleets' is selected.</source>
+  <target>Deshabilitado porque 'view_all_fleets' está seleccionado.</target>
+</trans-unit>
+<trans-unit id="s0d306e3854135765">
+  <source>(No Access)</source>
+  <target>(Sin Acceso)</target>
+</trans-unit>
+<trans-unit id="sd8dabd8b1e42b43d">
+  <source>No fleet groups available.</source>
+  <target>No hay grupos de flota disponibles.</target>
+</trans-unit>
+<trans-unit id="s031945e67717bf79">
+  <source>Save Changes</source>
+  <target>Guardar Cambios</target>
+</trans-unit>
+<trans-unit id="s050a350e3aad47a7">
+  <source>Back to Users</source>
+  <target>Volver a Usuarios</target>
+</trans-unit>
+<trans-unit id="s6694b6896680ffb2">
+  <source>Fleet Overview</source>
+  <target>Resumen de Flota</target>
+</trans-unit>
+<trans-unit id="s2cc2cb5ce36719da">
+  <source>Total Vehicles</source>
+  <target>Total de Vehículos</target>
+</trans-unit>
+<trans-unit id="sf89ce12500fbbafd">
+  <source>Across all groups</source>
+  <target>En todos los grupos</target>
+</trans-unit>
+<trans-unit id="s9bdabb0b1a1e43ea">
+  <source>Reporting telemetry</source>
+  <target>Reportando telemetría</target>
+</trans-unit>
+<trans-unit id="s3a231b3f6a7cdeb4">
+  <source>Customer Owned</source>
+  <target>Propiedad del Cliente</target>
+</trans-unit>
+<trans-unit id="s1d79cc4bb7cf1b86">
+  <source>Active customers</source>
+  <target>Clientes activos</target>
+</trans-unit>
+<trans-unit id="s318b296f98fcbd38">
+  <source>Dealer inventory</source>
+  <target>Inventario del concesionario</target>
+</trans-unit>
+<trans-unit id="sf9082455bc457e90">
+  <source>Immobilized</source>
+  <target>Inmovilizado</target>
+</trans-unit>
+<trans-unit id="sbd31640a7726f137">
+  <source>Engine blocked</source>
+  <target>Motor bloqueado</target>
+</trans-unit>
+<trans-unit id="scde3342a428aaee8">
+  <source>Offline</source>
+  <target>Sin conexión</target>
+</trans-unit>
+<trans-unit id="sd8a1ec541a72c3cc">
+  <source>Not reporting</source>
+  <target>Sin reportar</target>
+</trans-unit>
+<trans-unit id="sb5c1ca45921710f7">
+  <source>Saved Reports</source>
+  <target>Reportes Guardados</target>
+</trans-unit>
+<trans-unit id="sc8de1e60b757e699">
+  <source>Overspeed — Fleet A — Last 7 Days</source>
+  <target>Exceso de Velocidad — Flota A — Últimos 7 Días</target>
+</trans-unit>
+<trans-unit id="s6fe1a1b2b0445bd2">
+  <source>Last run:</source>
+  <target>Última ejecución:</target>
+</trans-unit>
+<trans-unit id="sc70dc95b0330f014">
+  <source>Kilometers — All Vehicles — November</source>
+  <target>Kilómetros — Todos los Vehículos — Noviembre</target>
+</trans-unit>
+<trans-unit id="sd3602199ebe0dc6f">
+  <source>Fuel Consumption — Santiago — Weekly</source>
+  <target>Consumo de Combustible — Santiago — Semanal</target>
+</trans-unit>
+<trans-unit id="s6c820f49a9224729">
+  <source>Recent Reports</source>
+  <target>Reportes Recientes</target>
+</trans-unit>
+<trans-unit id="s0203762e62fa12ca">
+  <source>Report Name</source>
+  <target>Nombre del Reporte</target>
+</trans-unit>
+<trans-unit id="s4a83556509addf74">
+  <source>Fleet Group(s)</source>
+  <target>Grupo(s) de Flota</target>
+</trans-unit>
+<trans-unit id="s2dab6da5c3c253f0">
+  <source>Date Range</source>
+  <target>Rango de Fechas</target>
+</trans-unit>
+<trans-unit id="sbfbbc245e1ce643c">
+  <source>Last Run</source>
+  <target>Última Ejecución</target>
+</trans-unit>
+<trans-unit id="se1a45efe990f6a5b">
+  <source>Overspeed Events</source>
+  <target>Eventos de Exceso de Velocidad</target>
+</trans-unit>
+<trans-unit id="sf6f06103b7073462">
+  <source>Fleet A, Fleet B</source>
+  <target>Flota A, Flota B</target>
+</trans-unit>
+<trans-unit id="s0c6798bfc6913ce9">
+  <source>OPEN</source>
+  <target>ABRIR</target>
+</trans-unit>
+<trans-unit id="sdb543b8b7556e4e0">
+  <source>RE-RUN</source>
+  <target>RE-EJECUTAR</target>
+</trans-unit>
+<trans-unit id="s46ef8d74c8922288">
+  <source>Kilometers Driven</source>
+  <target>Kilómetros Recorridos</target>
+</trans-unit>
+<trans-unit id="s109978ca36128425">
+  <source>All Vehicles</source>
+  <target>Todos los Vehículos</target>
+</trans-unit>
+<trans-unit id="sabc9a24cff8281ff">
+  <source>Units Not Reporting</source>
+  <target>Unidades Sin Reportar</target>
+</trans-unit>
+<trans-unit id="sab8b4cbbb1fa71fa">
+  <source>Current</source>
+  <target>Actual</target>
+</trans-unit>
+<trans-unit id="se37ab3e9e08c953b">
+  <source>Weekend Activity</source>
+  <target>Actividad de Fin de Semana</target>
+</trans-unit>
+<trans-unit id="sf07ee78ba6e5ca68">
+  <source>Santiago North</source>
+  <target>Santiago Norte</target>
+</trans-unit>
+<trans-unit id="sac432d5d9bb20916">
+  <source>You do not have the required permissions to access the Reports section.</source>
+  <target>No tiene los permisos necesarios para acceder a la sección de Reportes.</target>
+</trans-unit>
+<trans-unit id="s81e40c4a7344983f">
+  <source>Existing Reports</source>
+  <target>Reportes Existentes</target>
+</trans-unit>
+<trans-unit id="se6850e989ab3591e">
+  <source>Loading reports...</source>
+  <target>Cargando reportes...</target>
+</trans-unit>
+<trans-unit id="sebcfef8703ffced5">
+  <source>No reports found.</source>
+  <target>No se encontraron reportes.</target>
+</trans-unit>
+<trans-unit id="s0b423919aa0d4e1f">
+  <source>CSV</source>
+  <target>CSV</target>
+</trans-unit>
+<trans-unit id="sff29be900b3b70eb">
+  <source>Create New Report</source>
+  <target>Crear Nuevo Reporte</target>
+</trans-unit>
+<trans-unit id="sd1af9e4e4d18a25c">
+  <source>Report Settings</source>
+  <target>Configuración del Reporte</target>
+</trans-unit>
+<trans-unit id="s9fec9f37112c4bab">
+  <source>Overspeed Settings</source>
+  <target>Configuración de Exceso de Velocidad</target>
+</trans-unit>
+<trans-unit id="sa9996732e986ac5d">
+  <source>Overspeed Threshold (km/h)</source>
+  <target>Umbral de Exceso de Velocidad (km/h)</target>
+</trans-unit>
+<trans-unit id="sf3b941de4c71b067">
+  <source>Speed above this value triggers overspeed events</source>
+  <target>La velocidad por encima de este valor activa eventos de exceso de velocidad</target>
+</trans-unit>
+<trans-unit id="sa1af7f047dbbdfc8">
+  <source>After-Hours Activity</source>
+  <target>Actividad Fuera de Horario</target>
+</trans-unit>
+<trans-unit id="s32db877724f3a059">
+  <source>Cutoff Time</source>
+  <target>Hora de Corte</target>
+</trans-unit>
+<trans-unit id="s88e5d966c2b8accd">
+  <source>Activity after this time is flagged in reports</source>
+  <target>La actividad después de esta hora se marca en los reportes</target>
+</trans-unit>
+<trans-unit id="s06411dffec3b2002">
+  <source>Fuel Consumption</source>
+  <target>Consumo de Combustible</target>
+</trans-unit>
+<trans-unit id="sac9009930544bf5d">
+  <source>Refuel Increase Threshold (%)</source>
+  <target>Umbral de Incremento de Recarga (%)</target>
+</trans-unit>
+<trans-unit id="s659773b2545b1d37">
+  <source>Fuel level increase above this % is a refuel event</source>
+  <target>El aumento del nivel de combustible por encima de este % es un evento de recarga</target>
+</trans-unit>
+<trans-unit id="sa9f9b1c823eef121">
+  <source>Minimum Data Density</source>
+  <target>Densidad Mínima de Datos</target>
+</trans-unit>
+<trans-unit id="s7cff7b8a99de26ef">
+  <source>1 reading per hour</source>
+  <target>1 lectura por hora</target>
+</trans-unit>
+<trans-unit id="s87e727472385a4bf">
+  <source>1 reading per 30 minutes</source>
+  <target>1 lectura cada 30 minutos</target>
+</trans-unit>
+<trans-unit id="sd2d7b2a2d91e654a">
+  <source>1 reading per 15 minutes</source>
+  <target>1 lectura cada 15 minutos</target>
+</trans-unit>
+<trans-unit id="s27fe8e8cd298d71f">
+  <source>Scheduling</source>
+  <target>Programación</target>
+</trans-unit>
+<trans-unit id="s1b7faec1228f3e9a">
+  <source>Weekly Report Day</source>
+  <target>Día del Reporte Semanal</target>
+</trans-unit>
+<trans-unit id="se9ff6e9a514d8cf9">
+  <source>Monday</source>
+  <target>Lunes</target>
+</trans-unit>
+<trans-unit id="s240732794d597f70">
+  <source>Tuesday</source>
+  <target>Martes</target>
+</trans-unit>
+<trans-unit id="s9eaa6e7fbfd5cdd7">
+  <source>Wednesday</source>
+  <target>Miércoles</target>
+</trans-unit>
+<trans-unit id="s7b9d13ea440cd1d7">
+  <source>Thursday</source>
+  <target>Jueves</target>
+</trans-unit>
+<trans-unit id="s978464661758a212">
+  <source>Friday</source>
+  <target>Viernes</target>
+</trans-unit>
+<trans-unit id="s5b3a18cef989b865">
+  <source>SAVE SETTINGS</source>
+  <target>GUARDAR CONFIGURACIÓN</target>
+</trans-unit>
+<trans-unit id="s479350a32274d64c">
+  <source>Report Templates</source>
+  <target>Plantillas de Reporte</target>
+</trans-unit>
+<trans-unit id="s93ac8cea2e583f1d">
+  <source>No templates found</source>
+  <target>No se encontraron plantillas</target>
+</trans-unit>
+<trans-unit id="s794745b9387bce9b">
+  <source>Fleet Groups (ctrl+click to select multiple)</source>
+  <target>Grupos de Flota (ctrl+clic para seleccionar múltiples)</target>
+</trans-unit>
+<trans-unit id="scad3eeec41d43ce3">
+  <source> (No Access)</source>
+  <target> (Sin Acceso)</target>
+</trans-unit>
+<trans-unit id="s8e811ea81abd164f">
+  <source>Last 7 Days</source>
+  <target>Últimos 7 Días</target>
+</trans-unit>
+<trans-unit id="s34488fe2547c31f3">
+  <source>Last 30 Days</source>
+  <target>Últimos 30 Días</target>
+</trans-unit>
+<trans-unit id="s5c31a39273f2bc37">
+  <source>This Month</source>
+  <target>Este Mes</target>
+</trans-unit>
+<trans-unit id="sb505ced5c55ab9af">
+  <source>Last Month</source>
+  <target>Mes Pasado</target>
+</trans-unit>
+<trans-unit id="sf0cab2483f66aa2e">
+  <source>Custom</source>
+  <target>Personalizado</target>
+</trans-unit>
+<trans-unit id="s87ddaf748f20de21">
+  <source>Start Date</source>
+  <target>Fecha de Inicio</target>
+</trans-unit>
+<trans-unit id="s47d2a0ab45bec70a">
+  <source>End Date</source>
+  <target>Fecha de Fin</target>
+</trans-unit>
+<trans-unit id="s3d049bc5a462d8ec">
+  <source>RUN REPORT</source>
+  <target>EJECUTAR REPORTE</target>
+</trans-unit>
+<trans-unit id="sa973d7dbb201896e">
+  <source>Select a template and run report</source>
+  <target>Seleccione una plantilla y ejecute el reporte</target>
+</trans-unit>
+<trans-unit id="s6b37d154cadc74f3">
+  <source>Select a report template, choose fleet groups, and click RUN REPORT</source>
+  <target>Seleccione una plantilla de reporte, elija grupos de flota y haga clic en EJECUTAR REPORTE</target>
+</trans-unit>
+<trans-unit id="sdc59fbd3fcd51fb3">
+  <source>Pick your Oracle</source>
+  <target>Seleccione su Oracle</target>
+</trans-unit>
+<trans-unit id="s0c9be10b33609336">
+  <source>Tenant Selector</source>
+  <target>Selector de Inquilino</target>
+</trans-unit>
+<trans-unit id="s00a84204340a1db4">
+  <source>Selected</source>
+  <target>Seleccionado</target>
+</trans-unit>
+<trans-unit id="sfa4002eebaf96bbe">
+  <source>Your account has no tenants configured. Reach out to your organization administrator to add your account 0x address.</source>
+  <target>Su cuenta no tiene inquilinos configurados. Comuníquese con el administrador de su organización para agregar la dirección 0x de su cuenta.</target>
+</trans-unit>
+<trans-unit id="s67326877508f54b2">
+  <source>Failed to load tenant settings</source>
+  <target>Error al cargar configuración del inquilino</target>
+</trans-unit>
+<trans-unit id="s13503971d6cf6d3f">
+  <source>Failed to save tenant settings</source>
+  <target>Error al guardar configuración del inquilino</target>
+</trans-unit>
+<trans-unit id="s177336ebcc035e98">
+  <source>Settings saved successfully</source>
+  <target>Configuración guardada exitosamente</target>
+</trans-unit>
+<trans-unit id="s830aaf66c59dca65">
+  <source>Kore sync started successfully</source>
+  <target>Sincronización de Kore iniciada exitosamente</target>
+</trans-unit>
+<trans-unit id="s585a92341df97d3f">
+  <source>Failed to sync Kore</source>
+  <target>Error al sincronizar Kore</target>
+</trans-unit>
+<trans-unit id="sf9b1c0661a02d9f9">
+  <source>Configuration</source>
+  <target>Configuración</target>
+</trans-unit>
+<trans-unit id="s64ef2a6c2dd1d3d1">
+  <source>Edit</source>
+  <target>Editar</target>
+</trans-unit>
+<trans-unit id="s6ebc9bd6feae62a3">
+  <source>Loading…</source>
+  <target>Cargando…</target>
+</trans-unit>
+<trans-unit id="s25c2392ffcb78df2">
+  <source>Tenant ID</source>
+  <target>ID del Inquilino</target>
+</trans-unit>
+<trans-unit id="s4ee6d90c2eb5ecdc">
+  <source>Tenant Name</source>
+  <target>Nombre del Inquilino</target>
+</trans-unit>
+<trans-unit id="s42f1224a8c90ec4e">
+  <source>Kore Client ID</source>
+  <target>Kore Client ID</target>
+</trans-unit>
+<trans-unit id="seb4634a675ab28c4">
+  <source>Syncing...</source>
+  <target>Sincronizando...</target>
+</trans-unit>
+<trans-unit id="s9a453768c4472e07">
+  <source>Sync SIMs and Fleet</source>
+  <target>Sincronizar SIMs y Flota</target>
+</trans-unit>
+<trans-unit id="s265e617379006228">
+  <source>Provided from the Kore website. Not required, only needed to automatically sync IMEIs.</source>
+  <target>Proporcionado desde el sitio web de Kore. No requerido, solo necesario para sincronizar IMEIs automáticamente.</target>
+</trans-unit>
+<trans-unit id="s17480f058313bc12">
+  <source>Kore Secret</source>
+  <target>Kore Secret</target>
+</trans-unit>
+<trans-unit id="s9e638fef900f19f9">
+  <source>Also from the Kore website, and also not required.</source>
+  <target>También del sitio web de Kore, y tampoco es requerido.</target>
+</trans-unit>
+<trans-unit id="sbe143fa3c603edcb">
+  <source>Command Password</source>
+  <target>Contraseña de Comando</target>
+</trans-unit>
+<trans-unit id="se93f30189944812b">
+  <source>Used to authenticate device commands. Optional, needed for immobilization and other SMS commands.</source>
+  <target>Usado para autenticar comandos de dispositivo. Opcional, necesario para inmovilización y otros comandos SMS.</target>
+</trans-unit>
+<trans-unit id="sf07d6a84023f6642">
+  <source>DIMO Client ID</source>
+  <target>DIMO Client ID</target>
+</trans-unit>
+<trans-unit id="s6e196b93c62518bb">
+  <source>Found in your DIMO developer console.</source>
+  <target>Se encuentra en su consola de desarrollador DIMO.</target>
+</trans-unit>
+<trans-unit id="s7da178cd5e1c395e">
+  <source>DIMO Secret</source>
+  <target>DIMO Secret</target>
+</trans-unit>
+<trans-unit id="s8b539418961e8d5b">
+  <source>From your DIMO license credentials, also from the developer console.</source>
+  <target>De sus credenciales de licencia DIMO, también de la consola de desarrollador.</target>
+</trans-unit>
+<trans-unit id="sb060188bb28bfa9f">
+  <source>Saving…</source>
+  <target>Guardando…</target>
+</trans-unit>
+<trans-unit id="s33f85f24c0f5f008">
+  <source>Save</source>
+  <target>Guardar</target>
+</trans-unit>
+<trans-unit id="s0330c151a844c01e">
+  <source>Getting Started</source>
+  <target>Primeros Pasos</target>
+</trans-unit>
+<trans-unit id="h104d0372d43faa07">
+  <source>To connect your fleet you will need a DIMO developer account. If you don't have one yet, create one at <x id="0" equiv-text="&lt;a href=&quot;https://console.dimo.org&quot; target=&quot;_blank&quot;&gt;"/>console.dimo.org<x id="1" equiv-text="&lt;/a&gt;"/>.</source>
+  <target>Para conectar su flota necesitará una cuenta de desarrollador DIMO. Si aún no tiene una, cree una en <x id="0" equiv-text="&lt;a href=&quot;https://console.dimo.org&quot; target=&quot;_blank&quot;&gt;"/>console.dimo.org<x id="1" equiv-text="&lt;/a&gt;"/>.</target>
+</trans-unit>
+<trans-unit id="h66e656fa5620dd93">
+  <source>Your <x id="0" equiv-text="&lt;strong&gt;"/>DIMO Client ID<x id="1" equiv-text="&lt;/strong&gt;"/> and <x id="2" equiv-text="&lt;strong&gt;"/>DIMO Secret<x id="3" equiv-text="&lt;/strong&gt;"/> can be found in your developer console under your license credentials.</source>
+  <target>Su <x id="0" equiv-text="&lt;strong&gt;"/>DIMO Client ID<x id="1" equiv-text="&lt;/strong&gt;"/> y <x id="2" equiv-text="&lt;strong&gt;"/>DIMO Secret<x id="3" equiv-text="&lt;/strong&gt;"/> se pueden encontrar en su consola de desarrollador bajo sus credenciales de licencia.</target>
+</trans-unit>
+<trans-unit id="h67d8842e6c03f894">
+  <source>The <x id="0" equiv-text="&lt;strong&gt;"/>Kore<x id="1" equiv-text="&lt;/strong&gt;"/> credentials are provided by your hardware / connectivity provider and are used to sync SIM and device information.</source>
+  <target>Las credenciales de <x id="0" equiv-text="&lt;strong&gt;"/>Kore<x id="1" equiv-text="&lt;/strong&gt;"/> son proporcionadas por su proveedor de hardware / conectividad y se usan para sincronizar información de SIM y dispositivos.</target>
+</trans-unit>
+<trans-unit id="sff390fb4dc02d04f">
+  <source>Failed to load user profile.</source>
+  <target>Error al cargar perfil de usuario.</target>
+</trans-unit>
+<trans-unit id="s0dbf648c666584d8">
+  <source>Profile updated successfully.</source>
+  <target>Perfil actualizado exitosamente.</target>
+</trans-unit>
+<trans-unit id="s40826b781c6feddb">
+  <source>Failed to update profile.</source>
+  <target>Error al actualizar perfil.</target>
+</trans-unit>
+<trans-unit id="sb8054673c62ea9ed">
+  <source>Vehicles Owned</source>
+  <target>Vehículos Propios</target>
+</trans-unit>
+<trans-unit id="s160db8e7aaf41fd7">
+  <source>No vehicles found.</source>
+  <target>No se encontraron vehículos.</target>
+</trans-unit>
+<trans-unit id="s1e775819b5769662">
+  <source>MMY</source>
+  <target>MMA</target>
+</trans-unit>
+<trans-unit id="s17597a8bb4810524">
+  <source>License</source>
+  <target>Licencia</target>
+</trans-unit>
+<trans-unit id="s096870834409c059">
+  <source>Minted On</source>
+  <target>Acuñado el</target>
+</trans-unit>
+<trans-unit id="sdc758b94c5980ef3">
+  <source>Vehicles Shared With</source>
+  <target>Vehículos Compartidos Con</target>
+</trans-unit>
+<trans-unit id="s74b85ca082cba3d6">
+  <source>No shared vehicles found.</source>
+  <target>No se encontraron vehículos compartidos.</target>
+</trans-unit>
+<trans-unit id="s64e515e1736240d7">
+  <source>Loading user profile...</source>
+  <target>Cargando perfil de usuario...</target>
+</trans-unit>
+<trans-unit id="sb81e810d1a2c1ec7">
+  <source>BACK TO USERS</source>
+  <target>VOLVER A USUARIOS</target>
+</trans-unit>
+<trans-unit id="sc2c6ab213f763d92">
+  <source>Profile Info</source>
+  <target>Información del Perfil</target>
+</trans-unit>
+<trans-unit id="sf1bc83d2509bafcf">
+  <source>Phone</source>
+  <target>Teléfono</target>
+</trans-unit>
+<trans-unit id="s88253ec2c673f2ea">
+  <source>Business Name</source>
+  <target>Nombre de la Empresa</target>
+</trans-unit>
+<trans-unit id="s853062af0bcf2d88">
+  <source>Gov ID Type</source>
+  <target>Tipo de ID Gubernamental</target>
+</trans-unit>
+<trans-unit id="s4a772fa67280a0dc">
+  <source>Created At</source>
+  <target>Creado el</target>
+</trans-unit>
+<trans-unit id="s5408f28b5a10cc75">
+  <source>Updated At</source>
+  <target>Actualizado el</target>
+</trans-unit>
+<trans-unit id="s1d825f2422e04828">
+  <source>SAVE</source>
+  <target>GUARDAR</target>
+</trans-unit>
+<trans-unit id="s5b9f294c4f4a21fb">
+  <source>CANCEL</source>
+  <target>CANCELAR</target>
+</trans-unit>
+<trans-unit id="s1886f4b7d7c547eb">
+  <source>+ CREATE NEW USER</source>
+  <target>+ CREAR NUEVO USUARIO</target>
+</trans-unit>
+<trans-unit id="s4e035c2ccf0535fd">
+  <source>Failed to load vehicle data</source>
+  <target>Error al cargar datos del vehículo</target>
+</trans-unit>
+<trans-unit id="sb045239bd60fa040">
+  <source>Failed to load telemetry</source>
+  <target>Error al cargar telemetría</target>
+</trans-unit>
+<trans-unit id="s863a334030f271d3">
+  <source>Failed to load vehicle identity</source>
+  <target>Error al cargar identidad del vehículo</target>
+</trans-unit>
+<trans-unit id="s1a7d1a91f4212c93">
+  <source>This week</source>
+  <target>Esta semana</target>
+</trans-unit>
+<trans-unit id="sf08825084467201b">
+  <source>Failed to load trips</source>
+  <target>Error al cargar viajes</target>
+</trans-unit>
+<trans-unit id="sb0be85c5e7eec038">
+  <source>← BACK TO VEHICLES</source>
+  <target>← VOLVER A VEHÍCULOS</target>
+</trans-unit>
+<trans-unit id="s8ba5dc0c56c7205d">
+  <source>Minted At:</source>
+  <target>Acuñado el:</target>
+</trans-unit>
+<trans-unit id="sb819464683a062e5">
+  <source>Click to update inventory status</source>
+  <target>Clic para actualizar estado de inventario</target>
+</trans-unit>
+<trans-unit id="s55b4fa9d08ad927e">
+  <source>LAST TELEMETRY</source>
+  <target>ÚLTIMA TELEMETRÍA</target>
+</trans-unit>
+<trans-unit id="s49730f3d5751a433">
+  <source>Loading...</source>
+  <target>Cargando...</target>
+</trans-unit>
+<trans-unit id="sadcd22b46ccac6f9">
+  <source>HARDWARE</source>
+  <target>HARDWARE</target>
+</trans-unit>
+<trans-unit id="s05fe088a81aec78a">
+  <source>Owner Information</source>
+  <target>Información del Propietario</target>
+</trans-unit>
+<trans-unit id="s37984723eda2abb4">
+  <source>Owner Email</source>
+  <target>Correo del Propietario</target>
+</trans-unit>
+<trans-unit id="s322e34cfcba47155">
+  <source>Not available</source>
+  <target>No disponible</target>
+</trans-unit>
+<trans-unit id="s42177b0fbb2fb8e2">
+  <source>User Created</source>
+  <target>Usuario Creado</target>
+</trans-unit>
+<trans-unit id="s4e2391300b797f3c">
+  <source>VIEW USER PROFILE →</source>
+  <target>VER PERFIL DE USUARIO →</target>
+</trans-unit>
+<trans-unit id="sb019a2ec0320b8e2">
+  <source>No user assigned — vehicle is in inventory.</source>
+  <target>Sin usuario asignado — el vehículo está en inventario.</target>
+</trans-unit>
+<trans-unit id="se38055aa47435788">
+  <source>Loading owner information...</source>
+  <target>Cargando información del propietario...</target>
+</trans-unit>
+<trans-unit id="see2fcaedf9743ec6">
+  <source>Location</source>
+  <target>Ubicación</target>
+</trans-unit>
+<trans-unit id="s0a95ea7c8e330485">
+  <source>Latitude</source>
+  <target>Latitud</target>
+</trans-unit>
+<trans-unit id="sa25de1d82d6a4d4e">
+  <source>Longitude</source>
+  <target>Longitud</target>
+</trans-unit>
+<trans-unit id="sfcdd8e672c75b713">
+  <source>Address</source>
+  <target>Dirección</target>
+</trans-unit>
+<trans-unit id="s415be0d832062d44">
+  <source>Click on map pointer to get address</source>
+  <target>Haga clic en el marcador del mapa para obtener la dirección</target>
+</trans-unit>
+<trans-unit id="s293028be2dd62335">
+  <source>Last Location Update</source>
+  <target>Última Actualización de Ubicación</target>
+</trans-unit>
+<trans-unit id="s24e6c0958f92378f">
+  <source>Vehicle Controls</source>
+  <target>Controles del Vehículo</target>
+</trans-unit>
+<trans-unit id="s0aee163636587063">
+  <source>ENGINE STATUS</source>
+  <target>ESTADO DEL MOTOR</target>
+</trans-unit>
+<trans-unit id="s8ef448ea928acc53">
+  <source>BLOCKED</source>
+  <target>BLOQUEADO</target>
+</trans-unit>
+<trans-unit id="sbdced4fd52eabf7e">
+  <source>UNBLOCKED</source>
+  <target>DESBLOQUEADO</target>
+</trans-unit>
+<trans-unit id="sb91d3de10eb301a0">
+  <source>Last update:</source>
+  <target>Última actualización:</target>
+</trans-unit>
+<trans-unit id="s82e03d888f770d2f">
+  <source>IMMOBILIZER ON</source>
+  <target>INMOVILIZADOR ACTIVADO</target>
+</trans-unit>
+<trans-unit id="sda30a80bc7620933">
+  <source>IMMOBILIZER OFF</source>
+  <target>INMOVILIZADOR DESACTIVADO</target>
+</trans-unit>
+<trans-unit id="s744a500def5015c5">
+  <source>CAN / Telemetry Snapshot</source>
+  <target>CAN / Instantánea de Telemetría</target>
+</trans-unit>
+<trans-unit id="s250bde15254b34c6">
+  <source>Ignition</source>
+  <target>Encendido</target>
+</trans-unit>
+<trans-unit id="se24130f1123560a0">
+  <source>Speed</source>
+  <target>Velocidad</target>
+</trans-unit>
+<trans-unit id="s7957094cc8fd0fe7">
+  <source>Fuel Level</source>
+  <target>Nivel de Combustible</target>
+</trans-unit>
+<trans-unit id="se2f2dc6fb02a09f8">
+  <source>Odometer</source>
+  <target>Odómetro</target>
+</trans-unit>
+<trans-unit id="sa039cb19fee9b0d6">
+  <source>RPM</source>
+  <target>RPM</target>
+</trans-unit>
+<trans-unit id="s1d2fad14d2ede488">
+  <source>Battery Voltage</source>
+  <target>Voltaje de Batería</target>
+</trans-unit>
+<trans-unit id="sf9f4ee4518e88e8b">
+  <source>Active DTCs</source>
+  <target>DTCs Activos</target>
+</trans-unit>
+<trans-unit id="s269dba61afbaadfc">
+  <source>Last CAN Update</source>
+  <target>Última Actualización CAN</target>
+</trans-unit>
+<trans-unit id="se449f1215ef49707">
+  <source>Recent Activity</source>
+  <target>Actividad Reciente</target>
+</trans-unit>
+<trans-unit id="se39db80d5e146efb">
+  <source>Trips</source>
+  <target>Viajes</target>
+</trans-unit>
+<trans-unit id="sebf4dcb0999597b3">
+  <source>Commands</source>
+  <target>Comandos</target>
+</trans-unit>
+<trans-unit id="sae1c7f13b7c0c47f">
+  <source>Start</source>
+  <target>Inicio</target>
+</trans-unit>
+<trans-unit id="sd8f923198e0c5c6a">
+  <source>End</source>
+  <target>Fin</target>
+</trans-unit>
+<trans-unit id="s30d8afddc9716922">
+  <source>Distance</source>
+  <target>Distancia</target>
+</trans-unit>
+<trans-unit id="se86a217c69996361">
+  <source>Avg/Max Speed</source>
+  <target>Velocidad Prom/Máx</target>
+</trans-unit>
+<trans-unit id="s0cd0f490954a4ee2">
+  <source>Ongoing</source>
+  <target>En curso</target>
+</trans-unit>
+<trans-unit id="s8f8328a1638a3b9a">
+  <source>No trip history available</source>
+  <target>No hay historial de viajes disponible</target>
+</trans-unit>
+<trans-unit id="s8bea2885ff2d1272">
+  <source>Command</source>
+  <target>Comando</target>
+</trans-unit>
+<trans-unit id="sb41b2cfbbc52565b">
+  <source>Created</source>
+  <target>Creado</target>
+</trans-unit>
+<trans-unit id="sc1b8b2a4faa830eb">
+  <source>Command ID</source>
+  <target>ID de Comando</target>
+</trans-unit>
+<trans-unit id="sedb05f83531d5ae8">
+  <source>No command history available</source>
+  <target>No hay historial de comandos disponible</target>
+</trans-unit>
+<trans-unit id="sae239213b7c70376">
+  <source>State</source>
+  <target>Estado</target>
+</trans-unit>
+<trans-unit id="s9d9f911ad6d7fb41">
+  <source>No inventory history available</source>
+  <target>No hay historial de inventario disponible</target>
+</trans-unit>
+<trans-unit id="s9da50bec44f2d8ab">
+  <source>Vehicle Sharing</source>
+  <target>Compartir Vehículo</target>
+</trans-unit>
+<trans-unit id="see4e22f60d66f607">
+  <source>Grantee</source>
+  <target>Beneficiario</target>
+</trans-unit>
+<trans-unit id="s5f43af3669b1e098">
+  <source>Source</source>
+  <target>Fuente</target>
+</trans-unit>
+<trans-unit id="s40ffe3175b6e32f4">
+  <source>Expires At</source>
+  <target>Expira el</target>
+</trans-unit>
+<trans-unit id="sdd5b71ef1b191637">
+  <source>No sharing information available</source>
+  <target>No hay información de compartir disponible</target>
+</trans-unit>
+<trans-unit id="s59f86282bcc88563">
+  <source>No IMEI or API service provided</source>
+  <target>No se proporcionó IMEI o servicio API</target>
+</trans-unit>
+<trans-unit id="s3c699cca4f4dbfb4">
+  <source>Vehicles</source>
+  <target>Vehículos</target>
+</trans-unit>
+<trans-unit id="s47f4637aaa012055">
+  <source>Fleet Groups</source>
+  <target>Grupos de Flota</target>
+</trans-unit>
+<trans-unit id="sbc0d49dbd9313db4">
+  <source>Search by VIN, IMEI, or Nickname...</source>
+  <target>Buscar por VIN, IMEI o Apodo...</target>
+</trans-unit>
+<trans-unit id="s0c2c45e80b08422a">
+  <source>All Inventory Status</source>
+  <target>Todos los Estados de Inventario</target>
+</trans-unit>
+<trans-unit id="sa0c400f4dc1fd284">
+  <source>All Groups</source>
+  <target>Todos los Grupos</target>
+</trans-unit>
+<trans-unit id="s5bed171fa60428de">
+  <source>Last Telemetry</source>
+  <target>Última Telemetría</target>
+</trans-unit>
+<trans-unit id="s9f26843287bb592d">
+  <source>Groups</source>
+  <target>Grupos</target>
+</trans-unit>
+<trans-unit id="sb0d17b84dc5cd2ad">
+  <source>Fuel</source>
+  <target>Combustible</target>
+</trans-unit>
+<trans-unit id="s2615a3939b0639bb">
+  <source>Engine</source>
+  <target>Motor</target>
+</trans-unit>
+<trans-unit id="scb489a1a173ac3f0">
+  <source>Yes</source>
+  <target>Sí</target>
+</trans-unit>
+<trans-unit id="s09205907b5b56cda">
+  <source>No</source>
+  <target>No</target>
+</trans-unit>
+<trans-unit id="se8bc25ae43fe22b1">
+  <source>Showing <x id="0" equiv-text="${this.showingStart}"/>-<x id="1" equiv-text="${this.showingEnd}"/> of <x id="2" equiv-text="${this.totalCount}"/> vehicles</source>
+  <target>Mostrando <x id="0" equiv-text="${this.showingStart}"/>-<x id="1" equiv-text="${this.showingEnd}"/> de <x id="2" equiv-text="${this.totalCount}"/> vehículos</target>
+</trans-unit>
+<trans-unit id="s3cd32d36254fcb81">
+  <source>+ CREATE GROUP</source>
+  <target>+ CREAR GRUPO</target>
+</trans-unit>
+<trans-unit id="s0d6e8794b1c66c63">
+  <source>No fleet groups yet. Click "CREATE GROUP" to add one.</source>
+  <target>Aún no hay grupos de flota. Haga clic en "CREAR GRUPO" para agregar uno.</target>
+</trans-unit>
+<trans-unit id="s3cf3d6dbc14ee16d">
+  <source><x id="0" equiv-text="${group.vehicle_count}"/> vehicle<x id="1" equiv-text="${group.vehicle_count !== 1 ? 's' : ''}"/></source>
+  <target><x id="0" equiv-text="${group.vehicle_count}"/> vehículo<x id="1" equiv-text="${group.vehicle_count !== 1 ? 's' : ''}"/></target>
+</trans-unit>
+<trans-unit id="s225cc5b439508377">
+  <source>MANAGE VEHICLES</source>
+  <target>ADMINISTRAR VEHÍCULOS</target>
+</trans-unit>
+<trans-unit id="s3f2689e11bed17e1">
+  <source>Delete Fleet Group</source>
+  <target>Eliminar Grupo de Flota</target>
+</trans-unit>
+<trans-unit id="s02f08b8f4c49b948">
+  <source>Are you sure you want to delete "<x id="0" equiv-text="${this.groupToDelete.name}"/>"? This action cannot be undone.</source>
+  <target>¿Está seguro de que desea eliminar "<x id="0" equiv-text="${this.groupToDelete.name}"/>"? Esta acción no se puede deshacer.</target>
+</trans-unit>
+</body>
+</file>
+</xliff>

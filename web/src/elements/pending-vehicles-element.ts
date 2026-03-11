@@ -1,4 +1,5 @@
 import {css, html, LitElement} from 'lit';
+import {msg} from '@lit/localize';
 import {repeat} from 'lit/directives/repeat.js';
 import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
@@ -104,7 +105,7 @@ export class PendingVehiclesElement extends LitElement {
             this.totalItems = response.data.totalCount;
             this.shouldShowPagination = this.totalItems > this.pageSize;
         } else {
-            this.alertText = response.error || "Failed to load pending vehicles";
+            this.alertText = response.error || msg("Failed to load pending vehicles");
             this.items = [];
             this.totalItems = 0;
         }
@@ -144,16 +145,16 @@ export class PendingVehiclesElement extends LitElement {
 		render() {
         return html`
             <div class="onboard-section">
-                <div class="onboard-header">PENDING TO ONBOARD VEHICLES</div>
+                <div class="onboard-header">${msg('PENDING TO ONBOARD VEHICLES')}</div>
                 <div class="onboard-toolbar">
                     <input type="text"
-                       placeholder="Search by IMEI or VIN"
+                       .placeholder=${msg('Search by IMEI or VIN')}
                        style="width: 40%; min-width: 200px;"
                        .value=${this.searchTerm}
                        @input=${this.onSearchInput}>
                     <button class="btn btn-primary" @click=${this.openClaimImeiModal} style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 1.2rem; font-weight: bold;" title="Please claim your IMEI's every time you purchase or add a new device to your fleet" >+</span>
-                        Claim new IMEI
+                        <span style="font-size: 1.2rem; font-weight: bold;" title=${msg("Please claim your IMEI's every time you purchase or add a new device to your fleet")} >+</span>
+                        ${msg('Claim new IMEI')}
                     </button>
                 </div>
                 <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
@@ -170,17 +171,17 @@ export class PendingVehiclesElement extends LitElement {
                                                             })()}
                                                             @change=${this.toggleAllPendingVehicles}>
                             </th>
-                            <th>VIN</th>
-                            <th>IMEI</th>
-                            <th>First Seen</th>
-                            <th>Action</th>
+                            <th>${msg('VIN')}</th>
+                            <th>${msg('IMEI')}</th>
+                            <th>${msg('First Seen')}</th>
+                            <th>${msg('Action')}</th>
                         </tr>
                         </thead>
                         <tbody>
                         ${this.items.length === 0 ? html`
                         <tr>
                             <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
-                                No results found, make sure you have <a href="#" @click=${(e: Event) => { e.preventDefault(); this.openClaimImeiModal(); }} style="color: #007bff; text-decoration: underline; cursor: pointer;">claimed</a> your devices
+                                ${msg('No results found, make sure you have')} <a href="#" @click=${(e: Event) => { e.preventDefault(); this.openClaimImeiModal(); }} style="color: #007bff; text-decoration: underline; cursor: pointer;">${msg('claimed')}</a> ${msg('your devices')}
                             </td>
                         </tr>
                         ` : repeat(this.items, (item) => item.vin, (item) => html`
@@ -196,12 +197,12 @@ export class PendingVehiclesElement extends LitElement {
                             }
                         }}>
                             </td>
-                            <td>${item.vin || 'N/A'}</td>
+                            <td>${item.vin || msg('N/A')}</td>
                             <td>${item.imei}</td>
                             <td>${item.firstSeen}</td>
                             <td>
                                 <button class="action-btn" @click=${() => this.openTelemetryModal(item.imei, item.vin)} style="margin-left: 0.5rem;">
-                                    TELEMETRY
+                                    ${msg('TELEMETRY')}
                                 </button>
                             </td>
                         </tr>
@@ -210,10 +211,10 @@ export class PendingVehiclesElement extends LitElement {
                     </table>
                 </div>
                 <div class="pagination" ?hidden=${!this.shouldShowPagination}>
-                    <button class="pagination-btn" @click=${this.previousPage} ?disabled=${!this.hasPreviousPage}>PREVIOUS</button>
-                    <span>Page ${this.currentPage} of ${this.totalPages}</span>
-                    <button class="pagination-btn" @click=${this.nextPage} ?disabled=${!this.hasNextPage}>NEXT</button>
-                    <span style="margin-left: auto; color: #666;">Showing ${this.items.length} of ${this.totalItems} items</span>
+                    <button class="pagination-btn" @click=${this.previousPage} ?disabled=${!this.hasPreviousPage}>${msg('PREVIOUS')}</button>
+                    <span>${msg('Page')} ${this.currentPage} ${msg('of')} ${this.totalPages}</span>
+                    <button class="pagination-btn" @click=${this.nextPage} ?disabled=${!this.hasNextPage}>${msg('NEXT')}</button>
+                    <span style="margin-left: auto; color: #666;">${msg('Showing')} ${this.items.length} ${msg('of')} ${this.totalItems} ${msg('items')}</span>
                 </div>
             </div>
         `;

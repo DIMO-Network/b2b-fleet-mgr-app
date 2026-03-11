@@ -1,4 +1,5 @@
 import { LitElement, html } from "lit";
+import {msg} from '@lit/localize';
 import { customElement, property } from "lit/decorators.js";
 import { globalStyles } from "../global-styles.ts";
 
@@ -33,27 +34,27 @@ export class UserProfileCard extends LitElement {
 
     return html`
       <div class="panel mb-16">
-        <div class="panel-header">User Profile</div>
+        <div class="panel-header">${msg('User Profile')}</div>
         <div class="panel-body">
-          ${this.renderRow("Email", email)}
-          ${this.renderRow("Wallet Address", wallet)}
-          ${this.renderRow("Phone Number", "—")}
-          ${this.renderRow("Account Created", created)}
+          ${this.renderRow(msg("Email"), email)}
+          ${this.renderRow(msg("Wallet Address"), wallet)}
+          ${this.renderRow(msg("Phone Number"), "—")}
+          ${this.renderRow(msg("Account Created"), created)}
 
           <div class="detail-row">
-            <span class="detail-label">Auth Methods</span>
+            <span class="detail-label">${msg('Auth Methods')}</span>
             <span class="detail-value">
-              ${info?.hasPasskey ? html`<span class="badge">Passkey</span>` : null}
-              ${info?.emailVerified ? html`<span class="badge">Email</span>` : null}
+              ${info?.hasPasskey ? html`<span class="badge">${msg('Passkey')}</span>` : null}
+              ${info?.emailVerified ? html`<span class="badge">${msg('Email')}</span>` : null}
             </span>
           </div>
 
           <div class="detail-row">
-            <span class="detail-label">Account Status</span>
+            <span class="detail-label">${msg('Account Status')}</span>
             <span class="detail-value">
               ${info?.isDeployed
-                ? html`<span class="status status-connected">Active</span>`
-                : html`<span class="status status-disconnected">Inactive</span>`}
+                ? html`<span class="status status-connected">${msg('Active')}</span>`
+                : html`<span class="status status-disconnected">${msg('Inactive')}</span>`}
             </span>
           </div>
         </div>

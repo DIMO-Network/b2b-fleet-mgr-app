@@ -1,4 +1,5 @@
 import {css, html, LitElement} from 'lit';
+import {msg} from '@lit/localize';
 import {repeat} from 'lit/directives/repeat.js';
 import {customElement, property, state} from "lit/decorators.js";
 import {Vehicle} from "@datatypes//vehicle.ts";
@@ -106,7 +107,7 @@ export class VehicleListElement extends LitElement {
             this.totalItems = response.data.totalCount;
             this.shouldShowPagination = this.totalItems > this.pageSize;
         } else {
-            this.alertText = response.error || "Failed to load vehicles";
+            this.alertText = response.error || msg("Failed to load vehicles");
             this.items = [];
             this.totalItems = 0;
         }
@@ -184,7 +185,7 @@ export class VehicleListElement extends LitElement {
             );
         } catch (error: any) {
             console.error("Export CSV failed:", error);
-            this.alertText = error.message || "Failed to export CSV";
+            this.alertText = error.message || msg("Failed to export CSV");
         } finally {
             this.exporting = false;
         }
@@ -193,15 +194,15 @@ export class VehicleListElement extends LitElement {
     render() {
         return html`
             <div class="onboard-section">
-                <div class="onboard-header">ONBOARDED VEHICLES</div>
+                <div class="onboard-header">${msg('ONBOARDED VEHICLES')}</div>
                 <div class="onboard-toolbar">
                     <input type="text"
-                           placeholder="Search by IMEI, VIN, or Token ID"
+                           .placeholder=${msg('Search by IMEI, VIN, or Token ID')}
                            style="width: 40%; min-width: 200px;"
                            .value=${this.searchTerm}
                            @input=${this.onSearchInput}>
-                    <button class="btn btn-sm ${this.exporting ? 'processing' : ''}" 
-                            style="margin-left: auto; display: flex; align-items: center; gap: 6px;" 
+                    <button class="btn btn-sm ${this.exporting ? 'processing' : ''}"
+                            style="margin-left: auto; display: flex; align-items: center; gap: 6px;"
                             @click=${this.handleExportCSV}
                             ?disabled=${this.exporting}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -209,7 +210,7 @@ export class VehicleListElement extends LitElement {
                             <polyline points="7 10 12 15 17 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
-                        Export CSV
+                        ${msg('Export CSV')}
                     </button>
                 </div>
                 <div class="alert alert-error" role="alert" ?hidden=${this.alertText === ""}>
@@ -219,12 +220,12 @@ export class VehicleListElement extends LitElement {
                     <table>
                         <thead>
                         <tr>
-                            <th>VIN</th>
-                            <th>Make Model Year</th>
-                            <th>IMEI</th>
-                            <th>Token ID</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>${msg('VIN')}</th>
+                            <th>${msg('Make Model Year')}</th>
+                            <th>${msg('IMEI')}</th>
+                            <th>${msg('Token ID')}</th>
+                            <th>${msg('Status')}</th>
+                            <th>${msg('Actions')}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -238,16 +239,16 @@ export class VehicleListElement extends LitElement {
                             @click=${this.previousPage}
                             ?disabled=${!this.hasPreviousPage}
                     >
-                        Previous
+                        ${msg('Previous')}
                     </button>
-                    <span>Page ${this.currentPage} of ${this.totalPages}</span>
+                    <span>${msg('Page')} ${this.currentPage} ${msg('of')} ${this.totalPages}</span>
                     <button class="pagination-btn"
                             @click=${this.nextPage}
                             ?disabled=${!this.hasNextPage}
                     >
-                        Next
+                        ${msg('Next')}
                     </button>
-                    <span style="margin-left: auto; color: #666;">Showing ${this.filteredItems.length} of ${this.totalItems} items</span>
+                    <span style="margin-left: auto; color: #666;">${msg('Showing')} ${this.filteredItems.length} ${msg('of')} ${this.totalItems} ${msg('items')}</span>
                 </div>
             </div>
         `;

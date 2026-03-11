@@ -1,4 +1,5 @@
 import {css, html, LitElement, nothing} from 'lit';
+import {msg} from '@lit/localize';
 import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import {globalStyles} from "../global-styles.ts";
@@ -59,21 +60,21 @@ export class ClaimImeiModalElement extends LitElement {
             <div class="modal-overlay" @click=${this.closeModal}>
                 <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
                     <div class="modal-header">
-                        <h3>Claim New IMEI</h3>
+                        <h3>${msg('Claim New IMEI')}</h3>
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>
                     <div class="modal-body">
                         ${this.error ? html`<div class="alert alert-error" style="margin-bottom: 1rem;">${this.error}</div>` : nothing}
-                        <p class="helper-text">Please claim your IMEI's every time you purchase or add a new device to your fleet.</p>
+                        <p class="helper-text">${msg("Please claim your IMEI's every time you purchase or add a new device to your fleet.")}</p>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <p class="instruction-text">Enter one or more IMEIs (one per line):</p>
+                            <p class="instruction-text">${msg('Enter one or more IMEIs (one per line):')}</p>
                             <button type="button" class="btn btn-sm" @click=${() => this.shadowRoot?.querySelector<HTMLInputElement>('#csv-upload')?.click()} ?disabled=${this.processing}>
-                                Upload CSV
+                                ${msg('Upload CSV')}
                             </button>
                             <input type="file" id="csv-upload" style="display: none;" accept=".csv" @change=${this.handleFileUpload}>
                         </div>
                         <textarea 
-                            placeholder="Enter IMEIs here..."
+                            .placeholder=${msg('Enter IMEIs here...')}
                             .value=${this.imeisText}
                             @input=${(e: InputEvent) => this.imeisText = (e.target as HTMLTextAreaElement).value}
                             ?disabled=${this.processing}
@@ -81,10 +82,10 @@ export class ClaimImeiModalElement extends LitElement {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @click=${this.closeModal} ?disabled=${this.processing}>
-                            Cancel
+                            ${msg('Cancel')}
                         </button>
                         <button type="button" class="btn btn-primary ${this.processing ? 'processing' : ''}" @click=${this.submitClaims} ?disabled=${this.processing || !this.imeisText.trim()}>
-                            ${this.processing ? 'Claiming...' : 'Submit'}
+                            ${this.processing ? msg('Claiming...') : msg('Submit')}
                         </button>
                     </div>
                 </div>
@@ -107,7 +108,7 @@ export class ClaimImeiModalElement extends LitElement {
         };
 
         reader.onerror = () => {
-            this.error = "Failed to read file";
+            this.error = msg("Failed to read file");
         };
 
         reader.readAsText(file);
@@ -117,7 +118,7 @@ export class ClaimImeiModalElement extends LitElement {
         this.error = "";
         const lines = content.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
         if (lines.length === 0) {
-            this.error = "The CSV file is empty";
+            this.error = msg("The CSV file is empty");
             return;
         }
 
@@ -146,12 +147,12 @@ export class ClaimImeiModalElement extends LitElement {
             // No header, but single column - assume all rows are IMEIs
             extractedImeis = rows.map(row => row[0]);
         } else {
-            this.error = "Could not find 'imei' or 'IMEI' column in CSV and it has multiple columns.";
+            this.error = msg("Could not find 'imei' or 'IMEI' column in CSV and it has multiple columns.");
             return;
         }
 
         if (extractedImeis.length === 0) {
-            this.error = "No IMEIs found in the CSV file";
+            this.error = msg("No IMEIs found in the CSV file");
             return;
         }
 
@@ -178,7 +179,7 @@ export class ClaimImeiModalElement extends LitElement {
             .filter(imei => imei.length > 0);
 
         if (imeis.length === 0) {
-            this.error = "Please enter at least one IMEI";
+            this.error = msg("Please enter at least one IMEI");
             return;
         }
 

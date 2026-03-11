@@ -1,4 +1,5 @@
 import { html, nothing, LitElement, css } from 'lit';
+import {msg} from '@lit/localize';
 import { customElement, property, state } from 'lit/decorators.js';
 import { globalStyles } from '../global-styles.ts';
 import { ApiService } from '@services/api-service.ts';
@@ -41,7 +42,7 @@ export class UpdateInventoryModalElement extends LitElement {
       <div class="modal-overlay" @click=${this.handleCancel}>
         <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
           <div class="modal-header">
-            <h3>Update Inventory Status</h3>
+            <h3>${msg('Update Inventory Status')}</h3>
             <button type="button" class="modal-close" @click=${this.handleCancel}>×</button>
           </div>
           <div class="modal-body">
@@ -54,7 +55,7 @@ export class UpdateInventoryModalElement extends LitElement {
             <div style="display: grid; gap: 16px;">
               <div>
                 <label class="form-label" style="display: block; margin-bottom: 8px;">
-                  Status
+                  ${msg('Status')}
                 </label>
                 <select
                   class="form-control"
@@ -62,20 +63,20 @@ export class UpdateInventoryModalElement extends LitElement {
                   .value=${this.selectedState}
                   @change=${this.handleStateChange}
                 >
-                  <option value="Inventory">Inventory</option>
-                  <option value="Customer">Customer</option>
+                  <option value="Inventory">${msg('Inventory')}</option>
+                  <option value="Customer">${msg('Customer')}</option>
                 </select>
               </div>
 
               <div>
                 <label class="form-label" style="display: block; margin-bottom: 8px;">
-                  Note
+                  ${msg('Note')}
                 </label>
                 <input
                   type="text"
                   class="form-control"
                   style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;"
-                  placeholder="Enter a note (optional)"
+                  .placeholder=${msg('Enter a note (optional)')}
                   .value=${this.note}
                   @input=${this.handleNoteChange}
                 />
@@ -89,7 +90,7 @@ export class UpdateInventoryModalElement extends LitElement {
               @click=${this.handleCancel}
               ?disabled=${this.processing}
             >
-              Cancel
+              ${msg('Cancel')}
             </button>
             <button
               type="button"
@@ -97,7 +98,7 @@ export class UpdateInventoryModalElement extends LitElement {
               @click=${this.handleSubmit}
               ?disabled=${this.processing}
             >
-              ${this.processing ? 'Updating...' : 'Update Status'}
+              ${this.processing ? msg('Updating...') : msg('Update Status')}
             </button>
           </div>
         </div>
@@ -124,7 +125,7 @@ export class UpdateInventoryModalElement extends LitElement {
 
   private async handleSubmit() {
     if (!this.imei) {
-      this.errorMessage = 'IMEI is required';
+      this.errorMessage = msg('IMEI is required');
       return;
     }
 
@@ -146,7 +147,7 @@ export class UpdateInventoryModalElement extends LitElement {
       );
 
       if (!response.success) {
-        this.errorMessage = response.error || 'Failed to update inventory status';
+        this.errorMessage = response.error || msg('Failed to update inventory status');
         this.processing = false;
         return;
       }

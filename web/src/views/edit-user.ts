@@ -1,4 +1,5 @@
 import { LitElement, css, html } from "lit";
+import { msg } from "@lit/localize";
 import { customElement, property, state } from "lit/decorators.js";
 import { globalStyles } from "../global-styles.ts";
 import { IdentityService } from "@services/identity-service";
@@ -88,14 +89,14 @@ export class EditUserView extends LitElement {
         this.selectedPermissions = user.permissions || [];
         this.selectedFleetGroupIds = user.fleetGroupIds || [];
       } else {
-        this.errorMessage = "User not found.";
+        this.errorMessage = msg("User not found.");
       }
 
       this.availablePermissions = permissions;
       this.availableFleetGroups = fleets;
     } catch (error) {
       console.error("Failed to fetch data:", error);
-      this.errorMessage = "Failed to load user data.";
+      this.errorMessage = msg("Failed to load user data.");
     } finally {
       this.loading = false;
     }
@@ -135,14 +136,14 @@ export class EditUserView extends LitElement {
       });
 
       if (res.success) {
-        this.successMessage = "User updated successfully!";
+        this.successMessage = msg("User updated successfully!");
         // Refresh data to be sure
         await this.fetchData();
       } else {
-        this.errorMessage = res.error || "Failed to update user.";
+        this.errorMessage = res.error || msg("Failed to update user.");
       }
     } catch (error: any) {
-      this.errorMessage = error.message || "An unexpected error occurred.";
+      this.errorMessage = error.message || msg("An unexpected error occurred.");
     } finally {
       this.submitting = false;
     }
@@ -150,7 +151,7 @@ export class EditUserView extends LitElement {
 
   render() {
     if (this.loading) {
-      return html`<div class="page active"><div class="panel"><div class="panel-body">Loading user data...</div></div></div>`;
+      return html`<div class="page active"><div class="panel"><div class="panel-body">${msg("Loading user data...")}</div></div></div>`;
     }
 
     const hasViewAllFleets = this.selectedPermissions.includes('view_all_fleets');
@@ -158,7 +159,7 @@ export class EditUserView extends LitElement {
     return html`
       <div class="page active">
         <div class="section-header">
-          <span>Edit Admin User</span>
+          <span>${msg("Edit Admin User")}</span>
         </div>
 
         <div class="panel form-container">
@@ -167,18 +168,18 @@ export class EditUserView extends LitElement {
             ${this.successMessage ? html`<div class="alert alert-success">${this.successMessage}</div>` : ""}
             
             <div class="form-group">
-              <label class="form-label">Email</label>
+              <label class="form-label">${msg("Email")}</label>
               <div style="padding: 8px 0;">${this.email || "N/A"}</div>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Wallet Address</label>
+              <label class="form-label">${msg("Wallet Address")}</label>
               <div style="padding: 8px 0; font-family: monospace;">${this.walletAddress}</div>
             </div>
 
             <form @submit=${this.handleSubmit}>
               <div class="form-group">
-                <label class="form-label">Permissions</label>
+                <label class="form-label">${msg("Permissions")}</label>
                 <div class="permissions-grid">
                   ${this.availablePermissions.map(
                     (perm) => html`
@@ -198,9 +199,9 @@ export class EditUserView extends LitElement {
               </div>
 
               <div class="form-group ${hasViewAllFleets ? 'disabled-section' : ''}">
-                <label class="form-label">Controlled Fleets</label>
-                ${hasViewAllFleets 
-                  ? html`<div style="font-size: 12px; color: #666; margin-bottom: 8px;">Disabled because 'view_all_fleets' is selected.</div>` 
+                <label class="form-label">${msg("Controlled Fleets")}</label>
+                ${hasViewAllFleets
+                  ? html`<div style="font-size: 12px; color: #666; margin-bottom: 8px;">${msg("Disabled because 'view_all_fleets' is selected.")}</div>`
                   : ""}
                 <div class="fleets-grid">
                   ${this.availableFleetGroups.map(
@@ -215,13 +216,13 @@ export class EditUserView extends LitElement {
                         />
                         <label for="fleet-${fleet.id}" class="fleet-info">
                           <span class="fleet-color" style="background-color: ${fleet.color}"></span>
-                          <span>${fleet.name} ${!fleet.has_access ? html`<span style="color: #dc2626; font-size: 11px;">(No Access)</span>` : ''}</span>
+                          <span>${fleet.name} ${!fleet.has_access ? html`<span style="color: #dc2626; font-size: 11px;">${msg("(No Access)")}</span>` : ''}</span>
                           <span class="fleet-count">(${fleet.vehicle_count} vehicles)</span>
                         </label>
                       </div>
                     `
                   )}
-                  ${this.availableFleetGroups.length === 0 ? html`<div>No fleet groups available.</div>` : ""}
+                  ${this.availableFleetGroups.length === 0 ? html`<div>${msg("No fleet groups available.")}</div>` : ""}
                 </div>
               </div>
 
@@ -231,7 +232,7 @@ export class EditUserView extends LitElement {
                   class="btn btn-primary ${this.submitting ? 'processing' : ''}"
                   ?disabled=${this.submitting}
                 >
-                  Save Changes
+                  ${msg("Save Changes")}
                 </button>
                 <button
                   type="button"
@@ -239,7 +240,7 @@ export class EditUserView extends LitElement {
                   @click=${() => (window.location.hash = "/users")}
                   ?disabled=${this.submitting}
                 >
-                  Back to Users
+                  ${msg("Back to Users")}
                 </button>
               </div>
             </form>

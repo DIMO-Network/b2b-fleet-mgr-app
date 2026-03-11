@@ -1,4 +1,5 @@
 import {css, html, nothing, LitElement} from 'lit';
+import {msg} from '@lit/localize';
 import {customElement, property} from 'lit/decorators.js';
 import {globalStyles} from '../global-styles.ts';
 
@@ -10,7 +11,7 @@ export class ErrorModalElement extends LitElement {
   show: boolean = false;
 
   @property({type: String})
-  title: string = 'Error';
+  title: string = msg('Error');
 
   @property({type: String})
   message: string = '';
@@ -30,7 +31,7 @@ export class ErrorModalElement extends LitElement {
             <div class="alert alert-error">${this.message}</div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-primary" @click=${this.close}>OK</button>
+            <button class="btn btn-primary" @click=${this.close}>${msg('OK')}</button>
           </div>
         </div>
       </div>

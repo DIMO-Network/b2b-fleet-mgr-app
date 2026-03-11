@@ -1,4 +1,5 @@
 import {css, html, nothing} from 'lit';
+import {msg} from '@lit/localize';
 import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
 import { IdentityService, VehicleIdentityData } from '../services/identity-service';
@@ -45,12 +46,12 @@ export class IdentityVehicleInfoModalElement extends LitElement {
             <div class="modal-overlay" @click=${this.closeModal}>
                 <div class="modal-content" @click=${(e: Event) => e.stopPropagation()} style="max-width: 800px;">
                     <div class="modal-header">
-                        <h3>Vehicle Identity Information - Token ID: ${this.tokenId}</h3>
+                        <h3>${msg('Vehicle Identity Information')} - Token ID: ${this.tokenId}</h3>
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>
                     <div class="modal-body">
                         ${this.loading ? html`
-                            <div class="loading-message">Loading vehicle identity data...</div>
+                            <div class="loading-message">${msg('Loading vehicle identity data...')}</div>
                         ` : html`
                             ${this.error ? html`
                                 <div class="alert alert-error">${this.error}</div>
@@ -58,14 +59,14 @@ export class IdentityVehicleInfoModalElement extends LitElement {
                                 ${this.identityData ? html`
                                     <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow: auto; max-height: 60vh;">${this.formatJsonForDisplay(this.identityData)}</pre>
                                 ` : html`
-                                    <div class="no-data">No identity data available for this vehicle.</div>
+                                    <div class="no-data">${msg('No identity data available for this vehicle.')}</div>
                                 `}
                             `}
                         `}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="action-btn secondary" @click=${this.closeModal}>
-                            Close
+                            ${msg('Close')}
                         </button>
                     </div>
                 </div>
@@ -89,7 +90,7 @@ export class IdentityVehicleInfoModalElement extends LitElement {
     // Method to load identity data (to be called from parent)
     public async loadIdentityData() {
         if (!this.tokenId) {
-            this.error = "No Token ID provided";
+            this.error = msg("No Token ID provided");
             return;
         }
 
@@ -101,7 +102,7 @@ export class IdentityVehicleInfoModalElement extends LitElement {
             if (data) {
                 this.identityData = data;
             } else {
-                this.error = "Failed to load vehicle identity data";
+                this.error = msg("Failed to load vehicle identity data");
             }
         } catch (err) {
             this.error = "Failed to load vehicle identity data";
