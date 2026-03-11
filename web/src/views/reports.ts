@@ -1,4 +1,5 @@
 import { LitElement, css, html } from 'lit';
+import { msg } from '@lit/localize';
 import { customElement, state } from 'lit/decorators.js';
 import {globalStyles} from "../global-styles.ts";
 import { FleetService, FleetReport, FleetGroup } from '@services/fleet-service.ts';
@@ -337,8 +338,8 @@ export class ReportsView extends LitElement {
         <div class="page active" id="page-reports">
             <div class="access-denied-notice" style="text-align: center; padding: 48px; background: #fff; border: 1px solid #000; border-radius: 8px;">
                 <div style="font-size: 48px; margin-bottom: 16px;">🚫</div>
-                <h3>Access Denied</h3>
-                <p>You do not have the required permissions to access the Reports section.</p>
+                <h3>${msg('Access Denied')}</h3>
+                <p>${msg('You do not have the required permissions to access the Reports section.')}</p>
             </div>
         </div>
       `;
@@ -349,30 +350,30 @@ export class ReportsView extends LitElement {
         <div class="page active" id="page-reports">
 
             <!-- EXISTING REPORTS SECTION -->
-            <div class="section-header">Existing Reports</div>
+            <div class="section-header">${msg('Existing Reports')}</div>
             <div class="table-container mb-24">
                 <table>
                     <thead>
                     <tr>
-                        <th>Report Name</th>
-                        <th>Fleet Group(s)</th>
-                        <th>Date Range</th>
-                        <th>Last Run</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>${msg('Report Name')}</th>
+                        <th>${msg('Fleet Group(s)')}</th>
+                        <th>${msg('Date Range')}</th>
+                        <th>${msg('Last Run')}</th>
+                        <th>${msg('Status')}</th>
+                        <th>${msg('Actions')}</th>
                     </tr>
                     </thead>
                     <tbody>
                     ${this.loading ? html`
                         <tr>
                             <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
-                                Loading reports...
+                                ${msg('Loading reports...')}
                             </td>
                         </tr>
                     ` : this.reports.length === 0 ? html`
                         <tr>
                             <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
-                                No reports found.
+                                ${msg('No reports found.')}
                             </td>
                         </tr>
                     ` : this.reports.map(report => html`
@@ -393,7 +394,7 @@ export class ReportsView extends LitElement {
                                     @click=${(e: Event) => { e.stopPropagation(); this.handleDownloadCsv(report.id); }}
                                     ?disabled=${!!this.downloadingReportId || report.status !== 'completed'}
                                 >
-                                    CSV
+                                    ${msg('CSV')}
                                 </button>
                             </td>
                         </tr>
@@ -404,7 +405,7 @@ export class ReportsView extends LitElement {
 
             <!-- REPORT CREATOR SECTION -->
             <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Create New Report</span>
+                <span>${msg('Create New Report')}</span>
               <!--  <button class="btn" onclick="toggleReportSettings()" style="display: flex; align-items: center; gap: 6px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -418,57 +419,57 @@ export class ReportsView extends LitElement {
             <!-- Report Settings Panel (hidden by default) -->
             <div id="report-settings-panel" class="panel mb-24" style="display: none;">
                 <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span>Report Settings</span>
+                    <span>${msg('Report Settings')}</span>
                     <button class="btn btn-sm" onclick="toggleReportSettings()">✕ CLOSE</button>
                 </div>
                 <div class="panel-body">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                         <div>
-                            <div style="font-weight: bold; margin-bottom: 12px;">Overspeed Settings</div>
+                            <div style="font-weight: bold; margin-bottom: 12px;">${msg('Overspeed Settings')}</div>
                             <div class="form-group">
-                                <label class="form-label">Overspeed Threshold (km/h)</label>
+                                <label class="form-label">${msg('Overspeed Threshold (km/h)')}</label>
                                 <input type="number" value="110" style="width: 120px;">
-                                <div style="font-size: 12px; color: #666; margin-top: 4px;">Speed above this value triggers overspeed events</div>
+                                <div style="font-size: 12px; color: #666; margin-top: 4px;">${msg('Speed above this value triggers overspeed events')}</div>
                             </div>
 
-                            <div style="font-weight: bold; margin-bottom: 12px; margin-top: 20px;">After-Hours Activity</div>
+                            <div style="font-weight: bold; margin-bottom: 12px; margin-top: 20px;">${msg('After-Hours Activity')}</div>
                             <div class="form-group">
-                                <label class="form-label">Cutoff Time</label>
+                                <label class="form-label">${msg('Cutoff Time')}</label>
                                 <input type="time" value="20:00" style="width: 120px;">
-                                <div style="font-size: 12px; color: #666; margin-top: 4px;">Activity after this time is flagged in reports</div>
+                                <div style="font-size: 12px; color: #666; margin-top: 4px;">${msg('Activity after this time is flagged in reports')}</div>
                             </div>
                         </div>
                         <div>
-                            <div style="font-weight: bold; margin-bottom: 12px;">Fuel Consumption</div>
+                            <div style="font-weight: bold; margin-bottom: 12px;">${msg('Fuel Consumption')}</div>
                             <div class="form-group">
-                                <label class="form-label">Refuel Increase Threshold (%)</label>
+                                <label class="form-label">${msg('Refuel Increase Threshold (%)')}</label>
                                 <input type="number" value="10" style="width: 120px;">
-                                <div style="font-size: 12px; color: #666; margin-top: 4px;">Fuel level increase above this % is a refuel event</div>
+                                <div style="font-size: 12px; color: #666; margin-top: 4px;">${msg('Fuel level increase above this % is a refuel event')}</div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Minimum Data Density</label>
+                                <label class="form-label">${msg('Minimum Data Density')}</label>
                                 <select style="width: 220px;">
-                                    <option>1 reading per hour</option>
-                                    <option selected>1 reading per 30 minutes</option>
-                                    <option>1 reading per 15 minutes</option>
+                                    <option>${msg('1 reading per hour')}</option>
+                                    <option selected>${msg('1 reading per 30 minutes')}</option>
+                                    <option>${msg('1 reading per 15 minutes')}</option>
                                 </select>
                             </div>
 
-                            <div style="font-weight: bold; margin-bottom: 12px; margin-top: 20px;">Scheduling</div>
+                            <div style="font-weight: bold; margin-bottom: 12px; margin-top: 20px;">${msg('Scheduling')}</div>
                             <div class="form-group">
-                                <label class="form-label">Weekly Report Day</label>
+                                <label class="form-label">${msg('Weekly Report Day')}</label>
                                 <select style="width: 150px;">
-                                    <option selected>Monday</option>
-                                    <option>Tuesday</option>
-                                    <option>Wednesday</option>
-                                    <option>Thursday</option>
-                                    <option>Friday</option>
+                                    <option selected>${msg('Monday')}</option>
+                                    <option>${msg('Tuesday')}</option>
+                                    <option>${msg('Wednesday')}</option>
+                                    <option>${msg('Thursday')}</option>
+                                    <option>${msg('Friday')}</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #ccc;">
-                        <button class="btn btn-primary">SAVE SETTINGS</button>
+                        <button class="btn btn-primary">${msg('SAVE SETTINGS')}</button>
                     </div>
                 </div>
             </div>
@@ -476,7 +477,7 @@ export class ReportsView extends LitElement {
             <div class="reports-layout">
                 <!-- Report Templates -->
                 <div class="report-templates">
-                    <div class="panel-header">Report Templates</div>
+                    <div class="panel-header">${msg('Report Templates')}</div>
                     ${this.templates.map(template => html`
                         <div 
                             class="report-template-item ${this.selectedTemplate === template ? 'active' : ''}" 
@@ -485,7 +486,7 @@ export class ReportsView extends LitElement {
                             ${template}
                         </div>
                     `)}
-                    ${this.templates.length === 0 ? html`<div style="padding: 12px; color: #999;">No templates found</div>` : ''}
+                    ${this.templates.length === 0 ? html`<div style="padding: 12px; color: #999;">${msg('No templates found')}</div>` : ''}
                 </div>
 
                 <!-- Report Main Area -->
@@ -494,31 +495,31 @@ export class ReportsView extends LitElement {
                     <div class="report-config">
                         <div class="form-row" style="align-items: flex-start;">
                             <div class="form-group" style="flex:1; display: flex; flex-direction: column;">
-                                <label class="form-label">Fleet Groups (ctrl+click to select multiple)</label>
+                                <label class="form-label">${msg('Fleet Groups (ctrl+click to select multiple)')}</label>
                                 <select multiple style="width: 100%; flex: 1; min-height: 120px;" @change="${this.handleFleetGroupChange}">
                                     ${this.fleetGroups.map(group => html`
                                         <option value="${group.id}" ?disabled=${!group.has_access}>
-                                            ${group.name} - ${group.vehicle_count} ${!group.has_access ? ' (No Access)' : ''}
+                                            ${group.name} - ${group.vehicle_count} ${!group.has_access ? msg(' (No Access)') : ''}
                                         </option>
                                     `)}
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Date Range</label>
+                                <label class="form-label">${msg('Date Range')}</label>
                                 <select style="width: 180px;" .value="${this.dateRange}" @change="${this.handleDateRangeChange}">
-                                    <option value="Last 7 Days">Last 7 Days</option>
-                                    <option value="Last 30 Days">Last 30 Days</option>
-                                    <option value="This Month">This Month</option>
-                                    <option value="Last Month">Last Month</option>
-                                    <option value="Custom" ?hidden="${this.dateRange !== 'Custom'}">Custom</option>
+                                    <option value="Last 7 Days">${msg('Last 7 Days')}</option>
+                                    <option value="Last 30 Days">${msg('Last 30 Days')}</option>
+                                    <option value="This Month">${msg('This Month')}</option>
+                                    <option value="Last Month">${msg('Last Month')}</option>
+                                    <option value="Custom" ?hidden="${this.dateRange !== 'Custom'}">${msg('Custom')}</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Start Date</label>
+                                <label class="form-label">${msg('Start Date')}</label>
                                 <input type="date" .value="${this.startDate}" @input="${this.handleStartDateChange}">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">End Date</label>
+                                <label class="form-label">${msg('End Date')}</label>
                                 <input type="date" .value="${this.endDate}" @input="${this.handleEndDateChange}">
                             </div>
                         </div>
@@ -535,7 +536,7 @@ export class ReportsView extends LitElement {
                                     @click="${this.handleRunReport}"
                                     ?disabled="${this.submitting || !this.selectedTemplate || this.selectedFleetGroupIds.length === 0}"
                                 >
-                                    RUN REPORT
+                                    ${msg('RUN REPORT')}
                                 </button>
                             </div>
                         </div>
@@ -544,12 +545,12 @@ export class ReportsView extends LitElement {
                     <!-- Output -->
                     <div class="report-output" id="report-output-panel">
                         <div class="report-output-header">
-                            <span id="report-output-title">Select a template and run report</span>
+                            <span id="report-output-title">${msg('Select a template and run report')}</span>
                             <span id="report-output-count" style="color: #666;"></span>
                         </div>
                         <div class="report-output-body" id="report-output-body">
                             <div class="report-empty">
-                                Select a report template, choose fleet groups, and click RUN REPORT
+                                ${msg('Select a report template, choose fleet groups, and click RUN REPORT')}
                             </div>
                         </div>
                     </div>

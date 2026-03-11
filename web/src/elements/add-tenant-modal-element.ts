@@ -1,4 +1,5 @@
 import {css, html, LitElement, nothing} from 'lit';
+import {msg} from '@lit/localize';
 import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import {globalStyles} from "../global-styles.ts";
@@ -49,30 +50,30 @@ export class AddTenantModalElement extends LitElement {
             <div class="modal-overlay" @click=${this.closeModal}>
                 <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
                     <div class="modal-header">
-                        <h3>Add New Tenant</h3>
+                        <h3>${msg('Add New Tenant')}</h3>
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>
                     <div class="modal-body">
                         ${this.error ? html`<div class="alert alert-error" style="margin-bottom: 1rem;">${this.error}</div>` : nothing}
                         
                         <div class="form-group">
-                            <label class="form-label">Name</label>
-                            <input 
-                                type="text" 
-                                placeholder="Enter tenant name"
+                            <label class="form-label">${msg('Name')}</label>
+                            <input
+                                type="text"
+                                .placeholder=${msg('Enter tenant name')}
                                 .value=${this.tenantName}
                                 @input=${(e: InputEvent) => this.tenantName = (e.target as HTMLInputElement).value}
                                 ?disabled=${this.processing}
                                 style="width: 100%;"
                             >
-                            <p class="helper-text">give your tenant a name that makes sense to you eg. your business name</p>
+                            <p class="helper-text">${msg('give your tenant a name that makes sense to you eg. your business name')}</p>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Dimo Client Id</label>
-                            <input 
-                                type="text" 
-                                placeholder="Enter DIMO Client ID"
+                            <label class="form-label">${msg('Dimo Client Id')}</label>
+                            <input
+                                type="text"
+                                .placeholder=${msg('Enter DIMO Client ID')}
                                 .value=${this.dimoClientId}
                                 @input=${(e: InputEvent) => this.dimoClientId = (e.target as HTMLInputElement).value}
                                 ?disabled=${this.processing}
@@ -81,24 +82,24 @@ export class AddTenantModalElement extends LitElement {
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Dimo Secret</label>
-                            <input 
-                                type="password" 
-                                placeholder="Enter DIMO Secret"
+                            <label class="form-label">${msg('Dimo Secret')}</label>
+                            <input
+                                type="password"
+                                .placeholder=${msg('Enter DIMO Secret')}
                                 .value=${this.dimoSecret}
                                 @input=${(e: InputEvent) => this.dimoSecret = (e.target as HTMLInputElement).value}
                                 ?disabled=${this.processing}
                                 style="width: 100%;"
                             >
-                            <p class="helper-text">user must have or create a new dimo developer account at the dimo console <a href="https://console.dimo.org" target="_blank" class="link">https://console.dimo.org</a></p>
+                            <p class="helper-text">${msg('user must have or create a new dimo developer account at the dimo console')} <a href="https://console.dimo.org" target="_blank" class="link">https://console.dimo.org</a></p>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @click=${this.closeModal} ?disabled=${this.processing}>
-                            Cancel
+                            ${msg('Cancel')}
                         </button>
                         <button type="button" class="btn btn-primary ${this.processing ? 'processing' : ''}" @click=${this.submitTenant} ?disabled=${this.processing || !this.tenantName.trim()}>
-                            ${this.processing ? 'Adding...' : 'Submit'}
+                            ${this.processing ? msg('Adding...') : msg('Submit')}
                         </button>
                     </div>
                 </div>
@@ -145,10 +146,10 @@ export class AddTenantModalElement extends LitElement {
                     composed: true 
                 }));
             } else {
-                this.error = response.error || "Failed to add tenant";
+                this.error = response.error || msg("Failed to add tenant");
             }
         } catch (e: any) {
-            this.error = e.message || "An unexpected error occurred";
+            this.error = e.message || msg("An unexpected error occurred");
         } finally {
             this.processing = false;
         }

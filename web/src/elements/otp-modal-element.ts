@@ -1,4 +1,5 @@
 import { LitElement, html, nothing } from 'lit';
+import {msg} from '@lit/localize';
 import {customElement, property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import { generateP256KeyPair } from "@turnkey/crypto";
@@ -123,12 +124,12 @@ export class OtpModalElement extends LitElement {
             <div class="modal-overlay">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3>Enter OTP</h3>
+                        <h3>${msg('Enter OTP')}</h3>
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>                    
                     <div class="modal-body">
                         <div class="message">
-                            Please enter the 6 digit code sent to your email.
+                            ${msg('Please enter the 6 digit code sent to your email.')}
                         </div>
                         <div class="otp-inputs">
                             ${this.otpValues.map(
@@ -146,8 +147,8 @@ export class OtpModalElement extends LitElement {
                         </div>                        
                     </div>
                     <div class="modal-footer">
-                        <button @click=${this.requestOtp}>Resend</button>
-                        <button @click=${this.confirmOtp}>Confirm</button>
+                        <button @click=${this.requestOtp}>${msg('Resend')}</button>
+                        <button @click=${this.confirmOtp}>${msg('Confirm')}</button>
                     </div>
                 </div>
             </div>

@@ -1,4 +1,5 @@
 import { html, nothing, LitElement, css } from 'lit';
+import {msg} from '@lit/localize';
 import { customElement, property, state } from 'lit/decorators.js';
 import { FleetService, FleetGroup } from '@services/fleet-service.ts';
 import { globalStyles } from '../global-styles.ts';
@@ -58,7 +59,7 @@ export class CreateFleetGroupModalElement extends LitElement {
       <div class="modal-overlay" @click=${this.closeModal}>
         <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
           <div class="modal-header">
-            <h3>${isEditMode ? 'Edit Fleet Group' : 'Create Fleet Group'}</h3>
+            <h3>${isEditMode ? msg('Edit Fleet Group') : msg('Create Fleet Group')}</h3>
             <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
           </div>
           <div class="modal-body">
@@ -70,11 +71,11 @@ export class CreateFleetGroupModalElement extends LitElement {
 
             <div style="margin-bottom: 1rem;">
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
-                Group Name <span style="color: #dc2626;">*</span>
+                ${msg('Group Name')} <span style="color: #dc2626;">*</span>
               </label>
               <input
                 type="text"
-                placeholder="Enter group name"
+                .placeholder=${msg('Enter group name')}
                 .value=${this.groupName}
                 @input=${this.handleNameInput}
                 ?disabled=${this.isSubmitting}
@@ -91,7 +92,7 @@ export class CreateFleetGroupModalElement extends LitElement {
 
             <div style="margin-bottom: 1rem;">
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
-                Group Color
+                ${msg('Group Color')}
               </label>
               <div style="display: flex; align-items: center; gap: 1rem;">
                 <input
@@ -112,7 +113,7 @@ export class CreateFleetGroupModalElement extends LitElement {
                 />
               </div>
               <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">
-                Preview: <span style="display: inline-block; width: 20px; height: 20px; background-color: ${this.groupColor}; border: 1px solid #ddd; border-radius: 3px; vertical-align: middle;"></span>
+                ${msg('Preview:')} <span style="display: inline-block; width: 20px; height: 20px; background-color: ${this.groupColor}; border: 1px solid #ddd; border-radius: 3px; vertical-align: middle;"></span>
               </div>
             </div>
           </div>
@@ -123,7 +124,7 @@ export class CreateFleetGroupModalElement extends LitElement {
               @click=${this.closeModal}
               ?disabled=${this.isSubmitting}
             >
-              Cancel
+              ${msg('Cancel')}
             </button>
             <button
               type="button"
@@ -132,8 +133,8 @@ export class CreateFleetGroupModalElement extends LitElement {
               ?disabled=${this.isSubmitting}
             >
               ${this.isSubmitting
-                ? (isEditMode ? 'Updating...' : 'Creating...')
-                : (isEditMode ? 'Update Group' : 'Create Group')}
+                ? (isEditMode ? msg('Updating...') : msg('Creating...'))
+                : (isEditMode ? msg('Update Group') : msg('Create Group'))}
             </button>
           </div>
         </div>
@@ -189,13 +190,13 @@ export class CreateFleetGroupModalElement extends LitElement {
   private async handleSubmit() {
     // Validate
     if (!this.groupName.trim()) {
-      this.nameError = 'Group name is required';
+      this.nameError = msg('Group name is required');
       return;
     }
 
     // Validate color format
     if (!/^#[0-9A-Fa-f]{6}$/.test(this.groupColor)) {
-      this.errorMessage = 'Invalid color format. Please use hex format (e.g., #FF5733)';
+      this.errorMessage = msg('Invalid color format. Please use hex format (e.g., #FF5733)');
       return;
     }
 
@@ -226,11 +227,11 @@ export class CreateFleetGroupModalElement extends LitElement {
         this.show = false;
         this.resetForm();
       } else {
-        this.errorMessage = response.error || `Failed to ${isEditMode ? 'update' : 'create'} group`;
+        this.errorMessage = response.error || (isEditMode ? msg('Failed to update group') : msg('Failed to create group'));
       }
     } catch (error: any) {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} fleet group:`, error);
-      this.errorMessage = error.message || 'An unexpected error occurred';
+      this.errorMessage = error.message || msg('An unexpected error occurred');
     } finally {
       this.isSubmitting = false;
     }

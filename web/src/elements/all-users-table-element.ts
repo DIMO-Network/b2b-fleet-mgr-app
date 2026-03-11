@@ -1,4 +1,5 @@
 import { LitElement, css, html } from "lit";
+import { msg } from '@lit/localize';
 import { customElement, state } from "lit/decorators.js";
 import { globalStyles } from "../global-styles.ts";
 import { ApiService } from "../services/api-service.ts";
@@ -103,13 +104,13 @@ export class AllUsersTable extends LitElement {
         class="section-header"
         style="display: flex; justify-content: space-between; align-items: center;"
       >
-        <span>All Users</span>
+        <span>${msg('All Users')}</span>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input
             type="text"
             class="search-box"
             style="width: 250px; margin: 0; font-size: 14px; padding: 5px 10px;"
-            placeholder="Search users..."
+            .placeholder=${msg('Search users...')}
             .value=${this.search}
             @input=${this.handleSearchInput}
           />
@@ -119,19 +120,19 @@ export class AllUsersTable extends LitElement {
       <div class="panel">
         <div class="panel-body">
           ${this.loading
-            ? html`<div>Loading users...</div>`
+            ? html`<div>${msg('Loading users...')}</div>`
             : this.users.length === 0
-            ? html`<div>No users found.</div>`
+            ? html`<div>${msg('No users found.')}</div>`
             : html`
                 <div class="table-container">
                   <table>
                     <thead>
                       <tr>
-                        <th>Wallet</th>
-                        <th>Email</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Gov ID Number</th>
+                        <th>${msg('Wallet')}</th>
+                        <th>${msg('Email')}</th>
+                        <th>${msg('First Name')}</th>
+                        <th>${msg('Last Name')}</th>
+                        <th>${msg('Gov ID Number')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -166,11 +167,11 @@ export class AllUsersTable extends LitElement {
                     @click=${() =>
                       this.handlePageChange(Math.max(0, this.skip - this.take))}
                   >
-                    PREV
+                    ${msg('PREV')}
                   </button>
                   <span style="margin: 0 8px; font-size: 14px;">
-                    Showing ${this.skip + 1} -
-                    ${Math.min(this.skip + this.take, this.totalCount)} of
+                    ${msg('Showing')} ${this.skip + 1} -
+                    ${Math.min(this.skip + this.take, this.totalCount)} ${msg('of')}
                     ${this.totalCount}
                   </span>
                   <button
@@ -178,7 +179,7 @@ export class AllUsersTable extends LitElement {
                     ?disabled=${this.skip + this.take >= this.totalCount}
                     @click=${() => this.handlePageChange(this.skip + this.take)}
                   >
-                    NEXT
+                    ${msg('NEXT')}
                   </button>
                 </div>
               `}

@@ -1,4 +1,5 @@
 import {html, LitElement, css} from 'lit';
+import {msg} from '@lit/localize';
 import {SettingsService} from "@services/settings-service";
 
 export class LoginElement extends LitElement {
@@ -40,11 +41,11 @@ export class LoginElement extends LitElement {
     render() {
         return html`
             <div class="grid place-items-center" ?hidden=${this.loginUrl === ""}>
-                <a id="loginLink" href="${this.loginUrl}">Login with DIMO!</a>
+                <a id="loginLink" href="${this.loginUrl}">${msg('Login with DIMO!')}</a>
             </div>
             <div class="grid place-items-center" ?hidden=${this.loginUrl !== ""}>
-                <h3>It appears there is no ClientID configured</h3>
-                <p>If you don't have a Client ID please go to the <a href="https://console.dimo.org">DIMO Developer Console</a></p>
+                <h3>${msg('It appears there is no ClientID configured')}</h3>
+                <p>${msg('If you don\'t have a Client ID please go to the')} <a href="https://console.dimo.org">${msg('DIMO Developer Console')}</a></p>
             </div>
         `;
     }

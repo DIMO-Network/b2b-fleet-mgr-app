@@ -1,5 +1,6 @@
 import { LitElement, css, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
+import { msg } from "@lit/localize";
 import { globalStyles } from "../global-styles.ts";
 
 import "../elements/admin-users-table-element.ts";
@@ -19,24 +20,24 @@ export class UsersView extends LitElement {
     return html`
       <div class="page active" id="page-users">
         <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
-          <span>Users</span>
+          <span>${msg('Users')}</span>
           <button class="btn btn-success" @click=${() => window.location.hash = "/users/create"}>
-            + CREATE NEW USER
+            ${msg('+ CREATE NEW USER')}
           </button>
         </div>
-        
+
         <div class="inner-tabs mt-24">
           <div
             class="inner-tab ${this.activeTab === "admin" ? "active" : ""}"
             @click=${() => (this.activeTab = "admin")}
           >
-            Admin Users
+            ${msg('Admin Users')}
           </div>
           <div
             class="inner-tab ${this.activeTab === "all" ? "active" : ""}"
             @click=${() => (this.activeTab = "all")}
           >
-            All Users
+            ${msg('All Users')}
           </div>
         </div>
 

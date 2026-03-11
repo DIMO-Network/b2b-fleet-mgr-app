@@ -1,4 +1,5 @@
 import { html, nothing, LitElement, css } from 'lit';
+import {msg} from '@lit/localize';
 import { customElement, property } from 'lit/decorators.js';
 import { globalStyles } from '../global-styles.ts';
 
@@ -10,16 +11,16 @@ export class ConfirmModalElement extends LitElement {
   public show = false;
 
   @property({ attribute: false, type: String })
-  public title: string = 'Confirm Action';
+  public title: string = msg('Confirm Action');
 
   @property({ attribute: false, type: String })
-  public message: string = 'Are you sure you want to proceed?';
+  public message: string = msg('Are you sure you want to proceed?');
 
   @property({ attribute: false, type: String })
-  public confirmText: string = 'Confirm';
+  public confirmText: string = msg('Confirm');
 
   @property({ attribute: false, type: String })
-  public cancelText: string = 'Cancel';
+  public cancelText: string = msg('Cancel');
 
   @property({ attribute: false, type: String })
   public confirmButtonClass: string = 'btn-primary';

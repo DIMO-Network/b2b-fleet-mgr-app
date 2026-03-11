@@ -1,4 +1,6 @@
 import {LitElement, html, css} from 'lit';
+import {msg} from '@lit/localize';
+import {getLocale, setLocale} from '../localization.js';
 import {customElement, state} from 'lit/decorators.js';
 import { provide } from '@lit/context';
 import { apiServiceContext } from '../context';
@@ -221,6 +223,11 @@ export class AppRootV2 extends LitElement {
 
     async connectedCallback() {
         super.connectedCallback();
+        // Restore saved locale
+        const savedLocale = localStorage.getItem('locale');
+        if (savedLocale === 'es') {
+            await setLocale('es');
+        }
         // Start listening for hash changes as early as possible
         window.addEventListener('hashchange', this.boundOnHashChange);
         window.addEventListener('click', this.closeMenus);
@@ -327,18 +334,18 @@ export class AppRootV2 extends LitElement {
 
     private getPageTitle(): string {
         const path = this.currentPath || '/';
-        if (path === '/') return 'Home';
-        if (path.startsWith('/onboarding')) return 'Onboarding';
-        if (path.startsWith('/vehicles/')) return 'Vehicle Detail';
-        if (path.startsWith('/vehicles-fleets')) return 'Vehicles & Fleets';
-        if (path.startsWith('/reports')) return 'Reports';
-        if (path.startsWith('/users/create')) return 'Create User';
-        if (path.startsWith('/users/edit')) return 'Edit User';
-        if (path.startsWith('/users/profile')) return 'User Profile';
-        if (path.startsWith('/users')) return 'Users';
-        if (path.startsWith('/tenant-selector')) return 'Tenant Selector';
-        if (path.startsWith('/tenant-settings')) return 'Tenant Settings';
-        return 'Home';
+        if (path === '/') return msg('Home');
+        if (path.startsWith('/onboarding')) return msg('Onboarding');
+        if (path.startsWith('/vehicles/')) return msg('Vehicle Detail');
+        if (path.startsWith('/vehicles-fleets')) return msg('Vehicles & Fleets');
+        if (path.startsWith('/reports')) return msg('Reports');
+        if (path.startsWith('/users/create')) return msg('Create User');
+        if (path.startsWith('/users/edit')) return msg('Edit User');
+        if (path.startsWith('/users/profile')) return msg('User Profile');
+        if (path.startsWith('/users')) return msg('Users');
+        if (path.startsWith('/tenant-selector')) return msg('Tenant Selector');
+        if (path.startsWith('/tenant-settings')) return msg('Tenant Settings');
+        return msg('Home');
     }
 
     private truncateWalletToEmail(wallet: string, email: string): string {
@@ -417,41 +424,41 @@ export class AppRootV2 extends LitElement {
                     </div>
                     <nav class="sidebar-nav" @click=${this.onSidebarClick}>
                         <div class="nav-item ${this.isActive('/') ? 'active' : ''}" data-page="home">
-                            <a data-page="home" href="#/" aria-current="${this.isActive('/') ? 'page' : 'false'}">Home</a>
+                            <a data-page="home" href="#/" aria-current="${this.isActive('/') ? 'page' : 'false'}">${msg('Home')}</a>
                         </div>
-                        <div class="nav-item ${this.isActive('/onboarding') ? 'active' : ''} ${!this.permissions.includes('onboard_vehicles') ? 'disabled' : ''}" 
-                             title="${!this.permissions.includes('onboard_vehicles') ? 'You don\'t have access' : ''}">
-                            <a data-page="onboarding" 
-                               href="#/onboarding" 
+                        <div class="nav-item ${this.isActive('/onboarding') ? 'active' : ''} ${!this.permissions.includes('onboard_vehicles') ? 'disabled' : ''}"
+                             title="${!this.permissions.includes('onboard_vehicles') ? msg('You don\'t have access') : ''}">
+                            <a data-page="onboarding"
+                               href="#/onboarding"
                                aria-current="${this.isActive('/onboarding') ? 'page' : 'false'}"
                                tabindex="${!this.permissions.includes('onboard_vehicles') ? '-1' : '0'}"
-                               aria-disabled="${!this.permissions.includes('onboard_vehicles') ? 'true' : 'false'}">Onboarding</a>
+                               aria-disabled="${!this.permissions.includes('onboard_vehicles') ? 'true' : 'false'}">${msg('Onboarding')}</a>
                         </div>
                         <div class="nav-item ${this.isActive('/vehicles-fleets') ? 'active' : ''}">
-                            <a data-page="vehicles" href="#/vehicles-fleets" aria-current="${this.isActive('/vehicles-fleets') ? 'page' : 'false'}">Vehicles & Fleets</a>
+                            <a data-page="vehicles" href="#/vehicles-fleets" aria-current="${this.isActive('/vehicles-fleets') ? 'page' : 'false'}">${msg('Vehicles & Fleets')}</a>
                         </div>
-                        
-                        <div class="nav-item hidden" data-page="vehicle-detail" id="nav-vehicle-detail">Vehicle Detail</div>
+
+                        <div class="nav-item hidden" data-page="vehicle-detail" id="nav-vehicle-detail">${msg('Vehicle Detail')}</div>
                         <div class="nav-divider"></div>
                         <div class="nav-item ${this.isActive('/reports') ? 'active' : ''} ${!this.permissions.includes('reports') ? 'disabled' : ''}"
-                             title="${!this.permissions.includes('reports') ? 'You don\'t have access' : ''}">
-                            <a data-page="reports" 
-                               href="#/reports" 
+                             title="${!this.permissions.includes('reports') ? msg('You don\'t have access') : ''}">
+                            <a data-page="reports"
+                               href="#/reports"
                                aria-current="${this.isActive('/reports') ? 'page' : 'false'}"
                                tabindex="${!this.permissions.includes('reports') ? '-1' : '0'}"
-                               aria-disabled="${!this.permissions.includes('reports') ? 'true' : 'false'}">Reports</a>
+                               aria-disabled="${!this.permissions.includes('reports') ? 'true' : 'false'}">${msg('Reports')}</a>
                         </div>
                         <div class="nav-item ${this.isActive('/users') ? 'active' : ''} ${!this.permissions.includes('manage_admin_users') ? 'disabled' : ''}"
-                             title="${!this.permissions.includes('manage_admin_users') ? 'You don\'t have access' : ''}">
-                            <a data-page="users" 
-                               href="#/users" 
+                             title="${!this.permissions.includes('manage_admin_users') ? msg('You don\'t have access') : ''}">
+                            <a data-page="users"
+                               href="#/users"
                                aria-current="${this.isActive('/users') ? 'page' : 'false'}"
                                tabindex="${!this.permissions.includes('manage_admin_users') ? '-1' : '0'}"
-                               aria-disabled="${!this.permissions.includes('manage_admin_users') ? 'true' : 'false'}">Users</a>
+                               aria-disabled="${!this.permissions.includes('manage_admin_users') ? 'true' : 'false'}">${msg('Users')}</a>
                         </div>
                         <div class="nav-divider"></div>
                         <div class="nav-item ${this.isActive('/tenant-settings') ? 'active' : ''}">
-                            <a data-page="tenant-settings" href="#/tenant-settings" aria-current="${this.isActive('/tenant-settings') ? 'page' : 'false'}">Settings</a>
+                            <a data-page="tenant-settings" href="#/tenant-settings" aria-current="${this.isActive('/tenant-settings') ? 'page' : 'false'}">${msg('Settings')}</a>
                         </div>
                     </nav>
                 </aside>
@@ -469,7 +476,7 @@ export class AppRootV2 extends LitElement {
                                 </div>
                                 ${this.showTenantMenu ? html`
                                     <div class="dropdown-menu">
-                                        <div class="dropdown-item" @click=${this.handleSwitchTenant}>Switch Tenant</div>
+                                        <div class="dropdown-item" @click=${this.handleSwitchTenant}>${msg('Switch Tenant')}</div>
                                     </div>
                                 ` : ''}
                             </div>
@@ -483,7 +490,15 @@ export class AppRootV2 extends LitElement {
                                     >${walletDisplay}</span>
                                 </click-to-copy-element>
                             </div>
-                            <button class="btn btn-sm" @click=${this.handleLogout}>LOGOUT</button>
+                            <select
+                              style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; background: #fff;"
+                              .value=${getLocale()}
+                              @change=${this.handleLocaleChange}
+                            >
+                              <option value="en">English</option>
+                              <option value="es">Español</option>
+                            </select>
+                            <button class="btn btn-sm" @click=${this.handleLogout}>${msg('LOGOUT')}</button>
                         </div>
                     </header>
 
@@ -494,9 +509,9 @@ export class AppRootV2 extends LitElement {
                                 <!-- Show access denied notice if user doesn't have access -->
                                 <div class="access-denied-notice">
                                     <div class="icon">🚫</div>
-                                    <h3>Access Denied</h3>
+                                    <h3>${msg('Access Denied')}</h3>
                                     <p>
-                                        You do not have access to the selected oracle. Please pick a different Oracle.
+                                        ${msg('You do not have access to the selected oracle. Please pick a different Oracle.')}
                                     </p>
                                 </div>
                          ` : html`
@@ -518,11 +533,11 @@ export class AppRootV2 extends LitElement {
         return html`
             <div class="update-modal-overlay">
                 <div class="update-modal">
-                    <h3>Update Available</h3>
-                    <p>A new version of the application is available. Would you like to refresh to get the latest updates?</p>
+                    <h3>${msg('Update Available')}</h3>
+                    <p>${msg('A new version of the application is available. Would you like to refresh to get the latest updates?')}</p>
                     <div class="update-modal-actions">
-                        <button class="btn btn-sm" @click=${this.handleDismissUpdate}>Cancel</button>
-                        <button class="btn btn-sm btn-primary" @click=${this.handleRefresh}>Refresh</button>
+                        <button class="btn btn-sm" @click=${this.handleDismissUpdate}>${msg('Cancel')}</button>
+                        <button class="btn btn-sm btn-primary" @click=${this.handleRefresh}>${msg('Refresh')}</button>
                     </div>
                 </div>
             </div>
@@ -547,6 +562,12 @@ export class AppRootV2 extends LitElement {
     };
 
     // Oracle persistence is handled by OracleTenantService
+
+    private async handleLocaleChange(e: Event) {
+        const locale = (e.target as HTMLSelectElement).value as 'en' | 'es';
+        await setLocale(locale);
+        localStorage.setItem('locale', locale);
+    }
 
     private handleLogout() {
         const keysToRemove = ['token', 'email', 'appSettings', 'accountInfo', 'signerPublicKey', 'signerApiKey'];

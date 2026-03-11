@@ -1,5 +1,6 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { msg } from '@lit/localize';
 import {globalStyles} from "../global-styles.ts";
 import type {Tenant, Oracle} from "@services/oracle-tenant-service.ts";
 import {OracleTenantService} from "@services/oracle-tenant-service.ts";
@@ -116,29 +117,29 @@ export class TenantSelectorView extends LitElement {
     render() {
     return html`
         <div class="page active" id="page-tenant-selector">
-            <div class="section-header">Pick your Oracle</div>
+            <div class="section-header">${msg('Pick your Oracle')}</div>
             <oracle-selector .selectedOption=${this.oracleId} @option-changed=${this.handleOracleChange}></oracle-selector>
 
-            <div class="section-header" style="margin-top: 2em">Tenant Selector</div>
+            <div class="section-header" style="margin-top: 2em">${msg('Tenant Selector')}</div>
             <div class="tenant-grid">
               ${this.tenants.map(t => html`
                 <div class="tenant-card ${this.selectedTenantId === t.id ? 'tenant-selected' : ''}"
                      @click=${() => this.onSelectTenant(t)}
                      title="Select ${t.name}">
                   <span class="tenant-name">${t.name}</span>
-                  ${this.selectedTenantId === t.id ? html`<span class="badge-selected">Selected</span>` : html`<span></span>`}
+                  ${this.selectedTenantId === t.id ? html`<span class="badge-selected">${msg('Selected')}</span>` : html`<span></span>`}
                 </div>
               `)}
-              <div class="tenant-card add-tenant-card" @click=${this.openAddTenantModal} title="Add New Tenant">
+              <div class="tenant-card add-tenant-card" @click=${this.openAddTenantModal} title=${msg('Add New Tenant')}>
                 <span class="add-icon">+</span>
-                <span class="tenant-name">Add New Tenant</span>
+                <span class="tenant-name">${msg('Add New Tenant')}</span>
               </div>
             </div>
 
             ${this.tenants.length === 0 ? html`
               <div class="panel" style="margin-top: 1rem; width: 50%">
                 <div class="panel-body warning">
-                  Your account has no tenants configured. Reach out to your organization administrator to add your account 0x address.
+                  ${msg('Your account has no tenants configured. Reach out to your organization administrator to add your account 0x address.')}
                 </div>
               </div>
             ` : html``}

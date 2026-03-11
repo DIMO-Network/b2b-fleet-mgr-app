@@ -1,5 +1,6 @@
 import {LitElement, css, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
+import {msg} from '@lit/localize';
 import {globalStyles} from '../global-styles.ts';
 import {ApiService} from '@services/api-service.ts';
 import {TenantSettings, SettingsService} from '@services/settings-service.ts';
@@ -85,7 +86,7 @@ export class TenantSettingsView extends LitElement {
     const data = await this.settingsService.fetchTenantSettings();
     this.loading = false;
     if (!data) {
-      this.error = 'Failed to load tenant settings';
+      this.error = msg('Failed to load tenant settings');
       this.data = null;
       return;
     }
@@ -144,7 +145,7 @@ export class TenantSettingsView extends LitElement {
     this.loading = false;
 
     if (!resp.success || !resp.data) {
-      this.error = resp.error || 'Failed to save tenant settings';
+      this.error = resp.error || msg('Failed to save tenant settings');
       return;
     }
 
@@ -154,7 +155,7 @@ export class TenantSettingsView extends LitElement {
     this.settingsService.saveTenantSettings();
     //this.populateEditFieldsFromData();
     this.editing = false;
-    this.success = 'Settings saved successfully';
+    this.success = msg('Settings saved successfully');
   }
 
   private async syncKore() {
@@ -166,9 +167,9 @@ export class TenantSettingsView extends LitElement {
     this.syncing = false;
 
     if (resp.success) {
-      this.success = 'Kore sync started successfully';
+      this.success = msg('Kore sync started successfully');
     } else {
-      this.error = resp.error || 'Failed to sync Kore';
+      this.error = resp.error || msg('Failed to sync Kore');
     }
   }
 
@@ -176,22 +177,22 @@ export class TenantSettingsView extends LitElement {
     return html`
       <div class="page active" id="page-tenant-settings">
         <div class="section-header">
-          Tenant Settings
+          ${msg('Tenant Settings')}
           ${this.data ? html`<span style="font-weight: normal; color: #666; margin-left: 8px;">— ${this.data.name}</span>` : nothing}
         </div>
 
         <div class="settings-layout">
           <div class="panel">
             <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-              <span>Configuration</span>
+              <span>${msg('Configuration')}</span>
               ${this.editing ? html`` : html`
-                <button class="action-btn secondary" title="Edit" @click=${this.enableEdit}>
-                  ✎ Edit
+                <button class="action-btn secondary" title=${msg('Edit')} @click=${this.enableEdit}>
+                  ✎ ${msg('Edit')}
                 </button>
               `}
             </div>
             <div class="panel-body">
-              ${this.loading ? html`<div class="loading-message">Loading…</div>` : nothing}
+              ${this.loading ? html`<div class="loading-message">${msg('Loading…')}</div>` : nothing}
               ${this.error ? html`<div class="alert alert-error">${this.error}</div>` : nothing}
               ${this.success ? html`<div class="alert alert-success">${this.success}</div>` : nothing}
 
@@ -199,12 +200,12 @@ export class TenantSettingsView extends LitElement {
                 <form class="grid" style="gap: 12px;">
                   <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
                     <fieldset>
-                      <label class="form-label">Tenant ID</label>
+                      <label class="form-label">${msg('Tenant ID')}</label>
                       <!-- Tenant ID is not editable; render as plain text -->
                       <span class="detail-value" style="display:block; padding: 8px 0;">${this.tenantId}</span>
                     </fieldset>
                     <fieldset>
-                      <label class="form-label">Tenant Name</label>
+                      <label class="form-label">${msg('Tenant Name')}</label>
                       <input type="text" .value=${this.name}
                         ?disabled=${!this.editing}
                         @input=${(e: InputEvent) => this.onInput(e, v => this.name = v)}>
@@ -213,7 +214,7 @@ export class TenantSettingsView extends LitElement {
 
                   <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
                     <fieldset>
-                      <label class="form-label">Kore Client ID</label>
+                      <label class="form-label">${msg('Kore Client ID')}</label>
                       <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="text" style="width: 450px" .value=${this.kore_client_id}
                           ?disabled=${!this.editing}
@@ -221,13 +222,13 @@ export class TenantSettingsView extends LitElement {
                         <button type="button" class="btn btn-sm btn-success ${this.syncing ? 'processing' : ''}"
                           @click=${this.syncKore}
                           ?disabled=${this.syncing || !this.kore_client_id}>
-                          ${this.syncing ? 'Syncing...' : 'Sync SIMs and Fleet'}
+                          ${this.syncing ? msg('Syncing...') : msg('Sync SIMs and Fleet')}
                         </button>
                       </div>
-                      <div class="field-hint">Provided from the Kore website. Not required, only needed to automatically sync IMEIs.</div>
+                      <div class="field-hint">${msg('Provided from the Kore website. Not required, only needed to automatically sync IMEIs.')}</div>
                     </fieldset>
                     <fieldset>
-                      <label class="form-label">Kore Secret</label>
+                      <label class="form-label">${msg('Kore Secret')}</label>
                       ${this.editing ? html`
                         <input type="text" style="width: 450px" placeholder="${this.data.has_kore_secret ? '****' : ''}"
                           .value=${this.kore_secret_input}
@@ -235,30 +236,30 @@ export class TenantSettingsView extends LitElement {
                       ` : html`
                         <input type="text" .value=${this.data.has_kore_secret ? '****' : ''} disabled>
                       `}
-                      <div class="field-hint">Also from the Kore website, and also not required.</div>
+                      <div class="field-hint">${msg('Also from the Kore website, and also not required.')}</div>
                     </fieldset>
                   </div>
 
                   <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
                     <fieldset>
-                      <label class="form-label">Command Password</label>
+                      <label class="form-label">${msg('Command Password')}</label>
                       <input type="text" .value=${this.command_password}
                         ?disabled=${!this.editing}
                         @input=${(e: InputEvent) => this.onInput(e, v => this.command_password = v)}>
-                      <div class="field-hint">Used to authenticate device commands. Optional, needed for immobilization and other SMS commands.</div>
+                      <div class="field-hint">${msg('Used to authenticate device commands. Optional, needed for immobilization and other SMS commands.')}</div>
                     </fieldset>
                     <fieldset>
-                      <label class="form-label">DIMO Client ID</label>
+                      <label class="form-label">${msg('DIMO Client ID')}</label>
                       <input type="text" style="width: 450px" .value=${this.dimo_client_id}
                         ?disabled=${!this.editing}
                         @input=${(e: InputEvent) => this.onInput(e, v => this.dimo_client_id = v)}>
-                      <div class="field-hint">Found in your DIMO developer console.</div>
+                      <div class="field-hint">${msg('Found in your DIMO developer console.')}</div>
                     </fieldset>
                   </div>
 
                   <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
                     <fieldset>
-                      <label class="form-label">DIMO Secret</label>
+                      <label class="form-label">${msg('DIMO Secret')}</label>
                       ${this.editing ? html`
                         <input type="text" style="width: 450px" placeholder="${this.data.has_dimo_secret ? '****' : ''}"
                           .value=${this.dimo_secret_input}
@@ -266,7 +267,7 @@ export class TenantSettingsView extends LitElement {
                       ` : html`
                         <input type="text" .value=${this.data.has_dimo_secret ? '****' : ''} disabled>
                       `}
-                      <div class="field-hint">From your DIMO license credentials, also from the developer console.</div>
+                      <div class="field-hint">${msg('From your DIMO license credentials, also from the developer console.')}</div>
                     </fieldset>
                   </div>
                 </form>
@@ -274,17 +275,17 @@ export class TenantSettingsView extends LitElement {
             </div>
             <div class="panel-footer" style="display:flex; gap:8px; justify-content:flex-end;">
               ${this.editing ? html`
-                <button class="action-btn secondary" @click=${this.cancelEdit} ?disabled=${this.loading}>Cancel</button>
-                <button class="btn btn-primary ${this.loading ? 'processing' : ''}" @click=${this.save} ?disabled=${this.loading}>${this.loading ? 'Saving…' : 'Save'}</button>
+                <button class="action-btn secondary" @click=${this.cancelEdit} ?disabled=${this.loading}>${msg('Cancel')}</button>
+                <button class="btn btn-primary ${this.loading ? 'processing' : ''}" @click=${this.save} ?disabled=${this.loading}>${this.loading ? msg('Saving…') : msg('Save')}</button>
               ` : nothing}
             </div>
           </div>
 
           <div class="helper-panel">
-            <h4>Getting Started</h4>
-            <p>To connect your fleet you will need a DIMO developer account. If you don't have one yet, create one at <a href="https://console.dimo.org" target="_blank">console.dimo.org</a>.</p>
-            <p>Your <strong>DIMO Client ID</strong> and <strong>DIMO Secret</strong> can be found in your developer console under your license credentials.</p>
-            <p>The <strong>Kore</strong> credentials are provided by your hardware / connectivity provider and are used to sync SIM and device information.</p>
+            <h4>${msg('Getting Started')}</h4>
+            <p>${msg(html`To connect your fleet you will need a DIMO developer account. If you don't have one yet, create one at <a href="https://console.dimo.org" target="_blank">console.dimo.org</a>.`)}</p>
+            <p>${msg(html`Your <strong>DIMO Client ID</strong> and <strong>DIMO Secret</strong> can be found in your developer console under your license credentials.`)}</p>
+            <p>${msg(html`The <strong>Kore</strong> credentials are provided by your hardware / connectivity provider and are used to sync SIM and device information.`)}</p>
           </div>
         </div>
       </div>

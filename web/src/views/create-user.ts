@@ -1,4 +1,5 @@
 import { LitElement, css, html } from "lit";
+import { msg } from "@lit/localize";
 import { customElement, state } from "lit/decorators.js";
 import { globalStyles } from "../global-styles.ts";
 import { ApiService } from "@services/api-service";
@@ -106,7 +107,7 @@ export class CreateUserView extends LitElement {
       }
 
       if (res.success) {
-        this.successMessage = "User created successfully!";
+        this.successMessage = msg("User created successfully!");
         // Optional: clear form or redirect
         if (!this.isAdmin) {
           this.email = "";
@@ -116,10 +117,10 @@ export class CreateUserView extends LitElement {
           this.selectedPermissions = [];
         }
       } else {
-        this.errorMessage = res.error || "Failed to create user.";
+        this.errorMessage = res.error || msg("Failed to create user.");
       }
     } catch (error: any) {
-      this.errorMessage = error.message || "An unexpected error occurred.";
+      this.errorMessage = error.message || msg("An unexpected error occurred.");
     } finally {
       this.submitting = false;
     }
@@ -129,7 +130,7 @@ export class CreateUserView extends LitElement {
     return html`
       <div class="page active">
         <div class="section-header">
-          <span>Create New User</span>
+          <span>${msg("Create New User")}</span>
         </div>
 
         <div class="panel form-container">
@@ -138,7 +139,7 @@ export class CreateUserView extends LitElement {
             ${this.successMessage ? html`<div class="alert alert-success">${this.successMessage}</div>` : ""}
             <form @submit=${this.handleSubmit}>
               <div class="form-group">
-                <label class="form-label">Email</label>
+                <label class="form-label">${msg("Email")}</label>
                 <input
                   type="email"
                   class="search-box"
@@ -158,16 +159,16 @@ export class CreateUserView extends LitElement {
                   @change=${this.handleIsAdminChange}
                   ?disabled=${this.submitting}
                 />
-                <label for="isAdmin" class="form-label" style="margin-bottom: 0;">Is Admin</label>
+                <label for="isAdmin" class="form-label" style="margin-bottom: 0;">${msg("Is Admin")}</label>
               </div>
               <div style="font-size: 12px; color: #666; margin-top: -8px; margin-bottom: 12px; margin-left: 22px;">
-                Check this box for users that need to access this tool
+                ${msg("Check this box for users that need to access this tool")}
               </div>
 
               ${this.isAdmin
                 ? html`
                     <div class="form-group">
-                      <label class="form-label">Wallet Address</label>
+                      <label class="form-label">${msg("Wallet Address")}</label>
                       <input
                         type="text"
                         class="search-box"
@@ -178,14 +179,14 @@ export class CreateUserView extends LitElement {
                         ?disabled=${this.submitting}
                       />
                       <div style="font-size: 12px; color: #666; margin-top: 4px;">
-                        For existing accounts only provide 0x, not email.
+                        ${msg("For existing accounts only provide 0x, not email.")}
                       </div>
                     </div>
 
                     <div class="form-group">
-                      <label class="form-label">Permissions</label>
+                      <label class="form-label">${msg("Permissions")}</label>
                       ${this.loadingPermissions
-                        ? html`<div>Loading permissions...</div>`
+                        ? html`<div>${msg("Loading permissions...")}</div>`
                         : html`
                             <div class="permissions-grid">
                               ${this.availablePermissions.map(
@@ -214,7 +215,7 @@ export class CreateUserView extends LitElement {
                   class="btn btn-primary ${this.submitting ? 'processing' : ''}"
                   ?disabled=${this.submitting}
                 >
-                  Create User
+                  ${msg("Create User")}
                 </button>
                 <button
                   type="button"
@@ -222,7 +223,7 @@ export class CreateUserView extends LitElement {
                   @click=${() => (window.location.hash = "/users")}
                   ?disabled=${this.submitting}
                 >
-                  Cancel
+                  ${msg("Cancel")}
                 </button>
               </div>
             </form>

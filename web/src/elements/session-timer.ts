@@ -1,4 +1,5 @@
 import {html, LitElement, PropertyValues} from 'lit';
+import {msg, str} from '@lit/localize';
 import { customElement, property, state } from 'lit/decorators.js';
 
 @customElement('session-timer')
@@ -37,11 +38,11 @@ export class SessionTimer extends LitElement {
         const timeLeft = this.expirationTime - currentTime;
 
         if (timeLeft <= 0) {
-            this.remainingTime = 'No Active Passkey Session';
+            this.remainingTime = msg('No Active Passkey Session');
         } else {
             const minutes = Math.floor(timeLeft / (1000 * 60));
             const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-            this.remainingTime = `Passkey expires in: ${minutes} min and ${seconds} secs`;
+            this.remainingTime = msg(str`Passkey expires in: ${minutes} min and ${seconds} secs`);
         }
     }
 

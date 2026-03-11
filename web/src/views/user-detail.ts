@@ -1,4 +1,5 @@
 import { LitElement, css, html } from "lit";
+import { msg } from "@lit/localize";
 import { customElement, property, state } from "lit/decorators.js";
 import { globalStyles } from "../global-styles.ts";
 import { ApiService } from "../services/api-service.ts";
@@ -137,12 +138,12 @@ export class UserDetailView extends LitElement {
         this.profile = result.data;
         this.syncEditFields(result.data);
       } else {
-        this.errorMessage = result.error || "Failed to load user profile.";
+        this.errorMessage = result.error || msg("Failed to load user profile.");
       }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to fetch user profile:", error);
-      this.errorMessage = "An unexpected error occurred.";
+      this.errorMessage = msg("An unexpected error occurred.");
     } finally {
       this.loading = false;
     }
@@ -281,16 +282,16 @@ export class UserDetailView extends LitElement {
         true
       );
       if (result.success) {
-        this.successMessage = "Profile updated successfully.";
+        this.successMessage = msg("Profile updated successfully.");
         this.editing = false;
         await this.fetchProfile();
       } else {
-        this.errorMessage = result.error || "Failed to update profile.";
+        this.errorMessage = result.error || msg("Failed to update profile.");
       }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to update user profile:", error);
-      this.errorMessage = "An unexpected error occurred.";
+      this.errorMessage = msg("An unexpected error occurred.");
     } finally {
       this.saving = false;
     }
@@ -335,22 +336,22 @@ export class UserDetailView extends LitElement {
   private renderVehiclesPanel() {
     return html`
       <div class="panel vehicles-panel">
-        <div class="panel-header">Vehicles Owned</div>
+        <div class="panel-header">${msg("Vehicles Owned")}</div>
         <div class="panel-body">
           ${this.vehiclesLoading
-            ? html`<div>Loading vehicles...</div>`
+            ? html`<div>${msg("Loading vehicles...")}</div>`
             : this.vehicles.length === 0
-            ? html`<div>No vehicles found.</div>`
+            ? html`<div>${msg("No vehicles found.")}</div>`
             : html`
                 <div class="table-container">
                   <table>
                     <thead>
                       <tr>
-                        <th>Token ID</th>
-                        <th>MMY</th>
-                        <th>VIN</th>
-                        <th>License</th>
-                        <th>Minted On</th>
+                        <th>${msg("Token ID")}</th>
+                        <th>${msg("MMY")}</th>
+                        <th>${msg("VIN")}</th>
+                        <th>${msg("License")}</th>
+                        <th>${msg("Minted On")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -390,22 +391,22 @@ export class UserDetailView extends LitElement {
   private renderSharedVehiclesPanel() {
     return html`
       <div class="panel vehicles-panel">
-        <div class="panel-header">Vehicles Shared With</div>
+        <div class="panel-header">${msg("Vehicles Shared With")}</div>
         <div class="panel-body">
           ${this.vehiclesLoading
-            ? html`<div>Loading vehicles...</div>`
+            ? html`<div>${msg("Loading vehicles...")}</div>`
             : this.sharedVehicles.length === 0
-            ? html`<div>No shared vehicles found.</div>`
+            ? html`<div>${msg("No shared vehicles found.")}</div>`
             : html`
                 <div class="table-container">
                   <table>
                     <thead>
                       <tr>
-                        <th>Token ID</th>
-                        <th>MMY</th>
-                        <th>VIN</th>
-                        <th>License</th>
-                        <th>Minted On</th>
+                        <th>${msg("Token ID")}</th>
+                        <th>${msg("MMY")}</th>
+                        <th>${msg("VIN")}</th>
+                        <th>${msg("License")}</th>
+                        <th>${msg("Minted On")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -447,7 +448,7 @@ export class UserDetailView extends LitElement {
       return html`
         <div class="page active">
           <div class="panel detail-panel">
-            <div class="panel-body">Loading user profile...</div>
+            <div class="panel-body">${msg("Loading user profile...")}</div>
           </div>
         </div>
       `;
@@ -461,15 +462,15 @@ export class UserDetailView extends LitElement {
           class="section-header"
           style="display: flex; justify-content: space-between; align-items: center;"
         >
-          <span>User Profile</span>
+          <span>${msg("User Profile")}</span>
           <button class="btn" @click=${() => (window.location.hash = "/users")}>
-            BACK TO USERS
+            ${msg("BACK TO USERS")}
           </button>
         </div>
 
         <div class="panels-row">
           <div class="panel detail-panel">
-            <div class="panel-header">Profile Info</div>
+            <div class="panel-header">${msg("Profile Info")}</div>
             <div class="panel-body">
               ${this.errorMessage
                 ? html`<div class="alert alert-error">${this.errorMessage}</div>`
@@ -478,16 +479,16 @@ export class UserDetailView extends LitElement {
                 ? html`<div class="alert alert-success">${this.successMessage}</div>`
                 : ""}
 
-              ${this.renderField("Wallet", p?.wallet ?? "-", "", () => {}, false, true)}
-              ${this.renderField("Email", p?.email ?? "-", "", () => {}, false)}
-              ${this.renderField("First Name", p?.first_name ?? "-", this.firstName, (v) => (this.firstName = v))}
-              ${this.renderField("Last Name", p?.last_name ?? "-", this.lastName, (v) => (this.lastName = v))}
-              ${this.renderField("Phone", p?.phone ?? "-", this.phone, (v) => (this.phone = v))}
-              ${this.renderField("Business Name", p?.business_name ?? "-", this.businessName, (v) => (this.businessName = v))}
-              ${this.renderField("Gov ID Type", p?.government_id_type ?? "-", this.govIdType, (v) => (this.govIdType = v))}
-              ${this.renderField("Gov ID Number", p?.government_id_number ?? "-", this.govIdNumber, (v) => (this.govIdNumber = v))}
-              ${this.renderField("Created At", this.formatDate(p?.created_at ?? ""), "", () => {}, false)}
-              ${this.renderField("Updated At", this.formatDate(p?.updated_at ?? ""), "", () => {}, false)}
+              ${this.renderField(msg("Wallet"), p?.wallet ?? "-", "", () => {}, false, true)}
+              ${this.renderField(msg("Email"), p?.email ?? "-", "", () => {}, false)}
+              ${this.renderField(msg("First Name"), p?.first_name ?? "-", this.firstName, (v) => (this.firstName = v))}
+              ${this.renderField(msg("Last Name"), p?.last_name ?? "-", this.lastName, (v) => (this.lastName = v))}
+              ${this.renderField(msg("Phone"), p?.phone ?? "-", this.phone, (v) => (this.phone = v))}
+              ${this.renderField(msg("Business Name"), p?.business_name ?? "-", this.businessName, (v) => (this.businessName = v))}
+              ${this.renderField(msg("Gov ID Type"), p?.government_id_type ?? "-", this.govIdType, (v) => (this.govIdType = v))}
+              ${this.renderField(msg("Gov ID Number"), p?.government_id_number ?? "-", this.govIdNumber, (v) => (this.govIdNumber = v))}
+              ${this.renderField(msg("Created At"), this.formatDate(p?.created_at ?? ""), "", () => {}, false)}
+              ${this.renderField(msg("Updated At"), this.formatDate(p?.updated_at ?? ""), "", () => {}, false)}
 
               <div class="actions">
                 ${this.editing
@@ -497,19 +498,19 @@ export class UserDetailView extends LitElement {
                         ?disabled=${this.saving}
                         @click=${this.handleSave}
                       >
-                        SAVE
+                        ${msg("SAVE")}
                       </button>
                       <button
                         class="btn"
                         ?disabled=${this.saving}
                         @click=${this.handleCancel}
                       >
-                        CANCEL
-                      </button>
+                        ${msg("CANCEL")}
+  </button>
                     `
                   : html`
                       <button class="btn btn-primary" @click=${this.handleEdit}>
-                        EDIT
+                        ${msg("EDIT")}
                       </button>
                     `}
               </div>
@@ -525,17 +526,17 @@ export class UserDetailView extends LitElement {
                 ?disabled=${this.vehiclesPageIndex === 0 || this.vehiclesLoading}
                 @click=${() => this.fetchAllVehicles(this.vehiclesPageIndex - 1)}
               >
-                PREV
+                ${msg("PREV")}
               </button>
               <span style="margin: 0 8px; font-size: 14px;">
-                Page ${this.vehiclesPageIndex + 1}
+                ${msg("Page")} ${this.vehiclesPageIndex + 1}
               </span>
               <button
                 class="pagination-btn"
                 ?disabled=${!this.vehiclesHasNextPage || this.vehiclesLoading}
                 @click=${() => this.fetchAllVehicles(this.vehiclesPageIndex + 1)}
               >
-                NEXT
+                ${msg("NEXT")}
               </button>
             </div>
           </div>

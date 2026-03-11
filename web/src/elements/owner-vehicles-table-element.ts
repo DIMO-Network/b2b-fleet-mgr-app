@@ -1,4 +1,5 @@
 import { LitElement, html } from "lit";
+import {msg} from '@lit/localize';
 import { customElement, property } from "lit/decorators.js";
 import { globalStyles } from "../global-styles.ts";
 
@@ -40,10 +41,10 @@ export class OwnedVehiclesTable extends LitElement {
     // Loading state
     if (this.loading) {
       return html`
-        <div class="section-header mt-24">Owned Vehicles</div>
+        <div class="section-header mt-24">${msg('Owned Vehicles')}</div>
         <div class="panel">
           <div class="panel-body" style="color:#666; padding:24px;">
-            Loading vehicles...
+            ${msg('Loading vehicles...')}
           </div>
         </div>
       `;
@@ -52,10 +53,10 @@ export class OwnedVehiclesTable extends LitElement {
     // Empty state
     if (!this.vehicles || this.vehicles.length === 0) {
       return html`
-        <div class="section-header mt-24">Owned Vehicles</div>
+        <div class="section-header mt-24">${msg('Owned Vehicles')}</div>
         <div class="panel">
           <div class="panel-body" style="color:#666; padding:24px;">
-            No vehicles are associated with this wallet.
+            ${msg('No vehicles are associated with this wallet.')}
           </div>
         </div>
       `;
@@ -69,12 +70,12 @@ export class OwnedVehiclesTable extends LitElement {
         <table>
           <thead>
             <tr>
-              <th>Vehicle</th>
-              <th>Token ID</th>
-              <th>VIN</th>
-              <th>Status</th>
-              <th>Engine</th>
-              <th>Actions</th>
+              <th>${msg('Vehicle')}</th>
+              <th>${msg('Token ID')}</th>
+              <th>${msg('VIN')}</th>
+              <th>${msg('Status')}</th>
+              <th>${msg('Engine')}</th>
+              <th>${msg('Actions')}</th>
             </tr>
           </thead>
 
@@ -93,8 +94,8 @@ export class OwnedVehiclesTable extends LitElement {
                   <td>-</td>
                   <td>
                     ${connected
-                      ? html`<span class="status status-connected">Connected</span>`
-                      : html`<span class="status status-offline">Disconnected</span>`}
+                      ? html`<span class="status status-connected">${msg('Connected')}</span>`
+                      : html`<span class="status status-offline">${msg('Disconnected')}</span>`}
                   </td>
                   <td>-</td>
                   <td>
@@ -102,9 +103,9 @@ export class OwnedVehiclesTable extends LitElement {
                       class="btn btn-sm"
                       @click=${(e: Event) => e.stopPropagation()}
                       disabled
-                      title="Coming soon"
+                      .title=${msg('Coming soon')}
                     >
-                      OPEN
+                      ${msg('OPEN')}
                     </button>
                   </td>
                 </tr>
@@ -123,17 +124,17 @@ export class OwnedVehiclesTable extends LitElement {
           ?disabled=${!hasPrev}
           @click=${this.onPrev}
         >
-          Prev
+          ${msg('Prev')}
         </button>
 
-        <div style="color:#666;">Page ${page}</div>
+        <div style="color:#666;">${msg('Page')} ${page}</div>
 
         <button
           class="btn btn-secondary"
           ?disabled=${!hasNext}
           @click=${this.onNext}
         >
-          Next
+          ${msg('Next')}
         </button>
       </div>
     `;

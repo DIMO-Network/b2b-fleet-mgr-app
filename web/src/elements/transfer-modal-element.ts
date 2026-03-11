@@ -1,4 +1,5 @@
 import {css, html, nothing} from 'lit';
+import {msg} from '@lit/localize';
 import {customElement, property, state} from "lit/decorators.js";
 // import {ApiService} from "@services/api-service.ts";
 import './session-timer';
@@ -113,7 +114,7 @@ export class TransferModalElement extends BaseOnboardingElement {
             <div class="modal-overlay" @click=${this.closeModal}>
                 <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
                     <div class="modal-header">
-                        <h3>Transfer Vehicle</h3>
+                        <h3>${msg('Transfer Vehicle')}</h3>
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>
                         <div class="modal-body">
@@ -130,43 +131,43 @@ export class TransferModalElement extends BaseOnboardingElement {
                             
                             <div class="transfer-options">
                                 <div class="transfer-option">
-                                    <h4>Transfer by Wallet Address</h4>
+                                    <h4>${msg('Transfer by Wallet Address')}</h4>
                                     <form class="transfer-form">
                                         <label>
-                                            Wallet 0x Address (for existing accounts)
+                                            ${msg('Wallet 0x Address (for existing accounts)')}
                                             <div style="display: flex; align-items: center; gap: 8px;">
                                                 <input type="text" 
                                                        placeholder="0x..." 
                                                        maxlength="42"
                                                        .value=${this.walletAddress}
                                                        @input=${this.handleWalletInput}>
-                                                ${this.isCheckingAccount ? html`<span style="font-size: 12px; color: #666;">Checking…</span>` : nothing}
+                                                ${this.isCheckingAccount ? html`<span style="font-size: 12px; color: #666;">${msg('Checking...')}</span>` : nothing}
                                                 ${this.accountFound ? html`<span style="color: #22c55e; font-size: 16px;">✓</span>` : nothing}
                                             </div>
                                         </label>
                                         ${this.walletAddress && this.accountNotFound ? html`
                                             <div style="font-size: 12px; color: #fc0303; margin-top: 6px;">
-                                                the wallet address ${this.walletAddress} does not exist.
+                                                ${msg('The wallet address does not exist.')}
                                             </div>
                                         ` : nothing}
                                         <button type="button" 
                                                 class="action-btn ${this.processing ? 'processing' : ''}" 
                                                 @click=${() => this.confirmTransfer('wallet')}
                                                 ?disabled=${!this.walletAddress.trim() || this.processing}>
-                                            ${this.processing ? 'Processing...' : 'Transfer by Wallet'}
+                                            ${this.processing ? msg('Processing...') : msg('Transfer by Wallet')}
                                         </button>
                                     </form>
                                 </div>
                                 
                                 <div class="transfer-divider">
-                                    <span>OR</span>
+                                    <span>${msg('OR')}</span>
                                 </div>
                                 
                                 <div class="transfer-option">
-                                    <h4>Transfer by Email (new accounts)</h4>
+                                    <h4>${msg('Transfer by Email (new accounts)')}</h4>
                                     <form class="transfer-form">
                                         <label>
-                                            Email Address
+                                            ${msg('Email Address')}
                                             <input type="email" 
                                                    placeholder="user@example.com"
                                                    .value=${this.email}
@@ -176,10 +177,10 @@ export class TransferModalElement extends BaseOnboardingElement {
                                                 class="action-btn ${this.processing ? 'processing' : ''}" 
                                                 @click=${() => this.confirmTransfer('email')}
                                                 ?disabled=${!this.email.trim() || this.processing}>
-                                            ${this.processing ? 'Processing...' : 'Transfer by Email'}
+                                            ${this.processing ? msg('Processing...') : msg('Transfer by Email')}
                                         </button>
                                         <p>
-                                           User will receive an email with an OTP code to login to the App. This will not work for existing accounts.
+                                           ${msg('User will receive an email with an OTP code to login to the App. This will not work for existing accounts.')}
                                         </p>
                                     </form>
                                 </div>
@@ -187,7 +188,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="action-btn secondary" @click=${this.closeModal}>
-                                Cancel
+                                ${msg('Cancel')}
                             </button>
                         </div>
                 </div>
@@ -259,10 +260,10 @@ export class TransferModalElement extends BaseOnboardingElement {
         console.log("Vehicle VIN:", this.vehicleVin);
         console.log("Vehicle IMEI", this.imei);
         console.log("Transfer Type:", transferType);
-        this.statusMessage = "Processing transfer for IMEI: " + this.imei;
+        this.statusMessage = msg("Processing transfer for IMEI: ") + this.imei;
         
         if (transferType === 'email') {
-            this.statusMessage = "Creating account for email: " + this.email;
+            this.statusMessage = msg("Creating account for email: ") + this.email;
             const createAccountResp = await this.createAccount(this.email);
             if (!createAccountResp.success) {
                 this.errorMessage = createAccountResp.error;
@@ -271,11 +272,11 @@ export class TransferModalElement extends BaseOnboardingElement {
             }
             this.walletAddress = createAccountResp.data.walletAddress;
             console.log("Created account with wallet address:", this.walletAddress);
-            this.statusMessage = "Account created with wallet address: " + this.walletAddress;
+            this.statusMessage = msg("Account created with wallet address: ") + this.walletAddress;
         }
 
         if (this.walletAddress == "") {
-            alert("Please enter a wallet address");
+            alert(msg("Please enter a wallet address"));
             this.processing = false;
             return;
         }
@@ -285,7 +286,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         const result = await this.transferVehicle(this.imei, this.walletAddress);
         if (!result.success) {
             if (result.error.toLowerCase().includes('timeout')) {
-                this.errorMessage = "Check Info for final transfer verification";
+                this.errorMessage = msg("Check Info for final transfer verification");
             } else {
                 this.errorMessage = result.error;
                 this.processing = false;
@@ -293,10 +294,10 @@ export class TransferModalElement extends BaseOnboardingElement {
             }
 
         }
-        this.statusMessage = "Transfer completed successfully";
+        this.statusMessage = msg("Transfer completed successfully");
 
         // Add inventory state record
-        this.statusMessage = "Recording inventory state change...";
+        this.statusMessage = msg("Recording inventory state change...");
         const inventoryResult = await this.addInventoryState(this.imei, this.walletAddress);
         if (!inventoryResult.success) {
             console.error("Failed to add inventory state:", inventoryResult.error);
@@ -318,7 +319,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         if (!creatResp.success || !creatResp.data) {
             return {
                 success: false,
-                error: creatResp.error || "Failed to create account"
+                error: creatResp.error || msg("Failed to create account")
             };
         }
 
@@ -338,7 +339,7 @@ export class TransferModalElement extends BaseOnboardingElement {
         if (!resp.success) {
             return {
                 success: false,
-                error: resp.error || "Failed to add inventory state"
+                error: resp.error || msg("Failed to add inventory state")
             };
         }
 
