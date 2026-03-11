@@ -6,7 +6,42 @@ import {TenantSettings, SettingsService} from '@services/settings-service.ts';
 
 @customElement('tenant-settings-view')
 export class TenantSettingsView extends LitElement {
-  static styles = [ globalStyles, css`` ];
+  static styles = [ globalStyles, css`
+    .field-hint {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+    .settings-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+      align-items: start;
+    }
+    .helper-panel {
+      background: #f0f7ff;
+      border: 1px solid #b8d4f0;
+      border-radius: 4px;
+      padding: 20px;
+    }
+    .helper-panel h4 {
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      color: #1a3a5c;
+    }
+    .helper-panel p {
+      margin: 0 0 12px 0;
+      font-size: 13px;
+      color: #444;
+      line-height: 1.5;
+    }
+    .helper-panel p:last-child { margin-bottom: 0; }
+    .helper-panel a {
+      color: #1a73e8;
+      text-decoration: none;
+    }
+    .helper-panel a:hover { text-decoration: underline; }
+  ` ];
 
   private api = ApiService.getInstance();
   private settingsService = SettingsService.getInstance();
@@ -145,97 +180,111 @@ export class TenantSettingsView extends LitElement {
           ${this.data ? html`<span style="font-weight: normal; color: #666; margin-left: 8px;">— ${this.data.name}</span>` : nothing}
         </div>
 
-        <div class="panel">
-          <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <span>Configuration</span>
-            ${this.editing ? html`` : html`
-              <button class="action-btn secondary" title="Edit" @click=${this.enableEdit}>
-                ✎ Edit
-              </button>
-            `}
-          </div>
-          <div class="panel-body">
-            ${this.loading ? html`<div class="loading-message">Loading…</div>` : nothing}
-            ${this.error ? html`<div class="alert alert-error">${this.error}</div>` : nothing}
-            ${this.success ? html`<div class="alert alert-success">${this.success}</div>` : nothing}
+        <div class="settings-layout">
+          <div class="panel">
+            <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+              <span>Configuration</span>
+              ${this.editing ? html`` : html`
+                <button class="action-btn secondary" title="Edit" @click=${this.enableEdit}>
+                  ✎ Edit
+                </button>
+              `}
+            </div>
+            <div class="panel-body">
+              ${this.loading ? html`<div class="loading-message">Loading…</div>` : nothing}
+              ${this.error ? html`<div class="alert alert-error">${this.error}</div>` : nothing}
+              ${this.success ? html`<div class="alert alert-success">${this.success}</div>` : nothing}
 
-            ${this.data ? html`
-              <form class="grid" style="gap: 12px;">
-                <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
-                  <fieldset>
-                    <label class="form-label">Tenant ID</label>
-                    <!-- Tenant ID is not editable; render as plain text -->
-                    <span class="detail-value" style="display:block; padding: 8px 0;">${this.tenantId}</span>
-                  </fieldset>
-                  <fieldset>
-                    <label class="form-label">Tenant Name</label>
-                    <input type="text" .value=${this.name}
-                      ?disabled=${!this.editing}
-                      @input=${(e: InputEvent) => this.onInput(e, v => this.name = v)}>
-                  </fieldset>
-                </div>
-
-                <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
-                  <fieldset>
-                    <label class="form-label">Kore Client ID</label>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                      <input type="text" style="width: 450px" .value=${this.kore_client_id}
+              ${this.data ? html`
+                <form class="grid" style="gap: 12px;">
+                  <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <fieldset>
+                      <label class="form-label">Tenant ID</label>
+                      <!-- Tenant ID is not editable; render as plain text -->
+                      <span class="detail-value" style="display:block; padding: 8px 0;">${this.tenantId}</span>
+                    </fieldset>
+                    <fieldset>
+                      <label class="form-label">Tenant Name</label>
+                      <input type="text" .value=${this.name}
                         ?disabled=${!this.editing}
-                        @input=${(e: InputEvent) => this.onInput(e, v => this.kore_client_id = v)}>
-                      <button type="button" class="btn btn-sm btn-success ${this.syncing ? 'processing' : ''}" 
-                        @click=${this.syncKore} 
-                        ?disabled=${this.syncing || !this.kore_client_id}>
-                        ${this.syncing ? 'Syncing...' : 'Sync SIMs and Fleet'}
-                      </button>
-                    </div>
-                  </fieldset>
-                  <fieldset>
-                    <label class="form-label">Kore Secret</label>
-                    ${this.editing ? html`
-                      <input type="text" style="width: 450px" placeholder="${this.data.has_kore_secret ? '****' : ''}"
-                        .value=${this.kore_secret_input}
-                        @input=${(e: InputEvent) => this.onInput(e, v => this.kore_secret_input = v)}>
-                    ` : html`
-                      <input type="text" .value=${this.data.has_kore_secret ? '****' : ''} disabled>
-                    `}
-                  </fieldset>
-                </div>
+                        @input=${(e: InputEvent) => this.onInput(e, v => this.name = v)}>
+                    </fieldset>
+                  </div>
 
-                <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
-                  <fieldset>
-                    <label class="form-label">Command Password</label>
-                    <input type="text" .value=${this.command_password}
-                      ?disabled=${!this.editing}
-                      @input=${(e: InputEvent) => this.onInput(e, v => this.command_password = v)}>
-                  </fieldset>
-                  <fieldset>
-                    <label class="form-label">DIMO Client ID</label>
-                    <input type="text" style="width: 450px" .value=${this.dimo_client_id}
-                      ?disabled=${!this.editing}
-                      @input=${(e: InputEvent) => this.onInput(e, v => this.dimo_client_id = v)}>
-                  </fieldset>
-                </div>
+                  <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <fieldset>
+                      <label class="form-label">Kore Client ID</label>
+                      <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" style="width: 450px" .value=${this.kore_client_id}
+                          ?disabled=${!this.editing}
+                          @input=${(e: InputEvent) => this.onInput(e, v => this.kore_client_id = v)}>
+                        <button type="button" class="btn btn-sm btn-success ${this.syncing ? 'processing' : ''}"
+                          @click=${this.syncKore}
+                          ?disabled=${this.syncing || !this.kore_client_id}>
+                          ${this.syncing ? 'Syncing...' : 'Sync SIMs and Fleet'}
+                        </button>
+                      </div>
+                      <div class="field-hint">Provided from the Kore website. Not required, only needed to automatically sync IMEIs.</div>
+                    </fieldset>
+                    <fieldset>
+                      <label class="form-label">Kore Secret</label>
+                      ${this.editing ? html`
+                        <input type="text" style="width: 450px" placeholder="${this.data.has_kore_secret ? '****' : ''}"
+                          .value=${this.kore_secret_input}
+                          @input=${(e: InputEvent) => this.onInput(e, v => this.kore_secret_input = v)}>
+                      ` : html`
+                        <input type="text" .value=${this.data.has_kore_secret ? '****' : ''} disabled>
+                      `}
+                      <div class="field-hint">Also from the Kore website, and also not required.</div>
+                    </fieldset>
+                  </div>
 
-                <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
-                  <fieldset>
-                    <label class="form-label">DIMO Secret</label>
-                    ${this.editing ? html`
-                      <input type="text" style="width: 450px" placeholder="${this.data.has_dimo_secret ? '****' : ''}"
-                        .value=${this.dimo_secret_input}
-                        @input=${(e: InputEvent) => this.onInput(e, v => this.dimo_secret_input = v)}>
-                    ` : html`
-                      <input type="text" .value=${this.data.has_dimo_secret ? '****' : ''} disabled>
-                    `}
-                  </fieldset>
-                </div>
-              </form>
-            ` : nothing}
+                  <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <fieldset>
+                      <label class="form-label">Command Password</label>
+                      <input type="text" .value=${this.command_password}
+                        ?disabled=${!this.editing}
+                        @input=${(e: InputEvent) => this.onInput(e, v => this.command_password = v)}>
+                      <div class="field-hint">Used to authenticate device commands. Optional, needed for immobilization and other SMS commands.</div>
+                    </fieldset>
+                    <fieldset>
+                      <label class="form-label">DIMO Client ID</label>
+                      <input type="text" style="width: 450px" .value=${this.dimo_client_id}
+                        ?disabled=${!this.editing}
+                        @input=${(e: InputEvent) => this.onInput(e, v => this.dimo_client_id = v)}>
+                      <div class="field-hint">Found in your DIMO developer console.</div>
+                    </fieldset>
+                  </div>
+
+                  <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <fieldset>
+                      <label class="form-label">DIMO Secret</label>
+                      ${this.editing ? html`
+                        <input type="text" style="width: 450px" placeholder="${this.data.has_dimo_secret ? '****' : ''}"
+                          .value=${this.dimo_secret_input}
+                          @input=${(e: InputEvent) => this.onInput(e, v => this.dimo_secret_input = v)}>
+                      ` : html`
+                        <input type="text" .value=${this.data.has_dimo_secret ? '****' : ''} disabled>
+                      `}
+                      <div class="field-hint">From your DIMO license credentials, also from the developer console.</div>
+                    </fieldset>
+                  </div>
+                </form>
+              ` : nothing}
+            </div>
+            <div class="panel-footer" style="display:flex; gap:8px; justify-content:flex-end;">
+              ${this.editing ? html`
+                <button class="action-btn secondary" @click=${this.cancelEdit} ?disabled=${this.loading}>Cancel</button>
+                <button class="btn btn-primary ${this.loading ? 'processing' : ''}" @click=${this.save} ?disabled=${this.loading}>${this.loading ? 'Saving…' : 'Save'}</button>
+              ` : nothing}
+            </div>
           </div>
-          <div class="panel-footer" style="display:flex; gap:8px; justify-content:flex-end;">
-            ${this.editing ? html`
-              <button class="action-btn secondary" @click=${this.cancelEdit} ?disabled=${this.loading}>Cancel</button>
-              <button class="btn btn-primary ${this.loading ? 'processing' : ''}" @click=${this.save} ?disabled=${this.loading}>${this.loading ? 'Saving…' : 'Save'}</button>
-            ` : nothing}
+
+          <div class="helper-panel">
+            <h4>Getting Started</h4>
+            <p>To connect your fleet you will need a DIMO developer account. If you don't have one yet, create one at <a href="https://console.dimo.org" target="_blank">console.dimo.org</a>.</p>
+            <p>Your <strong>DIMO Client ID</strong> and <strong>DIMO Secret</strong> can be found in your developer console under your license credentials.</p>
+            <p>The <strong>Kore</strong> credentials are provided by your hardware / connectivity provider and are used to sync SIM and device information.</p>
           </div>
         </div>
       </div>

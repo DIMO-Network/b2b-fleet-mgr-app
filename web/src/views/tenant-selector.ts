@@ -154,9 +154,21 @@ export class TenantSelectorView extends LitElement {
             document.body.removeChild(modal);
         });
 
-        modal.addEventListener('tenant-added', async () => {
+        modal.addEventListener('tenant-added', async (e: Event) => {
             const list = await this.oracleTenantService.fetchTenants();
             this.tenants = Array.isArray(list) ? list : (this.oracleTenantService.loadTenants() ?? []);
+
+            // Auto-select the newly created tenant and redirect to settings
+            const newTenant = (e as CustomEvent).detail?.tenant;
+            if (newTenant?.id) {
+              const match = this.tenants.find(t => t.id === newTenant.id);
+              if (match) {
+                this.oracleTenantService.setSelectedTenant(match);
+                this.selectedTenantId = match.id;
+                this.dispatchEvent(new CustomEvent('tenant-changed', { detail: { tenant: match }, bubbles: true, composed: true }));
+                window.location.hash = '/tenant-settings';
+              }
+            }
         });
 
         document.body.appendChild(modal);
