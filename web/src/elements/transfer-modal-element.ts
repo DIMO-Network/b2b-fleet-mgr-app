@@ -315,7 +315,8 @@ export class TransferModalElement extends BaseOnboardingElement {
             email: email,
             deployAccount: true
         };
-        const creatResp = await this.api.callApi<AccountData>('POST', '/account', payload, true, true, false);
+        const creatResp = await this.api.callApi<AccountData>('POST', '/account',
+            payload, true, true, true);
         if (!creatResp.success || !creatResp.data) {
             return {
                 success: false,
