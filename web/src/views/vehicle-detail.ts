@@ -5,7 +5,8 @@ import {globalStyles} from "../global-styles.ts";
 import {consume} from '@lit/context';
 import {apiServiceContext} from '../context';
 import {ApiService} from '@services/api-service.ts';
-import {AccountInfo, IdentityService, VehicleIdentityData} from '@services/identity-service.ts';
+import {IdentityService, VehicleIdentityData} from '@services/identity-service.ts';
+import {OracleTenantService} from '@services/oracle-tenant-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import '../elements/update-inventory-modal-element';
@@ -105,6 +106,19 @@ interface InventoryAudit {
   created_at: string;
 }
 
+interface UserProfileInfo {
+  wallet: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  business_name?: string;
+  government_id_type?: string;
+  government_id_number?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 interface Vehicle {
   vin: string;
   imei: string;
@@ -119,11 +133,25 @@ interface Vehicle {
   commands: Command[];
   inventory_audit: InventoryAudit[];
   vendor_data?: Record<string, string>;
+  license_plate?: string;
 }
 
 @customElement('vehicle-detail-view')
 export class VehicleDetailView extends LitElement {
-  static styles = [globalStyles, css``];
+  static styles = [globalStyles, css`
+    .license-plate {
+      display: inline-block;
+      background: #e9ecef;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-left: 12px;
+      vertical-align: middle;
+    }
+  `];
 
   @property({ type: Number })
   tokenID: number = 0;
@@ -145,10 +173,13 @@ export class VehicleDetailView extends LitElement {
   private trips: Trip[] = [];
 
   @state()
-  private ownerInfo: AccountInfo | null = null;
+  private ownerInfo: UserProfileInfo | null = null;
   
   @state()
   private ownerWalletAddress: string | null = null;
+
+  @state()
+  private ownerProfileMissing: boolean = false;
 
   @state()
   private selectedWeekIndex: number = 0;
@@ -161,6 +192,12 @@ export class VehicleDetailView extends LitElement {
 
   @state()
   private errorMessage: string = '';
+
+  @state()
+  private successMessage: string = '';
+
+  @state()
+  private syncingApimaz: boolean = false;
 
   @state()
   private currentAddress: string = '';
@@ -412,7 +449,6 @@ export class VehicleDetailView extends LitElement {
       const ownerAddress = await identityService.getVehicleOwnerAddress(tokenId);
 
       if (!ownerAddress) {
-        // No owner found
         this.ownerInfo = null;
         return;
       }
@@ -420,11 +456,23 @@ export class VehicleDetailView extends LitElement {
       // Show wallet address immediately
       this.ownerWalletAddress = ownerAddress;
 
-      // Then load the full account info in the background
-      const accountInfo = await identityService.getAccountInfo(ownerAddress);
+      // Load user profile from kaufmann-oracle backend
+      if (this.apiService) {
+        const response = await this.apiService.callApi<UserProfileInfo>(
+          'GET',
+          `/user-profiles/${ownerAddress}`,
+          null,
+          true,
+          true
+        );
 
-      if (accountInfo) {
-        this.ownerInfo = accountInfo;
+        if (response.success && response.data) {
+          this.ownerInfo = response.data;
+          this.ownerProfileMissing = false;
+        } else if (response.status === 404) {
+          this.ownerInfo = null;
+          this.ownerProfileMissing = true;
+        }
       }
     } catch (error) {
       console.error('Error loading owner info:', error);
@@ -444,6 +492,7 @@ export class VehicleDetailView extends LitElement {
       <!-- VEHICLE DETAIL PAGE -->
       <div class="page active" id="page-vehicle-detail">
         ${this.errorMessage ? html`<div class="alert alert-error">${this.errorMessage}</div>` : ''}
+        ${this.successMessage ? html`<div class="alert alert-success">${this.successMessage}</div>` : ''}
         <div class="toolbar mb-16">
           <button class="btn" @click=${this.goBack}>${msg('← BACK TO VEHICLES')}</button>
         </div>
@@ -453,7 +502,7 @@ export class VehicleDetailView extends LitElement {
           <div class="panel-body">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
               <div>
-                <h2 style="font-size: 18px; margin-bottom: 8px;" id="detail-vehicle-name">${this.vehicle?.make} ${this.vehicle?.model} ${this.vehicle?.year}</h2>
+                <h2 style="font-size: 18px; margin-bottom: 8px;" id="detail-vehicle-name">${this.vehicle?.make} ${this.vehicle?.model} ${this.vehicle?.year}${this.vehicle?.license_plate ? html`<span class="license-plate">${this.vehicle.license_plate}</span>` : ''}</h2>
                 <div style="margin-bottom: 8px;">
                   <span style="color: #666;">${msg('VIN:')}</span> ${this.vehicle?.vin}
                   <span style="color: #666; margin-left: 16px;">${msg('Minted At:')}</span> ${this.formatMintedAt(this.vehicleIdentity?.vehicle?.mintedAt)}
@@ -478,16 +527,28 @@ export class VehicleDetailView extends LitElement {
         </div>
 
         <!-- Vendor Data Panel -->
-        ${this.vehicle?.vendor_data && Object.keys(this.vehicle.vendor_data).length > 0 ? html`
+        ${this.vehicle?.vendor_data && Object.keys(this.vehicle.vendor_data).length > 0 || this.isKaufmannTenant() ? html`
         <div class="panel mb-16">
-          <div class="panel-header">${msg('Vendor Information')}</div>
+          <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>${msg('Vendor Information')}</span>
+            ${this.isKaufmannTenant() ? html`
+              <button class="btn btn-sm ${this.syncingApimaz ? 'processing' : ''}"
+                      @click=${this.syncApimaz}
+                      ?disabled=${this.syncingApimaz || !this.vehicle?.vin}>
+                ${this.syncingApimaz ? msg('Syncing...') : msg('Synchronize')}
+              </button>
+            ` : ''}
+          </div>
           <div class="panel-body">
-            ${Object.entries(this.vehicle.vendor_data).map(([key, value]) => html`
-              <div class="detail-row">
-                <span class="detail-label">${this.formatVendorLabel(key)}</span>
-                <span class="detail-value">${value || msg('N/A')}</span>
-              </div>
-            `)}
+            ${this.vehicle?.vendor_data && Object.keys(this.vehicle.vendor_data).length > 0
+              ? Object.entries(this.vehicle.vendor_data).map(([key, value]) => html`
+                <div class="detail-row">
+                  <span class="detail-label">${this.formatVendorLabel(key)}</span>
+                  <span class="detail-value">${value || msg('N/A')}</span>
+                </div>
+              `)
+              : html`<div style="color:#666;">${msg('No vendor data available. Click Synchronize to fetch.')}</div>`
+            }
           </div>
         </div>
         ` : ''}
@@ -501,20 +562,24 @@ export class VehicleDetailView extends LitElement {
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
                   <div>
                     <div class="detail-row">
-                      <span class="detail-label">${msg('Owner Email')}</span>
+                      <span class="detail-label">${msg('Name')}</span>
+                      <span class="detail-value">${[this.ownerInfo.first_name, this.ownerInfo.last_name].filter(Boolean).join(' ') || msg('Not available')}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">${msg('Email')}</span>
                       <span class="detail-value">${this.ownerInfo.email || msg('Not available')}</span>
                     </div>
                     <div class="detail-row">
                       <span class="detail-label">${msg('Phone')}</span>
-                      <span class="detail-value">${msg('Not available')}</span>
+                      <span class="detail-value">${this.ownerInfo.phone || msg('Not available')}</span>
                     </div>
                   </div>
                   <div>
                     <div class="detail-row">
                       <span class="detail-label">${msg('Wallet')}</span>
                       <click-to-copy-element .valueToCopy="${this.ownerWalletAddress || ''}">
-                        <span 
-                          class="detail-value clickable" 
+                        <span
+                          class="detail-value clickable"
                           style="font-size: 11px;"
                         >
                           ${this.ownerWalletAddress ? this.formatWalletAddress(this.ownerWalletAddress) : 'N/A'}
@@ -522,14 +587,34 @@ export class VehicleDetailView extends LitElement {
                       </click-to-copy-element>
                     </div>
                     <div class="detail-row">
+                      <span class="detail-label">${msg('Business')}</span>
+                      <span class="detail-value">${this.ownerInfo.business_name || msg('Not available')}</span>
+                    </div>
+                    <div class="detail-row">
                       <span class="detail-label">${msg('User Created')}</span>
-                      <span class="detail-value">${this.ownerInfo.authenticators?.[0]?.creationDate ? this.formatCreatedDate(this.ownerInfo.authenticators[0].creationDate) : msg('Not available')}</span>
+                      <span class="detail-value">${this.ownerInfo.created_at ? this.formatCreatedDate(this.ownerInfo.created_at) : msg('Not available')}</span>
                     </div>
                   </div>
                   <div style="text-align: right;">
-                    <button class="btn btn-sm" @click=${this.viewUserProfile} ?disabled=${this.ownerInfo.walletAddress}>${msg('VIEW USER PROFILE →')}</button>
+                    <button class="btn btn-sm" @click=${this.viewUserProfile}>${msg('VIEW USER PROFILE →')}</button>
                   </div>
                 </div>
+              </div>
+            ` : this.ownerProfileMissing && this.ownerWalletAddress ? html`
+              <!-- Owner wallet found but no profile in DB -->
+              <div id="vehicle-user-info">
+                <div class="detail-row">
+                  <span class="detail-label">${msg('Wallet')}</span>
+                  <click-to-copy-element .valueToCopy="${this.ownerWalletAddress}">
+                    <span class="detail-value clickable" style="font-size: 11px;">
+                      ${this.formatWalletAddress(this.ownerWalletAddress)}
+                    </span>
+                  </click-to-copy-element>
+                </div>
+                <div style="color: #666; margin-top: 8px; margin-bottom: 12px;">
+                  ${msg('No additional user profile information found.')}
+                </div>
+                <button class="btn btn-success btn-sm" @click=${this.addUserProfile}>${msg('+ ADD PROFILE INFO')}</button>
               </div>
             ` : html`
               <!-- Inventory vehicle state (no owner) -->
@@ -977,10 +1062,52 @@ export class VehicleDetailView extends LitElement {
   }
 
   private viewUserProfile() {
-    if (this.ownerInfo?.email) {
-      window.location.hash = `/users?search=${encodeURIComponent(this.ownerInfo.email)}`;
-    } else if (this.ownerInfo?.walletAddress) {
-      window.location.hash = `/users?search=${encodeURIComponent(this.ownerInfo.walletAddress)}`;
+    if (this.ownerInfo?.wallet) {
+      window.location.hash = `/users/profile/${this.ownerInfo.wallet}`;
+    }
+  }
+
+  private addUserProfile() {
+    if (this.ownerWalletAddress) {
+      window.location.hash = `/users/profile/${this.ownerWalletAddress}?edit=true`;
+    }
+  }
+
+  private isKaufmannTenant(): boolean {
+    const tenant = OracleTenantService.getInstance().getSelectedTenant();
+    return tenant?.name?.toLowerCase().includes('kaufmann') ?? false;
+  }
+
+  private async syncApimaz() {
+    if (!this.apiService || !this.vehicle?.vin) return;
+
+    this.syncingApimaz = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    try {
+      const response = await this.apiService.callApi<{ message: string }>(
+        'POST',
+        `/fleet/vehicles/apimaz/${this.vehicle.vin}/sync`,
+        null,
+        true,
+        true
+      );
+
+      if (response.success) {
+        this.successMessage = msg('Vendor data synchronized successfully.');
+        // Reload vehicle to show updated data
+        const [vehicleData] = await this.loadVehicleData();
+        if (vehicleData) {
+          this.vehicle = vehicleData;
+        }
+      } else {
+        this.errorMessage = response.error || msg('Failed to synchronize vendor data.');
+      }
+    } catch (error: any) {
+      this.errorMessage = error.message || msg('Failed to synchronize vendor data.');
+    } finally {
+      this.syncingApimaz = false;
     }
   }
 }

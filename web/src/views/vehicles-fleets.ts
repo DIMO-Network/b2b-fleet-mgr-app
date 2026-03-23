@@ -29,12 +29,12 @@ interface Vehicle {
   last_telemetry: string;
   inventory: string;
   groups: VehicleGroup[];
-  fuel: boolean;
+  fuel: string;
   engine: string;
   license_plate: string;
 }
 
-interface TelemetryInfo {
+interface TelemetrySignals {
   signalsLatest: {
     currentLocationCoordinates: {
       value: {
@@ -47,8 +47,12 @@ interface TelemetryInfo {
       value: number;
       timestamp: string;
     };
+    powertrainFuelSystemRelativeLevel: {
+      value: number;
+    };
   };
 }
+
 
 interface FleetVehiclesResponse {
   items: Vehicle[];
@@ -129,6 +133,25 @@ export class VehiclesFleetsView extends LitElement {
   private searchDebounceTimer?: number;
   private telemetryLoadAbortController?: AbortController;
 
+  private telemetryQuery = `{
+  signalsLatest(tokenId: TOKEN_ID) {
+    currentLocationCoordinates {
+      value {
+        latitude
+        longitude
+      }
+      timestamp
+    }
+    obdIsEngineBlocked {
+      value
+      timestamp
+    }
+    powertrainFuelSystemRelativeLevel {
+      value
+    }
+  }
+}`;
+
   async connectedCallback() {
     super.connectedCallback();
     await this.loadVehicles();
@@ -199,10 +222,11 @@ export class VehiclesFleetsView extends LitElement {
       }
 
       try {
-        const response = await this.apiService.callApi<TelemetryInfo>(
-          'GET',
-          `/fleet/vehicles/telemetry-info/${vehicle.vehicle_token_id}`,
-          null,
+        const query = this.telemetryQuery.replace('TOKEN_ID', vehicle.vehicle_token_id.toString());
+        const response = await this.apiService.callApi<TelemetrySignals>(
+          'POST',
+          `/fleet/vehicles/telemetry/${vehicle.vehicle_token_id}`,
+          query,
           true, // auth required
           true  // oracle endpoint
         );
@@ -222,9 +246,13 @@ export class VehiclesFleetsView extends LitElement {
             engineStatus = engineBlockedValue === 0 ? 'running' : 'blocked';
           }
 
+          // Extract fuel level
+          const fuelValue = telemetryData.signalsLatest?.powertrainFuelSystemRelativeLevel?.value;
+          const fuelLevel = fuelValue != null ? `${Math.round(fuelValue)}%` : '';
+
           // Update the specific vehicle in the array
           this.vehicles = this.vehicles.map((v, idx) =>
-            idx === i ? { ...v, last_telemetry: lastTelemetry, engine: engineStatus } : v
+            idx === i ? { ...v, last_telemetry: lastTelemetry, engine: engineStatus, fuel: fuelLevel } : v
           );
         } else {
           // If API call failed, still set default to 'running' (UNBLOCKED)
@@ -560,7 +588,7 @@ export class VehiclesFleetsView extends LitElement {
                             <td title="${vehicle.last_telemetry}">${this.formatLastTelemetry(vehicle.last_telemetry)}</td>
                             <td>${vehicle.inventory ? html`<span class="status ${this.getInventoryClass(vehicle.inventory)}">${vehicle.inventory}</span>` : '—'}</td>
                             <td>${vehicle.groups.length > 0 ? vehicle.groups.map(group => html`<span class="badge" style="background-color: ${group.color}; color: #fff;">${group.name}</span>`) : '—'}</td>
-                            <td>${vehicle.fuel ? msg('Yes') : msg('No')}</td>
+                            <td>${vehicle.fuel || '—'}</td>
                             <td><span class="status ${this.getEngineClass(vehicle.engine)}">${this.getEngineDisplay(vehicle.engine)}</span></td>
                           </tr>
                         `)}

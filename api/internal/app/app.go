@@ -99,6 +99,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	// fleets
 	oracleApp.Get("/fleet/vehicles", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/vehicles/apimaz/:vin", genericProxyCtrl.Proxy)
+	oracleApp.Post("/fleet/vehicles/apimaz/:vin/sync", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/vehicles/:tokenID", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/vehicles/telemetry-info/:tokenID", genericProxyCtrl.Proxy)
 	oracleApp.Post("/fleet/vehicles/telemetry/:tokenID", genericProxyCtrl.Proxy)
@@ -151,6 +152,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Post("/user-profiles", genericProxyCtrl.Proxy)
 	oracleApp.Get("/user-profiles/:wallet", genericProxyCtrl.Proxy)
 	oracleApp.Patch("/user-profiles/:wallet", genericProxyCtrl.Proxy)
+	oracleApp.Put("/user-profiles/:wallet", genericProxyCtrl.Proxy)
 
 	// accounts
 	oracleApp.Get("/account", accountsCtrl.GetAccount)

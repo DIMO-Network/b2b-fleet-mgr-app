@@ -91,6 +91,7 @@ export class UserDetailView extends LitElement {
 
   // profile state
   @state() private profile?: UserProfile;
+  @state() private isNewProfile = false;
   @state() private loading = true;
   @state() private editing = false;
   @state() private saving = false;
@@ -98,6 +99,7 @@ export class UserDetailView extends LitElement {
   @state() private successMessage = "";
 
   // editable field state
+  @state() private email = "";
   @state() private firstName = "";
   @state() private lastName = "";
   @state() private phone = "";
@@ -119,6 +121,17 @@ export class UserDetailView extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
+
+    // Strip query string from wallet (router may URL-encode ? as %3F)
+    const decoded = decodeURIComponent(this.wallet);
+    if (decoded.includes('?')) {
+      const [cleanWallet, qs] = decoded.split('?');
+      this.wallet = cleanWallet;
+      if (new URLSearchParams(qs).get('edit') === 'true') {
+        this.editing = true;
+      }
+    }
+
     await this.fetchProfile();
     this.fetchAllVehicles(0);
   }
@@ -136,7 +149,13 @@ export class UserDetailView extends LitElement {
       );
       if (result.success && result.data) {
         this.profile = result.data;
+        this.isNewProfile = false;
         this.syncEditFields(result.data);
+      } else if (result.status === 404) {
+        // No profile exists yet — set up for creation
+        this.profile = { wallet: this.wallet } as UserProfile;
+        this.isNewProfile = true;
+        this.syncEditFields(this.profile);
       } else {
         this.errorMessage = result.error || msg("Failed to load user profile.");
       }
@@ -241,6 +260,7 @@ export class UserDetailView extends LitElement {
   }
 
   private syncEditFields(p: UserProfile) {
+    this.email = p.email || "";
     this.firstName = p.first_name || "";
     this.lastName = p.last_name || "";
     this.phone = p.phone || "";
@@ -267,26 +287,32 @@ export class UserDetailView extends LitElement {
     this.errorMessage = "";
     this.successMessage = "";
     try {
+      const method = this.isNewProfile ? "PUT" : "PATCH";
+      const body: Record<string, string> = {
+        first_name: this.firstName,
+        last_name: this.lastName,
+        phone: this.phone,
+        business_name: this.businessName,
+        government_id_type: this.govIdType,
+        government_id_number: this.govIdNumber,
+      };
+      if (this.isNewProfile) {
+        body.email = this.email;
+      }
       const result = await ApiService.getInstance().callApi(
-        "PATCH",
+        method,
         `/user-profiles/${this.wallet}`,
-        {
-          first_name: this.firstName,
-          last_name: this.lastName,
-          phone: this.phone,
-          business_name: this.businessName,
-          government_id_type: this.govIdType,
-          government_id_number: this.govIdNumber,
-        },
+        body,
         true,
         true
       );
       if (result.success) {
-        this.successMessage = msg("Profile updated successfully.");
+        this.successMessage = this.isNewProfile ? msg("Profile created successfully.") : msg("Profile updated successfully.");
+        this.isNewProfile = false;
         this.editing = false;
         await this.fetchProfile();
       } else {
-        this.errorMessage = result.error || msg("Failed to update profile.");
+        this.errorMessage = result.error || msg("Failed to save profile.");
       }
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -470,7 +496,7 @@ export class UserDetailView extends LitElement {
 
         <div class="panels-row">
           <div class="panel detail-panel">
-            <div class="panel-header">${msg("Profile Info")}</div>
+            <div class="panel-header">${this.isNewProfile ? msg("New Profile") : msg("Profile Info")}</div>
             <div class="panel-body">
               ${this.errorMessage
                 ? html`<div class="alert alert-error">${this.errorMessage}</div>`
@@ -480,7 +506,7 @@ export class UserDetailView extends LitElement {
                 : ""}
 
               ${this.renderField(msg("Wallet"), p?.wallet ?? "-", "", () => {}, false, true)}
-              ${this.renderField(msg("Email"), p?.email ?? "-", "", () => {}, false)}
+              ${this.renderField(msg("Email"), p?.email ?? "-", this.email, (v) => (this.email = v), this.isNewProfile)}
               ${this.renderField(msg("First Name"), p?.first_name ?? "-", this.firstName, (v) => (this.firstName = v))}
               ${this.renderField(msg("Last Name"), p?.last_name ?? "-", this.lastName, (v) => (this.lastName = v))}
               ${this.renderField(msg("Phone"), p?.phone ?? "-", this.phone, (v) => (this.phone = v))}
