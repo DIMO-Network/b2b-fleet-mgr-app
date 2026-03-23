@@ -118,6 +118,7 @@ interface Vehicle {
   groups: Group[];
   commands: Command[];
   inventory_audit: InventoryAudit[];
+  vendor_data?: Record<string, string>;
 }
 
 @customElement('vehicle-detail-view')
@@ -475,6 +476,21 @@ export class VehicleDetailView extends LitElement {
             </div>
           </div>
         </div>
+
+        <!-- Vendor Data Panel -->
+        ${this.vehicle?.vendor_data && Object.keys(this.vehicle.vendor_data).length > 0 ? html`
+        <div class="panel mb-16">
+          <div class="panel-header">${msg('Vendor Information')}</div>
+          <div class="panel-body">
+            ${Object.entries(this.vehicle.vendor_data).map(([key, value]) => html`
+              <div class="detail-row">
+                <span class="detail-label">${this.formatVendorLabel(key)}</span>
+                <span class="detail-value">${value || msg('N/A')}</span>
+              </div>
+            `)}
+          </div>
+        </div>
+        ` : ''}
 
         <!-- User Information Panel -->
         <div class="panel mb-16" id="vehicle-user-panel">
@@ -954,6 +970,10 @@ export class VehicleDetailView extends LitElement {
   private formatCreatedDate(dateString: string | undefined): string {
     if (!dateString) return 'N/A';
     return dayjs(dateString).format('YYYY-MM-DD');
+  }
+
+  private formatVendorLabel(key: string): string {
+    return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
   private viewUserProfile() {
