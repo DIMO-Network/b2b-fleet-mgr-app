@@ -31,6 +31,7 @@ interface Vehicle {
   groups: VehicleGroup[];
   fuel: boolean;
   engine: string;
+  license_plate: string;
 }
 
 interface TelemetryInfo {
@@ -59,7 +60,19 @@ interface FleetVehiclesResponse {
 @customElement('vehicles-fleets-view')
 export class VehiclesFleetsView extends LitElement {
   static styles = [ globalStyles,
-    css`` ];
+    css`
+      .license-plate {
+        display: inline-block;
+        background: #e9ecef;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+      }
+    ` ];
 
   @consume({ context: apiServiceContext, subscribe: true })
   @state()
@@ -540,7 +553,7 @@ export class VehiclesFleetsView extends LitElement {
                         <tbody>
                         ${this.vehicles.map(vehicle => html`
                           <tr>
-                            <td class="link" title="${vehicle.vehicle_token_id}" @click=${() => this.handleVehicleClick(vehicle.vehicle_token_id)} style="cursor:pointer">${vehicle.make.toUpperCase()} ${vehicle.model.toUpperCase()} ${vehicle.year}</td>
+                            <td>${vehicle.license_plate ? html`<span class="license-plate">${vehicle.license_plate}</span><br>` : ''}<span class="link" title="${vehicle.vehicle_token_id}" @click=${() => this.handleVehicleClick(vehicle.vehicle_token_id)} style="cursor:pointer">${vehicle.make.toUpperCase()} ${vehicle.model.toUpperCase()} ${vehicle.year}</span></td>
                             <td>${vehicle.imei}</td>
                             <td>${vehicle.vin}</td>
                             <td><span class="status ${this.getStatusClass(vehicle.connection_status)}">${vehicle.connection_status}</span></td>
