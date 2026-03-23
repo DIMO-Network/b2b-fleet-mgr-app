@@ -1,12 +1,54 @@
 import { LitElement, css, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import { msg } from '@lit/localize';
-import {globalStyles} from "../global-styles.ts";
+import { globalStyles } from "../global-styles.ts";
+import { consume } from '@lit/context';
+import { apiServiceContext } from '../context';
+import { ApiService } from '@services/api-service.ts';
+
+interface DashboardStats {
+  total_vehicles: number;
+  connected: number;
+  pending_onboard: number;
+}
 
 @customElement('home-view')
 export class HomeView extends LitElement {
   static styles = [ globalStyles,
     css`` ];
+
+  @consume({ context: apiServiceContext, subscribe: true })
+  @state()
+  apiService?: ApiService;
+
+  @state()
+  private stats: DashboardStats | null = null;
+
+  @state()
+  private loading: boolean = true;
+
+  async connectedCallback() {
+    super.connectedCallback();
+    await this.loadStats();
+  }
+
+  private async loadStats() {
+    if (!this.apiService) return;
+    this.loading = true;
+
+    const response = await this.apiService.callApi<DashboardStats>(
+      'GET',
+      '/dashboard/stats',
+      null,
+      true,
+      true
+    );
+
+    if (response.success && response.data) {
+      this.stats = response.data;
+    }
+    this.loading = false;
+  }
 
   render() {
     return html`
@@ -15,107 +57,19 @@ export class HomeView extends LitElement {
             <div class="tiles-grid">
                 <div class="tile">
                     <div class="tile-label">${msg('Total Vehicles')}</div>
-                    <div class="tile-value">247</div>
+                    <div class="tile-value">${this.loading ? '—' : this.stats?.total_vehicles ?? 0}</div>
                     <div class="tile-subtitle">${msg('Across all groups')}</div>
                 </div>
                 <div class="tile">
                     <div class="tile-label">${msg('Connected')}</div>
-                    <div class="tile-value">231</div>
-                    <div class="tile-subtitle">${msg('Reporting telemetry')}</div>
+                    <div class="tile-value">${this.loading ? '—' : this.stats?.connected ?? 0}</div>
+                    <div class="tile-subtitle">${msg('Onboarded and minted')}</div>
                 </div>
                 <div class="tile">
-                    <div class="tile-label">${msg('Customer Owned')}</div>
-                    <div class="tile-value">158</div>
-                    <div class="tile-subtitle">${msg('Active customers')}</div>
+                    <div class="tile-label">${msg('Pending Onboard')}</div>
+                    <div class="tile-value">${this.loading ? '—' : this.stats?.pending_onboard ?? 0}</div>
+                    <div class="tile-subtitle">${msg('Devices existing but not minted')}</div>
                 </div>
-                <div class="tile">
-                    <div class="tile-label">${msg('Inventory')}</div>
-                    <div class="tile-value">89</div>
-                    <div class="tile-subtitle">${msg('Dealer inventory')}</div>
-                </div>
-                <div class="tile">
-                    <div class="tile-label">${msg('Immobilized')}</div>
-                    <div class="tile-value">3</div>
-                    <div class="tile-subtitle">${msg('Engine blocked')}</div>
-                </div>
-                <div class="tile">
-                    <div class="tile-label">${msg('Offline')}</div>
-                    <div class="tile-value">16</div>
-                    <div class="tile-subtitle">${msg('Not reporting')}</div>
-                </div>
-            </div>
-
-            <div class="section-header">${msg('Saved Reports')}</div>
-            <div class="tiles-grid">
-                <div class="tile saved-report-tile" onclick="openReport('overspeed')">
-                    <div class="saved-report-name">${msg('Overspeed — Fleet A — Last 7 Days')}</div>
-                    <div class="saved-report-meta">${msg('Last run:')} 2025-12-04 08:00</div>
-                </div>
-                <div class="tile saved-report-tile" onclick="openReport('km')">
-                    <div class="saved-report-name">${msg('Kilometers — All Vehicles — November')}</div>
-                    <div class="saved-report-meta">${msg('Last run:')} 2025-12-02 09:15</div>
-                </div>
-                <div class="tile saved-report-tile" onclick="openReport('fuel')">
-                    <div class="saved-report-name">${msg('Fuel Consumption — Santiago — Weekly')}</div>
-                    <div class="saved-report-meta">${msg('Last run:')} 2025-12-02 07:00</div>
-                </div>
-            </div>
-
-            <div class="section-header">${msg('Recent Reports')}</div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>${msg('Report Name')}</th>
-                        <th>${msg('Fleet Group(s)')}</th>
-                        <th>${msg('Date Range')}</th>
-                        <th>${msg('Last Run')}</th>
-                        <th>${msg('Actions')}</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>${msg('Overspeed Events')}</td>
-                        <td>${msg('Fleet A, Fleet B')}</td>
-                        <td>Nov 27 - Dec 4, 2025</td>
-                        <td>2025-12-04 08:00</td>
-                        <td>
-                            <button class="btn btn-sm">${msg('OPEN')}</button>
-                            <button class="btn btn-sm">${msg('RE-RUN')}</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>${msg('Kilometers Driven')}</td>
-                        <td>${msg('All Vehicles')}</td>
-                        <td>November 2025</td>
-                        <td>2025-12-02 09:15</td>
-                        <td>
-                            <button class="btn btn-sm">${msg('OPEN')}</button>
-                            <button class="btn btn-sm">${msg('RE-RUN')}</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>${msg('Units Not Reporting')}</td>
-                        <td>${msg('All Vehicles')}</td>
-                        <td>${msg('Current')}</td>
-                        <td>2025-12-01 12:00</td>
-                        <td>
-                            <button class="btn btn-sm">${msg('OPEN')}</button>
-                            <button class="btn btn-sm">${msg('RE-RUN')}</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>${msg('Weekend Activity')}</td>
-                        <td>${msg('Santiago North')}</td>
-                        <td>Nov 30 - Dec 1, 2025</td>
-                        <td>2025-12-02 07:30</td>
-                        <td>
-                            <button class="btn btn-sm">${msg('OPEN')}</button>
-                            <button class="btn btn-sm">${msg('RE-RUN')}</button>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
             </div>
         </div>
     `;

@@ -84,6 +84,8 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	// oracle group with route parameter.
 	oracleApp := app.Group("/oracle/:oracleID", jwtAuth, oracleIDMiddleware(knownOracles))
 	oracleApp.Get("/permissions", genericProxyCtrl.Proxy)
+	// dashboard
+	oracleApp.Get("/dashboard/stats", genericProxyCtrl.Proxy)
 	// pending vehicles
 	oracleApp.Get("/pending-vehicles", genericProxyCtrl.Proxy)
 	oracleApp.Post("/pending-vehicles/claim/:imei", genericProxyCtrl.Proxy)
