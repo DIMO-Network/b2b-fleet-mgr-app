@@ -132,6 +132,7 @@ export class AllUsersTable extends LitElement {
                         <th>${msg('Email')}</th>
                         <th>${msg('First Name')}</th>
                         <th>${msg('Last Name')}</th>
+                        <th>${msg('Business')}</th>
                         <th>${msg('Gov ID Number')}</th>
                       </tr>
                     </thead>
@@ -152,6 +153,7 @@ export class AllUsersTable extends LitElement {
                             </td>
                             <td>${user.first_name || "-"}</td>
                             <td>${user.last_name || "-"}</td>
+                            <td>${user.business_name || "-"}</td>
                             <td>${user.government_id_number || "-"}</td>
                           </tr>
                         `
