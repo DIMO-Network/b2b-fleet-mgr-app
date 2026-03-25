@@ -12,6 +12,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import '../elements/update-inventory-modal-element';
 import '../elements/fleet-map';
 import '../elements/click-to-copy-element';
+import '../elements/share-vehicle-modal-element';
 
 dayjs.extend(relativeTime);
 
@@ -189,6 +190,9 @@ export class VehicleDetailView extends LitElement {
 
   @state()
   private showInventoryModal: boolean = false;
+
+  @state()
+  private showShareModal: boolean = false;
 
   @state()
   private errorMessage: string = '';
@@ -521,6 +525,9 @@ export class VehicleDetailView extends LitElement {
                 <div>${this.lastTelemetry ? this.formatLastTelemetry(this.lastTelemetry.signalsLatest.currentLocationCoordinates.timestamp) : msg('Loading...')}</div>
                 <div style="color: #666; font-size: 10px; margin-top: 12px;">${msg('HARDWARE')}</div>
                 <div>${this.renderHardwareDetails()}</div>
+                <button class="btn btn-sm" style="margin-top: 12px;" @click=${() => { this.showShareModal = true; }}>
+                  ${msg('Share Tracking')}
+                </button>
               </div>
             </div>
           </div>
@@ -887,6 +894,13 @@ export class VehicleDetailView extends LitElement {
           </div>
         </div>
       </div>
+
+      <!-- Share Vehicle Tracking Modal -->
+      <share-vehicle-modal-element
+        .show=${this.showShareModal}
+        .vehicleTokenID=${this.vehicle?.vehicle_token_id || 0}
+        @modal-closed=${() => { this.showShareModal = false; }}
+      ></share-vehicle-modal-element>
 
       <!-- Update Inventory Modal -->
       <update-inventory-modal-element

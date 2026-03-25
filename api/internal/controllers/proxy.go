@@ -46,6 +46,22 @@ func (gp *GenericProxyController) Proxy(c *fiber.Ctx) error {
 	return ProxyRequest(c, targetURL, nil, gp.logger)
 }
 
+// TrackingProxy forwards tracking requests directly to the Kaufmann oracle API.
+// These are public endpoints (no JWT), the backend validates via share link UUID.
+func (gp *GenericProxyController) TrackingProxy(c *fiber.Ctx) error {
+	u := gp.settings.KaufmannOracleAPIURL
+
+	fullPath := string(c.Request().URI().Path())
+	targetURL := u.JoinPath("/v1" + fullPath)
+	targetURL.RawQuery = string(c.Request().URI().QueryString())
+
+	body := c.Body()
+	if len(body) > 0 {
+		return ProxyRequest(c, targetURL, body, gp.logger)
+	}
+	return ProxyRequest(c, targetURL, nil, gp.logger)
+}
+
 // ProxyRequest forwards a request to the target URL and returns the response. uses the method from the original request
 // It handles all HTTP methods (GET, POST, PUT, PATCH, DELETE) based on the original request
 // If authHeader is not empty, it will be added as an Authorization header to the request

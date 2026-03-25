@@ -67,6 +67,11 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	definitionsCtrl := controllers.NewDefinitionsController(settings, logger)
 	genericProxyCtrl := controllers.NewGenericProxyController(settings, logger)
 
+	// Public tracking routes (no JWT, validated by share link UUID in backend)
+	app.Get("/tracking/:shareID", genericProxyCtrl.TrackingProxy)
+	app.Post("/tracking/:shareID/telemetry", genericProxyCtrl.TrackingProxy)
+	app.Post("/tracking/:shareID/trips", genericProxyCtrl.TrackingProxy)
+
 	jwtAuth := jwtware.New(jwtware.Config{
 		JWKSetURLs: []string{settings.JwtKeySetURL.String()},
 	})
@@ -113,6 +118,11 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Post("/fleet/vehicles/:imei/group/:group_id", genericProxyCtrl.Proxy)
 	oracleApp.Delete("/fleet/vehicles/:imei/group/:group_id", genericProxyCtrl.Proxy)
 	oracleApp.Post("/fleet/vehicles/:imei/inventory", genericProxyCtrl.Proxy)
+	// Vehicle share links
+	oracleApp.Get("/fleet/vehicles/shares/:shareID", genericProxyCtrl.Proxy)
+	oracleApp.Delete("/fleet/vehicles/shares/:shareID", genericProxyCtrl.Proxy)
+	oracleApp.Post("/fleet/vehicles/:tokenID/share", genericProxyCtrl.Proxy)
+	oracleApp.Get("/fleet/vehicles/:tokenID/shares", genericProxyCtrl.Proxy)
 
 	// report
 	oracleApp.Post("/fleet/reports", genericProxyCtrl.Proxy)

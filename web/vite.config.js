@@ -25,7 +25,8 @@ export default defineConfig({
             // Define app entry points (only main is used now)
             input: {
                 main: resolve(__dirname, 'index.html'),
-                login: resolve(__dirname, 'login.html')
+                login: resolve(__dirname, 'login.html'),
+                tracking: resolve(__dirname, 'tracking.html')
             }
         }
     },
