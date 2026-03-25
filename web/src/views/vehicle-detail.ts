@@ -186,6 +186,12 @@ export class VehicleDetailView extends LitElement {
   private selectedWeekIndex: number = 0;
 
   @state()
+  private selectedTrip: Trip | null = null;
+
+  @state()
+  private tripRoutePoints: Array<[number, number]> = [];
+
+  @state()
   private activeActivityTab: 'trips' | 'commands' | 'inventory' = 'trips';
 
   @state()
@@ -525,9 +531,6 @@ export class VehicleDetailView extends LitElement {
                 <div>${this.lastTelemetry ? this.formatLastTelemetry(this.lastTelemetry.signalsLatest.currentLocationCoordinates.timestamp) : msg('Loading...')}</div>
                 <div style="color: #666; font-size: 10px; margin-top: 12px;">${msg('HARDWARE')}</div>
                 <div>${this.renderHardwareDetails()}</div>
-                <button class="btn btn-sm" style="margin-top: 12px;" @click=${() => { this.showShareModal = true; }}>
-                  ${msg('Share Tracking')}
-                </button>
               </div>
             </div>
           </div>
@@ -637,11 +640,18 @@ export class VehicleDetailView extends LitElement {
           <div>
             <!-- Location -->
             <div class="panel mb-16">
-              <div class="panel-header">${msg('Location')}</div>
+              <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <span>${msg('Location')} ${this.selectedTrip ? html`<span style="color:#0066cc;font-size:11px;font-weight:400;"> — ${msg('Viewing Trip')}</span>` : ''}</span>
+                <div style="display:flex;gap:8px;">
+                  ${this.selectedTrip ? html`<button class="btn btn-sm" @click=${this.clearTripSelection}>${msg('Back to Live')}</button>` : ''}
+                  <button class="btn btn-sm" @click=${() => { this.showShareModal = true; }}>${msg('Share Tracking')}</button>
+                </div>
+              </div>
               <div class="panel-body">
                 <fleet-map class="map-placeholder"
                     .lat="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.latitude ?? 0.0}"
                     .lng="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.longitude ?? 0.0}"
+                    .routePoints=${this.tripRoutePoints}
                     @address-updated=${this.handleAddressUpdated}>
                 </fleet-map>
                 <div class="mt-16">
@@ -788,7 +798,7 @@ export class VehicleDetailView extends LitElement {
                     const avgSpeed = this.getTripSignalValue(trip, 'speed', 'AVG');
                     const maxSpeed = this.getTripSignalValue(trip, 'speed', 'MAX');
                     return html`
-                      <tr>
+                      <tr style="cursor:pointer;${this.selectedTrip === trip ? 'background:#e8f4fd;' : ''}" @click=${() => this.selectTrip(trip)}>
                         <td>${this.formatTripTime(trip.start.timestamp)}</td>
                         <td>${trip.isOngoing ? msg('Ongoing') : this.formatTripTime(trip.end.timestamp)}</td>
                         <td>${distance.toFixed(1)} km</td>
@@ -1034,6 +1044,48 @@ export class VehicleDetailView extends LitElement {
       return last - first;
     }
     return 0;
+  }
+
+  private async selectTrip(trip: Trip) {
+    this.selectedTrip = trip;
+    await this.loadTripRoute(trip);
+  }
+
+  private clearTripSelection() {
+    this.selectedTrip = null;
+    this.tripRoutePoints = [];
+  }
+
+  private async loadTripRoute(trip: Trip) {
+    if (!this.apiService || !this.tokenID) return;
+    try {
+      const query = `{
+  signals(tokenId: ${this.tokenID}, interval: "3s", from: "${trip.start.timestamp}", to: "${trip.end.timestamp}") {
+    currentLocationCoordinates(agg: FIRST) {
+      latitude
+      longitude
+    }
+  }
+}`;
+      const response = await this.apiService.callApi<{ data: { signals: Array<{ currentLocationCoordinates: { latitude: number; longitude: number } }> } }>(
+        'POST',
+        `/fleet/vehicles/telemetry/${this.tokenID}`,
+        query,
+        true,
+        true
+      );
+      if (response.success && response.data) {
+        const signals = (response.data as any)?.signals ?? response.data?.data?.signals;
+        if (signals) {
+          this.tripRoutePoints = signals
+            .filter((s: any) => s.currentLocationCoordinates?.latitude && s.currentLocationCoordinates?.longitude)
+            .map((s: any) => [s.currentLocationCoordinates.latitude, s.currentLocationCoordinates.longitude] as [number, number]);
+        }
+      }
+    } catch (e: any) {
+      console.error('Failed to load trip route:', e);
+      this.tripRoutePoints = [];
+    }
   }
 
   private formatWalletAddress(address: string): string {

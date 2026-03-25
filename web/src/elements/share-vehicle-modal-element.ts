@@ -90,7 +90,7 @@ export class ShareVehicleModalElement extends LitElement {
   public vehicleTokenID: number = 0;
 
   @state()
-  private hours: number = 24;
+  private durationSteps: number = 2; // each step = 12h, so 2 = 1 day, range 1-14
 
   @state()
   private processing: boolean = false;
@@ -150,7 +150,7 @@ export class ShareVehicleModalElement extends LitElement {
     const response = await this.api.callApi<ShareLink>(
       'POST',
       `/fleet/vehicles/${this.vehicleTokenID}/share`,
-      { hours: this.hours },
+      { hours: this.durationSteps * 12 },
       true,
       true
     );
@@ -202,7 +202,14 @@ export class ShareVehicleModalElement extends LitElement {
   }
 
   private handleSliderInput(e: Event) {
-    this.hours = parseInt((e.target as HTMLInputElement).value);
+    this.durationSteps = parseInt((e.target as HTMLInputElement).value);
+  }
+
+  private get durationLabel(): string {
+    const days = this.durationSteps * 0.5;
+    if (days === 0.5) return '0.5 days';
+    if (days === 1) return '1 day';
+    return `${days} days`;
   }
 
   render() {
@@ -226,8 +233,8 @@ export class ShareVehicleModalElement extends LitElement {
 
             <label style="font-size: 13px; text-transform: uppercase; color: #666;">${msg('Link Duration')}</label>
             <div class="slider-container">
-              <input type="range" min="1" max="72" .value=${String(this.hours)} @input=${this.handleSliderInput}>
-              <span class="slider-value">${this.hours}h</span>
+              <input type="range" min="1" max="14" .value=${String(this.durationSteps)} @input=${this.handleSliderInput}>
+              <span class="slider-value">${this.durationLabel}</span>
             </div>
 
             <button class="btn btn-primary ${this.processing ? 'processing' : ''}"

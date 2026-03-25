@@ -1210,61 +1210,9 @@
   <source>Across all groups</source>
   <target>En todos los grupos</target>
 </trans-unit>
-<trans-unit id="s9bdabb0b1a1e43ea">
-  <source>Reporting telemetry</source>
-  <target>Reportando telemetría</target>
-</trans-unit>
 <trans-unit id="s3a231b3f6a7cdeb4">
   <source>Customer Owned</source>
   <target>Propiedad del Cliente</target>
-</trans-unit>
-<trans-unit id="s1d79cc4bb7cf1b86">
-  <source>Active customers</source>
-  <target>Clientes activos</target>
-</trans-unit>
-<trans-unit id="s318b296f98fcbd38">
-  <source>Dealer inventory</source>
-  <target>Inventario del concesionario</target>
-</trans-unit>
-<trans-unit id="sf9082455bc457e90">
-  <source>Immobilized</source>
-  <target>Inmovilizado</target>
-</trans-unit>
-<trans-unit id="sbd31640a7726f137">
-  <source>Engine blocked</source>
-  <target>Motor bloqueado</target>
-</trans-unit>
-<trans-unit id="scde3342a428aaee8">
-  <source>Offline</source>
-  <target>Sin conexión</target>
-</trans-unit>
-<trans-unit id="sd8a1ec541a72c3cc">
-  <source>Not reporting</source>
-  <target>Sin reportar</target>
-</trans-unit>
-<trans-unit id="sb5c1ca45921710f7">
-  <source>Saved Reports</source>
-  <target>Reportes Guardados</target>
-</trans-unit>
-<trans-unit id="sc8de1e60b757e699">
-  <source>Overspeed — Fleet A — Last 7 Days</source>
-  <target>Exceso de Velocidad — Flota A — Últimos 7 Días</target>
-</trans-unit>
-<trans-unit id="s6fe1a1b2b0445bd2">
-  <source>Last run:</source>
-  <target>Última ejecución:</target>
-</trans-unit>
-<trans-unit id="sc70dc95b0330f014">
-  <source>Kilometers — All Vehicles — November</source>
-  <target>Kilómetros — Todos los Vehículos — Noviembre</target>
-</trans-unit>
-<trans-unit id="sd3602199ebe0dc6f">
-  <source>Fuel Consumption — Santiago — Weekly</source>
-  <target>Consumo de Combustible — Santiago — Semanal</target>
-</trans-unit>
-<trans-unit id="s6c820f49a9224729">
-  <source>Recent Reports</source>
-  <target>Reportes Recientes</target>
 </trans-unit>
 <trans-unit id="s0203762e62fa12ca">
   <source>Report Name</source>
@@ -1282,45 +1230,9 @@
   <source>Last Run</source>
   <target>Última Ejecución</target>
 </trans-unit>
-<trans-unit id="se1a45efe990f6a5b">
-  <source>Overspeed Events</source>
-  <target>Eventos de Exceso de Velocidad</target>
-</trans-unit>
-<trans-unit id="sf6f06103b7073462">
-  <source>Fleet A, Fleet B</source>
-  <target>Flota A, Flota B</target>
-</trans-unit>
 <trans-unit id="s0c6798bfc6913ce9">
   <source>OPEN</source>
   <target>ABRIR</target>
-</trans-unit>
-<trans-unit id="sdb543b8b7556e4e0">
-  <source>RE-RUN</source>
-  <target>RE-EJECUTAR</target>
-</trans-unit>
-<trans-unit id="s46ef8d74c8922288">
-  <source>Kilometers Driven</source>
-  <target>Kilómetros Recorridos</target>
-</trans-unit>
-<trans-unit id="s109978ca36128425">
-  <source>All Vehicles</source>
-  <target>Todos los Vehículos</target>
-</trans-unit>
-<trans-unit id="sabc9a24cff8281ff">
-  <source>Units Not Reporting</source>
-  <target>Unidades Sin Reportar</target>
-</trans-unit>
-<trans-unit id="sab8b4cbbb1fa71fa">
-  <source>Current</source>
-  <target>Actual</target>
-</trans-unit>
-<trans-unit id="se37ab3e9e08c953b">
-  <source>Weekend Activity</source>
-  <target>Actividad de Fin de Semana</target>
-</trans-unit>
-<trans-unit id="sf07ee78ba6e5ca68">
-  <source>Santiago North</source>
-  <target>Santiago Norte</target>
 </trans-unit>
 <trans-unit id="sac432d5d9bb20916">
   <source>You do not have the required permissions to access the Reports section.</source>
@@ -1626,10 +1538,6 @@
   <source>Profile updated successfully.</source>
   <target>Perfil actualizado exitosamente.</target>
 </trans-unit>
-<trans-unit id="s40826b781c6feddb">
-  <source>Failed to update profile.</source>
-  <target>Error al actualizar perfil.</target>
-</trans-unit>
 <trans-unit id="sb8054673c62ea9ed">
   <source>Vehicles Owned</source>
   <target>Vehículos Propios</target>
@@ -1749,10 +1657,6 @@
 <trans-unit id="s05fe088a81aec78a">
   <source>Owner Information</source>
   <target>Información del Propietario</target>
-</trans-unit>
-<trans-unit id="s37984723eda2abb4">
-  <source>Owner Email</source>
-  <target>Correo del Propietario</target>
 </trans-unit>
 <trans-unit id="s322e34cfcba47155">
   <source>Not available</source>
@@ -1982,14 +1886,6 @@
   <source>Engine</source>
   <target>Motor</target>
 </trans-unit>
-<trans-unit id="scb489a1a173ac3f0">
-  <source>Yes</source>
-  <target>Sí</target>
-</trans-unit>
-<trans-unit id="s09205907b5b56cda">
-  <source>No</source>
-  <target>No</target>
-</trans-unit>
 <trans-unit id="se8bc25ae43fe22b1">
   <source>Showing <x id="0" equiv-text="${this.showingStart}"/>-<x id="1" equiv-text="${this.showingEnd}"/> of <x id="2" equiv-text="${this.totalCount}"/> vehicles</source>
   <target>Mostrando <x id="0" equiv-text="${this.showingStart}"/>-<x id="1" equiv-text="${this.showingEnd}"/> de <x id="2" equiv-text="${this.totalCount}"/> vehículos</target>
@@ -2017,6 +1913,127 @@
 <trans-unit id="s02f08b8f4c49b948">
   <source>Are you sure you want to delete "<x id="0" equiv-text="${this.groupToDelete.name}"/>"? This action cannot be undone.</source>
   <target>¿Está seguro de que desea eliminar "<x id="0" equiv-text="${this.groupToDelete.name}"/>"? Esta acción no se puede deshacer.</target>
+</trans-unit>
+<trans-unit id="s233ae776268cd44b">
+  <source>Business</source>
+</trans-unit>
+<trans-unit id="s5ad1d7df2ad28528">
+  <source>Failed to create share link</source>
+</trans-unit>
+<trans-unit id="se777e8bbe9401309">
+  <source>Share Vehicle Tracking</source>
+</trans-unit>
+<trans-unit id="s3a8601d715da564b">
+  <source>Generate a temporary link to share live vehicle tracking.</source>
+</trans-unit>
+<trans-unit id="s8a1c5159e49fedef">
+  <source>Link Duration</source>
+</trans-unit>
+<trans-unit id="s4ccd358f963638ce">
+  <source>Generate Link</source>
+</trans-unit>
+<trans-unit id="sdccd8f78d52d3a87">
+  <source>Copy to clipboard</source>
+</trans-unit>
+<trans-unit id="sdfb2b12b255de30c">
+  <source>Copied!</source>
+</trans-unit>
+<trans-unit id="s861bd8a8203b4c16">
+  <source>Active Links</source>
+</trans-unit>
+<trans-unit id="sd924045605feea63">
+  <source>Expires</source>
+</trans-unit>
+<trans-unit id="s0e871352ba4b17d3">
+  <source>Revoke</source>
+</trans-unit>
+<trans-unit id="sef100b7ce8268df6">
+  <source>No tracking link provided.</source>
+  <target>No se proporcionó un enlace de seguimiento.</target>
+</trans-unit>
+<trans-unit id="s03856a39fd9ab160">
+  <source>Link Expired</source>
+  <target>Enlace Expirado</target>
+</trans-unit>
+<trans-unit id="s51656fb52e6635e2">
+  <source>This tracking link is no longer active.</source>
+  <target>Este enlace de seguimiento ya no está activo.</target>
+</trans-unit>
+<trans-unit id="s80d410d589eae08a">
+  <source>Loading vehicle tracking...</source>
+  <target>Cargando seguimiento del vehículo...</target>
+</trans-unit>
+<trans-unit id="s1de603e252d062a7">
+  <source>Vehicle Status</source>
+  <target>Estado del Vehículo</target>
+</trans-unit>
+<trans-unit id="s8e618110b1dca95e">
+  <source>Recent Trips</source>
+  <target>Viajes Recientes</target>
+</trans-unit>
+<trans-unit id="s4fbee35cf27541da">
+  <source>No trips in the last 7 days</source>
+  <target>Sin viajes en los últimos 7 días</target>
+</trans-unit>
+<trans-unit id="s9a8e784897a942dd">
+  <source>Onboarded and minted</source>
+  <target>Incorporados y acuñados</target>
+</trans-unit>
+<trans-unit id="s38ddc546900018a3">
+  <source>Pending Onboard</source>
+  <target>Pendientes de Incorporación</target>
+</trans-unit>
+<trans-unit id="scab045cc56e0e078">
+  <source>Devices existing but not minted</source>
+  <target>Dispositivos existentes sin acuñar</target>
+</trans-unit>
+<trans-unit id="s30d9809841254e9b">
+  <source>Profile created successfully.</source>
+  <target>Perfil creado exitosamente.</target>
+</trans-unit>
+<trans-unit id="se20979f11bba31c7">
+  <source>Failed to save profile.</source>
+  <target>Error al guardar el perfil.</target>
+</trans-unit>
+<trans-unit id="s99e529c3b577e92c">
+  <source>New Profile</source>
+</trans-unit>
+<trans-unit id="s3c138f53071e0a09">
+  <source>Vendor Information</source>
+</trans-unit>
+<trans-unit id="s076c0c69ea9cfd5d">
+  <source>Synchronize</source>
+</trans-unit>
+<trans-unit id="s0b9b78ed2af28880">
+  <source>No vendor data available. Click Synchronize to fetch.</source>
+</trans-unit>
+<trans-unit id="sf5d79e41936109a5">
+  <source>No additional user profile information found.</source>
+  <target>No se encontró información adicional del perfil de usuario.</target>
+</trans-unit>
+<trans-unit id="s0321a32c569f7394">
+  <source>+ ADD PROFILE INFO</source>
+  <target>+ AGREGAR INFO DE PERFIL</target>
+</trans-unit>
+<trans-unit id="s91f3aed6f7cf5bfb">
+  <source>Viewing Trip</source>
+  <target>Viendo Viaje</target>
+</trans-unit>
+<trans-unit id="sa9bea300db43ef13">
+  <source>Back to Live</source>
+  <target>Volver a En Vivo</target>
+</trans-unit>
+<trans-unit id="sb6fa8ad2ae025529">
+  <source>Share Tracking</source>
+  <target>Compartir Seguimiento</target>
+</trans-unit>
+<trans-unit id="s3424b7cd81db2ea0">
+  <source>Vendor data synchronized successfully.</source>
+  <target>Datos del proveedor sincronizados exitosamente.</target>
+</trans-unit>
+<trans-unit id="s0cfd7011c5af6255">
+  <source>Failed to synchronize vendor data.</source>
+  <target>Error al sincronizar datos del proveedor.</target>
 </trans-unit>
 </body>
 </file>

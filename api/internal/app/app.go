@@ -67,15 +67,15 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	definitionsCtrl := controllers.NewDefinitionsController(settings, logger)
 	genericProxyCtrl := controllers.NewGenericProxyController(settings, logger)
 
-	// Public tracking routes (no JWT, validated by share link UUID in backend)
-	app.Get("/tracking/:shareID", genericProxyCtrl.TrackingProxy)
-	app.Post("/tracking/:shareID/telemetry", genericProxyCtrl.TrackingProxy)
-	app.Post("/tracking/:shareID/trips", genericProxyCtrl.TrackingProxy)
-
 	jwtAuth := jwtware.New(jwtware.Config{
 		JWKSetURLs: []string{settings.JwtKeySetURL.String()},
 	})
 	knownOracles := settings.GetOracles()
+
+    // Public tracking routes (no JWT, validated by share link UUID in backend)
+    app.Get("/tracking/:shareID", genericProxyCtrl.TrackingProxy)
+    app.Post("/tracking/:shareID/telemetry", genericProxyCtrl.TrackingProxy)
+    app.Post("/tracking/:shareID/trips", genericProxyCtrl.TrackingProxy)
 
 	// these are general to the app, not oracle specific
 	app.Get("/public/settings", settingsCtrl.GetPublicSettings)

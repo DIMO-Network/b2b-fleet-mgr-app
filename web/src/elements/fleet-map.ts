@@ -9,9 +9,11 @@ export class FleetMap extends LitElement {
     @property({ type: Number }) lng = -0.09;
     @property({ type: Number }) zoom = 13;
     @property({ type: String }) currentAddress = '';
+    @property({ attribute: false }) routePoints: Array<[number, number]> = [];
 
     private map: L.Map | undefined;
     private marker: L.CircleMarker | undefined;
+    private routeLayer: L.Polyline | undefined;
     private locationNeedsDecoding = true;
 
     static styles = css`
@@ -52,6 +54,24 @@ export class FleetMap extends LitElement {
                 // You might want to remove this if users want to pan away manually.
                 this.map.panTo(newLatLng);
                 this.locationNeedsDecoding = true;
+            }
+        }
+
+        if (this.map && changedProperties.has('routePoints')) {
+            // Remove old route
+            if (this.routeLayer) {
+                this.routeLayer.remove();
+                this.routeLayer = undefined;
+            }
+
+            if (this.routePoints.length > 0) {
+                const latLngs = this.routePoints.map(([lat, lng]) => new L.LatLng(lat, lng));
+                this.routeLayer = L.polyline(latLngs, {
+                    color: '#0066cc',
+                    weight: 4,
+                    opacity: 0.8,
+                }).addTo(this.map);
+                this.map.fitBounds(this.routeLayer.getBounds(), { padding: [30, 30] });
             }
         }
     }

@@ -1,7 +1,10 @@
 import { LitElement, html, css } from 'lit';
+import { msg } from '@lit/localize';
 import { customElement, state } from 'lit/decorators.js';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { isLocalhost } from '@utils/utils.ts';
+import { getLocale, setLocale } from '../localization.ts';
 
 dayjs.extend(relativeTime);
 
@@ -186,24 +189,30 @@ export class TrackingApp extends LitElement {
   @state() private error = '';
   @state() private expired = false;
   @state() private selectedTrip: Trip | null = null;
+  @state() private tripRoutePoints: Array<[number, number]> = [];
   @state() private isLive = true;
 
   private refreshTimer?: number;
-  private apiBase = '';
+  private readonly apiBase = isLocalhost() ? 'https://localdev.dimo.org:3007' : '';
 
-  connectedCallback() {
+  async connectedCallback() {
     super.connectedCallback();
+
+    // Restore saved locale
+    const savedLocale = localStorage.getItem('locale');
+    const locale = savedLocale ?? (navigator.language.startsWith('es') ? 'es' : 'en');
+    if (locale === 'es') {
+      await setLocale('es');
+    }
+
     const params = new URLSearchParams(window.location.search);
     this.shareID = params.get('id') || '';
 
     if (!this.shareID) {
-      this.error = 'No tracking link provided.';
+      this.error = msg('No tracking link provided.');
       this.loading = false;
       return;
     }
-
-    // Determine API base (same origin for proxy)
-    this.apiBase = window.location.origin;
 
     this.loadInitialData();
   }
@@ -323,22 +332,56 @@ export class TrackingApp extends LitElement {
     try {
       const result = await this.apiFetch<{ data: { segments: Trip[] } }>(`/tracking/${this.shareID}/trips`, query);
       if (result?.data?.segments) {
-        this.trips = result.data.segments;
+        this.trips = result.data.segments.sort((a, b) => new Date(b.start.timestamp).getTime() - new Date(a.start.timestamp).getTime());
       }
     } catch (e: any) {
       console.error('Trips load failed:', e);
     }
   }
 
-  private selectTrip(trip: Trip) {
+  private async selectTrip(trip: Trip) {
     this.selectedTrip = trip;
     this.isLive = false;
+    await this.loadTripRoute(trip);
+  }
+
+  private async handleLocaleChange(e: Event) {
+    const locale = (e.target as HTMLSelectElement).value as 'en' | 'es';
+    localStorage.setItem('locale', locale);
+    await setLocale(locale);
+    window.location.reload();
   }
 
   private goLive() {
     this.selectedTrip = null;
+    this.tripRoutePoints = [];
     this.isLive = true;
     this.loadTelemetry();
+  }
+
+  private async loadTripRoute(trip: Trip) {
+    if (!this.info) return;
+    try {
+      const query = `{
+  signals(tokenId: ${this.info.vehicle_token_id}, interval: "3s", from: "${trip.start.timestamp}", to: "${trip.end.timestamp}") {
+    currentLocationCoordinates(agg: FIRST) {
+      latitude
+      longitude
+    }
+  }
+}`;
+      const result = await this.apiFetch<{ data: { signals: Array<{ currentLocationCoordinates: { latitude: number; longitude: number } }> } }>(
+        `/tracking/${this.shareID}/telemetry`, query
+      );
+      if (result?.data?.signals) {
+        this.tripRoutePoints = result.data.signals
+          .filter(s => s.currentLocationCoordinates?.latitude && s.currentLocationCoordinates?.longitude)
+          .map(s => [s.currentLocationCoordinates.latitude, s.currentLocationCoordinates.longitude] as [number, number]);
+      }
+    } catch (e: any) {
+      console.error('Failed to load trip route:', e);
+      this.tripRoutePoints = [];
+    }
   }
 
   private getTripDistance(trip: Trip): string {
@@ -359,8 +402,8 @@ export class TrackingApp extends LitElement {
     if (this.expired) {
       return html`
         <div class="expired">
-          <h2>Link Expired</h2>
-          <p>This tracking link is no longer active.</p>
+          <h2>${msg('Link Expired')}</h2>
+          <p>${msg('This tracking link is no longer active.')}</p>
         </div>
       `;
     }
@@ -370,7 +413,7 @@ export class TrackingApp extends LitElement {
     }
 
     if (this.loading) {
-      return html`<div class="loading">Loading vehicle tracking...</div>`;
+      return html`<div class="loading">${msg('Loading vehicle tracking...')}</div>`;
     }
 
     const loc = this.telemetry?.signalsLatest?.currentLocationCoordinates;
@@ -385,9 +428,19 @@ export class TrackingApp extends LitElement {
             <div class="subtitle">${this.info?.vin || ''}</div>
             ${this.info?.license_plate ? html`<span class="plate">${this.info.license_plate}</span>` : ''}
           </div>
-          <div class="live-badge ${this.isLive ? '' : 'paused'}" @click=${this.isLive ? () => {} : this.goLive}>
-            <span class="dot"></span>
-            ${this.isLive ? 'LIVE' : 'PAUSED'}
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+            <div class="live-badge ${this.isLive ? '' : 'paused'}" @click=${this.isLive ? () => {} : this.goLive}>
+              <span class="dot"></span>
+              ${this.isLive ? 'LIVE' : 'PAUSED'}
+            </div>
+            <select
+              style="padding:3px 6px;border:1px solid rgba(255,255,255,0.3);border-radius:4px;font-size:11px;background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;"
+              .value=${getLocale()}
+              @change=${this.handleLocaleChange}
+            >
+              <option value="en" style="color:#333;">English</option>
+              <option value="es" style="color:#333;">Español</option>
+            </select>
           </div>
         </div>
       </div>
@@ -395,7 +448,7 @@ export class TrackingApp extends LitElement {
       <!-- Map -->
       <div class="card">
         <div class="card-header">
-          Location
+          ${msg('Location')}
           ${loc?.timestamp ? html`<span style="font-weight:400;text-transform:none;">${dayjs(loc.timestamp).fromNow()}</span>` : ''}
         </div>
         <div class="card-body">
@@ -403,7 +456,8 @@ export class TrackingApp extends LitElement {
             <fleet-map
               .lat="${loc?.value?.latitude ?? 0}"
               .lng="${loc?.value?.longitude ?? 0}"
-              .zoom="${14}">
+              .zoom="${14}"
+              .routePoints=${this.tripRoutePoints}>
             </fleet-map>
           </div>
         </div>
@@ -411,33 +465,36 @@ export class TrackingApp extends LitElement {
 
       <!-- Telemetry Snapshot -->
       <div class="card">
-        <div class="card-header">Vehicle Status</div>
+        <div class="card-header">
+          ${msg('Vehicle Status')}
+          ${loc?.timestamp ? html`<span style="font-weight:400;text-transform:none;">${dayjs(loc.timestamp).fromNow()}</span>` : ''}
+        </div>
         <div class="card-body">
           <div class="telemetry-grid">
             <div class="telemetry-item">
-              <div class="telemetry-label">Ignition</div>
+              <div class="telemetry-label">${msg('Ignition')}</div>
               <div class="telemetry-value" style="color:${signals?.isIgnitionOn?.value ? '#28a745' : '#dc3545'}">
                 ${signals?.isIgnitionOn?.value ? 'ON' : 'OFF'}
               </div>
             </div>
             <div class="telemetry-item">
-              <div class="telemetry-label">Speed</div>
+              <div class="telemetry-label">${msg('Speed')}</div>
               <div class="telemetry-value">${signals?.speed?.value != null ? `${Math.round(signals.speed.value)} km/h` : '-'}</div>
             </div>
             <div class="telemetry-item">
-              <div class="telemetry-label">Fuel</div>
+              <div class="telemetry-label">${msg('Fuel')}</div>
               <div class="telemetry-value">${signals?.powertrainFuelSystemRelativeLevel?.value != null ? `${Math.round(signals.powertrainFuelSystemRelativeLevel.value)}%` : '-'}</div>
             </div>
             <div class="telemetry-item">
-              <div class="telemetry-label">Odometer</div>
+              <div class="telemetry-label">${msg('Odometer')}</div>
               <div class="telemetry-value small">${signals?.powertrainTransmissionTravelledDistance?.value != null ? `${Math.round(signals.powertrainTransmissionTravelledDistance.value)} km` : '-'}</div>
             </div>
             <div class="telemetry-item">
-              <div class="telemetry-label">RPM</div>
+              <div class="telemetry-label">${msg('RPM')}</div>
               <div class="telemetry-value">${signals?.powertrainCombustionEngineSpeed?.value != null ? Math.round(signals.powertrainCombustionEngineSpeed.value) : '-'}</div>
             </div>
             <div class="telemetry-item">
-              <div class="telemetry-label">Engine</div>
+              <div class="telemetry-label">${msg('Engine')}</div>
               <div class="telemetry-value" style="color:${signals?.obdIsEngineBlocked?.value === 0 ? '#28a745' : '#dc3545'}">
                 ${signals?.obdIsEngineBlocked?.value === 0 ? 'OK' : signals?.obdIsEngineBlocked?.value === 1 ? 'BLOCKED' : '-'}
               </div>
@@ -449,12 +506,12 @@ export class TrackingApp extends LitElement {
       <!-- Trips -->
       <div class="card">
         <div class="card-header">
-          Recent Trips
-          ${this.selectedTrip ? html`<button class="back-btn" @click=${this.goLive}>Back to Live</button>` : ''}
+          ${msg('Recent Trips')}
+          ${this.selectedTrip ? html`<button class="back-btn" @click=${this.goLive}>${msg('Back to Live')}</button>` : ''}
         </div>
         <div class="card-body">
           ${this.trips.length === 0
-            ? html`<div style="padding:16px;color:#999;text-align:center;">No trips in the last 7 days</div>`
+            ? html`<div style="padding:16px;color:#999;text-align:center;">${msg('No trips in the last 7 days')}</div>`
             : this.trips.map(trip => html`
               <div class="trip-item ${this.selectedTrip === trip ? 'selected' : ''}" @click=${() => this.selectTrip(trip)}>
                 <div>
