@@ -201,6 +201,15 @@ export class VehicleDetailView extends LitElement {
   private showShareModal: boolean = false;
 
   @state()
+  private editingPlate: boolean = false;
+
+  @state()
+  private editPlateValue: string = '';
+
+  @state()
+  private savingPlate: boolean = false;
+
+  @state()
   private errorMessage: string = '';
 
   @state()
@@ -512,7 +521,23 @@ export class VehicleDetailView extends LitElement {
           <div class="panel-body">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
               <div>
-                <h2 style="font-size: 18px; margin-bottom: 8px;" id="detail-vehicle-name">${this.vehicle?.make} ${this.vehicle?.model} ${this.vehicle?.year}${this.vehicle?.license_plate ? html`<span class="license-plate">${this.vehicle.license_plate}</span>` : ''}</h2>
+                <h2 style="font-size: 18px; margin-bottom: 8px;" id="detail-vehicle-name">${this.vehicle?.make} ${this.vehicle?.model} ${this.vehicle?.year}${this.editingPlate ? html`
+                  <span style="margin-left:12px;vertical-align:middle;">
+                    <input type="text"
+                      style="padding:2px 8px;font-size:12px;font-weight:600;letter-spacing:1px;border:1px solid #0066cc;border-radius:4px;width:100px;font-family:inherit;"
+                      .value=${this.editPlateValue}
+                      @input=${(e: Event) => { this.editPlateValue = (e.target as HTMLInputElement).value.toUpperCase(); }}
+                      @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') this.saveLicensePlate(); if (e.key === 'Escape') this.editingPlate = false; }}
+                    />
+                    <button class="btn btn-sm" style="margin-left:4px;padding:2px 8px;" @click=${this.saveLicensePlate} ?disabled=${this.savingPlate}>${this.savingPlate ? '...' : msg('Save')}</button>
+                    <button class="btn btn-sm" style="padding:2px 8px;" @click=${() => { this.editingPlate = false; }}>${msg('Cancel')}</button>
+                  </span>
+                ` : html`
+                  <span class="license-plate" style="cursor:pointer;" title="${msg('Click to edit')}"
+                    @click=${() => { this.editPlateValue = this.vehicle?.license_plate || ''; this.editingPlate = true; }}>
+                    ${this.vehicle?.license_plate || msg('+ Plate')}
+                  </span>
+                `}</h2>
                 <div style="margin-bottom: 8px;">
                   <span style="color: #666;">${msg('VIN:')}</span> ${this.vehicle?.vin}
                   <span style="color: #666; margin-left: 16px;">${msg('Minted At:')}</span> ${this.formatMintedAt(this.vehicleIdentity?.vehicle?.mintedAt)}
@@ -1131,6 +1156,30 @@ export class VehicleDetailView extends LitElement {
     if (this.ownerInfo?.wallet) {
       window.location.hash = `/users/profile/${this.ownerInfo.wallet}`;
     }
+  }
+
+  private async saveLicensePlate() {
+    if (!this.apiService || !this.vehicle) return;
+    this.savingPlate = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const response = await this.apiService.callApi(
+      'PATCH',
+      `/fleet/vehicles/${this.vehicle.vehicle_token_id}/license-plate`,
+      { license_plate: this.editPlateValue.trim() },
+      true,
+      true
+    );
+
+    if (response.success) {
+      this.vehicle = { ...this.vehicle, license_plate: this.editPlateValue.trim() };
+      this.editingPlate = false;
+      this.successMessage = msg('License plate updated.');
+    } else {
+      this.errorMessage = response.error || msg('Failed to update license plate.');
+    }
+    this.savingPlate = false;
   }
 
   private addUserProfile() {

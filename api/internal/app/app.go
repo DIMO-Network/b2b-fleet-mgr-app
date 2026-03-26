@@ -107,6 +107,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Get("/fleet/vehicles", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/vehicles/apimaz/:vin", genericProxyCtrl.Proxy)
 	oracleApp.Post("/fleet/vehicles/apimaz/:vin/sync", genericProxyCtrl.Proxy)
+	oracleApp.Patch("/fleet/vehicles/:tokenID/license-plate", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/vehicles/:tokenID", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/vehicles/telemetry-info/:tokenID", genericProxyCtrl.Proxy)
 	oracleApp.Post("/fleet/vehicles/telemetry/:tokenID", genericProxyCtrl.Proxy)
