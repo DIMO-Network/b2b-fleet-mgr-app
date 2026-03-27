@@ -11,6 +11,7 @@ interface UserProfile {
   last_name: string;
   phone: string;
   business_name: string;
+  address: string;
   government_id_type: string;
   government_id_number: string;
   created_at: string;
@@ -104,6 +105,7 @@ export class UserDetailView extends LitElement {
   @state() private lastName = "";
   @state() private phone = "";
   @state() private businessName = "";
+  @state() private address = "";
   @state() private govIdType = "";
   @state() private govIdNumber = "";
 
@@ -265,6 +267,7 @@ export class UserDetailView extends LitElement {
     this.lastName = p.last_name || "";
     this.phone = p.phone || "";
     this.businessName = p.business_name || "";
+    this.address = p.address || "";
     this.govIdType = p.government_id_type || "";
     this.govIdNumber = p.government_id_number || "";
   }
@@ -293,6 +296,7 @@ export class UserDetailView extends LitElement {
         last_name: this.lastName,
         phone: this.phone,
         business_name: this.businessName,
+        address: this.address,
         government_id_type: this.govIdType,
         government_id_number: this.govIdNumber,
       };
@@ -511,6 +515,7 @@ export class UserDetailView extends LitElement {
               ${this.renderField(msg("Last Name"), p?.last_name ?? "-", this.lastName, (v) => (this.lastName = v))}
               ${this.renderField(msg("Phone"), p?.phone ?? "-", this.phone, (v) => (this.phone = v))}
               ${this.renderField(msg("Business Name"), p?.business_name ?? "-", this.businessName, (v) => (this.businessName = v))}
+              ${this.renderField(msg("Address"), p?.address ?? "-", this.address, (v) => (this.address = v))}
               ${this.renderField(msg("Gov ID Type"), p?.government_id_type ?? "-", this.govIdType, (v) => (this.govIdType = v))}
               ${this.renderField(msg("Gov ID Number"), p?.government_id_number ?? "-", this.govIdNumber, (v) => (this.govIdNumber = v))}
               ${this.renderField(msg("Created At"), this.formatDate(p?.created_at ?? ""), "", () => {}, false)}
