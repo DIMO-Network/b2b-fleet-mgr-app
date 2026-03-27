@@ -1883,8 +1883,8 @@
   <target>Combustible</target>
 </trans-unit>
 <trans-unit id="s2615a3939b0639bb">
-  <source>Engine</source>
-  <target>Motor</target>
+  <source>Immobilizer</source>
+  <target>Imobilizador</target>
 </trans-unit>
 <trans-unit id="se8bc25ae43fe22b1">
   <source>Showing <x id="0" equiv-text="${this.showingStart}"/>-<x id="1" equiv-text="${this.showingEnd}"/> of <x id="2" equiv-text="${this.totalCount}"/> vehicles</source>

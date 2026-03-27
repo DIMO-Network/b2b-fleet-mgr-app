@@ -494,9 +494,9 @@ export class TrackingApp extends LitElement {
               <div class="telemetry-value">${signals?.powertrainCombustionEngineSpeed?.value != null ? Math.round(signals.powertrainCombustionEngineSpeed.value) : '-'}</div>
             </div>
             <div class="telemetry-item">
-              <div class="telemetry-label">${msg('Engine')}</div>
+              <div class="telemetry-label">${msg('Immobilizer')}</div>
               <div class="telemetry-value" style="color:${signals?.obdIsEngineBlocked?.value === 0 ? '#28a745' : '#dc3545'}">
-                ${signals?.obdIsEngineBlocked?.value === 0 ? 'OK' : signals?.obdIsEngineBlocked?.value === 1 ? 'BLOCKED' : '-'}
+                ${signals?.obdIsEngineBlocked?.value === 0 ? 'INACTIVE' : signals?.obdIsEngineBlocked?.value === 1 ? 'BLOCKED' : '-'}
               </div>
             </div>
           </div>
