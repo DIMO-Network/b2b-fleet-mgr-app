@@ -202,7 +202,13 @@ export class TenantSettingsView extends LitElement {
                     <fieldset>
                       <label class="form-label">${msg('Tenant ID')}</label>
                       <!-- Tenant ID is not editable; render as plain text -->
-                      <span class="detail-value" style="display:block; padding: 8px 0;">${this.tenantId}</span>
+                      <span style="display:flex; align-items:center; gap: 8px; padding: 8px 0;">
+                        <span class="detail-value">${this.tenantId}</span>
+                        <button type="button" class="action-btn secondary" style="padding: 2px 8px; font-size: 12px;"
+                          @click=${() => { navigator.clipboard.writeText(this.tenantId); this.success = msg('Tenant ID copied'); }}>
+                          ${msg('Copy')}
+                        </button>
+                      </span>
                     </fieldset>
                     <fieldset>
                       <label class="form-label">${msg('Tenant Name')}</label>
