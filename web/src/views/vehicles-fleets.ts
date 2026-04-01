@@ -29,7 +29,7 @@ interface Vehicle {
   last_telemetry: string;
   inventory: string;
   groups: VehicleGroup[];
-  fuel: string;
+  odometer: string;
   engine: string;
   license_plate: string;
 }
@@ -47,7 +47,7 @@ interface TelemetrySignals {
       value: number;
       timestamp: string;
     };
-    powertrainFuelSystemRelativeLevel: {
+    powertrainTransmissionTravelledDistance: {
       value: number;
     };
   };
@@ -146,7 +146,7 @@ export class VehiclesFleetsView extends LitElement {
       value
       timestamp
     }
-    powertrainFuelSystemRelativeLevel {
+    powertrainTransmissionTravelledDistance {
       value
     }
   }
@@ -246,13 +246,13 @@ export class VehiclesFleetsView extends LitElement {
             engineStatus = engineBlockedValue === 0 ? 'running' : 'blocked';
           }
 
-          // Extract fuel level
-          const fuelValue = telemetryData.signalsLatest?.powertrainFuelSystemRelativeLevel?.value;
-          const fuelLevel = fuelValue != null ? `${Math.round(fuelValue)}%` : '';
+          // Extract odometer
+          const odometerValue = telemetryData.signalsLatest?.powertrainTransmissionTravelledDistance?.value;
+          const odometer = odometerValue != null ? `${Math.round(odometerValue).toLocaleString()} km` : '';
 
           // Update the specific vehicle in the array
           this.vehicles = this.vehicles.map((v, idx) =>
-            idx === i ? { ...v, last_telemetry: lastTelemetry, engine: engineStatus, fuel: fuelLevel } : v
+            idx === i ? { ...v, last_telemetry: lastTelemetry, engine: engineStatus, odometer } : v
           );
         } else {
           // If API call failed, still set default to 'running' (UNBLOCKED)
@@ -276,7 +276,7 @@ export class VehiclesFleetsView extends LitElement {
 
   private async loadFleetGroups() {
     try {
-      this.fleetGroups = await FleetService.getInstance().getFleetGroups() as unknown as FleetGroup[];
+      this.fleetGroups = await FleetService.getInstance().getFleetGroups(true) as unknown as FleetGroup[];
     } catch (error) {
       console.error('Error loading fleet groups:', error);
     }
@@ -546,7 +546,7 @@ export class VehiclesFleetsView extends LitElement {
                     <select @change=${this.handleGroupFilterChange} .value=${this.filter}>
                         <option value="">${msg('All Groups')}</option>
                         ${this.fleetGroups.map(group => html`
-                          <option value=${'group:' + group.id} ?disabled=${!group.has_access}>${group.name}</option>
+                          <option value=${'group:' + group.id}>${group.name}</option>
                         `)}
                     </select>
                     <button class="btn btn-sm ${this.exporting ? 'processing' : ''}" 
@@ -574,7 +574,7 @@ export class VehiclesFleetsView extends LitElement {
                             <th>${msg('Last Telemetry')}</th>
                             <th>${msg('Inventory')}</th>
                             <th>${msg('Groups')}</th>
-                            <th>${msg('Fuel')}</th>
+                            <th>${msg('Odometer')}</th>
                             <th>${msg('Engine')}</th>
                         </tr>
                         </thead>
@@ -588,7 +588,7 @@ export class VehiclesFleetsView extends LitElement {
                             <td title="${vehicle.last_telemetry}">${this.formatLastTelemetry(vehicle.last_telemetry)}</td>
                             <td>${vehicle.inventory ? html`<span class="status ${this.getInventoryClass(vehicle.inventory)}">${vehicle.inventory}</span>` : '—'}</td>
                             <td>${vehicle.groups.length > 0 ? vehicle.groups.map(group => html`<span class="badge" style="background-color: ${group.color}; color: #fff;">${group.name}</span>`) : '—'}</td>
-                            <td>${vehicle.fuel || '—'}</td>
+                            <td>${vehicle.odometer || '—'}</td>
                             <td><span class="status ${this.getEngineClass(vehicle.engine)}">${this.getEngineDisplay(vehicle.engine)}</span></td>
                           </tr>
                         `)}

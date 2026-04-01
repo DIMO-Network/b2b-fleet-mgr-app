@@ -44,11 +44,12 @@ export class FleetService {
    * Get all fleet groups for the current tenant
    * @returns List of fleet groups
    */
-  async getFleetGroups(): Promise<FleetGroup[]> {
+  async getFleetGroups(accessibleOnly: boolean = false): Promise<FleetGroup[]> {
     try {
+      const url = accessibleOnly ? '/fleet/groups?accessible_only=true' : '/fleet/groups';
       const response = await this.apiService.callApi<FleetGroup[]>(
         'GET',
-        '/fleet/groups',
+        url,
         null,
         true, // auth required
         true, // oracle endpoint

@@ -349,60 +349,6 @@ export class ReportsView extends LitElement {
         <!-- REPORTS PAGE -->
         <div class="page active" id="page-reports">
 
-            <!-- EXISTING REPORTS SECTION -->
-            <div class="section-header">${msg('Existing Reports')}</div>
-            <div class="table-container mb-24">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>${msg('Report Name')}</th>
-                        <th>${msg('Fleet Group(s)')}</th>
-                        <th>${msg('Date Range')}</th>
-                        <th>${msg('Last Run')}</th>
-                        <th>${msg('Status')}</th>
-                        <th>${msg('Actions')}</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    ${this.loading ? html`
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
-                                ${msg('Loading reports...')}
-                            </td>
-                        </tr>
-                    ` : this.reports.length === 0 ? html`
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
-                                ${msg('No reports found.')}
-                            </td>
-                        </tr>
-                    ` : this.reports.map(report => html`
-                        <tr class="report-row ${this.statusUpdateEffectIds.has(report.id) ? 'polling-effect' : ''}">
-                            <td class="link">
-                                ${report.status === 'pending' ? html`<span class="spinner"></span>` : ''}
-                                ${report.reportName}
-                            </td>
-                            <td>${this.getFleetGroupDisplay(report)}</td>
-                            <td>${this.getDateRangeDisplay(report)}</td>
-                            <td title="${report.createdAt}">${this.formatLastRun(report.createdAt)}</td>
-                            <td>
-                                <span class="status status-${report.status.toLowerCase()}">${report.status.toUpperCase()}</span>
-                            </td>
-                            <td>
-                                <button 
-                                    class="btn btn-sm ${this.downloadingReportId === report.id ? 'processing' : ''}" 
-                                    @click=${(e: Event) => { e.stopPropagation(); this.handleDownloadCsv(report.id); }}
-                                    ?disabled=${!!this.downloadingReportId || report.status !== 'completed'}
-                                >
-                                    ${msg('CSV')}
-                                </button>
-                            </td>
-                        </tr>
-                    `)}
-                    </tbody>
-                </table>
-            </div>
-
             <!-- REPORT CREATOR SECTION -->
             <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span>${msg('Create New Report')}</span>
@@ -555,6 +501,60 @@ export class ReportsView extends LitElement {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- EXISTING REPORTS SECTION -->
+            <div class="section-header">${msg('Report History')}</div>
+            <div class="table-container mb-24">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>${msg('Report Name')}</th>
+                        <th>${msg('Fleet Group(s)')}</th>
+                        <th>${msg('Date Range')}</th>
+                        <th>${msg('Last Run')}</th>
+                        <th>${msg('Status')}</th>
+                        <th>${msg('Actions')}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    ${this.loading ? html`
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                                ${msg('Loading reports...')}
+                            </td>
+                        </tr>
+                    ` : this.reports.length === 0 ? html`
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                                ${msg('No reports found.')}
+                            </td>
+                        </tr>
+                    ` : this.reports.map(report => html`
+                        <tr class="report-row ${this.statusUpdateEffectIds.has(report.id) ? 'polling-effect' : ''}">
+                            <td class="link">
+                                ${report.status === 'pending' ? html`<span class="spinner"></span>` : ''}
+                                ${report.reportName}
+                            </td>
+                            <td>${this.getFleetGroupDisplay(report)}</td>
+                            <td>${this.getDateRangeDisplay(report)}</td>
+                            <td title="${report.createdAt}">${this.formatLastRun(report.createdAt)}</td>
+                            <td>
+                                <span class="status status-${report.status.toLowerCase()}">${report.status.toUpperCase()}</span>
+                            </td>
+                            <td>
+                                <button
+                                    class="btn btn-sm ${this.downloadingReportId === report.id ? 'processing' : ''}"
+                                    @click=${(e: Event) => { e.stopPropagation(); this.handleDownloadCsv(report.id); }}
+                                    ?disabled=${!!this.downloadingReportId || report.status !== 'completed'}
+                                >
+                                    ${msg('CSV')}
+                                </button>
+                            </td>
+                        </tr>
+                    `)}
+                    </tbody>
+                </table>
             </div>
         </div>
     `;
