@@ -59,6 +59,35 @@ export interface VehicleIdentityData {
   errors?: any[];
 }
 
+export interface DeviceDefinitionAttribute {
+  name?: string;
+  value?: string;
+}
+
+export interface DeviceDefinitionNode {
+  model?: string;
+  year?: number;
+  deviceDefinitionId?: string;
+  attributes?: DeviceDefinitionAttribute[];
+}
+
+export interface DeviceDefinitionsPageInfo {
+  hasNextPage?: boolean;
+  endCursor?: string;
+  hasPreviousPage?: boolean;
+  startCursor?: string;
+}
+
+export interface ManufacturerOption {
+  name: string;
+}
+
+export interface DeviceDefinitionsResult {
+  manufacturerName: string;
+  nodes: DeviceDefinitionNode[];
+  pageInfo?: DeviceDefinitionsPageInfo;
+}
+
 /**
  * Service for handling identity and account-related operations
  */
@@ -326,6 +355,141 @@ export class IdentityService {
     } catch (error) {
       console.error('Error fetching user permissions:', error);
       return [];
+    }
+  }
+
+  async getManufacturers(): Promise<ManufacturerOption[]> {
+    try {
+      const query = `{
+        manufacturers {
+          nodes {
+            name
+            tokenDID
+          }
+        }
+      }`;
+
+      const response = await this.apiService.callApi<{
+        manufacturers?: { nodes?: Array<{ name?: string; tokenDID?: string }> };
+      }>(
+        'POST',
+        '/identity/proxy',
+        { query },
+        false,
+        false,
+        false
+      );
+
+      if (!response.success || !response.data) {
+        return [];
+      }
+
+      return (response.data.manufacturers?.nodes ?? [])
+        .map((manufacturer) => manufacturer.name?.trim() ?? '')
+        .filter((name) => Boolean(name))
+        .map((name) => ({ name }));
+    } catch (error) {
+      console.error('Error fetching manufacturers:', error);
+      return [];
+    }
+  }
+
+  async getDeviceDefinitions(params: {
+    manufacturerName: string;
+    model?: string;
+    year?: number;
+    first?: number;
+    after?: string;
+    before?: string;
+    last?: number;
+  }): Promise<DeviceDefinitionsResult | null> {
+    try {
+      const manufacturerName = params.manufacturerName.trim();
+      if (!manufacturerName) {
+        return null;
+      }
+
+      const paginationParts: string[] = [];
+      if (typeof params.first === 'number') {
+        paginationParts.push(`first: ${params.first}`);
+      }
+      if (typeof params.last === 'number') {
+        paginationParts.push(`last: ${params.last}`);
+      }
+      if (params.after) {
+        paginationParts.push(`after: ${JSON.stringify(params.after)}`);
+      }
+      if (params.before) {
+        paginationParts.push(`before: ${JSON.stringify(params.before)}`);
+      }
+
+      const filterParts: string[] = [];
+      if (params.model?.trim()) {
+        filterParts.push(`model: ${JSON.stringify(params.model.trim())}`);
+      }
+      if (typeof params.year === 'number' && Number.isFinite(params.year)) {
+        filterParts.push(`year: ${params.year}`);
+      }
+
+      const filterByClause = filterParts.length > 0
+        ? `, filterBy: { ${filterParts.join(', ')} }`
+        : '';
+      const paginationClause = paginationParts.join(', ');
+
+      const query = `{
+        manufacturer(by: { name: ${JSON.stringify(manufacturerName)} }) {
+          name
+          id
+          tokenId
+          deviceDefinitions(${paginationClause}${filterByClause}) {
+            nodes {
+              model
+              year
+              deviceDefinitionId
+              attributes {
+                name
+                value
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+      }`;
+
+      const response = await this.apiService.callApi<{
+        manufacturer?: {
+          name?: string;
+          deviceDefinitions?: {
+            nodes?: DeviceDefinitionNode[];
+            pageInfo?: DeviceDefinitionsPageInfo;
+          };
+        };
+      }>(
+        'POST',
+        '/identity/proxy',
+        { query },
+        false,
+        false,
+        false
+      );
+
+      if (!response.success || !response.data?.manufacturer) {
+        return null;
+      }
+
+      return {
+        manufacturerName: response.data.manufacturer.name ?? manufacturerName,
+        nodes: response.data.manufacturer.deviceDefinitions?.nodes ?? [],
+        pageInfo: response.data.manufacturer.deviceDefinitions?.pageInfo,
+      };
+    } catch (error) {
+      console.error('Error fetching device definitions:', error);
+      return null;
     }
   }
 

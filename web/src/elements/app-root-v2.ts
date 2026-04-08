@@ -214,6 +214,7 @@ export class AppRootV2 extends LitElement {
             { path: '/users/create', render: () => html`<create-user-view></create-user-view>` },
             { path: '/users/edit/:walletAddress', render: ({ walletAddress }) => html`<edit-user-view .walletAddress=${walletAddress}></edit-user-view>` },
             { path: '/users/profile/:wallet', render: ({ wallet }) => html`<user-detail-view .wallet=${wallet}></user-detail-view>` },
+            { path: '/device-definitions', render: () => html`<device-definitions-view></device-definitions-view>` },
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
             { path: '/onboarding', render: () => html`<onboarding-view></onboarding-view>` },
             { path: '/tenant-selector', render: () => html`<tenant-selector-view></tenant-selector-view>` },
@@ -347,6 +348,7 @@ export class AppRootV2 extends LitElement {
         if (path.startsWith('/users/edit')) return msg('Edit User');
         if (path.startsWith('/users/profile')) return msg('User Profile');
         if (path.startsWith('/users')) return msg('Users');
+        if (path.startsWith('/device-definitions')) return msg('Device Definitions');
         if (path.startsWith('/tenant-selector')) return msg('Tenant Selector');
         if (path.startsWith('/tenant-settings')) return msg('Tenant Settings');
         return msg('Home');
@@ -459,6 +461,9 @@ export class AppRootV2 extends LitElement {
                                aria-current="${this.isActive('/users') ? 'page' : 'false'}"
                                tabindex="${!this.permissions.includes('manage_admin_users') ? '-1' : '0'}"
                                aria-disabled="${!this.permissions.includes('manage_admin_users') ? 'true' : 'false'}">${msg('Users')}</a>
+                        </div>
+                        <div class="nav-item ${this.isActive('/device-definitions') ? 'active' : ''}">
+                            <a data-page="device-definitions" href="#/device-definitions" aria-current="${this.isActive('/device-definitions') ? 'page' : 'false'}">${msg('Device Definitions')}</a>
                         </div>
                         <div class="nav-divider"></div>
                         <div class="nav-item ${this.isActive('/tenant-settings') ? 'active' : ''}">
