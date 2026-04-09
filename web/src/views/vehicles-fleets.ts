@@ -371,17 +371,22 @@ export class VehiclesFleetsView extends LitElement {
   }
 
   private handleExportCsv = async () => {
-    if (!this.apiService || this.exporting) return;
+    if (this.exporting) return;
 
     this.exporting = true;
     try {
-      const url = `/vehicles/export?search=${encodeURIComponent(this.search)}&filter=${encodeURIComponent(this.filter)}`;
-      await this.apiService.downloadFile(
-        url,
-        true, // auth
-        true, // useOracle
-        true  // includeTenantId
-      );
+      const data = {
+        reportName: 'VehiclesExportReport',
+        search: this.search,
+        filter: this.filter,
+      };
+
+      const result = await FleetService.getInstance().runReport(data);
+
+      if (result && result.reportId) {
+        // Navigate to reports page so the user can track progress
+        location.hash = '/reports';
+      }
     } catch (error) {
       console.error('Export CSV failed:', error);
     } finally {

@@ -208,11 +208,13 @@ export class FleetService {
    * @returns Report ID and initial status
    */
   async runReport(data: {
-    startDate: string;
-    endDate: string;
-    fleetGroupIds: string[];
     reportName: string;
-    timezone: string;
+    startDate?: string;
+    endDate?: string;
+    fleetGroupIds?: string[];
+    timezone?: string;
+    search?: string;
+    filter?: string;
   }): Promise<{ reportId: string; status: string } | null> {
     try {
       const response = await this.apiService.callApi<{ reportId: string; status: string }>(

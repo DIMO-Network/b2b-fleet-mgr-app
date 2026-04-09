@@ -100,7 +100,6 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Post("/pending-vehicle/command/:imei", vehiclesCtrl.SubmitCommand)
 
 	oracleApp.Get("/vehicles", genericProxyCtrl.Proxy)
-	oracleApp.Get("/vehicles/export", genericProxyCtrl.Proxy)
 	oracleApp.Get("/vehicle/verify", vehiclesCtrl.GetVehiclesVerificationStatus)
 	oracleApp.Post("/vehicle/verify", vehiclesCtrl.SubmitVehiclesVerification)
 	// fleets
