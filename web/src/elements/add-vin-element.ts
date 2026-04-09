@@ -60,7 +60,7 @@ const defaultPermissions = {
     [Permission.ALLTIME_LOCATION]: true,
     [Permission.CREDENTIALS]: true,
     [Permission.STREAMS]: true,
-    [Permission.RAW_DATA]: false,
+    [Permission.RAW_DATA]: true,
     [Permission.APPROXIMATE_LOCATION]: false,
     [Permission.MAX]: false,
 };
