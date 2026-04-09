@@ -17,6 +17,13 @@ export class ReportsView extends LitElement {
         background-color: #f0f9ff;
         transition: background-color 0.5s ease;
       }
+      .highlight-glow {
+        animation: highlightFade 2s ease-out;
+      }
+      @keyframes highlightFade {
+        0% { background-color: #dbeafe; box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); }
+        100% { background-color: transparent; box-shadow: none; }
+      }
       .spinner {
         display: inline-block;
         width: 12px;
@@ -77,16 +84,34 @@ export class ReportsView extends LitElement {
   @state()
   private hasAccess: boolean = true;
 
+  @state()
+  private highlightReportId: string | null = null;
+
   async connectedCallback() {
     super.connectedCallback();
     this.setDefaultDates();
     await this.checkAccess();
     if (!this.hasAccess) return;
+
+    // Check if we were redirected here with a new report to highlight
+    const pendingHighlight = sessionStorage.getItem('highlightReportId');
+    if (pendingHighlight) {
+      sessionStorage.removeItem('highlightReportId');
+      this.highlightReportId = pendingHighlight;
+    }
+
     await Promise.all([
       this.fetchReports(),
       this.fetchTemplates(),
       this.fetchFleetGroups()
     ]);
+
+    // If we have a highlighted report, start polling and scroll to it
+    if (this.highlightReportId) {
+      this.startPolling(this.highlightReportId);
+      await this.updateComplete;
+      this.scrollToReportHistory();
+    }
   }
 
   disconnectedCallback() {
@@ -98,6 +123,13 @@ export class ReportsView extends LitElement {
   private setDefaultDates() {
     this.endDate = dayjs().format('YYYY-MM-DD');
     this.startDate = dayjs().subtract(7, 'day').format('YYYY-MM-DD');
+  }
+
+  private scrollToReportHistory() {
+    const row = this.shadowRoot?.querySelector('.highlight-glow');
+    if (row) {
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   private handleDateRangeChange(e: Event) {
@@ -531,7 +563,7 @@ export class ReportsView extends LitElement {
                             </td>
                         </tr>
                     ` : this.reports.map(report => html`
-                        <tr class="report-row ${this.statusUpdateEffectIds.has(report.id) ? 'polling-effect' : ''}">
+                        <tr class="report-row ${this.statusUpdateEffectIds.has(report.id) ? 'polling-effect' : ''} ${this.highlightReportId === report.id ? 'highlight-glow' : ''}">
                             <td class="link">
                                 ${report.status === 'pending' ? html`<span class="spinner"></span>` : ''}
                                 ${report.reportName}

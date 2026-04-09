@@ -384,6 +384,8 @@ export class VehiclesFleetsView extends LitElement {
       const result = await FleetService.getInstance().runReport(data);
 
       if (result && result.reportId) {
+        // Signal the reports page to highlight the new report
+        sessionStorage.setItem('highlightReportId', result.reportId);
         // Navigate to reports page so the user can track progress
         location.hash = '/reports';
       }
