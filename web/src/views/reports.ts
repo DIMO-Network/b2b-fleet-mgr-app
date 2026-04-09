@@ -371,6 +371,11 @@ export class ReportsView extends LitElement {
     const start = dayjs(report.params.startDate);
     const end = dayjs(report.params.endDate);
 
+    // Zero-value dates (e.g. from reports that don't use date ranges)
+    if (start.year() <= 1 || end.year() <= 1) {
+      return '—';
+    }
+
     // If same year
     if (start.year() === end.year()) {
       return `${start.format('MMM D')} - ${end.format('MMM D, YYYY')}`;
