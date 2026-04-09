@@ -15,11 +15,13 @@ export interface FleetReport {
   reportName: string;
   status: string;
   params?: {
-    startDate: string;
-    endDate: string;
-    fleetGroupIds: string[];
     reportName: string;
+    startDate?: string;
+    endDate?: string;
+    fleetGroupIds?: string[];
     timezone?: string;
+    search?: string;
+    filter?: string;
   };
   createdAt: string;
   updatedAt: string;

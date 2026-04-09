@@ -106,8 +106,23 @@ export class ReportsView extends LitElement {
       this.fetchFleetGroups()
     ]);
 
-    // If we have a highlighted report, start polling and scroll to it
+    // If we have a highlighted report, ensure it's in the list, poll, and scroll
     if (this.highlightReportId) {
+      const exists = this.reports.some(r => r.id === this.highlightReportId);
+      if (!exists) {
+        // Report may not have been returned by fetchReports yet — add a pending placeholder
+        const reportName = sessionStorage.getItem('highlightReportName') || 'VehiclesExportReport';
+        sessionStorage.removeItem('highlightReportName');
+        const placeholder: FleetReport = {
+          id: this.highlightReportId,
+          reportName,
+          status: 'pending',
+          params: { reportName },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        this.reports = [placeholder, ...this.reports];
+      }
       this.startPolling(this.highlightReportId);
       await this.updateComplete;
       this.scrollToReportHistory();
