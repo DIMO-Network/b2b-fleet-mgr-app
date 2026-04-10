@@ -38,6 +38,9 @@ interface TelemetryInfo {
     powertrainFuelSystemRelativeLevel: {
       value: number;
     };
+    powertrainFuelSystemAbsoluteLevel: {
+      value: number;
+    };
     powertrainTransmissionTravelledDistance: {
       value: number;
       timestamp: string;
@@ -180,6 +183,9 @@ export class VehicleDetailView extends LitElement {
   private ownerWalletAddress: string | null = null;
 
   @state()
+  private fuelTankCapacityGal: number | null = null;
+
+  @state()
   private ownerProfileMissing: boolean = false;
 
   @state()
@@ -253,6 +259,9 @@ export class VehicleDetailView extends LitElement {
       value
     }
     powertrainFuelSystemRelativeLevel {
+      value
+    }
+    powertrainFuelSystemAbsoluteLevel {
       value
     }
     powertrainTransmissionTravelledDistance {
@@ -336,6 +345,11 @@ export class VehicleDetailView extends LitElement {
       this.loadVehicleIdentity(this.tokenID)
     ]);
 
+    // Load device definition attributes (for fuel tank capacity) in background
+    if (vehicle.device_definition_id) {
+      this.loadDefinitionAttributes(vehicle.device_definition_id);
+    }
+
     this.vehicle = vehicle;
     this.vehicleIdentity = vehicleIdentity;
     this.lastTelemetry = telemetry;
@@ -408,6 +422,39 @@ export class VehicleDetailView extends LitElement {
     } catch (error: any) {
       console.error('Error loading vehicle identity:', error);
       return [null, error.message || 'Error loading vehicle identity'];
+    }
+  }
+
+  private async loadDefinitionAttributes(definitionId: string): Promise<void> {
+    if (!definitionId) return;
+    try {
+      const query = `{
+        deviceDefinition(by: {id: "${definitionId}"}) {
+          attributes {
+            name
+            value
+          }
+        }
+      }`;
+      const response = await this.apiService!.callApi<{ deviceDefinition?: { attributes?: Array<{ name: string; value: string }> } }>(
+        'POST',
+        '/identity/proxy',
+        { query },
+        false,
+        false
+      );
+      const attrs = response.data?.deviceDefinition?.attributes;
+      if (attrs) {
+        const fuelAttr = attrs.find(a => a.name === 'fuel_tank_capacity_gal');
+        if (fuelAttr) {
+          const val = parseFloat(fuelAttr.value);
+          if (Number.isFinite(val) && val > 0) {
+            this.fuelTankCapacityGal = val;
+          }
+        }
+      }
+    } catch (error) {
+      console.debug('Failed to load definition attributes:', error);
     }
   }
 
@@ -752,7 +799,7 @@ export class VehicleDetailView extends LitElement {
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">${msg('Fuel Level')}</span>
-                  <span class="detail-value">${this.lastTelemetry?.signalsLatest.powertrainFuelSystemRelativeLevel != null ? `${Math.round(this.lastTelemetry.signalsLatest.powertrainFuelSystemRelativeLevel.value)}%` : 'N/A'}</span>
+                  <span class="detail-value">${this.getFuelLevelDisplay()}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">${msg('Odometer')}</span>
@@ -1128,6 +1175,25 @@ export class VehicleDetailView extends LitElement {
     const imei = aftermarketDevice.imei || 'N/A';
     const manufacturer = aftermarketDevice.manufacturer?.name || 'N/A';
     return `Serial: ${serial} | IMEI: ${imei} | Manufacturer: ${manufacturer}`;
+  }
+
+  private getFuelLevelDisplay(): string {
+    const relative = this.lastTelemetry?.signalsLatest?.powertrainFuelSystemRelativeLevel?.value;
+    if (relative != null) {
+      return `${Math.round(relative)}%`;
+    }
+
+    const absoluteLiters = this.lastTelemetry?.signalsLatest?.powertrainFuelSystemAbsoluteLevel?.value;
+    if (absoluteLiters != null) {
+      if (this.fuelTankCapacityGal && this.fuelTankCapacityGal > 0) {
+        const tankCapacityLiters = this.fuelTankCapacityGal * 3.78541;
+        const pct = Math.round((absoluteLiters / tankCapacityLiters) * 100);
+        return `${Math.min(pct, 100)}%`;
+      }
+      return `${Math.round(absoluteLiters)} L`;
+    }
+
+    return 'N/A';
   }
 
   private formatMintedAt(timestamp: string | undefined): string {
