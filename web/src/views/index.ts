@@ -9,3 +9,4 @@ export * from "./vehicles-fleets.ts";
 export * from "./vehicle-detail.ts";
 export * from "./tenant-selector.ts";
 export * from "./tenant-settings.ts";
+export * from "./device-definitions.ts";
