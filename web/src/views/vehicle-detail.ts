@@ -1198,8 +1198,8 @@ export class VehicleDetailView extends LitElement {
       expirationDate: expiration,
       permissions: '11111010',
       redirectUri,
-      tokenId: this.tokenID.toString(),
     });
+    params.append('vehicles', this.tokenID.toString());
 
     return `https://login.dimo.org/?${params.toString()}`;
   }

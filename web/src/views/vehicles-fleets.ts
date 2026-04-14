@@ -489,8 +489,8 @@ export class VehiclesFleetsView extends LitElement {
       expirationDate: expiration,
       permissions: '11111010',
       redirectUri,
-      tokenId: tokenId.toString(),
     });
+    params.append('vehicles', tokenId.toString());
 
     return `https://login.dimo.org/?${params.toString()}`;
   }
