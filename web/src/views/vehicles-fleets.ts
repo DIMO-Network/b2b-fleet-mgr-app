@@ -77,6 +77,40 @@ export class VehiclesFleetsView extends LitElement {
         letter-spacing: 1px;
         margin-bottom: 4px;
       }
+      .export-dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      .export-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 4px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        z-index: 10;
+        min-width: 140px;
+      }
+      .export-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      .export-menu-item:hover {
+        background: #f5f5f5;
+      }
+      .export-menu-item:first-child {
+        border-radius: 4px 4px 0 0;
+      }
+      .export-menu-item:last-child {
+        border-radius: 0 0 4px 4px;
+      }
     ` ];
 
   @consume({ context: apiServiceContext, subscribe: true })
@@ -129,6 +163,9 @@ export class VehiclesFleetsView extends LitElement {
   private exporting: boolean = false;
 
   @state()
+  private showExportMenu: boolean = false;
+
+  @state()
   private errorMessage: string = '';
 
   @state()
@@ -156,14 +193,24 @@ export class VehiclesFleetsView extends LitElement {
   }
 }`;
 
+  private boundCloseExportMenu = (e: MouseEvent) => {
+    const path = e.composedPath();
+    const dropdown = this.shadowRoot?.querySelector('.export-dropdown');
+    if (dropdown && !path.includes(dropdown)) {
+      this.showExportMenu = false;
+    }
+  };
+
   async connectedCallback() {
     super.connectedCallback();
+    document.addEventListener('click', this.boundCloseExportMenu);
     await this.loadVehicles();
     await this.loadFleetGroups();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    document.removeEventListener('click', this.boundCloseExportMenu);
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer);
     }
@@ -384,8 +431,9 @@ export class VehiclesFleetsView extends LitElement {
     }
   }
 
-  private handleExportCsv = async () => {
+  private handleExport = async (format: 'xlsx' | 'csv') => {
     if (this.exporting) return;
+    this.showExportMenu = false;
 
     this.exporting = true;
     try {
@@ -393,7 +441,7 @@ export class VehiclesFleetsView extends LitElement {
         reportName: 'VehiclesExportReport',
         search: this.search,
         filter: this.filter,
-        format: 'xlsx' as const,
+        format,
       };
 
       const result = await FleetService.getInstance().runReport(data);
@@ -604,17 +652,34 @@ export class VehiclesFleetsView extends LitElement {
                           <option value=${'group:' + group.id}>${group.name}</option>
                         `)}
                     </select>
-                    <button class="btn btn-sm ${this.exporting ? 'processing' : ''}" 
-                            style="margin-left: 8px; display: inline-flex; align-items: center; gap: 6px;" 
-                            @click=${this.handleExportCsv}
-                            ?disabled=${this.exporting}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        ${msg('Export CSV')}
-                    </button>
+                    <div class="export-dropdown" style="margin-left: 8px;">
+                        <button class="btn btn-sm ${this.exporting ? 'processing' : ''}"
+                                style="display: inline-flex; align-items: center; gap: 6px;"
+                                @click=${() => { this.showExportMenu = !this.showExportMenu; }}
+                                ?disabled=${this.exporting}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            ${msg('Export')}
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        ${this.showExportMenu ? html`
+                          <div class="export-menu">
+                            <div class="export-menu-item" @click=${() => this.handleExport('xlsx')}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#217346" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
+                              ${msg('Excel (.xlsx)')}
+                            </div>
+                            <div class="export-menu-item" @click=${() => this.handleExport('csv')}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                              ${msg('CSV (.csv)')}
+                            </div>
+                          </div>
+                        ` : ''}
+                    </div>
                   
                 </div>
 

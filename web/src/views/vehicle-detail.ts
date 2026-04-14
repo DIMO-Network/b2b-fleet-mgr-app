@@ -7,6 +7,7 @@ import {apiServiceContext} from '../context';
 import {ApiService} from '@services/api-service.ts';
 import {IdentityService, VehicleIdentityData} from '@services/identity-service.ts';
 import {OracleTenantService} from '@services/oracle-tenant-service.ts';
+import {SettingsService} from '@services/settings-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import '../elements/update-inventory-modal-element';
@@ -557,7 +558,15 @@ export class VehicleDetailView extends LitElement {
     return html`
       <!-- VEHICLE DETAIL PAGE -->
       <div class="page active" id="page-vehicle-detail">
-        ${this.errorMessage ? html`<div class="alert alert-error">${this.errorMessage}</div>` : ''}
+        ${this.errorMessage ? (this.errorMessage.includes('403')
+          ? html`<div class="alert alert-error" style="display: flex; flex-direction: column; gap: 8px;">
+              <span>${msg('Permissions have expired for this vehicle. Please re-share to restore access.')}</span>
+              <a href=${this.buildShareUrl()} target="_blank" rel="noopener"
+                 class="btn btn-sm btn-primary" style="align-self: flex-start; text-decoration: none;">
+                ${msg('Re-share Permissions')}
+              </a>
+            </div>`
+          : html`<div class="alert alert-error">${this.errorMessage}</div>`) : ''}
         ${this.successMessage ? html`<div class="alert alert-success">${this.successMessage}</div>` : ''}
         <div class="toolbar mb-16">
           <button class="btn" @click=${this.goBack}>${msg('← BACK TO VEHICLES')}</button>
@@ -1175,6 +1184,24 @@ export class VehicleDetailView extends LitElement {
     const imei = aftermarketDevice.imei || 'N/A';
     const manufacturer = aftermarketDevice.manufacturer?.name || 'N/A';
     return `Serial: ${serial} | IMEI: ${imei} | Manufacturer: ${manufacturer}`;
+  }
+
+  private buildShareUrl(): string {
+    const settings = SettingsService.getInstance().tenantSettings;
+    const clientId = settings?.dimo_client_id ?? '';
+    const expiration = new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000).toISOString();
+    const redirectUri = window.location.origin + '/';
+
+    const params = new URLSearchParams({
+      clientId,
+      entryState: 'VEHICLE_MANAGER',
+      expirationDate: expiration,
+      permissions: '11111010',
+      redirectUri,
+      tokenId: this.tokenID.toString(),
+    });
+
+    return `https://login.dimo.org/?${params.toString()}`;
   }
 
   private getFuelLevelDisplay(): string {
