@@ -6,6 +6,7 @@ import { consume } from '@lit/context';
 import { apiServiceContext } from '../context';
 import { ApiService } from '@services/api-service.ts';
 import { FleetService, FleetGroup } from '@services/fleet-service.ts';
+import { SettingsService } from '@services/settings-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -130,6 +131,9 @@ export class VehiclesFleetsView extends LitElement {
   @state()
   private errorMessage: string = '';
 
+  @state()
+  private permissionErrorVehicles: Array<{ tokenId: number; label: string }> = [];
+
   private searchDebounceTimer?: number;
   private telemetryLoadAbortController?: AbortController;
 
@@ -171,6 +175,7 @@ export class VehiclesFleetsView extends LitElement {
 
   private async loadVehicles() {
     this.errorMessage = '';
+    this.permissionErrorVehicles = [];
     if (!this.apiService) return;
 
     // Cancel any ongoing telemetry loading
@@ -259,14 +264,23 @@ export class VehiclesFleetsView extends LitElement {
           this.vehicles = this.vehicles.map((v, idx) =>
             idx === i ? { ...v, engine: v.engine || 'running' } : v
           );
-          if (response.error) {
+          if (response.error && response.error.includes('403')) {
+            const label = `${vehicle.make} ${vehicle.model} ${vehicle.year}`.trim() || `Token ${vehicle.vehicle_token_id}`;
+            this.permissionErrorVehicles = [...this.permissionErrorVehicles, { tokenId: vehicle.vehicle_token_id, label }];
+          } else if (response.error) {
             this.errorMessage = response.error;
           }
         }
       } catch (error: any) {
         // Silently fail for individual telemetry loads, but ensure default is 'running'
         console.debug(`Failed to load telemetry for vehicle ${vehicle.vehicle_token_id}`, error);
-        this.errorMessage = error.message || `Failed to load telemetry for vehicle ${vehicle.vehicle_token_id}`;
+        const errMsg = error.message || '';
+        if (errMsg.includes('403')) {
+          const label = `${vehicle.make} ${vehicle.model} ${vehicle.year}`.trim() || `Token ${vehicle.vehicle_token_id}`;
+          this.permissionErrorVehicles = [...this.permissionErrorVehicles, { tokenId: vehicle.vehicle_token_id, label }];
+        } else {
+          this.errorMessage = errMsg || `Failed to load telemetry for vehicle ${vehicle.vehicle_token_id}`;
+        }
         this.vehicles = this.vehicles.map((v, idx) =>
           idx === i ? { ...v, engine: v.engine || 'running' } : v
         );
@@ -379,6 +393,7 @@ export class VehiclesFleetsView extends LitElement {
         reportName: 'VehiclesExportReport',
         search: this.search,
         filter: this.filter,
+        format: 'xlsx' as const,
       };
 
       const result = await FleetService.getInstance().runReport(data);
@@ -412,6 +427,24 @@ export class VehiclesFleetsView extends LitElement {
       this.skip = 0; // Reset to first page when searching
       this.loadVehicles();
     }, 500);
+  }
+
+  private buildShareUrl(tokenId: number): string {
+    const settings = SettingsService.getInstance().tenantSettings;
+    const clientId = settings?.dimo_client_id ?? '';
+    const expiration = new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000).toISOString();
+    const redirectUri = window.location.origin + '/';
+
+    const params = new URLSearchParams({
+      clientId,
+      entryState: 'VEHICLE_MANAGER',
+      expirationDate: expiration,
+      permissions: '11111010',
+      redirectUri,
+      tokenId: tokenId.toString(),
+    });
+
+    return `https://login.dimo.org/?${params.toString()}`;
   }
 
   private handleGroupFilterChange(e: Event) {
@@ -523,6 +556,20 @@ export class VehiclesFleetsView extends LitElement {
     return html`
         <div class="page active" id="page-vehicles">
             ${this.errorMessage ? html`<div class="alert alert-error">${this.errorMessage}</div>` : ''}
+            ${this.permissionErrorVehicles.length > 0 ? html`
+              <div class="alert alert-error" style="display: flex; flex-direction: column; gap: 8px;">
+                <strong>${msg('Permission expired for the following vehicles:')}</strong>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  ${this.permissionErrorVehicles.map(v => html`
+                    <a href=${this.buildShareUrl(v.tokenId)} target="_blank" rel="noopener"
+                       class="btn btn-sm" style="display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
+                      ${v.label}
+                      <span style="font-size: 11px;">${msg('Re-share')}</span>
+                    </a>
+                  `)}
+                </div>
+              </div>
+            ` : ''}
             <div class="inner-tabs">
                 <div
                   class="inner-tab ${this.activeTab === 'vehicles-list' ? 'active' : ''}"

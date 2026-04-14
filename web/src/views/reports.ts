@@ -79,6 +79,9 @@ export class ReportsView extends LitElement {
   private pollingIntervals: Map<string, number> = new Map();
 
   @state()
+  private selectedFormat: 'csv' | 'xlsx' = 'xlsx';
+
+  @state()
   private submitting: boolean = false;
 
   @state()
@@ -228,6 +231,10 @@ export class ReportsView extends LitElement {
     this.selectedTemplate = template;
   }
 
+  private handleFormatChange(e: Event) {
+    this.selectedFormat = (e.target as HTMLSelectElement).value as 'csv' | 'xlsx';
+  }
+
   private handleFleetGroupChange(e: Event) {
     const select = e.target as HTMLSelectElement;
     this.selectedFleetGroupIds = Array.from(select.selectedOptions).map(opt => opt.value);
@@ -248,7 +255,8 @@ export class ReportsView extends LitElement {
         endDate: dayjs(this.endDate).endOf('day').toISOString(),
         fleetGroupIds: this.selectedFleetGroupIds,
         reportName: this.selectedTemplate,
-        timezone: timezone
+        timezone: timezone,
+        format: this.selectedFormat,
       };
 
       const result = await FleetService.getInstance().runReport(data);
@@ -528,9 +536,13 @@ export class ReportsView extends LitElement {
 <!--                                    <input type="text" placeholder="Report name..." style="width: 200px;">-->
 <!--                                </div>-->
                             </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button 
-                                    class="btn btn-primary ${this.submitting ? 'processing' : ''}" 
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <select style="width: 100px;" .value="${this.selectedFormat}" @change="${this.handleFormatChange}">
+                                    <option value="xlsx">${msg('Excel')}</option>
+                                    <option value="csv">${msg('CSV')}</option>
+                                </select>
+                                <button
+                                    class="btn btn-primary ${this.submitting ? 'processing' : ''}"
                                     @click="${this.handleRunReport}"
                                     ?disabled="${this.submitting || !this.selectedTemplate || this.selectedFleetGroupIds.length === 0}"
                                 >
@@ -600,7 +612,7 @@ export class ReportsView extends LitElement {
                                     @click=${(e: Event) => { e.stopPropagation(); this.handleDownloadCsv(report.id); }}
                                     ?disabled=${!!this.downloadingReportId || report.status !== 'completed'}
                                 >
-                                    ${msg('CSV')}
+                                    ${report.params?.format === 'xlsx' ? msg('Excel') : msg('CSV')}
                                 </button>
                             </td>
                         </tr>

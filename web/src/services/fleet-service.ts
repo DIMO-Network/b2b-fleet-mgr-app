@@ -22,6 +22,7 @@ export interface FleetReport {
     timezone?: string;
     search?: string;
     filter?: string;
+    format?: string;
   };
   createdAt: string;
   updatedAt: string;
@@ -217,6 +218,7 @@ export class FleetService {
     timezone?: string;
     search?: string;
     filter?: string;
+    format?: string;
   }): Promise<{ reportId: string; status: string } | null> {
     try {
       const response = await this.apiService.callApi<{ reportId: string; status: string }>(
