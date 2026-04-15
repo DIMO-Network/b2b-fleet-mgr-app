@@ -390,28 +390,6 @@ export class AddVinElement extends BaseOnboardingElement {
             return this.displayFailure(msg("no vin provided"));
         }
 
-        // Claim pending vehicles
-        if (this.selectedImeis.length > 0) {
-            console.log("Claiming pending vehicles:", this.selectedImeis);
-            for (const imei of this.selectedImeis) {
-                try {
-                    const response = await this.api.callApi(
-                        'POST',
-                        `/pending-vehicles/claim/${imei}`,
-                        {},
-                        true, // auth
-                        true, // useOracle
-                        true  // includeTenantId
-                    );
-                    if (!response.success) {
-                        return this.displayFailure(`Failed to claim vehicle with IMEI ${imei}: ${response.error}`);
-                    }
-                } catch (e) {
-                    return this.displayFailure(`Error claiming vehicle with IMEI ${imei}: ${e}`);
-                }
-            }
-        }
-
         // Open the confirmation modal
         this.openConfirmationModal(vinsArray);
     }
