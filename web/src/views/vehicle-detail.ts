@@ -1190,7 +1190,7 @@ export class VehicleDetailView extends LitElement {
     const settings = SettingsService.getInstance().tenantSettings;
     const clientId = settings?.dimo_client_id ?? '';
     const expiration = new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000).toISOString();
-    const redirectUri = window.location.origin + '/';
+    const redirectUri = window.location.origin;
 
     const params = new URLSearchParams({
       clientId,
