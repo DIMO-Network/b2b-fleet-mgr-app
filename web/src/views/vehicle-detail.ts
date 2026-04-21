@@ -290,7 +290,7 @@ export class VehicleDetailView extends LitElement {
     tokenId: 189345
     from: "FROM_DATE"
     to: "TO_DATE"
-    mechanism: frequencyAnalysis
+    mechanism: TRIP_MECHANISM
     limit: 10
     config: { minSegmentDurationSeconds: 240 }
     signalRequests: [
@@ -481,10 +481,15 @@ export class VehicleDetailView extends LitElement {
       const fromDate = selected.from;
       const toDate = selected.to;
 
+      const mechanism = this.vehicleIdentity?.vehicle?.aftermarketDevice
+        ? 'frequencyAnalysis'
+        : 'ignitionDetection';
+
       const query = this.tripsQuery
         .replace('189345', tokenId.toString())
         .replace('FROM_DATE', fromDate)
-        .replace('TO_DATE', toDate);
+        .replace('TO_DATE', toDate)
+        .replace('TRIP_MECHANISM', mechanism);
 
       const response = await this.apiService.callApi<TripsResponse>(
         'POST',
@@ -508,19 +513,16 @@ export class VehicleDetailView extends LitElement {
     }
   }
 
-  private async loadOwnerInfo(tokenId: number) {
+  private async loadOwnerInfo(_tokenId: number) {
     try {
-      const identityService = IdentityService.getInstance();
-
-      // First, get just the wallet address quickly
-      const ownerAddress = await identityService.getVehicleOwnerAddress(tokenId);
+      // Reuse owner from the already-fetched identity data instead of calling identity-api again
+      const ownerAddress = this.vehicleIdentity?.vehicle?.owner;
 
       if (!ownerAddress) {
         this.ownerInfo = null;
         return;
       }
 
-      // Show wallet address immediately
       this.ownerWalletAddress = ownerAddress;
 
       // Load user profile from kaufmann-oracle backend
