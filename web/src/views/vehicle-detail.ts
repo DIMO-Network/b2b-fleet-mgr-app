@@ -14,6 +14,7 @@ import '../elements/update-inventory-modal-element';
 import '../elements/fleet-map';
 import '../elements/click-to-copy-element';
 import '../elements/share-vehicle-modal-element';
+import '../elements/edit-device-definition-modal-element';
 
 dayjs.extend(relativeTime);
 
@@ -206,6 +207,9 @@ export class VehicleDetailView extends LitElement {
 
   @state()
   private showShareModal: boolean = false;
+
+  @state()
+  private showEditDefinitionModal: boolean = false;
 
   @state()
   private editingPlate: boolean = false;
@@ -595,6 +599,9 @@ export class VehicleDetailView extends LitElement {
                     @click=${() => { this.editPlateValue = this.vehicle?.license_plate || ''; this.editingPlate = true; }}>
                     ${this.vehicle?.license_plate || msg('+ Plate')}
                   </span>
+                  <button class="btn btn-sm" style="margin-left:12px;vertical-align:middle;" @click=${this.openEditDefinitionModal}>
+                    ${msg('UPDATE')}
+                  </button>
                 `}</h2>
                 <div style="margin-bottom: 8px;">
                   <span style="color: #666;">${msg('VIN:')}</span> ${this.vehicle?.vin}
@@ -995,6 +1002,13 @@ export class VehicleDetailView extends LitElement {
         @modal-closed=${() => { this.showShareModal = false; }}
       ></share-vehicle-modal-element>
 
+      <edit-device-definition-modal-element
+        .show=${this.showEditDefinitionModal}
+        .deviceDefinitionId=${this.vehicle?.device_definition_id || this.vehicleIdentity?.vehicle?.definition?.id || ''}
+        .tokenDID=${this.vehicleIdentity?.vehicle?.tokenDID || ''}
+        @modal-closed=${this.handleEditDefinitionModalClosed}
+      ></edit-device-definition-modal-element>
+
       <!-- Update Inventory Modal -->
       <update-inventory-modal-element
         .show=${this.showInventoryModal}
@@ -1022,6 +1036,14 @@ export class VehicleDetailView extends LitElement {
 
   private handleInventoryModalClosed() {
     this.showInventoryModal = false;
+  }
+
+  private openEditDefinitionModal() {
+    this.showEditDefinitionModal = true;
+  }
+
+  private handleEditDefinitionModalClosed() {
+    this.showEditDefinitionModal = false;
   }
 
   private async handleInventoryUpdated(event: CustomEvent) {

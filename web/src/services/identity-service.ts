@@ -21,6 +21,7 @@ export interface AccountInfo {
 export interface VehicleIdentityData {
   vehicle?: {
     id?: string;
+    tokenDID?: string;
     owner?: string;
     sacds?: {
       nodes?: Array<{
@@ -88,6 +89,17 @@ export interface DeviceDefinitionsResult {
   pageInfo?: DeviceDefinitionsPageInfo;
 }
 
+export interface DeviceDefinitionDetail {
+  model?: string;
+  year?: number;
+  manufacturer?: {
+    name?: string;
+  };
+  deviceDefinitionId?: string;
+  deviceType?: string;
+  attributes?: DeviceDefinitionAttribute[];
+}
+
 /**
  * Service for handling identity and account-related operations
  */
@@ -123,6 +135,7 @@ export class IdentityService {
       const query = `{
         vehicle(tokenId: ${normalizedTokenId}) {
           id
+          tokenDID
           owner
           sacds(first: 15) {
             nodes {
@@ -489,6 +502,51 @@ export class IdentityService {
       };
     } catch (error) {
       console.error('Error fetching device definitions:', error);
+      return null;
+    }
+  }
+
+  async getDeviceDefinitionById(deviceDefinitionId: string): Promise<DeviceDefinitionDetail | null> {
+    try {
+      const trimmedId = deviceDefinitionId.trim();
+      if (!trimmedId) {
+        return null;
+      }
+
+      const query = `{
+        deviceDefinition(by: { id: ${JSON.stringify(trimmedId)} }) {
+          model
+          year
+          manufacturer {
+            name
+          }
+          deviceDefinitionId
+          deviceType
+          attributes {
+            name
+            value
+          }
+        }
+      }`;
+
+      const response = await this.apiService.callApi<{
+        deviceDefinition?: DeviceDefinitionDetail;
+      }>(
+        'POST',
+        '/identity/proxy',
+        { query },
+        false,
+        false,
+        false
+      );
+
+      if (!response.success || !response.data?.deviceDefinition) {
+        return null;
+      }
+
+      return response.data.deviceDefinition;
+    } catch (error) {
+      console.error('Error fetching device definition by ID:', error);
       return null;
     }
   }
