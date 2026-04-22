@@ -462,10 +462,10 @@ export class VehicleDetailView extends LitElement {
   private getWeekIntervals(): { label: string; from: string; to: string }[] {
     const intervals = [];
     for (let i = 0; i < 6; i++) {
-      const to = dayjs().subtract(i * 7, 'day');
-      const from = to.subtract(7, 'day');
+      const to = dayjs().subtract(i * 14, 'day');
+      const from = to.subtract(14, 'day');
       const label = i === 0
-        ? msg('This week')
+        ? msg('Last 2 weeks')
         : `${from.format('MMM D')} – ${to.format('MMM D')}`;
       intervals.push({ label, from: from.toISOString(), to: to.toISOString() });
     }
