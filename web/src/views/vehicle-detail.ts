@@ -11,6 +11,7 @@ import {
   VehicleIdentityData,
 } from '@services/identity-service.ts';
 import {OracleTenantService} from '@services/oracle-tenant-service.ts';
+import {SettingsService} from '@services/settings-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import '../elements/update-inventory-modal-element';
@@ -193,6 +194,9 @@ export class VehicleDetailView extends LitElement {
   private ownerWalletAddress: string | null = null;
 
   @state()
+  private fuelTankCapacityGal: number | null = null;
+
+  @state()
   private ownerProfileMissing: boolean = false;
 
   @state()
@@ -299,7 +303,7 @@ export class VehicleDetailView extends LitElement {
     tokenId: 189345
     from: "FROM_DATE"
     to: "TO_DATE"
-    mechanism: frequencyAnalysis
+    mechanism: TRIP_MECHANISM
     limit: 10
     config: { minSegmentDurationSeconds: 240 }
     signalRequests: [
@@ -355,6 +359,11 @@ export class VehicleDetailView extends LitElement {
       this.loadTelemetry(this.tokenID),
       this.loadVehicleIdentity(this.tokenID)
     ]);
+
+    // Load device definition attributes (for fuel tank capacity) in background
+    if (vehicle.device_definition_id) {
+      this.loadDefinitionAttributes(vehicle.device_definition_id);
+    }
 
     this.vehicle = vehicle;
     this.vehicleIdentity = vehicleIdentity;
@@ -512,10 +521,10 @@ export class VehicleDetailView extends LitElement {
   private getWeekIntervals(): { label: string; from: string; to: string }[] {
     const intervals = [];
     for (let i = 0; i < 6; i++) {
-      const to = dayjs().subtract(i * 7, 'day');
-      const from = to.subtract(7, 'day');
+      const to = dayjs().subtract(i * 14, 'day');
+      const from = to.subtract(14, 'day');
       const label = i === 0
-        ? msg('This week')
+        ? msg('Last 2 weeks')
         : `${from.format('MMM D')} – ${to.format('MMM D')}`;
       intervals.push({ label, from: from.toISOString(), to: to.toISOString() });
     }
@@ -531,10 +540,15 @@ export class VehicleDetailView extends LitElement {
       const fromDate = selected.from;
       const toDate = selected.to;
 
+      const mechanism = this.vehicleIdentity?.vehicle?.aftermarketDevice
+        ? 'frequencyAnalysis'
+        : 'ignitionDetection';
+
       const query = this.tripsQuery
         .replace('189345', tokenId.toString())
         .replace('FROM_DATE', fromDate)
-        .replace('TO_DATE', toDate);
+        .replace('TO_DATE', toDate)
+        .replace('TRIP_MECHANISM', mechanism);
 
       const response = await this.apiService.callApi<TripsResponse>(
         'POST',
@@ -558,19 +572,16 @@ export class VehicleDetailView extends LitElement {
     }
   }
 
-  private async loadOwnerInfo(tokenId: number) {
+  private async loadOwnerInfo(_tokenId: number) {
     try {
-      const identityService = IdentityService.getInstance();
-
-      // First, get just the wallet address quickly
-      const ownerAddress = await identityService.getVehicleOwnerAddress(tokenId);
+      // Reuse owner from the already-fetched identity data instead of calling identity-api again
+      const ownerAddress = this.vehicleIdentity?.vehicle?.owner;
 
       if (!ownerAddress) {
         this.ownerInfo = null;
         return;
       }
 
-      // Show wallet address immediately
       this.ownerWalletAddress = ownerAddress;
 
       // Load user profile from kaufmann-oracle backend
@@ -608,7 +619,15 @@ export class VehicleDetailView extends LitElement {
     return html`
       <!-- VEHICLE DETAIL PAGE -->
       <div class="page active" id="page-vehicle-detail">
-        ${this.errorMessage ? html`<div class="alert alert-error">${this.errorMessage}</div>` : ''}
+        ${this.errorMessage ? (this.errorMessage.includes('403')
+          ? html`<div class="alert alert-error" style="display: flex; flex-direction: column; gap: 8px;">
+              <span>${msg('Permissions have expired for this vehicle. Please re-share to restore access.')}</span>
+              <a href=${this.buildShareUrl()} target="_blank" rel="noopener"
+                 class="btn btn-sm btn-primary" style="align-self: flex-start; text-decoration: none;">
+                ${msg('Re-share Permissions')}
+              </a>
+            </div>`
+          : html`<div class="alert alert-error">${this.errorMessage}</div>`) : ''}
         ${this.successMessage ? html`<div class="alert alert-success">${this.successMessage}</div>` : ''}
         <div class="toolbar mb-16">
           <button class="btn" @click=${this.goBack}>${msg('← BACK TO VEHICLES')}</button>
@@ -1253,6 +1272,43 @@ export class VehicleDetailView extends LitElement {
     const imei = aftermarketDevice.imei || 'N/A';
     const manufacturer = aftermarketDevice.manufacturer?.name || 'N/A';
     return `Serial: ${serial} | IMEI: ${imei} | Manufacturer: ${manufacturer}`;
+  }
+
+  private buildShareUrl(): string {
+    const settings = SettingsService.getInstance().tenantSettings;
+    const clientId = settings?.dimo_client_id ?? '';
+    const expiration = new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000).toISOString();
+    const redirectUri = window.location.origin;
+
+    const params = new URLSearchParams({
+      clientId,
+      entryState: 'VEHICLE_MANAGER',
+      expirationDate: expiration,
+      permissions: '11111010',
+      redirectUri,
+    });
+    params.append('vehicles', this.tokenID.toString());
+
+    return `https://login.dimo.org/?${params.toString()}`;
+  }
+
+  private getFuelLevelDisplay(): string {
+    const relative = this.lastTelemetry?.signalsLatest?.powertrainFuelSystemRelativeLevel?.value;
+    if (relative != null) {
+      return `${Math.round(relative)}%`;
+    }
+
+    const absoluteLiters = this.lastTelemetry?.signalsLatest?.powertrainFuelSystemAbsoluteLevel?.value;
+    if (absoluteLiters != null) {
+      if (this.fuelTankCapacityGal && this.fuelTankCapacityGal > 0) {
+        const tankCapacityLiters = this.fuelTankCapacityGal * 3.78541;
+        const pct = Math.round((absoluteLiters / tankCapacityLiters) * 100);
+        return `${Math.min(pct, 100)}%`;
+      }
+      return `${Math.round(absoluteLiters)} L`;
+    }
+
+    return 'N/A';
   }
 
   private formatMintedAt(timestamp: string | undefined): string {

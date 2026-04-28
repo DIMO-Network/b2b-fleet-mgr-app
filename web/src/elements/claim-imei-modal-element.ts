@@ -64,7 +64,7 @@ export class ClaimImeiModalElement extends LitElement {
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>
                     <div class="modal-body">
-                        ${this.error ? html`<div class="alert alert-error" style="margin-bottom: 1rem;">${this.error}</div>` : nothing}
+                        ${this.error ? html`<div class="alert alert-error" style="margin-bottom: 1rem; white-space: pre-line;">${this.error}</div>` : nothing}
                         <p class="helper-text">${msg("Please claim your IMEI's every time you purchase or add a new device to your fleet.")}</p>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                             <p class="instruction-text">${msg('Enter one or more IMEIs (one per line):')}</p>
@@ -203,7 +203,7 @@ export class ClaimImeiModalElement extends LitElement {
                 if (response.success) {
                     successCount++;
                 } else {
-                    errors.push(`Failed to claim ${imei}: ${response.error}`);
+                    errors.push(response.error || `Failed to claim ${imei}`);
                 }
             } catch (e) {
                 errors.push(`Error claiming ${imei}: ${e}`);

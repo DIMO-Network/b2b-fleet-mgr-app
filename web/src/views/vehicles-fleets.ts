@@ -6,6 +6,7 @@ import { consume } from '@lit/context';
 import { apiServiceContext } from '../context';
 import { ApiService } from '@services/api-service.ts';
 import { FleetService, FleetGroup } from '@services/fleet-service.ts';
+import { SettingsService } from '@services/settings-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -76,6 +77,40 @@ export class VehiclesFleetsView extends LitElement {
         letter-spacing: 1px;
         margin-bottom: 4px;
       }
+      .export-dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      .export-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 4px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        z-index: 10;
+        min-width: 140px;
+      }
+      .export-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      .export-menu-item:hover {
+        background: #f5f5f5;
+      }
+      .export-menu-item:first-child {
+        border-radius: 4px 4px 0 0;
+      }
+      .export-menu-item:last-child {
+        border-radius: 0 0 4px 4px;
+      }
     ` ];
 
   @consume({ context: apiServiceContext, subscribe: true })
@@ -128,7 +163,13 @@ export class VehiclesFleetsView extends LitElement {
   private exporting: boolean = false;
 
   @state()
+  private showExportMenu: boolean = false;
+
+  @state()
   private errorMessage: string = '';
+
+  @state()
+  private permissionErrorVehicles: Array<{ tokenId: number; label: string }> = [];
 
   private searchDebounceTimer?: number;
   private telemetryLoadAbortController?: AbortController;
@@ -152,14 +193,24 @@ export class VehiclesFleetsView extends LitElement {
   }
 }`;
 
+  private boundCloseExportMenu = (e: MouseEvent) => {
+    const path = e.composedPath();
+    const dropdown = this.shadowRoot?.querySelector('.export-dropdown');
+    if (dropdown && !path.includes(dropdown)) {
+      this.showExportMenu = false;
+    }
+  };
+
   async connectedCallback() {
     super.connectedCallback();
+    document.addEventListener('click', this.boundCloseExportMenu);
     await this.loadVehicles();
     await this.loadFleetGroups();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    document.removeEventListener('click', this.boundCloseExportMenu);
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer);
     }
@@ -171,6 +222,7 @@ export class VehiclesFleetsView extends LitElement {
 
   private async loadVehicles() {
     this.errorMessage = '';
+    this.permissionErrorVehicles = [];
     if (!this.apiService) return;
 
     // Cancel any ongoing telemetry loading
@@ -259,14 +311,23 @@ export class VehiclesFleetsView extends LitElement {
           this.vehicles = this.vehicles.map((v, idx) =>
             idx === i ? { ...v, engine: v.engine || 'running' } : v
           );
-          if (response.error) {
+          if (response.error && response.error.includes('403')) {
+            const label = `${vehicle.make} ${vehicle.model} ${vehicle.year}`.trim() || `Token ${vehicle.vehicle_token_id}`;
+            this.permissionErrorVehicles = [...this.permissionErrorVehicles, { tokenId: vehicle.vehicle_token_id, label }];
+          } else if (response.error) {
             this.errorMessage = response.error;
           }
         }
       } catch (error: any) {
         // Silently fail for individual telemetry loads, but ensure default is 'running'
         console.debug(`Failed to load telemetry for vehicle ${vehicle.vehicle_token_id}`, error);
-        this.errorMessage = error.message || `Failed to load telemetry for vehicle ${vehicle.vehicle_token_id}`;
+        const errMsg = error.message || '';
+        if (errMsg.includes('403')) {
+          const label = `${vehicle.make} ${vehicle.model} ${vehicle.year}`.trim() || `Token ${vehicle.vehicle_token_id}`;
+          this.permissionErrorVehicles = [...this.permissionErrorVehicles, { tokenId: vehicle.vehicle_token_id, label }];
+        } else {
+          this.errorMessage = errMsg || `Failed to load telemetry for vehicle ${vehicle.vehicle_token_id}`;
+        }
         this.vehicles = this.vehicles.map((v, idx) =>
           idx === i ? { ...v, engine: v.engine || 'running' } : v
         );
@@ -370,8 +431,9 @@ export class VehiclesFleetsView extends LitElement {
     }
   }
 
-  private handleExportCsv = async () => {
+  private handleExport = async (format: 'xlsx' | 'csv') => {
     if (this.exporting) return;
+    this.showExportMenu = false;
 
     this.exporting = true;
     try {
@@ -379,6 +441,7 @@ export class VehiclesFleetsView extends LitElement {
         reportName: 'VehiclesExportReport',
         search: this.search,
         filter: this.filter,
+        format,
       };
 
       const result = await FleetService.getInstance().runReport(data);
@@ -412,6 +475,24 @@ export class VehiclesFleetsView extends LitElement {
       this.skip = 0; // Reset to first page when searching
       this.loadVehicles();
     }, 500);
+  }
+
+  private buildShareUrl(tokenId: number): string {
+    const settings = SettingsService.getInstance().tenantSettings;
+    const clientId = settings?.dimo_client_id ?? '';
+    const expiration = new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000).toISOString();
+    const redirectUri = window.location.origin;
+
+    const params = new URLSearchParams({
+      clientId,
+      entryState: 'VEHICLE_MANAGER',
+      expirationDate: expiration,
+      permissions: '11111010',
+      redirectUri,
+    });
+    params.append('vehicles', tokenId.toString());
+
+    return `https://login.dimo.org/?${params.toString()}`;
   }
 
   private handleGroupFilterChange(e: Event) {
@@ -523,6 +604,20 @@ export class VehiclesFleetsView extends LitElement {
     return html`
         <div class="page active" id="page-vehicles">
             ${this.errorMessage ? html`<div class="alert alert-error">${this.errorMessage}</div>` : ''}
+            ${this.permissionErrorVehicles.length > 0 ? html`
+              <div class="alert alert-error" style="display: flex; flex-direction: column; gap: 8px;">
+                <strong>${msg('Permission expired for the following vehicles:')}</strong>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  ${this.permissionErrorVehicles.map(v => html`
+                    <a href=${this.buildShareUrl(v.tokenId)} target="_blank" rel="noopener"
+                       class="btn btn-sm" style="display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
+                      ${v.label}
+                      <span style="font-size: 11px;">${msg('Re-share')}</span>
+                    </a>
+                  `)}
+                </div>
+              </div>
+            ` : ''}
             <div class="inner-tabs">
                 <div
                   class="inner-tab ${this.activeTab === 'vehicles-list' ? 'active' : ''}"
@@ -557,17 +652,34 @@ export class VehiclesFleetsView extends LitElement {
                           <option value=${'group:' + group.id}>${group.name}</option>
                         `)}
                     </select>
-                    <button class="btn btn-sm ${this.exporting ? 'processing' : ''}" 
-                            style="margin-left: 8px; display: inline-flex; align-items: center; gap: 6px;" 
-                            @click=${this.handleExportCsv}
-                            ?disabled=${this.exporting}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        ${msg('Export CSV')}
-                    </button>
+                    <div class="export-dropdown" style="margin-left: 8px;">
+                        <button class="btn btn-sm ${this.exporting ? 'processing' : ''}"
+                                style="display: inline-flex; align-items: center; gap: 6px;"
+                                @click=${() => { this.showExportMenu = !this.showExportMenu; }}
+                                ?disabled=${this.exporting}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            ${msg('Export')}
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        ${this.showExportMenu ? html`
+                          <div class="export-menu">
+                            <div class="export-menu-item" @click=${() => this.handleExport('xlsx')}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#217346" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
+                              ${msg('Excel (.xlsx)')}
+                            </div>
+                            <div class="export-menu-item" @click=${() => this.handleExport('csv')}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                              ${msg('CSV (.csv)')}
+                            </div>
+                          </div>
+                        ` : ''}
+                    </div>
                   
                 </div>
 
