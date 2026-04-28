@@ -6,6 +6,7 @@ import {
   DeviceDefinitionAttribute,
   DeviceDefinitionDetail,
   IdentityService,
+  LatestDeviceDefinitionCloudEvent,
   ManufacturerOption,
 } from '@services/identity-service.ts';
 import { ApiService } from '@services/api-service.ts';
@@ -22,7 +23,7 @@ interface AttributeFieldConfig {
 const ATTRIBUTE_FIELDS: AttributeFieldConfig[] = [
   { key: 'powertrain_type', label: 'Powertrain Type', required: true, placeholder: 'Select powertrain type' },
   { key: 'fuel_type', label: 'Fuel Type', required: true, placeholder: 'Enter fuel type' },
-  { key: 'driven_wheels', label: 'Driven Wheels', type: 'number', placeholder: 'Enter driven wheels' },
+  { key: 'driven_wheels', label: 'Driven Wheels', placeholder: 'Select driven wheels' },
   { key: 'fuel_tank_capacity_gal', label: 'Fuel Tank Capacity (gal)', type: 'number', required: true, placeholder: 'Enter fuel tank capacity', allowDecimal: true },
   { key: 'mpg', label: 'MPG', type: 'number', placeholder: 'Enter MPG', allowDecimal: true },
   { key: 'mpg_city', label: 'MPG City', type: 'number', placeholder: 'Enter city MPG', allowDecimal: true },
@@ -54,6 +55,7 @@ const ATTRIBUTE_ALIASES: Record<string, string[]> = {
 @customElement('edit-device-definition-modal-element')
 export class EditDeviceDefinitionModalElement extends LitElement {
   private static cachedManufacturers: ManufacturerOption[] | null = null;
+  private static readonly DRIVEN_WHEEL_OPTIONS = ['FWD', 'RWD', 'AWD', '4WD'];
 
   static styles = [globalStyles, css`
     .modal-content {
@@ -149,9 +151,6 @@ export class EditDeviceDefinitionModalElement extends LitElement {
   @state() private attributeValues: Record<string, string> = {};
   @state() private extraAttributes: DeviceDefinitionAttribute[] = [];
   @state() private validationErrors: Record<string, string> = {};
-  @state() private generatedJson = '';
-
-  private lastLoadedDefinitionId = '';
 
   protected updated(changedProperties: Map<string | number | symbol, unknown>) {
     super.updated(changedProperties);
@@ -159,7 +158,6 @@ export class EditDeviceDefinitionModalElement extends LitElement {
     const definitionChanged = changedProperties.has('deviceDefinitionId');
 
     if (showChanged && !this.show) {
-      this.generatedJson = '';
       return;
     }
 
@@ -223,11 +221,17 @@ export class EditDeviceDefinitionModalElement extends LitElement {
                         this.attributeValues[field.key] ?? '',
                         (value) => this.handleAttributeChange(field.key, value),
                         {
-                          type: field.key === 'powertrain_type' ? 'select' : (field.type ?? 'text'),
+                          type: field.key === 'powertrain_type' || field.key === 'driven_wheels'
+                            ? 'select'
+                            : (field.type ?? 'text'),
                           required: this.isFieldRequired(field.key) || isBatteryRequired,
                           hint: this.getFieldHint(field.key, isBatteryRequired),
                           placeholder: field.placeholder,
-                          options: field.key === 'powertrain_type' ? this.powertrainOptions : undefined,
+                          options: field.key === 'powertrain_type'
+                            ? this.powertrainOptions
+                            : field.key === 'driven_wheels'
+                              ? this.drivenWheelOptions
+                              : undefined,
                           disabled: this.isFieldDisabled(field.key),
                           allowDecimal: field.allowDecimal,
                         }
@@ -244,12 +248,6 @@ export class EditDeviceDefinitionModalElement extends LitElement {
                       </div>
                     ` : nothing}
                   </div>
-                  ${this.generatedJson ? html`
-                    <div class="section-title mt-16">${msg('Submission Response')}</div>
-                    <div class="form-group">
-                      <textarea class="json-preview" readonly .value=${this.generatedJson}></textarea>
-                    </div>
-                  ` : nothing}
                 `}
           </div>
           <div class="modal-footer">
@@ -286,17 +284,16 @@ export class EditDeviceDefinitionModalElement extends LitElement {
     return this.getSelectOptions(['ICE', 'BEV', 'HEV'], this.attributeValues.powertrain_type || '');
   }
 
+  private get drivenWheelOptions(): string[] {
+    return this.getSelectOptions(
+      EditDeviceDefinitionModalElement.DRIVEN_WHEEL_OPTIONS,
+      this.attributeValues.driven_wheels || ''
+    );
+  }
+
   private async loadFormData() {
     if (!this.deviceDefinitionId) {
       this.errorMessage = msg('Device definition ID is missing.');
-      return;
-    }
-
-    if (
-      this.lastLoadedDefinitionId === this.deviceDefinitionId &&
-      this.currentDefinition &&
-      this.manufacturers.length > 0
-    ) {
       return;
     }
 
@@ -304,34 +301,37 @@ export class EditDeviceDefinitionModalElement extends LitElement {
     this.errorMessage = '';
     this.successMessage = '';
     this.validationErrors = {};
-    this.generatedJson = '';
 
     try {
-      const [definition, manufacturers] = await Promise.all([
+      const [definition, latestCloudEvent, manufacturers] = await Promise.all([
         IdentityService.getInstance().getDeviceDefinitionById(this.deviceDefinitionId),
+        this.tokenDID
+          ? IdentityService.getInstance().getLatestDeviceDefinitionCloudEvent(this.tokenDID)
+          : Promise.resolve(null),
         EditDeviceDefinitionModalElement.cachedManufacturers
           ? Promise.resolve(EditDeviceDefinitionModalElement.cachedManufacturers)
           : IdentityService.getInstance().getManufacturers(),
       ]);
 
-      if (!definition) {
+      if (!definition && !latestCloudEvent?.data) {
         this.errorMessage = msg('Failed to load device definition.');
         this.loading = false;
         return;
       }
 
       EditDeviceDefinitionModalElement.cachedManufacturers = manufacturers;
-      this.lastLoadedDefinitionId = this.deviceDefinitionId;
-      this.currentDefinition = definition;
       this.manufacturers = manufacturers.sort((a, b) => a.name.localeCompare(b.name));
+
+      const resolvedDefinition = this.mergeDefinitionData(definition, latestCloudEvent);
+      this.currentDefinition = resolvedDefinition;
       this.manufacturer = this.normalizeSelectValue(
-        definition.manufacturer?.name || '',
+        resolvedDefinition.manufacturer?.name || '',
         this.manufacturers.map((item) => item.name)
       );
-      this.model = definition.model || '';
-      this.year = definition.year != null ? String(definition.year) : '';
+      this.model = resolvedDefinition.model || '';
+      this.year = resolvedDefinition.year != null ? String(resolvedDefinition.year) : '';
 
-      const normalizedAttributes = this.normalizeAttributes(definition.attributes ?? []);
+      const normalizedAttributes = this.normalizeAttributes(resolvedDefinition.attributes ?? []);
       this.attributeValues = normalizedAttributes.values;
       this.extraAttributes = normalizedAttributes.extra;
     } catch (error) {
@@ -354,13 +354,60 @@ export class EditDeviceDefinitionModalElement extends LitElement {
       if (key) {
         values[key] = key === 'powertrain_type'
           ? this.normalizeSelectValue(attribute.value ?? '', ['ICE', 'BEV', 'HEV'])
-          : attribute.value ?? '';
+          : key === 'driven_wheels'
+            ? this.normalizeSelectValue(attribute.value ?? '', EditDeviceDefinitionModalElement.DRIVEN_WHEEL_OPTIONS)
+            : attribute.value ?? '';
       } else {
         extra.push(attribute);
       }
     });
 
     return { values, extra };
+  }
+
+  private mergeDefinitionData(
+    identityDefinition: DeviceDefinitionDetail | null,
+    latestCloudEvent: LatestDeviceDefinitionCloudEvent | null
+  ): DeviceDefinitionDetail {
+    const latestDefinition = latestCloudEvent?.data;
+    const mergedIdentityDefinition = identityDefinition ?? {};
+
+    return {
+      model: latestDefinition?.model ?? mergedIdentityDefinition.model,
+      year: latestDefinition?.year ?? mergedIdentityDefinition.year,
+      manufacturer: {
+        name: latestDefinition?.manufacturer?.name ?? mergedIdentityDefinition.manufacturer?.name,
+      },
+      deviceDefinitionId: latestDefinition?.deviceDefinitionId ?? mergedIdentityDefinition.deviceDefinitionId,
+      deviceType: latestDefinition?.deviceType ?? mergedIdentityDefinition.deviceType,
+      attributes: this.mergeAttributes(
+        mergedIdentityDefinition.attributes ?? [],
+        latestDefinition?.attributes ?? []
+      ),
+    };
+  }
+
+  private mergeAttributes(
+    fallbackAttributes: DeviceDefinitionAttribute[],
+    latestAttributes: DeviceDefinitionAttribute[]
+  ): DeviceDefinitionAttribute[] {
+    const merged = new Map<string, DeviceDefinitionAttribute>();
+
+    fallbackAttributes.forEach((attribute) => {
+      const key = (attribute.name || '').trim();
+      if (key) {
+        merged.set(key, { ...attribute });
+      }
+    });
+
+    latestAttributes.forEach((attribute) => {
+      const key = (attribute.name || '').trim();
+      if (key) {
+        merged.set(key, { ...attribute });
+      }
+    });
+
+    return Array.from(merged.values());
   }
 
   private getCanonicalAttributeKey(name: string): string | undefined {
@@ -451,6 +498,10 @@ export class EditDeviceDefinitionModalElement extends LitElement {
   private sanitizeAttributeValue(key: string, value: string): string {
     if (key === 'powertrain_type') {
       return value.trim().toUpperCase();
+    }
+
+    if (key === 'driven_wheels') {
+      return this.normalizeSelectValue(value, EditDeviceDefinitionModalElement.DRIVEN_WHEEL_OPTIONS);
     }
 
     if (key === 'fuel_type') {
@@ -567,6 +618,14 @@ export class EditDeviceDefinitionModalElement extends LitElement {
       if (field.key === 'fuel_type' && value && /^\d+(\.\d+)?$/.test(value)) {
         errors[field.key] = msg('Fuel Type must include letters.');
       }
+
+      if (
+        field.key === 'driven_wheels' &&
+        value &&
+        !EditDeviceDefinitionModalElement.DRIVEN_WHEEL_OPTIONS.includes(value)
+      ) {
+        errors[field.key] = msg('Driven Wheels must be one of FWD, RWD, AWD, or 4WD.');
+      }
     });
 
     this.validationErrors = errors;
@@ -578,7 +637,6 @@ export class EditDeviceDefinitionModalElement extends LitElement {
     this.errorMessage = '';
     this.successMessage = '';
     this.validationErrors = {};
-    this.generatedJson = '';
     this.dispatchEvent(new CustomEvent('modal-closed', {
       bubbles: true,
       composed: true,
@@ -589,7 +647,6 @@ export class EditDeviceDefinitionModalElement extends LitElement {
     if (!this.validateForm()) {
       this.errorMessage = msg('Please fix the highlighted fields.');
       this.successMessage = '';
-      this.generatedJson = '';
       return;
     }
 
@@ -600,7 +657,6 @@ export class EditDeviceDefinitionModalElement extends LitElement {
     try {
       if (!this.tokenDID.trim()) {
         this.errorMessage = msg('Vehicle tokenDID is missing.');
-        this.generatedJson = '';
         return;
       }
 
@@ -620,16 +676,33 @@ export class EditDeviceDefinitionModalElement extends LitElement {
 
       if (!response.success) {
         this.errorMessage = response.error || msg('Failed to submit device definition update.');
-        this.generatedJson = '';
         return;
       }
 
-      this.generatedJson = JSON.stringify(response.data ?? {}, null, 2);
+      const latestCloudEvent = this.tokenDID
+        ? await IdentityService.getInstance().getLatestDeviceDefinitionCloudEvent(this.tokenDID)
+        : null;
+
+      if (latestCloudEvent?.data) {
+        const refreshedDefinition = this.mergeDefinitionData(this.currentDefinition ?? null, latestCloudEvent);
+        this.currentDefinition = refreshedDefinition;
+        this.manufacturer = this.normalizeSelectValue(
+          refreshedDefinition.manufacturer?.name || '',
+          this.manufacturers.map((item) => item.name)
+        );
+        this.model = refreshedDefinition.model || '';
+        this.year = refreshedDefinition.year != null ? String(refreshedDefinition.year) : '';
+
+        const normalizedAttributes = this.normalizeAttributes(refreshedDefinition.attributes ?? []);
+        this.attributeValues = normalizedAttributes.values;
+        this.extraAttributes = normalizedAttributes.extra;
+      }
+
       this.successMessage = msg('Device definition update submitted.');
       this.dispatchEvent(new CustomEvent('device-definition-update-requested', {
         detail: {
           request: payload,
-          response: response.data,
+          response: latestCloudEvent ?? response.data,
         },
         bubbles: true,
         composed: true,
@@ -687,7 +760,12 @@ export class EditDeviceDefinitionModalElement extends LitElement {
     const editableAttributes = ATTRIBUTE_FIELDS
       .map((field) => ({
         name: field.key,
-        value: (this.attributeValues[field.key] ?? '').trim(),
+        value: field.key === 'driven_wheels'
+          ? this.normalizeSelectValue(
+              (this.attributeValues[field.key] ?? '').trim(),
+              EditDeviceDefinitionModalElement.DRIVEN_WHEEL_OPTIONS
+            )
+          : (this.attributeValues[field.key] ?? '').trim(),
       }))
       .filter((attribute) => attribute.value !== '' || existingAttributeKeys.has(attribute.name));
 
