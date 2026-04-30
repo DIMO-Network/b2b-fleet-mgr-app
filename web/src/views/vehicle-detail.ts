@@ -194,9 +194,6 @@ export class VehicleDetailView extends LitElement {
   private ownerWalletAddress: string | null = null;
 
   @state()
-  private fuelTankCapacityGal: number | null = null;
-
-  @state()
   private ownerProfileMissing: boolean = false;
 
   @state()
@@ -359,11 +356,6 @@ export class VehicleDetailView extends LitElement {
       this.loadTelemetry(this.tokenID),
       this.loadVehicleIdentity(this.tokenID)
     ]);
-
-    // Load device definition attributes (for fuel tank capacity) in background
-    if (vehicle.device_definition_id) {
-      this.loadDefinitionAttributes(vehicle.device_definition_id);
-    }
 
     this.vehicle = vehicle;
     this.vehicleIdentity = vehicleIdentity;
@@ -1290,25 +1282,6 @@ export class VehicleDetailView extends LitElement {
     params.append('vehicles', this.tokenID.toString());
 
     return `https://login.dimo.org/?${params.toString()}`;
-  }
-
-  private getFuelLevelDisplay(): string {
-    const relative = this.lastTelemetry?.signalsLatest?.powertrainFuelSystemRelativeLevel?.value;
-    if (relative != null) {
-      return `${Math.round(relative)}%`;
-    }
-
-    const absoluteLiters = this.lastTelemetry?.signalsLatest?.powertrainFuelSystemAbsoluteLevel?.value;
-    if (absoluteLiters != null) {
-      if (this.fuelTankCapacityGal && this.fuelTankCapacityGal > 0) {
-        const tankCapacityLiters = this.fuelTankCapacityGal * 3.78541;
-        const pct = Math.round((absoluteLiters / tankCapacityLiters) * 100);
-        return `${Math.min(pct, 100)}%`;
-      }
-      return `${Math.round(absoluteLiters)} L`;
-    }
-
-    return 'N/A';
   }
 
   private formatMintedAt(timestamp: string | undefined): string {
