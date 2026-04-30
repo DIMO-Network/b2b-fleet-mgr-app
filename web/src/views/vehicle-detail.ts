@@ -5,7 +5,11 @@ import {globalStyles} from "../global-styles.ts";
 import {consume} from '@lit/context';
 import {apiServiceContext} from '../context';
 import {ApiService} from '@services/api-service.ts';
-import {IdentityService, VehicleIdentityData} from '@services/identity-service.ts';
+import {
+  DeviceDefinitionDetail,
+  IdentityService,
+  VehicleIdentityData,
+} from '@services/identity-service.ts';
 import {OracleTenantService} from '@services/oracle-tenant-service.ts';
 import {SettingsService} from '@services/settings-service.ts';
 import dayjs from 'dayjs';
@@ -14,6 +18,7 @@ import '../elements/update-inventory-modal-element';
 import '../elements/fleet-map';
 import '../elements/click-to-copy-element';
 import '../elements/share-vehicle-modal-element';
+import '../elements/edit-device-definition-modal-element';
 
 dayjs.extend(relativeTime);
 
@@ -39,8 +44,8 @@ interface TelemetryInfo {
     powertrainFuelSystemRelativeLevel: {
       value: number;
     };
-    powertrainFuelSystemAbsoluteLevel: {
-      value: number;
+    powertrainFuelSystemAbsoluteLevel?: {
+      value: number | null;
     };
     powertrainTransmissionTravelledDistance: {
       value: number;
@@ -143,6 +148,8 @@ interface Vehicle {
 
 @customElement('vehicle-detail-view')
 export class VehicleDetailView extends LitElement {
+  private static readonly LITERS_PER_GALLON = 3.78541;
+
   static styles = [globalStyles, css`
     .license-plate {
       display: inline-block;
@@ -173,6 +180,9 @@ export class VehicleDetailView extends LitElement {
 
   @state()
   private vehicleIdentity: VehicleIdentityData | null = null;
+
+  @state()
+  private fuelTankCapacity: number | null = null;
 
   @state()
   private trips: Trip[] = [];
@@ -206,6 +216,9 @@ export class VehicleDetailView extends LitElement {
 
   @state()
   private showShareModal: boolean = false;
+
+  @state()
+  private showEditDefinitionModal: boolean = false;
 
   @state()
   private editingPlate: boolean = false;
@@ -323,6 +336,7 @@ export class VehicleDetailView extends LitElement {
     this.errorMessage = '';
     this.vehicle = null;
     this.vehicleIdentity = null;
+    this.fuelTankCapacity = null;
     this.lastTelemetry = null;
     this.trips = [];
     this.ownerInfo = null;
@@ -354,6 +368,7 @@ export class VehicleDetailView extends LitElement {
     this.vehicle = vehicle;
     this.vehicleIdentity = vehicleIdentity;
     this.lastTelemetry = telemetry;
+    this.fuelTankCapacity = await this.loadFuelTankCapacity(vehicle, vehicleIdentity);
 
     const errors = [vehicleError, telemetryError, identityError].filter((err): err is string => !!err);
     this.errorMessage = errors.length > 0 ? errors.join(' | ') : '';
@@ -426,37 +441,81 @@ export class VehicleDetailView extends LitElement {
     }
   }
 
-  private async loadDefinitionAttributes(definitionId: string): Promise<void> {
-    if (!definitionId) return;
+  private async loadFuelTankCapacity(
+    vehicle: Vehicle,
+    vehicleIdentity: VehicleIdentityData | null
+  ): Promise<number | null> {
     try {
-      const query = `{
-        deviceDefinition(by: {id: "${definitionId}"}) {
-          attributes {
-            name
-            value
-          }
-        }
-      }`;
-      const response = await this.apiService!.callApi<{ deviceDefinition?: { attributes?: Array<{ name: string; value: string }> } }>(
-        'POST',
-        '/identity/proxy',
-        { query },
-        false,
-        false
+      const identityService = IdentityService.getInstance();
+      const tokenDID = vehicleIdentity?.vehicle?.tokenDID?.trim() || '';
+      const deviceDefinitionId =
+        vehicle.device_definition_id?.trim() || vehicleIdentity?.vehicle?.definition?.id?.trim() || '';
+
+      const [latestCloudEvent, identityDefinition] = await Promise.all([
+        tokenDID ? identityService.getLatestDeviceDefinitionCloudEvent(tokenDID) : Promise.resolve(null),
+        deviceDefinitionId ? identityService.getDeviceDefinitionById(deviceDefinitionId) : Promise.resolve(null),
+      ]);
+
+      return (
+        this.getFuelTankCapacityFromDefinition(latestCloudEvent?.data) ??
+        this.getFuelTankCapacityFromDefinition(identityDefinition)
       );
-      const attrs = response.data?.deviceDefinition?.attributes;
-      if (attrs) {
-        const fuelAttr = attrs.find(a => a.name === 'fuel_tank_capacity_gal');
-        if (fuelAttr) {
-          const val = parseFloat(fuelAttr.value);
-          if (Number.isFinite(val) && val > 0) {
-            this.fuelTankCapacityGal = val;
-          }
-        }
-      }
     } catch (error) {
-      console.debug('Failed to load definition attributes:', error);
+      console.error('Error loading fuel tank capacity:', error);
+      return null;
     }
+  }
+
+  private getFuelTankCapacityFromDefinition(definition: DeviceDefinitionDetail | null | undefined): number | null {
+    const fuelTankCapacityAttribute = definition?.attributes?.find((attribute) =>
+      this.isFuelTankCapacityAttribute(attribute.name)
+    );
+
+    return this.parseFuelTankCapacity(fuelTankCapacityAttribute?.value);
+  }
+
+  private isFuelTankCapacityAttribute(attributeName?: string): boolean {
+    const normalizedName = (attributeName || '').replace(/[_-\s]/g, '').toLowerCase();
+    return normalizedName === 'fueltankcapacitygal';
+  }
+
+  private parseFuelTankCapacity(value?: string | null): number | null {
+    if (value == null) {
+      return null;
+    }
+
+    const parsedValue = Number(value);
+    if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+      return null;
+    }
+
+    return parsedValue;
+  }
+
+  private getFuelLevelDisplay(): string {
+    const relativeFuelLevel = this.lastTelemetry?.signalsLatest.powertrainFuelSystemRelativeLevel?.value;
+    if (relativeFuelLevel != null && Number.isFinite(relativeFuelLevel)) {
+      return `${Math.round(relativeFuelLevel)}%`;
+    }
+
+    const absoluteFuelLevel = this.lastTelemetry?.signalsLatest.powertrainFuelSystemAbsoluteLevel?.value;
+    if (absoluteFuelLevel == null || !Number.isFinite(absoluteFuelLevel) || absoluteFuelLevel < 0) {
+      return 'N/A';
+    }
+
+    if (this.fuelTankCapacity == null || this.fuelTankCapacity <= 0) {
+      return 'N/A';
+    }
+
+    const fuelTankCapacityLiters = this.fuelTankCapacity * VehicleDetailView.LITERS_PER_GALLON;
+    if (!Number.isFinite(fuelTankCapacityLiters) || fuelTankCapacityLiters <= 0) {
+      return 'N/A';
+    }
+
+    const fuelLevelPercentage = (absoluteFuelLevel / fuelTankCapacityLiters) * 100;
+    const clampedFuelLevelPercentage = Math.min(100, Math.max(0, fuelLevelPercentage));
+
+    return `${Math.round(clampedFuelLevelPercentage)}%`;
   }
 
   private getWeekIntervals(): { label: string; from: string; to: string }[] {
@@ -595,6 +654,9 @@ export class VehicleDetailView extends LitElement {
                     @click=${() => { this.editPlateValue = this.vehicle?.license_plate || ''; this.editingPlate = true; }}>
                     ${this.vehicle?.license_plate || msg('+ Plate')}
                   </span>
+                  <button class="btn btn-sm" style="margin-left:12px;vertical-align:middle;" @click=${this.openEditDefinitionModal}>
+                    ${msg('UPDATE')}
+                  </button>
                 `}</h2>
                 <div style="margin-bottom: 8px;">
                   <span style="color: #666;">${msg('VIN:')}</span> ${this.vehicle?.vin}
@@ -995,6 +1057,14 @@ export class VehicleDetailView extends LitElement {
         @modal-closed=${() => { this.showShareModal = false; }}
       ></share-vehicle-modal-element>
 
+      <edit-device-definition-modal-element
+        .show=${this.showEditDefinitionModal}
+        .deviceDefinitionId=${this.vehicle?.device_definition_id || this.vehicleIdentity?.vehicle?.definition?.id || ''}
+        .tokenDID=${this.vehicleIdentity?.vehicle?.tokenDID || ''}
+        @modal-closed=${this.handleEditDefinitionModalClosed}
+        @device-definition-update-requested=${this.handleDeviceDefinitionUpdated}
+      ></edit-device-definition-modal-element>
+
       <!-- Update Inventory Modal -->
       <update-inventory-modal-element
         .show=${this.showInventoryModal}
@@ -1022,6 +1092,22 @@ export class VehicleDetailView extends LitElement {
 
   private handleInventoryModalClosed() {
     this.showInventoryModal = false;
+  }
+
+  private openEditDefinitionModal() {
+    this.showEditDefinitionModal = true;
+  }
+
+  private handleEditDefinitionModalClosed() {
+    this.showEditDefinitionModal = false;
+  }
+
+  private async handleDeviceDefinitionUpdated(_event: CustomEvent) {
+    this.showEditDefinitionModal = false;
+    this.successMessage = msg('Device definition update submitted.');
+
+    await new Promise((resolve) => window.setTimeout(resolve, 250));
+    await this.loadVehicleData();
   }
 
   private async handleInventoryUpdated(event: CustomEvent) {

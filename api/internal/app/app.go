@@ -72,10 +72,10 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	})
 	knownOracles := settings.GetOracles()
 
-    // Public tracking routes (no JWT, validated by share link UUID in backend)
-    app.Get("/tracking/:shareID", genericProxyCtrl.TrackingProxy)
-    app.Post("/tracking/:shareID/telemetry", genericProxyCtrl.TrackingProxy)
-    app.Post("/tracking/:shareID/trips", genericProxyCtrl.TrackingProxy)
+	// Public tracking routes (no JWT, validated by share link UUID in backend)
+	app.Get("/tracking/:shareID", genericProxyCtrl.TrackingProxy)
+	app.Post("/tracking/:shareID/telemetry", genericProxyCtrl.TrackingProxy)
+	app.Post("/tracking/:shareID/trips", genericProxyCtrl.TrackingProxy)
 
 	// these are general to the app, not oracle specific
 	app.Get("/public/settings", settingsCtrl.GetPublicSettings)
@@ -110,6 +110,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Get("/fleet/vehicles/:tokenID", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/vehicles/telemetry-info/:tokenID", genericProxyCtrl.Proxy)
 	oracleApp.Post("/fleet/vehicles/telemetry/:tokenID", genericProxyCtrl.Proxy)
+	oracleApp.Post("/fleet/vehicles/fetch", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/groups", genericProxyCtrl.Proxy)
 	oracleApp.Post("/fleet/groups", genericProxyCtrl.Proxy)
 	oracleApp.Get("/fleet/groups/:id", genericProxyCtrl.Proxy)
@@ -131,6 +132,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Get("/fleet/report-templates", genericProxyCtrl.Proxy)
 
 	oracleApp.Get("/definitions/top", definitionsCtrl.TopDefinitions)
+	oracleApp.Post("/device-definitions/attest", genericProxyCtrl.Proxy)
 
 	// Mint new vehicle
 	oracleApp.Get("/vehicle/mint", vehiclesCtrl.GetVehiclesMintData)

@@ -14,4 +14,5 @@ export * from "./create-fleet-group-modal-element.ts";
 export * from "./confirm-modal-element.ts";
 export * from "./manage-group-vehicles-modal-element.ts";
 export * from "./update-inventory-modal-element.ts";
+export * from "./edit-device-definition-modal-element.ts";
 export * from "./click-to-copy-element";

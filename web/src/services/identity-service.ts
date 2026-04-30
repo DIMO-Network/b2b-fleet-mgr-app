@@ -21,6 +21,7 @@ export interface AccountInfo {
 export interface VehicleIdentityData {
   vehicle?: {
     id?: string;
+    tokenDID?: string;
     owner?: string;
     sacds?: {
       nodes?: Array<{
@@ -88,6 +89,29 @@ export interface DeviceDefinitionsResult {
   pageInfo?: DeviceDefinitionsPageInfo;
 }
 
+export interface DeviceDefinitionDetail {
+  model?: string;
+  year?: number;
+  manufacturer?: {
+    name?: string;
+  };
+  deviceDefinitionId?: string;
+  deviceType?: string;
+  attributes?: DeviceDefinitionAttribute[];
+}
+
+export interface LatestDeviceDefinitionCloudEvent {
+  header?: {
+    id?: string;
+    type?: string;
+    time?: string;
+    source?: string;
+    producer?: string;
+    dataschema?: string;
+  };
+  data?: DeviceDefinitionDetail;
+}
+
 /**
  * Service for handling identity and account-related operations
  */
@@ -123,6 +147,7 @@ export class IdentityService {
       const query = `{
         vehicle(tokenId: ${normalizedTokenId}) {
           id
+          tokenDID
           owner
           sacds(first: 15) {
             nodes {
@@ -489,6 +514,97 @@ export class IdentityService {
       };
     } catch (error) {
       console.error('Error fetching device definitions:', error);
+      return null;
+    }
+  }
+
+  async getDeviceDefinitionById(deviceDefinitionId: string): Promise<DeviceDefinitionDetail | null> {
+    try {
+      const trimmedId = deviceDefinitionId.trim();
+      if (!trimmedId) {
+        return null;
+      }
+
+      const query = `{
+        deviceDefinition(by: { id: ${JSON.stringify(trimmedId)} }) {
+          model
+          year
+          manufacturer {
+            name
+          }
+          deviceDefinitionId
+          deviceType
+          attributes {
+            name
+            value
+          }
+        }
+      }`;
+
+      const response = await this.apiService.callApi<{
+        deviceDefinition?: DeviceDefinitionDetail;
+      }>(
+        'POST',
+        '/identity/proxy',
+        { query },
+        false,
+        false,
+        false
+      );
+
+      if (!response.success || !response.data?.deviceDefinition) {
+        return null;
+      }
+
+      return response.data.deviceDefinition;
+    } catch (error) {
+      console.error('Error fetching device definition by ID:', error);
+      return null;
+    }
+  }
+
+  async getLatestDeviceDefinitionCloudEvent(tokenDID: string): Promise<LatestDeviceDefinitionCloudEvent | null> {
+    try {
+      const trimmedTokenDID = tokenDID.trim();
+      if (!trimmedTokenDID) {
+        return null;
+      }
+
+      const query = `query GetLatestDeviceDefinitionCloudEvent {
+        latestCloudEvent(
+          did: ${JSON.stringify(trimmedTokenDID)}
+          filter: { type: "dimo.document.devicedefinition" }
+        ) {
+          header {
+            id
+            type
+            time
+            source
+            producer
+            dataschema
+          }
+          data
+        }
+      }`;
+
+      const response = await this.apiService.callApi<{
+        latestCloudEvent?: LatestDeviceDefinitionCloudEvent | null;
+      }>(
+        'POST',
+        `/fleet/vehicles/fetch?did=${encodeURIComponent(trimmedTokenDID)}`,
+        query,
+        true,
+        true,
+        true
+      );
+
+      if (!response.success) {
+        return null;
+      }
+
+      return response.data?.latestCloudEvent ?? null;
+    } catch (error) {
+      console.error('Error fetching latest device definition CloudEvent:', error);
       return null;
     }
   }
