@@ -19,6 +19,7 @@ import '../elements/fleet-map';
 import '../elements/click-to-copy-element';
 import '../elements/share-vehicle-modal-element';
 import '../elements/edit-device-definition-modal-element';
+import '../elements/vehicle-sharing-panel-element';
 
 dayjs.extend(relativeTime);
 
@@ -1009,37 +1010,7 @@ export class VehicleDetailView extends LitElement {
         </div>
 
         <!-- Vehicle Sharing -->
-        <div class="panel">
-          <div class="panel-header">${msg('Vehicle Sharing')}</div>
-          <div class="panel-body" style="padding: 0;">
-            <table>
-              <thead>
-              <tr>
-                <th>${msg('Grantee')}</th>
-                <th>${msg('Permissions')}</th>
-                <th>${msg('Source')}</th>
-                <th>${msg('Created At')}</th>
-                <th>${msg('Expires At')}</th>
-              </tr>
-              </thead>
-              <tbody>
-              ${this.vehicleIdentity?.vehicle?.sacds?.nodes && this.vehicleIdentity.vehicle.sacds.nodes.length > 0 ? this.vehicleIdentity.vehicle.sacds.nodes.map(sacd => html`
-                <tr>
-                  <td style="font-size: 11px;"><click-to-copy-element .valueToCopy="${sacd.grantee || ''}">${this.formatWalletAddress(sacd.grantee || '')}</click-to-copy-element></td>
-                  <td>${sacd.permissions}</td>
-                  <td>${sacd.source}</td>
-                  <td>${sacd.createdAt ? dayjs(sacd.createdAt).format('MMM D, YYYY') : 'N/A'}</td>
-                  <td>${sacd.expiresAt ? dayjs(sacd.expiresAt).format('MMM D, YYYY') : 'N/A'}</td>
-                </tr>
-              `) : html`
-                <tr>
-                  <td colspan="5" style="text-align: center; color: #666; padding: 2rem;">${msg('No sharing information available')}</td>
-                </tr>
-              `}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <vehicle-sharing-panel .tokenID=${this.tokenID}></vehicle-sharing-panel>
       </div>
 
       <!-- Share Vehicle Tracking Modal -->
