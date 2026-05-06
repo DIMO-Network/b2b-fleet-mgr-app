@@ -302,8 +302,7 @@ export class VehicleDetailView extends LitElement {
     from: "FROM_DATE"
     to: "TO_DATE"
     mechanism: TRIP_MECHANISM
-    limit: 10
-    config: { minSegmentDurationSeconds: 240 }
+    limit: 30
     signalRequests: [
       { name: "powertrainTransmissionTravelledDistance", agg: FIRST }
       { name: "powertrainTransmissionTravelledDistance", agg: LAST }
