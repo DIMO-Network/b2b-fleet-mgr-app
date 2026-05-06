@@ -532,26 +532,38 @@ export class VehicleDetailView extends LitElement {
       const fromDate = selected.from;
       const toDate = selected.to;
 
-      const mechanism = this.vehicleIdentity?.vehicle?.aftermarketDevice
+      const fetchSegments = async (mechanism: string) => {
+        const query = this.tripsQuery
+          .replace('189345', tokenId.toString())
+          .replace('FROM_DATE', fromDate)
+          .replace('TO_DATE', toDate)
+          .replace('TRIP_MECHANISM', mechanism);
+
+        return this.apiService!.callApi<TripsResponse>(
+          'POST',
+          `/fleet/vehicles/telemetry/${tokenId}`,
+          query,
+          true, // auth required
+          true  // oracle endpoint
+        );
+      };
+
+      const initialMechanism = this.vehicleIdentity?.vehicle?.aftermarketDevice
         ? 'frequencyAnalysis'
         : 'ignitionDetection';
 
-      const query = this.tripsQuery
-        .replace('189345', tokenId.toString())
-        .replace('FROM_DATE', fromDate)
-        .replace('TO_DATE', toDate)
-        .replace('TRIP_MECHANISM', mechanism);
+      let response = await fetchSegments(initialMechanism);
+      let segments = response.success && response.data ? response.data.segments || [] : null;
 
-      const response = await this.apiService.callApi<TripsResponse>(
-        'POST',
-        `/fleet/vehicles/telemetry/${tokenId}`,
-        query,
-        true, // auth required
-        true  // oracle endpoint
-      );
+      // If ignitionDetection returned no trips, retry with frequencyAnalysis as a fallback
+      if (segments !== null && segments.length === 0 && initialMechanism === 'ignitionDetection') {
+        response = await fetchSegments('frequencyAnalysis');
+        if (response.success && response.data) {
+          segments = response.data.segments || [];
+        }
+      }
 
-      if (response.success && response.data) {
-        const segments = response.data.segments || [];
+      if (segments !== null) {
         this.trips = segments.sort((a, b) =>
           new Date(b.start.timestamp).getTime() - new Date(a.start.timestamp).getTime()
         );
