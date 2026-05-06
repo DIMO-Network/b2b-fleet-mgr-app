@@ -41,6 +41,7 @@ export interface TenantSettings {
     command_password: string;
     dimo_client_id: string;
     has_dimo_secret: boolean;
+    signer_address?: string;
 }
 
 const PRIVATE_SETTINGS_KEY = "appPrivateSettings";
