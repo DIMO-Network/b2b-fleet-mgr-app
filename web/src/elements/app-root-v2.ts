@@ -215,6 +215,7 @@ export class AppRootV2 extends LitElement {
             { path: '/users/edit/:walletAddress', render: ({ walletAddress }) => html`<edit-user-view .walletAddress=${walletAddress}></edit-user-view>` },
             { path: '/users/profile/:wallet', render: ({ wallet }) => html`<user-detail-view .wallet=${wallet}></user-detail-view>` },
             { path: '/device-definitions', render: () => html`<device-definitions-view></device-definitions-view>` },
+            { path: '/emails', render: () => html`<emails-view></emails-view>` },
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
             { path: '/onboarding', render: () => html`<onboarding-view></onboarding-view>` },
             { path: '/tenant-selector', render: () => html`<tenant-selector-view></tenant-selector-view>` },
@@ -337,6 +338,10 @@ export class AppRootV2 extends LitElement {
         return this.currentPath === targetPath;
     }
 
+    private isKaufmannTenant(): boolean {
+        return !!this.selectedTenant?.name && this.selectedTenant.name.toLowerCase().includes('kaufmann');
+    }
+
     private getPageTitle(): string {
         const path = this.currentPath || '/';
         if (path === '/') return msg('Home');
@@ -349,6 +354,7 @@ export class AppRootV2 extends LitElement {
         if (path.startsWith('/users/profile')) return msg('User Profile');
         if (path.startsWith('/users')) return msg('Users');
         if (path.startsWith('/device-definitions')) return msg('Device Definitions');
+        if (path.startsWith('/emails')) return msg('Emails');
         if (path.startsWith('/tenant-selector')) return msg('Tenant Selector');
         if (path.startsWith('/tenant-settings')) return msg('Tenant Settings');
         return msg('Home');
@@ -465,6 +471,11 @@ export class AppRootV2 extends LitElement {
                         <div class="nav-item ${this.isActive('/device-definitions') ? 'active' : ''}">
                             <a data-page="device-definitions" href="#/device-definitions" aria-current="${this.isActive('/device-definitions') ? 'page' : 'false'}">${msg('Device Definitions')}</a>
                         </div>
+                        ${this.isKaufmannTenant() ? html`
+                            <div class="nav-item ${this.isActive('/emails') ? 'active' : ''}">
+                                <a data-page="emails" href="#/emails" aria-current="${this.isActive('/emails') ? 'page' : 'false'}">${msg('Emails')}</a>
+                            </div>
+                        ` : ''}
                         <div class="nav-divider"></div>
                         <div class="nav-item ${this.isActive('/tenant-settings') ? 'active' : ''}">
                             <a data-page="tenant-settings" href="#/tenant-settings" aria-current="${this.isActive('/tenant-settings') ? 'page' : 'false'}">${msg('Settings')}</a>
