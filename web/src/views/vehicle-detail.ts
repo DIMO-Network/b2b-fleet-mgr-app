@@ -189,6 +189,11 @@ export class VehicleDetailView extends LitElement {
   private trips: Trip[] = [];
 
   @state()
+  private tripsPage: number = 0;
+
+  private readonly tripsPageSize: number = 25;
+
+  @state()
   private ownerInfo: UserProfileInfo | null = null;
   
   @state()
@@ -302,7 +307,7 @@ export class VehicleDetailView extends LitElement {
     from: "FROM_DATE"
     to: "TO_DATE"
     mechanism: TRIP_MECHANISM
-    limit: 50
+    limit: 60
     signalRequests: [
       { name: "powertrainTransmissionTravelledDistance", agg: FIRST }
       { name: "powertrainTransmissionTravelledDistance", agg: LAST }
@@ -567,6 +572,7 @@ export class VehicleDetailView extends LitElement {
         this.trips = segments.sort((a, b) =>
           new Date(b.start.timestamp).getTime() - new Date(a.start.timestamp).getTime()
         );
+        this.tripsPage = 0;
       } else {
         this.errorMessage = this.appendError(this.errorMessage, response.error || msg('Failed to load trips'));
       }
@@ -932,6 +938,7 @@ export class VehicleDetailView extends LitElement {
                     `)}
                   </select>
                 </div>
+                ${this.renderTripsPagination()}
                 <table>
                   <thead>
                   <tr>
@@ -942,7 +949,9 @@ export class VehicleDetailView extends LitElement {
                   </tr>
                   </thead>
                   <tbody>
-                  ${this.trips && this.trips.length > 0 ? this.trips.map(trip => {
+                  ${this.trips && this.trips.length > 0 ? this.trips
+                    .slice(this.tripsPage * this.tripsPageSize, (this.tripsPage + 1) * this.tripsPageSize)
+                    .map(trip => {
                     const distance = this.calculateTripDistance(trip);
                     const avgSpeed = this.getTripSignalValue(trip, 'speed', 'AVG');
                     const maxSpeed = this.getTripSignalValue(trip, 'speed', 'MAX');
@@ -961,6 +970,7 @@ export class VehicleDetailView extends LitElement {
                   `}
                   </tbody>
                 </table>
+                ${this.renderTripsPagination()}
               </div>
 
               <!-- Commands Tab -->
@@ -1090,6 +1100,31 @@ export class VehicleDetailView extends LitElement {
 
     // Reload vehicle data to get updated inventory status
     await this.loadVehicleData();
+  }
+
+  private renderTripsPagination() {
+    const total = this.trips?.length || 0;
+    if (total <= this.tripsPageSize) return '';
+    const totalPages = Math.ceil(total / this.tripsPageSize);
+    const from = this.tripsPage * this.tripsPageSize + 1;
+    const to = Math.min((this.tripsPage + 1) * this.tripsPageSize, total);
+    return html`
+      <div class="pagination" style="margin: 8px 0;">
+        <button
+          class="pagination-btn"
+          ?disabled=${this.tripsPage === 0}
+          @click=${() => { this.tripsPage = Math.max(0, this.tripsPage - 1); }}
+        >${msg('PREV')}</button>
+        <span style="margin: 0 8px; font-size: 13px;">
+          ${from}-${to} ${msg('of')} ${total}
+        </span>
+        <button
+          class="pagination-btn"
+          ?disabled=${this.tripsPage >= totalPages - 1}
+          @click=${() => { this.tripsPage = Math.min(totalPages - 1, this.tripsPage + 1); }}
+        >${msg('NEXT')}</button>
+      </div>
+    `;
   }
 
   private async handleWeekChange(e: Event) {
