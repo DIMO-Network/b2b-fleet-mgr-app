@@ -151,6 +151,19 @@ interface Vehicle {
 export class VehicleDetailView extends LitElement {
   private static readonly LITERS_PER_GALLON = 3.78541;
 
+  // DIMO SACD permission numbers → human names, per
+  // https://www.dimo.org/docs/build/building-with-tools/client-sdk-dimo-connect
+  private static readonly PERMISSION_NAMES: Record<number, string> = {
+    1: 'All-time non-location data',
+    2: 'Commands',
+    3: 'Current location',
+    4: 'All-time location',
+    5: 'View VIN credentials',
+    6: 'Live data streams',
+    7: 'Raw data',
+    8: 'Approximate location',
+  };
+
   static styles = [globalStyles, css`
     .license-plate {
       display: inline-block;
@@ -625,19 +638,58 @@ export class VehicleDetailView extends LitElement {
     return `${currentError} | ${nextError}`;
   }
 
+  // Parses the token-exchange error body that comes back when a share exists but is missing
+  // some of the requested permissions. Returns the missing permission numbers, or null if
+  // this isn't an "insufficient permissions" error.
+  // Example body fragment: `lacks permissions [1 3 4 5] for asset did:erc721:...`
+  private parseInsufficientPermissions(errorMessage: string): number[] | null {
+    const match = errorMessage.match(/lacks permissions \[([\d\s,]+)\]/);
+    if (!match) return null;
+    const nums = match[1]
+      .split(/[\s,]+/)
+      .map(s => parseInt(s, 10))
+      .filter(n => Number.isFinite(n));
+    return nums.length > 0 ? nums : null;
+  }
+
+  private formatPermissionNames(nums: number[]): string {
+    return nums
+      .map(n => VehicleDetailView.PERMISSION_NAMES[n] ?? `#${n}`)
+      .join(', ');
+  }
+
+  private renderErrorAlert() {
+    if (!this.errorMessage) return '';
+
+    const insufficient = this.parseInsufficientPermissions(this.errorMessage);
+    if (insufficient) {
+      return html`<div class="alert alert-error" style="display: flex; flex-direction: column; gap: 8px;">
+        <span>${msg('This vehicle is shared with you, but the share is missing the following permissions:')} <strong>${this.formatPermissionNames(insufficient)}</strong>. ${msg('Please un-share this vehicle first, then re-share with the additional permissions to restore full access.')}</span>
+        <a href=${this.buildShareUrl()} target="_blank" rel="noopener"
+           class="btn btn-sm btn-primary" style="align-self: flex-start; text-decoration: none;">
+          ${msg('Re-share Permissions')}
+        </a>
+      </div>`;
+    }
+
+    if (this.errorMessage.includes('403')) {
+      return html`<div class="alert alert-error" style="display: flex; flex-direction: column; gap: 8px;">
+        <span>${msg('Permissions have expired for this vehicle. Please re-share to restore access.')}</span>
+        <a href=${this.buildShareUrl()} target="_blank" rel="noopener"
+           class="btn btn-sm btn-primary" style="align-self: flex-start; text-decoration: none;">
+          ${msg('Re-share Permissions')}
+        </a>
+      </div>`;
+    }
+
+    return html`<div class="alert alert-error">${this.errorMessage}</div>`;
+  }
+
   render() {
     return html`
       <!-- VEHICLE DETAIL PAGE -->
       <div class="page active" id="page-vehicle-detail">
-        ${this.errorMessage ? (this.errorMessage.includes('403')
-          ? html`<div class="alert alert-error" style="display: flex; flex-direction: column; gap: 8px;">
-              <span>${msg('Permissions have expired for this vehicle. Please re-share to restore access.')}</span>
-              <a href=${this.buildShareUrl()} target="_blank" rel="noopener"
-                 class="btn btn-sm btn-primary" style="align-self: flex-start; text-decoration: none;">
-                ${msg('Re-share Permissions')}
-              </a>
-            </div>`
-          : html`<div class="alert alert-error">${this.errorMessage}</div>`) : ''}
+        ${this.renderErrorAlert()}
         ${this.successMessage ? html`<div class="alert alert-success">${this.successMessage}</div>` : ''}
         <div class="toolbar mb-16">
           <button class="btn" @click=${this.goBack}>${msg('← BACK TO VEHICLES')}</button>
