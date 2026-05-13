@@ -62,6 +62,15 @@ export class TransferModalElement extends BaseOnboardingElement {
     @property({attribute: true})
     public imei = "";
 
+    @property({attribute: true, type: Number})
+    public tokenId = 0;
+
+    // When true, the connected wallet isn't the on-chain owner but the owning kernel
+    // authorised this tenant's signer — so the backend signs the transfer for us via
+    // POST /v1/vehicle/transfer/shared instead of asking the wallet for a passkey signature.
+    @property({attribute: true, type: Boolean})
+    public useSharedAccountFlow = false;
+
     @state()
     private walletAddress = "";
 
@@ -282,8 +291,11 @@ export class TransferModalElement extends BaseOnboardingElement {
         }
 
         console.log("Target Wallet to transfer to", this.walletAddress);
-        // this method does a lot of steps. It also checks the status of the transfer, which should be separated out into own function.
-        const result = await this.transferVehicle(this.imei, this.walletAddress);
+        // Shared-account vehicles can't be passkey-signed by the connected wallet (it isn't
+        // the owner). The backend signs server-side via the tenant signer.
+        const result = this.useSharedAccountFlow
+            ? await this.transferSharedAccountVehicle(this.tokenId, this.walletAddress)
+            : await this.transferVehicle(this.imei, this.walletAddress);
         if (!result.success) {
             if (result.error.toLowerCase().includes('timeout')) {
                 this.errorMessage = msg("Check Info for final transfer verification");

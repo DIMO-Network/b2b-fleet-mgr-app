@@ -386,6 +386,49 @@ export class BaseOnboardingElement extends LitElement {
         };
     }
 
+    // transferSharedAccountVehicle is the server-signed transfer flow used when the vehicle's
+    // on-chain owner is a shared kernel account that registered our tenant's signer. The
+    // backend (POST /v1/vehicle/transfer/shared) validates and submits the on-chain
+    // safeTransferFrom itself, so no passkey signature is required from the connected wallet.
+    async transferSharedAccountVehicle(tokenId: number, targetWallet: string): Promise<Result<void, string>> {
+        this.dispatchStatusUpdate(msg("Submitting shared-account transfer..."));
+        const submitResp = await this.api.callApi<VinTransferResponse>(
+            'POST',
+            '/vehicle/transfer/shared',
+            { tokenId, targetWalletAddress: targetWallet },
+            true,
+        );
+        if (!submitResp.success || !submitResp.data) {
+            return { success: false, error: submitResp.error || "Failed to submit shared-account transfer" };
+        }
+
+        // Same status-poll pattern as submitTransferData — backend marks the river job
+        // 'Success' once the safeTransferFrom UserOp lands on chain.
+        let success = false;
+        for (const attempt of range(30)) {
+            const query = qs.stringify({ jobId: submitResp.data.jobId });
+            const status = await this.api.callApi<VinStatus>('GET', `/vehicle/transfer/status?${query}`, null, true);
+            this.dispatchStatusUpdate(msg("Checking transfer status... ") + attempt);
+            if (!status.success || !status.data) {
+                return { success: false, error: status.error || "Failed to check transfer status" };
+            }
+            if (status.data.status === 'Success') {
+                success = true;
+                break;
+            }
+            if (attempt < 29) {
+                await delay(4000);
+            }
+        }
+
+        if (!success) {
+            return { success: false, error: "Transfer operation timed out" };
+        }
+
+        this.dispatchStatusUpdate(msg("Transfer completed successfully"));
+        return { success: true, data: undefined };
+    }
+
     // transferVehicle coordinates all of the necessary calls to get the data to sign, signing it and submitting the trx to transfer a vehicle
     async transferVehicle(imei: string, targetWallet: string) : Promise<Result<void, string>> {
         this.dispatchStatusUpdate(msg("Fetching transfer data..."));

@@ -115,7 +115,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   </button>
                   <button
                       type="button"
-                      ?hidden=${this.item.tokenId == 0 || !this.item.isCurrentUserOwner}
+                      ?hidden=${this.item.tokenId == 0 || (!this.item.isCurrentUserOwner && !this.item.isSharedAccountSigner)}
                       ?disabled=${this.processing}
                       @click=${this.openTransferModal}
                       class="action-btn"
@@ -327,6 +327,10 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         modal.show = true;
         modal.vehicleVin = this.item?.vin || '';
         modal.imei = this.item?.imei || '';
+        modal.tokenId = this.item?.tokenId || 0;
+        // The connected wallet isn't the literal owner but our tenant can sign for the
+        // owning kernel — modal will use the server-signed shared-account flow.
+        modal.useSharedAccountFlow = !!(this.item && !this.item.isCurrentUserOwner && this.item.isSharedAccountSigner);
 
         // Add event listener for modal close
         modal.addEventListener('modal-closed', () => {
