@@ -24,6 +24,7 @@
     "@turnkey/webauthn-stamper": "^0.6.0",
     "@zerodev/ecdsa-validator": "^5.4.9",
     "@zerodev/sdk": "^5.5.6",
+    "dayjs": "^1.11.20",
     "events": "^3.3.0",
     "leaflet": "^1.9.4",
     "lit": "^3.2.1",
