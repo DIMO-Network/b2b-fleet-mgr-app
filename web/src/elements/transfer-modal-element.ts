@@ -51,6 +51,36 @@ export class TransferModalElement extends BaseOnboardingElement {
             gap: 8px;
             margin-top: 8px;
           }
+          .shared-account-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-left: 4px solid #2563eb;
+            border-radius: 4px;
+            padding: 10px 12px;
+            margin-bottom: 16px;
+            color: #1e3a8a;
+            font-size: 13px;
+            line-height: 1.4;
+          }
+          .shared-account-badge {
+            display: inline-block;
+            flex: 0 0 auto;
+            background-color: #2563eb;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 2px 8px;
+            border-radius: 999px;
+            white-space: nowrap;
+          }
+          .shared-account-text {
+            flex: 1 1 auto;
+          }
         `
     ];
     @property({attribute: true, type: Boolean})
@@ -61,6 +91,15 @@ export class TransferModalElement extends BaseOnboardingElement {
 
     @property({attribute: true})
     public imei = "";
+
+    @property({attribute: true, type: Number})
+    public tokenId = 0;
+
+    // When true, the connected wallet isn't the on-chain owner but the owning kernel
+    // authorised this tenant's signer — so the backend signs the transfer for us via
+    // POST /v1/vehicle/transfer/shared instead of asking the wallet for a passkey signature.
+    @property({attribute: true, type: Boolean})
+    public useSharedAccountFlow = false;
 
     @state()
     private walletAddress = "";
@@ -118,6 +157,14 @@ export class TransferModalElement extends BaseOnboardingElement {
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>
                         <div class="modal-body">
+                            ${this.useSharedAccountFlow ? html`
+                                <div class="shared-account-banner" role="status" aria-label=${msg('Shared account mode')}>
+                                    <span class="shared-account-badge">${msg('Shared account mode')}</span>
+                                    <span class="shared-account-text">
+                                        ${msg('This vehicle is owned by a kernel account that authorised your tenant signer. Your tenant will sign and submit the transfer on its behalf — no passkey signature is required.')}
+                                    </span>
+                                </div>
+                            ` : nothing}
                             ${this.errorMessage ? html`
                                 <div style="background-color: #fee; border: 1px solid #fcc; border-radius: 4px; padding: 12px; margin-bottom: 16px; color: #c33;">
                                     ${this.errorMessage}
@@ -282,8 +329,11 @@ export class TransferModalElement extends BaseOnboardingElement {
         }
 
         console.log("Target Wallet to transfer to", this.walletAddress);
-        // this method does a lot of steps. It also checks the status of the transfer, which should be separated out into own function.
-        const result = await this.transferVehicle(this.imei, this.walletAddress);
+        // Shared-account vehicles can't be passkey-signed by the connected wallet (it isn't
+        // the owner). The backend signs server-side via the tenant signer.
+        const result = this.useSharedAccountFlow
+            ? await this.transferSharedAccountVehicle(this.tokenId, this.walletAddress)
+            : await this.transferVehicle(this.imei, this.walletAddress);
         if (!result.success) {
             if (result.error.toLowerCase().includes('timeout')) {
                 this.errorMessage = msg("Check Info for final transfer verification");

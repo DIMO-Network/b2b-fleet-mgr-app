@@ -23,4 +23,8 @@ export interface Vehicle {
     connectionStatus: string;       // status of connection to the vendor
     disconnectionStatus: string;    // status of disconnection from vendor
     isCurrentUserOwner: boolean;
+    // True when the on-chain owner is a shared kernel account that authorised the current
+    // tenant's signer (via providedSignerAddress at account creation). Lets the tenant drive
+    // transfers on its behalf even though isCurrentUserOwner is false.
+    isSharedAccountSigner?: boolean;
 }
