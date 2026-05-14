@@ -51,6 +51,36 @@ export class TransferModalElement extends BaseOnboardingElement {
             gap: 8px;
             margin-top: 8px;
           }
+          .shared-account-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-left: 4px solid #2563eb;
+            border-radius: 4px;
+            padding: 10px 12px;
+            margin-bottom: 16px;
+            color: #1e3a8a;
+            font-size: 13px;
+            line-height: 1.4;
+          }
+          .shared-account-badge {
+            display: inline-block;
+            flex: 0 0 auto;
+            background-color: #2563eb;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 2px 8px;
+            border-radius: 999px;
+            white-space: nowrap;
+          }
+          .shared-account-text {
+            flex: 1 1 auto;
+          }
         `
     ];
     @property({attribute: true, type: Boolean})
@@ -127,6 +157,14 @@ export class TransferModalElement extends BaseOnboardingElement {
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>
                         <div class="modal-body">
+                            ${this.useSharedAccountFlow ? html`
+                                <div class="shared-account-banner" role="status" aria-label=${msg('Shared account mode')}>
+                                    <span class="shared-account-badge">${msg('Shared account mode')}</span>
+                                    <span class="shared-account-text">
+                                        ${msg('This vehicle is owned by a kernel account that authorised your tenant signer. Your tenant will sign and submit the transfer on its behalf — no passkey signature is required.')}
+                                    </span>
+                                </div>
+                            ` : nothing}
                             ${this.errorMessage ? html`
                                 <div style="background-color: #fee; border: 1px solid #fcc; border-radius: 4px; padding: 12px; margin-bottom: 16px; color: #c33;">
                                     ${this.errorMessage}
