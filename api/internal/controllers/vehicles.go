@@ -202,6 +202,16 @@ func (v *VehiclesController) GetTransferStatus(c *fiber.Ctx) error {
 	return ProxyRequest(c, targetURL, nil, v.logger)
 }
 
+// SubmitSharedAccountTransfer forwards the server-signed transfer request to the kaufmann
+// oracle endpoint that signs on behalf of a shared kernel account using the tenant signer.
+// Body: { tokenId, targetWalletAddress }. Response: { jobId }.
+func (v *VehiclesController) SubmitSharedAccountTransfer(c *fiber.Ctx) error {
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/transfer/shared")
+	return ProxyRequest(c, targetURL, c.Body(), v.logger)
+}
+
 func (v *VehiclesController) SubmitCommand(c *fiber.Ctx) error {
 	imei := c.Params("imei", "")
 

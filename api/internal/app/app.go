@@ -147,7 +147,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	// Transfer vehicle
 	oracleApp.Get("/vehicle/transfer", vehiclesCtrl.GetTransferData)
 	oracleApp.Post("/vehicle/transfer", vehiclesCtrl.SubmitTransferData)
-	oracleApp.Post("/vehicle/transfer/shared", genericProxyCtrl.Proxy)
+	oracleApp.Post("/vehicle/transfer/shared", vehiclesCtrl.SubmitSharedAccountTransfer)
 	oracleApp.Get("/vehicle/transfer/status", vehiclesCtrl.GetTransferStatus)
 
 	// Delete vehicle
