@@ -145,6 +145,9 @@ interface Vehicle {
   inventory_audit: InventoryAudit[];
   vendor_data?: Record<string, string>;
   license_plate?: string;
+  // owner is the last known on-chain owner stored in kaufmann's vins table. Identity is the
+  // source of truth; we compare against it on detail load and PATCH back when it drifts.
+  owner?: string;
 }
 
 @customElement('vehicle-detail-view')
@@ -383,11 +386,36 @@ export class VehicleDetailView extends LitElement {
     const errors = [vehicleError, telemetryError, identityError].filter((err): err is string => !!err);
     this.errorMessage = errors.length > 0 ? errors.join(' | ') : '';
 
+    // Fire-and-forget: if identity's owner has drifted from what kaufmann has cached in vins,
+    // PATCH it back. Skipped silently when they already match — no extra writes on the common
+    // path. Not awaited so it never delays the render.
+    void this.maybeSyncOwner(this.tokenID, vehicle.owner, vehicleIdentity?.vehicle?.owner);
+
     // Continue loading auxiliary sections even if telemetry/identity are unavailable.
     await this.loadTrips(this.tokenID);
     await this.loadOwnerInfo(this.tokenID);
 
     return [this.vehicle, this.errorMessage || null];
+  }
+
+  private async maybeSyncOwner(tokenId: number, localOwner: string | undefined, identityOwner: string | undefined): Promise<void> {
+    if (!this.apiService || !identityOwner) return;
+    if (localOwner && localOwner.toLowerCase() === identityOwner.toLowerCase()) return;
+
+    try {
+      const response = await this.apiService.callApi(
+        'PATCH',
+        `/fleet/vehicles/${tokenId}/owner`,
+        { owner: identityOwner },
+        true,
+        true
+      );
+      if (!response.success) {
+        console.warn('Owner sync to kaufmann failed:', response.error);
+      }
+    } catch (error) {
+      console.warn('Owner sync to kaufmann threw:', error);
+    }
   }
 
   private async loadVehicle(tokenId: number): Promise<[Vehicle | null, string | null]> {
