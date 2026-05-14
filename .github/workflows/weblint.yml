@@ -30,3 +30,8 @@ jobs:
       # The cap exists so that a runaway regression (e.g. doubling current count) still trips CI.
       - name: ESLint
         run: npx eslint src --max-warnings 500
+
+      # tsc + vite build catches things ESLint can't, like missing modules and type errors —
+      # the kind of regression that otherwise only shows up in the docker buildpushdev step.
+      - name: Build
+        run: npm run build
