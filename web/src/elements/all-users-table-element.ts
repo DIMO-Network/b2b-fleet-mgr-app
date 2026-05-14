@@ -15,6 +15,9 @@ interface UserProfile {
   government_id_number: string;
   created_at: string;
   updated_at: string;
+  // Set when the account was created via the shared-account flow with a tenant signer
+  // registered as providedSignerAddress. Frontend renders a "Shared" badge when present.
+  shared_account_signer_address?: string;
 }
 
 interface UserProfilesResponse {
@@ -26,7 +29,23 @@ interface UserProfilesResponse {
 
 @customElement("all-users-table")
 export class AllUsersTable extends LitElement {
-  static styles = [globalStyles, css``];
+  static styles = [
+    globalStyles,
+    css`
+      .shared-badge {
+        display: inline-block;
+        background-color: #2563eb;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 2px 8px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+    `,
+  ];
 
   @state() private users: UserProfile[] = [];
   @state() private loading = false;
@@ -128,6 +147,7 @@ export class AllUsersTable extends LitElement {
                   <table>
                     <thead>
                       <tr>
+                        <th>${msg('Type')}</th>
                         <th>${msg('Wallet')}</th>
                         <th>${msg('Email')}</th>
                         <th>${msg('First Name')}</th>
@@ -140,6 +160,14 @@ export class AllUsersTable extends LitElement {
                       ${this.users.map(
                         (user) => html`
                           <tr>
+                            <td>
+                              ${user.shared_account_signer_address
+                                ? html`<span
+                                    class="shared-badge"
+                                    title=${msg('Shared account — your tenant signer is authorised to act on this kernel\'s behalf')}
+                                  >${msg('Shared')}</span>`
+                                : ""}
+                            </td>
                             <td style="font-family: monospace; font-size: 13px;">
                               ${user.wallet || "-"}
                             </td>
