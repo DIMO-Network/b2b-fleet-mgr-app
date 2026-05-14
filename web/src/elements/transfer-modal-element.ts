@@ -183,13 +183,14 @@ export class TransferModalElement extends BaseOnboardingElement {
                                         <label>
                                             ${msg('Wallet 0x Address (for existing accounts)')}
                                             <div style="display: flex; align-items: center; gap: 8px;">
-                                                <input type="text" 
-                                                       placeholder="0x..." 
+                                                <input type="text"
+                                                       placeholder="0x..."
                                                        maxlength="42"
+                                                       style="flex: 1; min-width: 0;"
                                                        .value=${this.walletAddress}
                                                        @input=${this.handleWalletInput}>
-                                                ${this.isCheckingAccount ? html`<span style="font-size: 12px; color: #666;">${msg('Checking...')}</span>` : nothing}
-                                                ${this.accountFound ? html`<span style="color: #22c55e; font-size: 16px;">✓</span>` : nothing}
+                                                ${this.isCheckingAccount ? html`<span style="font-size: 12px; color: #666; flex: 0 0 auto;">${msg('Checking...')}</span>` : nothing}
+                                                ${this.accountFound ? html`<span style="color: #22c55e; font-size: 16px; flex: 0 0 auto;">✓</span>` : nothing}
                                             </div>
                                         </label>
                                         ${this.walletAddress && this.accountNotFound ? html`
@@ -287,7 +288,8 @@ export class TransferModalElement extends BaseOnboardingElement {
     private async lookupAccount(walletAddress: string) {
         this.isCheckingAccount = true;
         const query = `?walletAddress=${encodeURIComponent(walletAddress)}`;
-        const resp = await this.api.callApi<any>('GET', `/account${query}`, null, true, true, false);
+        // Backend GET /account requires Tenant-Id (matches the POST /account create path).
+        const resp = await this.api.callApi<any>('GET', `/account${query}`, null, true, true, true);
         // If request failed or no body, show helper text
         if (!resp.success || !resp.data) {
             this.accountNotFound = true;
