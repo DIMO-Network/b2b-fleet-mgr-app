@@ -147,7 +147,6 @@ export class AllUsersTable extends LitElement {
                   <table>
                     <thead>
                       <tr>
-                        <th>${msg('Type')}</th>
                         <th>${msg('Wallet')}</th>
                         <th>${msg('Email')}</th>
                         <th>${msg('First Name')}</th>
@@ -160,16 +159,16 @@ export class AllUsersTable extends LitElement {
                       ${this.users.map(
                         (user) => html`
                           <tr>
-                            <td>
-                              ${user.shared_account_signer_address
-                                ? html`<span
-                                    class="shared-badge"
-                                    title=${msg('Shared account — your tenant signer is authorised to act on this kernel\'s behalf')}
-                                  >${msg('Shared')}</span>`
-                                : ""}
-                            </td>
                             <td style="font-family: monospace; font-size: 13px;">
-                              ${user.wallet || "-"}
+                              <span style="display: inline-flex; align-items: center; gap: 8px;">
+                                <span>${user.wallet || "-"}</span>
+                                ${user.shared_account_signer_address
+                                  ? html`<span
+                                      class="shared-badge"
+                                      title=${msg('we have control over any vehicle under this account to transfer or delete')}
+                                    >${msg('Shared')}</span>`
+                                  : ""}
+                              </span>
                             </td>
                             <td>
                               ${user.email
