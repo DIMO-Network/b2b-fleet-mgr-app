@@ -357,7 +357,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         document.body.appendChild(modal);
     }
 
-    private openIdentityInfoModal() {
+    private async openIdentityInfoModal() {
         console.log("Opening identity info modal for token ID:", this.item?.tokenId);
 
         // Create the identity info modal using the separate component
@@ -373,10 +373,34 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         // Add to body
         document.body.appendChild(modal);
 
-        // Load identity data after the modal is added to the DOM
-        setTimeout(() => {
-            modal.loadIdentityData();
-        }, 100);
+        // Load identity data, then mirror vehicle-detail.ts: if the on-chain owner returned by
+        // Identity has drifted from vins.owner (what `Vehicle.owner` carries on this row), fire
+        // PATCH /fleet/vehicles/{tokenID}/owner to self-heal. Identity is the source of truth.
+        try {
+            await modal.loadIdentityData();
+            void this.maybeSyncOwner(this.item?.tokenId, this.item?.owner, modal.identityData?.vehicle?.owner);
+        } catch (err) {
+            console.warn('Failed to load identity data for owner sync:', err);
+        }
+    }
+
+    private async maybeSyncOwner(tokenId: number | undefined, localOwner: string | undefined, identityOwner: string | undefined): Promise<void> {
+        if (!tokenId || !identityOwner) return;
+        if (localOwner && localOwner.toLowerCase() === identityOwner.toLowerCase()) return;
+
+        const resp = await this.api.callApi(
+            'PATCH',
+            `/fleet/vehicles/${tokenId}/owner`,
+            { owner: identityOwner },
+            true,
+            true
+        );
+        if (!resp.success) {
+            console.warn('Owner sync to kaufmann failed:', resp.error);
+            return;
+        }
+        // Refresh the list so the row reflects the corrected owner.
+        this.dispatchEvent(new CustomEvent('item-changed', { bubbles: true, composed: true }));
     }
 
     private openTelemetryModal() {
