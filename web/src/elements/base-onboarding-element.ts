@@ -71,6 +71,16 @@ export interface VinsStatusResult {
     statuses: VinStatus[];
 }
 
+// TransferJobStatus is the response shape for GET /vehicle/transfer/status — a single river-job
+// status, not the array shape VinsStatusResult returns. Success is signalled by `isSuccessful`,
+// not by a "Success" string on a `status` field (the old shape this code used to assume).
+export interface TransferJobStatus {
+    attempt: number;
+    errors: string[];
+    isSuccessful: boolean;
+    state: string;
+}
+
 export class BaseOnboardingElement extends LitElement {
 
     @property({attribute: false})
@@ -346,11 +356,10 @@ export class BaseOnboardingElement extends LitElement {
         }
 
         // todo could probably refactor this pattern with two other functions
-        let success = true;
+        let success = false;
         for (const attempt of range(30)) {
-            success = true;
             const query = qs.stringify({jobId: mintResponse.data.jobId});
-            const status = await this.api.callApi<VinStatus>('GET', `/vehicle/transfer/status?${query}`, null, true);
+            const status = await this.api.callApi<TransferJobStatus>('GET', `/vehicle/transfer/status?${query}`, null, true);
             this.dispatchStatusUpdate("Checking transfer status... " + attempt);
 
             if (!status.success || !status.data) {
@@ -360,11 +369,8 @@ export class BaseOnboardingElement extends LitElement {
                 };
             }
 
-            if (status.data.status !== 'Success') {
-                success = false;
-            }
-
-            if (success) {
+            if (status.data.isSuccessful) {
+                success = true;
                 break;
             }
 
@@ -402,17 +408,17 @@ export class BaseOnboardingElement extends LitElement {
             return { success: false, error: submitResp.error || "Failed to submit shared-account transfer" };
         }
 
-        // Same status-poll pattern as submitTransferData — backend marks the river job
-        // 'Success' once the safeTransferFrom UserOp lands on chain.
+        // Same status-poll pattern as submitTransferData — backend flips isSuccessful=true on the
+        // job once the safeTransferFrom UserOp lands on chain.
         let success = false;
         for (const attempt of range(30)) {
             const query = qs.stringify({ jobId: submitResp.data.jobId });
-            const status = await this.api.callApi<VinStatus>('GET', `/vehicle/transfer/status?${query}`, null, true);
+            const status = await this.api.callApi<TransferJobStatus>('GET', `/vehicle/transfer/status?${query}`, null, true);
             this.dispatchStatusUpdate(msg("Checking transfer status... ") + attempt);
             if (!status.success || !status.data) {
                 return { success: false, error: status.error || "Failed to check transfer status" };
             }
-            if (status.data.status === 'Success') {
+            if (status.data.isSuccessful) {
                 success = true;
                 break;
             }
