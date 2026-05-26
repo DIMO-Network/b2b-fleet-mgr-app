@@ -90,6 +90,8 @@ export class ReportsView extends LitElement {
   @state()
   private highlightReportId: string | null = null;
 
+  private static readonly MAX_RANGE_DAYS = 366;
+
   async connectedCallback() {
     super.connectedCallback();
     this.setDefaultDates();
@@ -187,6 +189,20 @@ export class ReportsView extends LitElement {
     this.dateRange = 'Custom';
   }
 
+  private getDateRangeError(): string | null {
+    if (!this.startDate || !this.endDate) return null;
+    const start = dayjs(this.startDate);
+    const end = dayjs(this.endDate);
+    if (!start.isValid() || !end.isValid()) return null;
+    if (end.isBefore(start)) {
+      return msg('End date must be on or after start date.');
+    }
+    if (end.diff(start, 'day') > ReportsView.MAX_RANGE_DAYS) {
+      return msg('Date range cannot exceed 1 year.');
+    }
+    return null;
+  }
+
   private async fetchReports() {
     this.loading = true;
     try {
@@ -242,6 +258,7 @@ export class ReportsView extends LitElement {
 
   private async handleRunReport() {
     if (!this.selectedTemplate || this.submitting) return;
+    if (this.getDateRangeError()) return;
 
     this.submitting = true;
     try {
@@ -529,27 +546,33 @@ export class ReportsView extends LitElement {
                                 <input type="date" .value="${this.endDate}" @input="${this.handleEndDateChange}">
                             </div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-                            <div class="form-row" style="margin:0">
-<!--                                <div class="form-group" style="margin:0">-->
-<!--                                    <label class="form-label">Save As Report</label>-->
-<!--                                    <input type="text" placeholder="Report name..." style="width: 200px;">-->
-<!--                                </div>-->
-                            </div>
-                            <div style="display: flex; gap: 8px; align-items: center;">
-                                <select style="width: 100px;" .value="${this.selectedFormat}" @change="${this.handleFormatChange}">
-                                    <option value="xlsx">${msg('Excel')}</option>
-                                    <option value="csv">${msg('CSV')}</option>
-                                </select>
-                                <button
-                                    class="btn btn-primary ${this.submitting ? 'processing' : ''}"
-                                    @click="${this.handleRunReport}"
-                                    ?disabled="${this.submitting || !this.selectedTemplate || this.selectedFleetGroupIds.length === 0}"
-                                >
-                                    ${msg('RUN REPORT')}
-                                </button>
-                            </div>
-                        </div>
+                        ${(() => {
+                            const dateRangeError = this.getDateRangeError();
+                            return html`
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                                    <div class="form-row" style="margin:0">
+                                        ${dateRangeError ? html`
+                                            <div class="alert-error" style="margin: 0; padding: 6px 10px;">
+                                                ${dateRangeError}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <select style="width: 100px;" .value="${this.selectedFormat}" @change="${this.handleFormatChange}">
+                                            <option value="xlsx">${msg('Excel')}</option>
+                                            <option value="csv">${msg('CSV')}</option>
+                                        </select>
+                                        <button
+                                            class="btn btn-primary ${this.submitting ? 'processing' : ''}"
+                                            @click="${this.handleRunReport}"
+                                            ?disabled="${this.submitting || !this.selectedTemplate || this.selectedFleetGroupIds.length === 0 || !!dateRangeError}"
+                                        >
+                                            ${msg('RUN REPORT')}
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        })()}
                     </div>
 
                     <!-- Output -->
