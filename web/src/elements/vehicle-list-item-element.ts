@@ -15,7 +15,6 @@ enum ConnectionStatus {
     DISCONNECTING,
     DISCONNECTION_FAILED,
     DISCONNECTED,
-    TRANSFERRED
 }
 
 const connectionStatusLabel = (status: ConnectionStatus): string => {
@@ -27,7 +26,6 @@ const connectionStatusLabel = (status: ConnectionStatus): string => {
         case ConnectionStatus.DISCONNECTING: return msg("Disconnecting...");
         case ConnectionStatus.DISCONNECTION_FAILED: return msg("Disconnection failed");
         case ConnectionStatus.DISCONNECTED: return msg("Disconnected");
-        case ConnectionStatus.TRANSFERRED: return msg("Transferred");
     }
 };
 
@@ -66,6 +64,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
               <td>${this.item.tokenId}</td>
               <td>
                   <span class=${this.getConnectionCSSClass(this.item)}>${connectionStatusLabel(this.getConnectionStatus(this.item))}</span>
+                  ${this.isExternallyOwned(this.item) ? html`<span class="status status-not-owned" title=${msg('On-chain owner is a different wallet')}>${msg('Not Owned')}</span>` : ''}
               </td>
               <td>
                   <button
@@ -146,10 +145,6 @@ export class VehicleListItemElement extends BaseOnboardingElement {
     }
 
     getConnectionStatus(item: Vehicle): ConnectionStatus {
-        if (!item.isCurrentUserOwner && item.tokenId !== 0) {
-            return ConnectionStatus.TRANSFERRED;
-        }
-
         if (["inQueue", "inProgress"].includes(item.disconnectionStatus)) {
             return ConnectionStatus.DISCONNECTING;
         }
@@ -178,18 +173,22 @@ export class VehicleListItemElement extends BaseOnboardingElement {
     }
 
     getConnectionCSSClass(item: Vehicle): string {
-        const status = this.getConnectionStatus(item);
-        if (status === ConnectionStatus.TRANSFERRED) {
-            return "status status-transferred";
-        }
-        return status === ConnectionStatus.CONNECTED ? "status status-connected" : "status status-offline";
+        return this.getConnectionStatus(item) === ConnectionStatus.CONNECTED ? "status status-connected" : "status status-offline";
+    }
+
+    // True when the vehicle is on-chain (minted) but neither owned by the current user
+    // nor controlled via a shared kernel account they signed for.
+    isExternallyOwned(item: Vehicle): boolean {
+        return item.tokenId !== 0 && !item.isCurrentUserOwner && !item.isSharedAccountSigner;
     }
 
     canConnect(item: Vehicle): boolean {
+        if (!item.isCurrentUserOwner) return false;
         return [ConnectionStatus.UNKNOWN, ConnectionStatus.DISCONNECTED, ConnectionStatus.CONNECTION_FAILED].includes(this.getConnectionStatus(item));
     }
 
     canDisconnect(item: Vehicle): boolean {
+        if (!item.isCurrentUserOwner) return false;
         return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item));
     }
 

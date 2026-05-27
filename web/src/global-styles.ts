@@ -408,9 +408,10 @@ export const globalStyles = css`
         color: #856404;
     }
 
-    .status-transferred {
+    .status-not-owned {
         background: #ffe5b4;
         color: #856404;
+        margin-left: 4px;
     }
 
     .status-blocked {
