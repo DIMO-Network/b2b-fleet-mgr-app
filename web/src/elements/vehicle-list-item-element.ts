@@ -106,8 +106,8 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   -->
                   <button
                       type="button"
-                      ?hidden=${this.item.tokenId == 0 || !this.item.isCurrentUserOwner}
-                      ?disabled=${this.item.syntheticDevice.tokenId || this.processing}
+                      ?hidden=${!this.canDelete(this.item)}
+                      ?disabled=${this.processing}
                       @click=${this.deleteVehicle}
                       class=${this.deletionProcessing ? 'processing action-btn secondary' : 'action-btn secondary'}
                   >
@@ -194,7 +194,13 @@ export class VehicleListItemElement extends BaseOnboardingElement {
     }
 
     canDelete(item: Vehicle): boolean {
-        return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item));
+        if (item.tokenId === 0) return false;
+        if (!item.isCurrentUserOwner) return false;
+        return [
+            ConnectionStatus.UNKNOWN,
+            ConnectionStatus.DISCONNECTED,
+            ConnectionStatus.CONNECTION_FAILED,
+        ].includes(this.getConnectionStatus(item));
     }
 
     private dispatchItemChanged() {
