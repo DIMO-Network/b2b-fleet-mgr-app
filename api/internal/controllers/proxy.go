@@ -142,6 +142,9 @@ func ProxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte, logger *
 			c.Set(k, val[0])
 		}
 	}
+	// Mark this response as having traversed the b2b proxy. Lets clients distinguish
+	// upstream-passthrough 404s from "this b2b proxy doesn't know about that path" 404s.
+	c.Set("X-Proxied-By", "b2b-fleet-mgr-api")
 	c.Status(resp.StatusCode)
 
 	// return the exact same JSON response

@@ -224,7 +224,7 @@ export class VehicleListElement extends LitElement {
                             <th>${msg('Make Model Year')}</th>
                             <th>${msg('IMEI')}</th>
                             <th>${msg('Token ID')}</th>
-                            <th>${msg('Status')}</th>
+                            <th style="min-width: 180px;">${msg('Status')}</th>
                             <th>${msg('Actions')}</th>
                         </tr>
                         </thead>

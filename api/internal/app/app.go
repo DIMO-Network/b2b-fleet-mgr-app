@@ -196,6 +196,19 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Post("/tenant/settings", genericProxyCtrl.Proxy)
 	oracleApp.Post("/tenant/sync-kore", genericProxyCtrl.Proxy)
 
+	// Fall-through 404 for the oracle group. Distinguishes "this b2b proxy doesn't know
+	// about that path" from "the upstream oracle returned 404". Upstream-passthrough 404s
+	// carry the X-Proxied-By header set by ProxyRequest and the upstream's own JSON body;
+	// this handler emits a stable code clients can switch on.
+	oracleApp.Use(func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error":  "Proxy route not registered in b2b api",
+			"code":   "proxy_route_not_registered",
+			"method": c.Method(),
+			"path":   c.Path(),
+		})
+	})
+
 	return app
 }
 

@@ -142,7 +142,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   </button>
                   <button
                       type="button"
-                      ?hidden=${this.item.tokenId == 0 || this.item.isCurrentUserOwner}
+                      ?hidden=${this.item.tokenId == 0 || this.item.isCurrentUserOwner || this.item.isSharedAccountSigner}
                       ?disabled=${this.processing}
                       @click=${this.forceDeleteVehicle}
                       class=${this.deletionProcessing ? 'processing action-btn secondary' : 'action-btn secondary'}
