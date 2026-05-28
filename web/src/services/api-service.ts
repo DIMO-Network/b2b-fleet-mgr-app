@@ -114,6 +114,43 @@ export class ApiService {
         }
     }
 
+    // uploadFile POSTs a multipart/form-data body to the given endpoint. Unlike
+    // callApi, the Content-Type is intentionally left unset so the browser sets
+    // it (with the multipart boundary) from the FormData instance. Used for
+    // document uploads to the extract proxy.
+    public async uploadFile<T>(
+        endpoint: string,
+        formData: FormData,
+        auth: boolean = true,
+        useOracle: boolean = true,
+        includeTenantId: boolean = true
+    ): Promise<ApiResponse<T>> {
+        const headers: Record<string, string> = {
+            "Accept": "application/json",
+            ...this.getAuthorizationHeader(auth),
+            ...this.getTenantIdHeader(includeTenantId),
+        };
+
+        const finalUrl = this.constructUrl(endpoint, useOracle);
+
+        try {
+            const response = await fetch(finalUrl, { method: "POST", headers, body: formData });
+            const result = await this.processResponse(response);
+            if (!response.ok) {
+                return {
+                    success: false,
+                    error: result?.error || result?.message || (typeof result === "string" ? result : `HTTP ${response.status}`),
+                    status: response.status,
+                };
+            }
+            return { success: true, data: result as T, status: response.status };
+        } catch (error: any) {
+            // eslint-disable-next-line no-console
+            console.error(`uploadFile to ${endpoint} failed:`, error);
+            return { success: false, error: error?.message || "Upload failed" };
+        }
+    }
+
     public getWalletAddress(): string | null {
         const token = localStorage.getItem('token');
         if (!token) {

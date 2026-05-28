@@ -17,3 +17,5 @@ export * from "./update-inventory-modal-element.ts";
 export * from "./edit-device-definition-modal-element.ts";
 export * from "./click-to-copy-element";
 export * from "./vehicle-sharing-panel-element";
+export * from "./vehicle-documents-panel-element";
+export * from "./upload-attestation-document-element";

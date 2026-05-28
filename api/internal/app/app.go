@@ -121,6 +121,8 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Post("/fleet/vehicles/:imei/inventory", genericProxyCtrl.Proxy)
 	oracleApp.Patch("/fleet/vehicles/:tokenID/owner", genericProxyCtrl.Proxy)
 	oracleApp.Patch("/fleet/vehicles/:tokenID/sync-from-identity", genericProxyCtrl.Proxy)
+	oracleApp.Post("/fleet/vehicles/:tokenID/documents/extract", genericProxyCtrl.Proxy)
+	oracleApp.Post("/fleet/vehicles/:tokenID/documents/attest", genericProxyCtrl.Proxy)
 	// Vehicle share links
 	oracleApp.Get("/fleet/vehicles/shares/:shareID", genericProxyCtrl.Proxy)
 	oracleApp.Delete("/fleet/vehicles/shares/:shareID", genericProxyCtrl.Proxy)
