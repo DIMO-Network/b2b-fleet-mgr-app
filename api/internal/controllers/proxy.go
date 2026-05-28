@@ -83,10 +83,6 @@ func ProxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte, logger *
 	//req.Header.Set("Accept-Encoding", "utf-8")
 	//i think issue is because content is being returned compress and then browser doesn't know to decompress it
 
-	if len(requestBody) > 0 {
-		req.Header.Set("Content-Type", "application/json")
-	}
-
 	// Add authorization header if provided
 	if len(authHeader) > 0 && authHeader[0] != "" {
 		req.Header.Set("Authorization", authHeader[0])
@@ -94,19 +90,31 @@ func ProxyRequest(c *fiber.Ctx, targetURL *url.URL, requestBody []byte, logger *
 
 	// store tenantID
 	tenantID := ""
-	// copy any request headers
+	// copy any request headers. Use Set for Content-Type so it doesn't end up
+	// as a duplicate; this also lets multipart/form-data uploads pass through
+	// with their boundary parameter intact instead of being clobbered by a
+	// hardcoded application/json.
 	for key, values := range c.GetReqHeaders() {
 		// Skip Authorization header if we've explicitly set one
 		if key == "Authorization" && len(authHeader) > 0 && authHeader[0] != "" {
 			continue
 		}
-
+		if key == "Content-Type" {
+			if len(values) > 0 {
+				req.Header.Set("Content-Type", values[0])
+			}
+			continue
+		}
 		for _, value := range values {
 			req.Header.Add(key, value)
 			if key == "Tenant-Id" {
 				tenantID = value
 			}
 		}
+	}
+	// Fallback: if the caller sent a body but no Content-Type, assume JSON.
+	if len(requestBody) > 0 && req.Header.Get("Content-Type") == "" {
+		req.Header.Set("Content-Type", "application/json")
 	}
 
 	// Perform the request

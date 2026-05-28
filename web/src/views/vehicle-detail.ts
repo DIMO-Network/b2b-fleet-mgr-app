@@ -1112,7 +1112,11 @@ export class VehicleDetailView extends LitElement {
         </div>
 
         <!-- Documents -->
-        <vehicle-documents-panel-element .tokenDID=${this.vehicleIdentity?.vehicle?.tokenDID || ''}></vehicle-documents-panel-element>
+        <vehicle-documents-panel-element
+            .tokenDID=${this.vehicleIdentity?.vehicle?.tokenDID || ''}
+            .tokenID=${this.tokenID}
+            .expectedVin=${this.vehicle?.vin || ''}>
+        </vehicle-documents-panel-element>
 
         <!-- Vehicle Sharing -->
         <vehicle-sharing-panel .tokenID=${this.tokenID}></vehicle-sharing-panel>

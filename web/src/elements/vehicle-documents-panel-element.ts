@@ -9,6 +9,7 @@ import {
     resolveDownloadUrl,
     buildDownloadFilename,
 } from '@services/document-service.ts';
+import './upload-attestation-document-element.ts';
 
 // Schema-aware group used for the special service-invoice table. Anything not in
 // this map falls through to the generic "Other Documents" table.
@@ -92,12 +93,21 @@ export class VehicleDocumentsPanelElement extends LitElement {
     ];
 
     @property({ type: String }) tokenDID: string = '';
+    // Vehicle token ID — required for the upload flow (extract/attest endpoints
+    // are namespaced by tokenID). Read-only flows only need tokenDID, which is
+    // why this is optional.
+    @property({ type: Number }) tokenID: number = 0;
+    // expectedVin is forwarded to the upload modal so it can warn on a
+    // VIN-mismatch between extract output and the current vehicle. Optional —
+    // when empty, no check is performed.
+    @property({ type: String }) expectedVin: string = '';
 
     @state() private entries: AttestationEntry[] = [];
     @state() private rawByFilehash: Record<string, string> = {};
     @state() private loading: boolean = false;
     @state() private loadError: string = '';
     @state() private expandedIds: Set<string> = new Set();
+    @state() private uploadOpen: boolean = false;
 
     private lastLoadedTokenDID: string = '';
 
@@ -280,7 +290,15 @@ export class VehicleDocumentsPanelElement extends LitElement {
     render() {
         return html`
             <div class="panel mb-16">
-                <div class="panel-header">${msg('Documents')}</div>
+                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>${msg('Documents')}</span>
+                    <button class="btn btn-sm btn-primary"
+                            ?disabled=${!this.tokenID}
+                            title=${this.tokenID ? msg('Upload a document attestation') : msg('Vehicle token not loaded yet')}
+                            @click=${() => { this.uploadOpen = true; }}>
+                        ${msg('+ Upload')}
+                    </button>
+                </div>
                 <div class="panel-body">
                     ${this.loading ? html`<div class="doc-empty">${msg('Loading documents...')}</div>` :
                     this.loadError ? html`<div class="alert alert-error">${this.loadError}</div>` :
@@ -288,7 +306,28 @@ export class VehicleDocumentsPanelElement extends LitElement {
                     this.renderGroupedTables()}
                 </div>
             </div>
+            <upload-attestation-document-element
+                .show=${this.uploadOpen}
+                .tokenID=${this.tokenID}
+                .expectedVin=${this.expectedVin}
+                @modal-closed=${() => { this.uploadOpen = false; }}
+                @attestation-uploaded=${this.handleAttestationUploaded}>
+            </upload-attestation-document-element>
         `;
+    }
+
+    // handleAttestationUploaded refreshes the list after a successful upload.
+    // We poll a few times because the newly-attested CE takes a moment to be
+    // indexed by fetch-api; mirrors the same wait-and-retry rental-fleets-app
+    // does in its upload flow. load() is called directly so the dedup guard
+    // in updated() doesn't apply.
+    private async handleAttestationUploaded() {
+        const before = this.entries.length;
+        for (let i = 0; i < 4; i++) {
+            await new Promise((r) => setTimeout(r, 1500));
+            await this.load();
+            if (this.entries.length > before) break;
+        }
     }
 
     private renderGroupedTables() {

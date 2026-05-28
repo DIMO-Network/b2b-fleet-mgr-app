@@ -193,3 +193,102 @@ function extensionForMime(mime: string): string {
 function sanitizeFilenameSegment(s: string): string {
     return s.replace(/[\\/:*?"<>|]/g, '_').replace(/\.\.+/g, '_').trim();
 }
+
+// Closed set of parsed-document CloudEvent types the DIMO Attest API accepts.
+// Mirror of the backend service.AllowedDocumentParsedTypes. Used to populate
+// the category dropdown in the upload modal and to validate selections.
+export const DOCUMENT_PARSED_TYPES = [
+    'dimo.document.vehicle.insurance',
+    'dimo.document.vehicle.registration',
+    'dimo.document.vehicle.title',
+    'dimo.document.vehicle.service.invoice',
+    'dimo.document.vehicle.inspection',
+    'dimo.document.vehicle.finance',
+    'dimo.document.vehicle.regulatory.other',
+    'dimo.document.driver.license',
+    'dimo.document.unknown',
+] as const;
+
+export type DocumentParsedType = typeof DOCUMENT_PARSED_TYPES[number];
+
+// Mirror of the backend gateway.ExtractResult.
+export interface ExtractDocumentResult {
+    // The detected dimo.document.* CloudEvent type. May be empty when Extract
+    // couldn't classify — callers should treat that as `dimo.document.unknown`.
+    type: string;
+    // The full structured payload Extract returned, passed through verbatim so
+    // the modal can show it and so attest can ship it unchanged.
+    fields: Record<string, unknown>;
+}
+
+// Mirror of the backend service.DocumentAttestResult.
+export interface AttestDocumentResult {
+    rawEventId: string;
+    parsedEventId: string;
+    rawType: string;
+    parsedType: string;
+    fileHash: string;
+}
+
+// extractAttestationDocument POSTs a single file to the kaufmann extract proxy
+// (which calls extract.dimo.zone on the tenant's behalf). The vehicle tokenID
+// scopes the call for routing only — extract is stateless and doesn't read
+// the vehicle record. Returns null on failure (the underlying ApiService
+// already logs the error).
+export async function extractAttestationDocument(tokenID: number, file: File): Promise<ExtractDocumentResult | null> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const resp = await ApiService.getInstance().uploadFile<ExtractDocumentResult>(
+        `/fleet/vehicles/${tokenID}/documents/extract`,
+        formData,
+        true,
+        true,
+        true,
+    );
+    if (!resp.success || !resp.data) return null;
+    return resp.data;
+}
+
+export interface AttestDocumentInput {
+    // Must be one of DOCUMENT_PARSED_TYPES — backend rejects anything else.
+    category: DocumentParsedType;
+    // Base64 of the file bytes (without any data: URI prefix). Backend re-decodes
+    // and computes filehash for the raw CE.
+    fileBase64: string;
+    mimeType: string;
+    // Extract's parsed fields, passed through verbatim. May be empty for a
+    // user-bypassed extract path.
+    parsedData: Record<string, unknown>;
+}
+
+// attestAttestationDocument submits the parsed+raw CE pair via the kaufmann
+// attest controller. The backend handles tokenDID resolution, signing, and
+// the dual POST to attest.dimo.zone.
+export async function attestAttestationDocument(tokenID: number, input: AttestDocumentInput): Promise<AttestDocumentResult | null> {
+    const resp = await ApiService.getInstance().callApi<AttestDocumentResult>(
+        'POST',
+        `/fleet/vehicles/${tokenID}/documents/attest`,
+        input as unknown as Record<string, unknown>,
+        true,
+        true,
+        true,
+    );
+    if (!resp.success || !resp.data) return null;
+    return resp.data;
+}
+
+// fileToBase64 strips the `data:<mime>;base64,` prefix so backend gets pure
+// base64. The browser FileReader's readAsDataURL always emits the prefixed
+// form, so this normalization is needed before sending to attest.
+export function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result as string;
+            const commaIdx = result.indexOf(',');
+            resolve(commaIdx >= 0 ? result.slice(commaIdx + 1) : result);
+        };
+        reader.onerror = () => reject(reader.error || new Error('FileReader failed'));
+        reader.readAsDataURL(file);
+    });
+}
