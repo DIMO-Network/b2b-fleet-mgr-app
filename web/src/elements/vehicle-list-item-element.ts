@@ -7,6 +7,16 @@ import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
 import {delay} from "@utils/utils.ts";
 import {globalStyles} from "../global-styles.ts";
 
+interface SyncFromIdentityResult {
+    tokenId: number;
+    ownerChanged: boolean;
+    newOwner?: string;
+    connectionStatusChanged: boolean;
+    disconnectionStatusChanged: boolean;
+    syntheticTokenIdChanged: boolean;
+    onboardingStatusChanged: boolean;
+}
+
 enum ConnectionStatus {
     UNKNOWN,
     CONNECTING,
@@ -378,34 +388,36 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         // Add to body
         document.body.appendChild(modal);
 
-        // Load identity data, then mirror vehicle-detail.ts: if the on-chain owner returned by
-        // Identity has drifted from vins.owner (what `Vehicle.owner` carries on this row), fire
-        // PATCH /fleet/vehicles/{tokenID}/owner to self-heal. Identity is the source of truth.
+        // Backend-driven reconciliation: kaufmann pulls Identity itself, computes diffs against
+        // vins (owner, connection_status, disconnection_status, synthetic_token_id,
+        // onboarding_status), and writes only what drifted. We don't trust anything the FE
+        // computed about owner/SD — it's an opportunistic refresh.
         try {
             await modal.loadIdentityData();
-            void this.maybeSyncOwner(this.item?.tokenId, this.item?.owner, modal.identityData?.vehicle?.owner);
+            void this.syncFromIdentity(this.item?.tokenId);
         } catch (err) {
-            console.warn('Failed to load identity data for owner sync:', err);
+            console.warn('Failed to load identity data:', err);
         }
     }
 
-    private async maybeSyncOwner(tokenId: number | undefined, localOwner: string | undefined, identityOwner: string | undefined): Promise<void> {
-        if (!tokenId || !identityOwner) return;
-        if (localOwner && localOwner.toLowerCase() === identityOwner.toLowerCase()) return;
+    private async syncFromIdentity(tokenId: number | undefined): Promise<void> {
+        if (!tokenId) return;
 
-        const resp = await this.api.callApi(
+        const resp = await this.api.callApi<SyncFromIdentityResult>(
             'PATCH',
-            `/fleet/vehicles/${tokenId}/owner`,
-            { owner: identityOwner },
+            `/fleet/vehicles/${tokenId}/sync-from-identity`,
+            null,
             true,
             true
         );
         if (!resp.success) {
-            console.warn('Owner sync to kaufmann failed:', resp.error);
+            console.warn('Identity sync failed:', resp.error);
             return;
         }
-        // Refresh the list so the row reflects the corrected owner.
-        this.dispatchEvent(new CustomEvent('item-changed', { bubbles: true, composed: true }));
+        const r = resp.data;
+        if (r && (r.ownerChanged || r.connectionStatusChanged || r.disconnectionStatusChanged || r.syntheticTokenIdChanged || r.onboardingStatusChanged)) {
+            this.dispatchEvent(new CustomEvent('item-changed', { bubbles: true, composed: true }));
+        }
     }
 
     private openTelemetryModal() {
