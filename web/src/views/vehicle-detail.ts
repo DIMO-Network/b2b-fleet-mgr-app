@@ -20,6 +20,7 @@ import '../elements/click-to-copy-element';
 import '../elements/share-vehicle-modal-element';
 import '../elements/edit-device-definition-modal-element';
 import '../elements/vehicle-sharing-panel-element';
+import '../elements/vehicle-documents-panel-element';
 
 dayjs.extend(relativeTime);
 
@@ -1109,6 +1110,9 @@ export class VehicleDetailView extends LitElement {
             </div>
           </div>
         </div>
+
+        <!-- Documents -->
+        <vehicle-documents-panel-element .tokenDID=${this.vehicleIdentity?.vehicle?.tokenDID || ''}></vehicle-documents-panel-element>
 
         <!-- Vehicle Sharing -->
         <vehicle-sharing-panel .tokenID=${this.tokenID}></vehicle-sharing-panel>
