@@ -8,6 +8,7 @@ import { globalStyles } from '../global-styles.ts';
 interface Vehicle {
   vin: string;
   imei: string;
+  vehicle_token_id: number;
   make: string;
   model: string;
   year: number;
@@ -159,11 +160,16 @@ export class ManageGroupVehiclesModalElement extends LitElement {
   @state()
   private newVehicleImei: string = '';
 
+  // The vehicle chosen from the search suggestions. Required to add, since membership is keyed by
+  // vehicle token id (a free-typed search string has no token id).
+  @state()
+  private selectedVehicle: Vehicle | null = null;
+
   @state()
   private isAdding: boolean = false;
 
   @state()
-  private removingImeis: Set<string> = new Set();
+  private removingTokenIds: Set<number> = new Set();
 
   @state()
   private errorMessage: string = '';
@@ -308,10 +314,10 @@ export class ManageGroupVehiclesModalElement extends LitElement {
                       <td>
                         <button
                           class="btn btn-sm btn-danger"
-                          @click=${() => this.handleRemoveVehicle(vehicle.imei)}
-                          ?disabled=${this.removingImeis.has(vehicle.imei)}
+                          @click=${() => this.handleRemoveVehicle(vehicle.vehicle_token_id)}
+                          ?disabled=${this.removingTokenIds.has(vehicle.vehicle_token_id)}
                         >
-                          ${this.removingImeis.has(vehicle.imei) ? msg('Removing...') : msg('Remove')}
+                          ${this.removingTokenIds.has(vehicle.vehicle_token_id) ? msg('Removing...') : msg('Remove')}
                         </button>
                       </td>
                     </tr>
@@ -367,6 +373,8 @@ export class ManageGroupVehiclesModalElement extends LitElement {
   private handleImeiInput(e: Event) {
     const input = e.target as HTMLInputElement;
     this.newVehicleImei = input.value;
+    // Typing invalidates any previously selected suggestion; a vehicle must be picked from the list.
+    this.selectedVehicle = null;
     // Clear messages when user types
     this.errorMessage = '';
     this.successMessage = '';
@@ -407,7 +415,8 @@ export class ManageGroupVehiclesModalElement extends LitElement {
 
   private handleSuggestionClick(vehicle: Vehicle, e: Event) {
     e.preventDefault();
-    // Set the IMEI value from the selected vehicle
+    // Capture the selected vehicle (its token id is what we add by); show the IMEI in the input.
+    this.selectedVehicle = vehicle;
     this.newVehicleImei = vehicle.imei;
     this.showSuggestions = false;
     this.searchSuggestions = [];
@@ -449,20 +458,30 @@ export class ManageGroupVehiclesModalElement extends LitElement {
   }
 
   private async handleAddVehicle() {
-    if (!this.apiService || !this.group || !this.newVehicleImei.trim()) return;
+    if (!this.apiService || !this.group) return;
+
+    // Membership is keyed by vehicle token id, so a vehicle must be picked from the suggestions
+    // (a free-typed search string has no token id, and only minted vehicles can be added).
+    if (!this.selectedVehicle) {
+      this.errorMessage = msg('Please select a vehicle from the suggestions');
+      return;
+    }
+    const vehicle = this.selectedVehicle;
 
     this.isAdding = true;
     this.errorMessage = '';
     this.successMessage = '';
 
     try {
-      const imei = this.newVehicleImei.trim();
-      const response = await FleetService.getInstance().addVehicleToGroup(imei, this.group.id);
+      const response = await FleetService.getInstance().addVehicleToGroup(vehicle.vehicle_token_id, this.group.id);
 
       if (response.success && response.data) {
-        // Add the vehicle to the list
-        this.vehicles = [...this.vehicles, response.data];
+        // Add the selected vehicle to the list (the API returns ids only, not the full record).
+        if (!this.vehicles.some(v => v.vehicle_token_id === vehicle.vehicle_token_id)) {
+          this.vehicles = [...this.vehicles, vehicle];
+        }
         this.newVehicleImei = '';
+        this.selectedVehicle = null;
         this.successMessage = msg('Vehicle added successfully');
 
         // Dispatch event to refresh parent view
@@ -486,20 +505,20 @@ export class ManageGroupVehiclesModalElement extends LitElement {
     }
   }
 
-  private async handleRemoveVehicle(imei: string) {
+  private async handleRemoveVehicle(tokenId: number) {
     if (!this.apiService || !this.group) return;
 
-    this.removingImeis.add(imei);
+    this.removingTokenIds.add(tokenId);
     this.errorMessage = '';
     this.successMessage = '';
     this.requestUpdate();
 
     try {
-      const response = await FleetService.getInstance().removeVehicleFromGroup(imei, this.group.id);
+      const response = await FleetService.getInstance().removeVehicleFromGroup(tokenId, this.group.id);
 
       if (response.success) {
         // Remove the vehicle from the list
-        this.vehicles = this.vehicles.filter(v => v.imei !== imei);
+        this.vehicles = this.vehicles.filter(v => v.vehicle_token_id !== tokenId);
         this.successMessage = msg('Vehicle removed successfully');
 
         // Dispatch event to refresh parent view
@@ -519,7 +538,7 @@ export class ManageGroupVehiclesModalElement extends LitElement {
       console.error('Error removing vehicle:', error);
       this.errorMessage = error.message || msg('An unexpected error occurred');
     } finally {
-      this.removingImeis.delete(imei);
+      this.removingTokenIds.delete(tokenId);
       this.requestUpdate();
     }
   }
