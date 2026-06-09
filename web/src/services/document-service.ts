@@ -83,6 +83,10 @@ export async function fetchVehicleAttestations(tokenDID: string): Promise<Attest
     }>(
         'POST',
         `/fleet/vehicles/fetch?did=${encodeURIComponent(tokenDID)}`,
+        // NOTE: fetch-api removed `filehash` from CloudEventHeader (it's now a CE
+        // extension attribute, not a header field), so selecting `header { filehash }`
+        // 422s with "Cannot query field \"filehash\" on type \"CloudEventHeader\"".
+        // We rely on each CE's own presigned `dataUrl` for downloads instead.
         `{
             cloudEvents(did: "${tokenDID}", limit: 40, filter: { type: "${type}" }) {
                 header {
@@ -95,7 +99,6 @@ export async function fetchVehicleAttestations(tokenDID: string): Promise<Attest
                     producer
                     datacontenttype
                     tags
-                    filehash
                 }
                 data
                 dataUrl
