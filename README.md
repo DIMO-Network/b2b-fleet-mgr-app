@@ -12,6 +12,25 @@ Can also serve as an example for developers wanting to build onboarding flows on
 
 ## Running locally
 
+### Quick start
+
+```
+make dev
+```
+
+This is the one-command path: it checks `localdev.dimo.org` is in your hosts
+file, ensures `api/settings.yaml` exists with `USE_DEV_CERTS: true`, installs web
+deps if needed, then brings up the frontend (Vite + mkcert) and the Go backend
+together. Ctrl-C tears both down. Run `make help` to see all targets
+(`make web` / `make api` run either half alone).
+
+First run still needs the prerequisites below — a hosts-file entry and the
+mkcert root CA trusted (Vite installs the CA on first run, a one-time sudo
+prompt). For features that need signing you'll also need the zerodev/RPC URLs
+and keys in `api/settings.yaml`.
+
+### Manual steps
+
 1. Modify your hosts file to add a 127.0.0.1 entry for localdev.dimo.org . This should exist in the equivalent app configured in dimo dev console. 
 
 2. Start the web app in the `web` folder. Install dependencies `$ npm i`, then start the vite server `$ npm run dev`.

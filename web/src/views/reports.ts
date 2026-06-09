@@ -38,6 +38,35 @@ export class ReportsView extends LitElement {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
+      .run-feedback {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .run-feedback-main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .run-feedback-status {
+        font-weight: bold;
+        opacity: 0.85;
+      }
+      .run-feedback-dismiss {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        color: inherit;
+        padding: 0 4px;
+        flex-shrink: 0;
+      }
+      .run-feedback-dismiss:hover {
+        opacity: 0.7;
+      }
     ` ];
 
   @state()
@@ -78,6 +107,9 @@ export class ReportsView extends LitElement {
 
   private pollingIntervals: Map<string, number> = new Map();
 
+  // Timestamp (ms) after which polling for a given report gives up.
+  private pollingDeadlines: Map<string, number> = new Map();
+
   @state()
   private selectedFormat: 'csv' | 'xlsx' = 'xlsx';
 
@@ -90,7 +122,19 @@ export class ReportsView extends LitElement {
   @state()
   private highlightReportId: string | null = null;
 
+  // Report just launched from the RUN REPORT button — keeps the button disabled
+  // until polling reaches a terminal state (completed / failed).
+  @state()
+  private activeRunReportId: string | null = null;
+
+  // Feedback panel shown above the report area when a report is launched.
+  @state()
+  private runFeedback: { tone: 'processing' | 'success' | 'error'; message: string } | null = null;
+
   private static readonly MAX_RANGE_DAYS = 366;
+
+  // Give up polling a report after this long and surface a timeout error.
+  private static readonly POLLING_TIMEOUT_MS = 15 * 60 * 1000;
 
   async connectedCallback() {
     super.connectedCallback();
@@ -127,6 +171,16 @@ export class ReportsView extends LitElement {
           updatedAt: new Date().toISOString(),
         };
         this.reports = [placeholder, ...this.reports];
+      }
+      // Reflect feedback for the redirected report unless it already finished.
+      const highlighted = this.reports.find(r => r.id === this.highlightReportId);
+      const status = highlighted?.status.toLowerCase();
+      if (status !== 'completed' && status !== 'failed' && status !== 'error') {
+        this.activeRunReportId = this.highlightReportId;
+        this.runFeedback = {
+          tone: 'processing',
+          message: msg('Your report is being processed. This may take a moment…'),
+        };
       }
       this.startPolling(this.highlightReportId);
       await this.updateComplete;
@@ -257,10 +311,11 @@ export class ReportsView extends LitElement {
   }
 
   private async handleRunReport() {
-    if (!this.selectedTemplate || this.submitting) return;
+    if (!this.selectedTemplate || this.submitting || this.activeRunReportId) return;
     if (this.getDateRangeError()) return;
 
     this.submitting = true;
+    this.runFeedback = { tone: 'processing', message: msg('Submitting report…') };
     try {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       console.log('Running report using timezone:', timezone);
@@ -296,12 +351,29 @@ export class ReportsView extends LitElement {
         };
 
         this.reports = [newReport, ...this.reports];
-        
+
+        // Track this report so the RUN REPORT button stays disabled and the
+        // feedback panel reflects live polling status until it finishes.
+        this.activeRunReportId = result.reportId;
+        this.runFeedback = {
+          tone: 'processing',
+          message: msg('Your report is being processed. This may take a moment…'),
+        };
+
         // Start polling for this report
         this.startPolling(result.reportId);
+      } else {
+        this.runFeedback = {
+          tone: 'error',
+          message: msg('Could not start the report. Please try again.'),
+        };
       }
     } catch (error) {
       console.error('Failed to run report:', error);
+      this.runFeedback = {
+        tone: 'error',
+        message: msg('Failed to run report. Please try again.'),
+      };
     } finally {
       this.submitting = false;
     }
@@ -313,11 +385,24 @@ export class ReportsView extends LitElement {
     this.pollingReportIds.add(reportId);
     this.pollingReportIds = new Set(this.pollingReportIds);
 
+    this.pollingDeadlines.set(reportId, Date.now() + ReportsView.POLLING_TIMEOUT_MS);
+
     const interval = window.setInterval(async () => {
+      // Give up if the report has been processing too long.
+      const deadline = this.pollingDeadlines.get(reportId);
+      if (deadline !== undefined && Date.now() > deadline) {
+        this.stopPolling(reportId);
+        this.finishActiveRun(reportId, {
+          tone: 'error',
+          message: msg('Report timed out after 15 minutes. Please try again.'),
+        });
+        return;
+      }
+
       // Show status update effect
       this.statusUpdateEffectIds.add(reportId);
       this.statusUpdateEffectIds = new Set(this.statusUpdateEffectIds);
-      
+
       // Remove effect after 1 second
       setTimeout(() => {
         this.statusUpdateEffectIds.delete(reportId);
@@ -325,18 +410,44 @@ export class ReportsView extends LitElement {
       }, 1000);
 
       const statusUpdate = await FleetService.getInstance().getReportStatus(reportId);
-      
+
       if (statusUpdate) {
         // Update the report in the list
         this.reports = this.reports.map(r => r.id === reportId ? statusUpdate : r);
 
-        if (statusUpdate.status === 'completed') {
+        const status = statusUpdate.status.toLowerCase();
+        if (status === 'completed') {
           this.stopPolling(reportId);
+          this.finishActiveRun(reportId, {
+            tone: 'success',
+            message: msg('Your report is ready — download it from Report History below.'),
+          });
+        } else if (status === 'failed' || status === 'error') {
+          this.stopPolling(reportId);
+          this.finishActiveRun(reportId, {
+            tone: 'error',
+            message: msg('Report processing failed. Please try again.'),
+          });
         }
       }
     }, 5000);
 
     this.pollingIntervals.set(reportId, interval);
+  }
+
+  // Clears the active-run lock (re-enabling RUN REPORT) and updates the
+  // feedback panel when the launched report reaches a terminal state.
+  private finishActiveRun(
+    reportId: string,
+    feedback: { tone: 'success' | 'error'; message: string }
+  ) {
+    if (this.activeRunReportId !== reportId) return;
+    this.activeRunReportId = null;
+    this.runFeedback = feedback;
+  }
+
+  private dismissRunFeedback() {
+    this.runFeedback = null;
   }
 
   private stopPolling(reportId: string) {
@@ -345,6 +456,7 @@ export class ReportsView extends LitElement {
       window.clearInterval(interval);
       this.pollingIntervals.delete(reportId);
     }
+    this.pollingDeadlines.delete(reportId);
     this.pollingReportIds.delete(reportId);
     this.pollingReportIds = new Set(this.pollingReportIds);
   }
@@ -407,6 +519,40 @@ export class ReportsView extends LitElement {
     }
 
     return `${start.format('MMM D, YYYY')} - ${end.format('MMM D, YYYY')}`;
+  }
+
+  private renderRunFeedback() {
+    if (!this.runFeedback) return '';
+
+    const { tone, message } = this.runFeedback;
+    const alertClass = tone === 'error' ? 'alert-error' : 'alert-success';
+
+    // While processing, surface the live status reported by polling.
+    const activeReport = this.activeRunReportId
+      ? this.reports.find(r => r.id === this.activeRunReportId)
+      : undefined;
+    const liveStatus = tone === 'processing' && activeReport
+      ? activeReport.status.toUpperCase()
+      : null;
+
+    return html`
+      <div class="alert ${alertClass} run-feedback" role="status" aria-live="polite">
+        <div class="run-feedback-main">
+          ${tone === 'processing' ? html`<span class="spinner"></span>` : ''}
+          <span>${message}</span>
+          ${liveStatus ? html`
+            <span class="run-feedback-status">${msg('Status:')} ${liveStatus}</span>
+          ` : ''}
+        </div>
+        ${tone !== 'processing' ? html`
+          <button
+            class="run-feedback-dismiss"
+            aria-label="${msg('Dismiss')}"
+            @click=${this.dismissRunFeedback}
+          >✕</button>
+        ` : ''}
+      </div>
+    `;
   }
 
   render() {
@@ -497,6 +643,8 @@ export class ReportsView extends LitElement {
                 </div>
             </div>
 
+            ${this.renderRunFeedback()}
+
             <div class="reports-layout">
                 <!-- Report Templates -->
                 <div class="report-templates">
@@ -563,11 +711,11 @@ export class ReportsView extends LitElement {
                                             <option value="csv">${msg('CSV')}</option>
                                         </select>
                                         <button
-                                            class="btn btn-primary ${this.submitting ? 'processing' : ''}"
+                                            class="btn btn-primary ${this.submitting || this.activeRunReportId ? 'processing' : ''}"
                                             @click="${this.handleRunReport}"
-                                            ?disabled="${this.submitting || !this.selectedTemplate || this.selectedFleetGroupIds.length === 0 || !!dateRangeError}"
+                                            ?disabled="${this.submitting || !!this.activeRunReportId || !this.selectedTemplate || this.selectedFleetGroupIds.length === 0 || !!dateRangeError}"
                                         >
-                                            ${msg('RUN REPORT')}
+                                            ${this.activeRunReportId ? msg('PROCESSING…') : msg('RUN REPORT')}
                                         </button>
                                     </div>
                                 </div>
