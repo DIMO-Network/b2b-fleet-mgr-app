@@ -26,6 +26,9 @@ export interface FleetReport {
   };
   createdAt: string;
   updatedAt: string;
+  // Wall-clock run time in ms, set by the backend once the report reaches a
+  // terminal state (completed/failed). Omitted while pending/running.
+  durationMs?: number;
 }
 
 export class FleetService {
