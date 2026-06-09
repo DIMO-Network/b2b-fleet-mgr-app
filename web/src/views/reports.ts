@@ -67,6 +67,12 @@ export class ReportsView extends LitElement {
       .run-feedback-dismiss:hover {
         opacity: 0.7;
       }
+      .report-duration {
+        display: block;
+        margin-top: 2px;
+        font-size: 11px;
+        color: #666;
+      }
     ` ];
 
   @state()
@@ -131,6 +137,16 @@ export class ReportsView extends LitElement {
   @state()
   private runFeedback: { tone: 'processing' | 'success' | 'error'; message: string } | null = null;
 
+  // Live "running for…" elapsed time (ms) shown while a report is processing.
+  // The backend's durationMs is only available once the report finishes, so we
+  // tick this client-side from the report's start until it reaches a terminal
+  // state, then show the authoritative durationMs.
+  @state()
+  private activeRunElapsedMs: number = 0;
+
+  private activeRunStartedAt: number | null = null;
+  private elapsedTimerId: number | null = null;
+
   private static readonly MAX_RANGE_DAYS = 366;
 
   // Give up polling a report after this long and surface a timeout error.
@@ -181,6 +197,9 @@ export class ReportsView extends LitElement {
           tone: 'processing',
           message: msg('Your report is being processed. This may take a moment…'),
         };
+        // Count elapsed from when the report was created, not "now".
+        const createdMs = highlighted ? dayjs(highlighted.createdAt).valueOf() : Date.now();
+        this.startElapsedTimer(createdMs);
       }
       this.startPolling(this.highlightReportId);
       await this.updateComplete;
@@ -192,6 +211,50 @@ export class ReportsView extends LitElement {
     super.disconnectedCallback();
     this.pollingIntervals.forEach(interval => window.clearInterval(interval));
     this.pollingIntervals.clear();
+    this.stopElapsedTimer();
+  }
+
+  // Ticks activeRunElapsedMs every second so the feedback panel shows a live
+  // "running for…" time while a report is processing.
+  private startElapsedTimer(startedAtMs: number) {
+    this.stopElapsedTimer();
+    this.activeRunStartedAt = startedAtMs;
+    this.activeRunElapsedMs = Math.max(0, Date.now() - startedAtMs);
+    this.elapsedTimerId = window.setInterval(() => {
+      if (this.activeRunStartedAt === null) return;
+      this.activeRunElapsedMs = Math.max(0, Date.now() - this.activeRunStartedAt);
+    }, 1000);
+  }
+
+  private stopElapsedTimer() {
+    if (this.elapsedTimerId !== null) {
+      window.clearInterval(this.elapsedTimerId);
+      this.elapsedTimerId = null;
+    }
+    this.activeRunStartedAt = null;
+  }
+
+  // "M:SS" for a live running timer (e.g. "0:45", "2:13").
+  private formatElapsed(ms: number): string {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  // Human duration for a finished report (e.g. "1.2s", "45s", "1m 5s").
+  private formatDuration(ms: number): string {
+    if (ms < 1000) return `${ms}ms`;
+    const totalSeconds = ms / 1000;
+    if (totalSeconds < 60) {
+      // One decimal under 10s ("1.2s"), whole seconds otherwise ("45s").
+      return totalSeconds < 10
+        ? `${totalSeconds.toFixed(1)}s`
+        : `${Math.round(totalSeconds)}s`;
+    }
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.round(totalSeconds % 60);
+    return `${minutes}m ${seconds}s`;
   }
 
   private setDefaultDates() {
@@ -359,6 +422,7 @@ export class ReportsView extends LitElement {
           tone: 'processing',
           message: msg('Your report is being processed. This may take a moment…'),
         };
+        this.startElapsedTimer(Date.now());
 
         // Start polling for this report
         this.startPolling(result.reportId);
@@ -416,17 +480,20 @@ export class ReportsView extends LitElement {
         this.reports = this.reports.map(r => r.id === reportId ? statusUpdate : r);
 
         const status = statusUpdate.status.toLowerCase();
+        const duration = statusUpdate.durationMs;
         if (status === 'completed') {
           this.stopPolling(reportId);
+          const suffix = duration !== undefined ? ` (${msg('took')} ${this.formatDuration(duration)})` : '';
           this.finishActiveRun(reportId, {
             tone: 'success',
-            message: msg('Your report is ready — download it from Report History below.'),
+            message: msg('Your report is ready — download it from Report History below.') + suffix,
           });
         } else if (status === 'failed' || status === 'error') {
           this.stopPolling(reportId);
+          const suffix = duration !== undefined ? ` (${msg('failed after')} ${this.formatDuration(duration)})` : '';
           this.finishActiveRun(reportId, {
             tone: 'error',
-            message: msg('Report processing failed. Please try again.'),
+            message: msg('Report processing failed. Please try again.') + suffix,
           });
         }
       }
@@ -443,6 +510,7 @@ export class ReportsView extends LitElement {
   ) {
     if (this.activeRunReportId !== reportId) return;
     this.activeRunReportId = null;
+    this.stopElapsedTimer();
     this.runFeedback = feedback;
   }
 
@@ -542,6 +610,9 @@ export class ReportsView extends LitElement {
           <span>${message}</span>
           ${liveStatus ? html`
             <span class="run-feedback-status">${msg('Status:')} ${liveStatus}</span>
+          ` : ''}
+          ${tone === 'processing' ? html`
+            <span class="run-feedback-status">${msg('Running for')} ${this.formatElapsed(this.activeRunElapsedMs)}</span>
           ` : ''}
         </div>
         ${tone !== 'processing' ? html`
@@ -776,6 +847,9 @@ export class ReportsView extends LitElement {
                             <td title="${report.createdAt}">${this.formatLastRun(report.createdAt)}</td>
                             <td>
                                 <span class="status status-${report.status.toLowerCase()}">${report.status.toUpperCase()}</span>
+                                ${report.durationMs !== undefined ? html`
+                                    <span class="report-duration" title="${msg('Run time')}">${this.formatDuration(report.durationMs)}</span>
+                                ` : ''}
                             </td>
                             <td>
                                 <button
