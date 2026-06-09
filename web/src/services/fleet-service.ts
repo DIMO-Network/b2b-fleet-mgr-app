@@ -120,15 +120,15 @@ export class FleetService {
   }
 
   /**
-   * Add a vehicle to a fleet group
-   * @param imei Vehicle IMEI
+   * Add a vehicle to a fleet group. Keyed by vehicle token id; minted vehicles only.
+   * @param tokenId Vehicle token id
    * @param groupId Group ID
    * @returns Success status
    */
-  async addVehicleToGroup(imei: string, groupId: string): Promise<any> {
+  async addVehicleToGroup(tokenId: number, groupId: string): Promise<any> {
     return this.apiService.callApi(
       'POST',
-      `/fleet/vehicles/${imei}/group/${groupId}`,
+      `/fleet/vehicles/${tokenId}/group/${groupId}`,
       null,
       true, // auth required
       true, // oracle endpoint
@@ -137,15 +137,15 @@ export class FleetService {
   }
 
   /**
-   * Remove a vehicle from a fleet group
-   * @param imei Vehicle IMEI
+   * Remove a vehicle from a fleet group. Keyed by vehicle token id; minted vehicles only.
+   * @param tokenId Vehicle token id
    * @param groupId Group ID
    * @returns Success status
    */
-  async removeVehicleFromGroup(imei: string, groupId: string): Promise<any> {
+  async removeVehicleFromGroup(tokenId: number, groupId: string): Promise<any> {
     return this.apiService.callApi(
       'DELETE',
-      `/fleet/vehicles/${imei}/group/${groupId}`,
+      `/fleet/vehicles/${tokenId}/group/${groupId}`,
       null,
       true, // auth required
       true, // oracle endpoint
