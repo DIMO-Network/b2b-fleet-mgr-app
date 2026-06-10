@@ -106,6 +106,9 @@ export class ReportsView extends LitElement {
   private selectedFleetGroupIds: string[] = [];
 
   @state()
+  private fleetGroupSearch: string = '';
+
+  @state()
   private pollingReportIds: Set<string> = new Set();
 
   @state()
@@ -368,9 +371,28 @@ export class ReportsView extends LitElement {
     this.selectedFormat = (e.target as HTMLSelectElement).value as 'csv' | 'xlsx';
   }
 
+  // Fleet groups matching the current search box (case-insensitive substring).
+  private get filteredFleetGroups(): FleetGroup[] {
+    const q = this.fleetGroupSearch.trim().toLowerCase();
+    if (!q) return this.fleetGroups;
+    return this.fleetGroups.filter(g => g.name.toLowerCase().includes(q));
+  }
+
+  private handleFleetGroupSearchInput(e: Event) {
+    this.fleetGroupSearch = (e.target as HTMLInputElement).value;
+  }
+
   private handleFleetGroupChange(e: Event) {
     const select = e.target as HTMLSelectElement;
-    this.selectedFleetGroupIds = Array.from(select.selectedOptions).map(opt => opt.value);
+    // The native select only knows about the currently-rendered (filtered)
+    // options, so merge: keep prior selections hidden by the filter, and
+    // replace the selection state of the visible ones with what's selected now.
+    const visibleIds = new Set(this.filteredFleetGroups.map(g => g.id));
+    const nowSelectedVisible = new Set(Array.from(select.selectedOptions).map(opt => opt.value));
+    this.selectedFleetGroupIds = [
+      ...this.selectedFleetGroupIds.filter(id => !visibleIds.has(id)),
+      ...this.filteredFleetGroups.filter(g => nowSelectedVisible.has(g.id)).map(g => g.id),
+    ];
   }
 
   private async handleRunReport() {
@@ -737,13 +759,27 @@ export class ReportsView extends LitElement {
                     <div class="report-config">
                         <div class="form-row" style="align-items: flex-start;">
                             <div class="form-group" style="flex:1; display: flex; flex-direction: column;">
-                                <label class="form-label">${msg('Fleet Groups (ctrl+click to select multiple)')}</label>
+                                <label class="form-label">
+                                    ${msg('Fleet Groups (ctrl+click to select multiple)')}
+                                    ${this.selectedFleetGroupIds.length > 0 ? html`<span style="color:#666; font-weight:normal;"> — ${this.selectedFleetGroupIds.length} ${msg('selected')}</span>` : ''}
+                                </label>
+                                <input
+                                    type="text"
+                                    class="search-box"
+                                    style="width: 100%; margin: 0 0 6px 0; font-size: 14px; padding: 5px 10px;"
+                                    .placeholder=${msg('Search fleet groups...')}
+                                    .value=${this.fleetGroupSearch}
+                                    @input=${this.handleFleetGroupSearchInput}
+                                >
                                 <select multiple style="width: 100%; flex: 1; min-height: 120px;" @change="${this.handleFleetGroupChange}">
-                                    ${this.fleetGroups.map(group => html`
-                                        <option value="${group.id}" ?disabled=${!group.has_access}>
+                                    ${this.filteredFleetGroups.map(group => html`
+                                        <option value="${group.id}" ?disabled=${!group.has_access} ?selected=${this.selectedFleetGroupIds.includes(group.id)}>
                                             ${group.name} - ${group.vehicle_count} ${!group.has_access ? msg(' (No Access)') : ''}
                                         </option>
                                     `)}
+                                    ${this.filteredFleetGroups.length === 0 ? html`
+                                        <option disabled>${msg('No matching fleet groups')}</option>
+                                    ` : ''}
                                 </select>
                             </div>
                             <div class="form-group">
