@@ -142,6 +142,9 @@ export class VehiclesFleetsView extends LitElement {
   private activeTab: 'vehicles-list' | 'fleet-groups' = 'vehicles-list';
 
   @state()
+  private groupSearch: string = '';
+
+  @state()
   private showCreateGroupModal: boolean = false;
 
   @state()
@@ -460,6 +463,12 @@ export class VehiclesFleetsView extends LitElement {
     }
   };
 
+  private get filteredFleetGroups(): FleetGroup[] {
+    const query = this.groupSearch.trim().toLowerCase();
+    if (!query) return this.fleetGroups;
+    return this.fleetGroups.filter(group => group.name.toLowerCase().includes(query));
+  }
+
   private handleSearchInput(e: Event) {
     const input = e.target as HTMLInputElement;
     const value = input.value;
@@ -735,6 +744,13 @@ export class VehiclesFleetsView extends LitElement {
             <div id="subtab-fleet-groups" style="display: ${this.activeTab === 'fleet-groups' ? 'block' : 'none'}">
                 <div class="toolbar">
                     <button class="btn btn-primary" @click=${this.openCreateGroupModal}>${msg('+ CREATE GROUP')}</button>
+                    <input
+                      type="text"
+                      class="search-box"
+                      .placeholder=${msg('Search groups...')}
+                      @input=${(e: Event) => { this.groupSearch = (e.target as HTMLInputElement).value; }}
+                      .value=${this.groupSearch}
+                    >
                 </div>
 
                 <div class="group-list">
@@ -742,7 +758,11 @@ export class VehiclesFleetsView extends LitElement {
                         <div style="text-align: center; padding: 2rem; color: #666;">
                             ${msg('No fleet groups yet. Click "CREATE GROUP" to add one.')}
                         </div>
-                    ` : this.fleetGroups.map(group => html`
+                    ` : this.filteredFleetGroups.length === 0 ? html`
+                        <div style="text-align: center; padding: 2rem; color: #666;">
+                            ${msg('No fleet groups match your search.')}
+                        </div>
+                    ` : this.filteredFleetGroups.map(group => html`
                         <div class="group-item">
                             <div class="group-info">
                                 <span class="group-name" style="display: flex; align-items: center; gap: 0.5rem;">
