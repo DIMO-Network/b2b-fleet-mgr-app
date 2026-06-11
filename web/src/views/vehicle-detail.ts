@@ -1435,6 +1435,8 @@ export class VehicleDetailView extends LitElement {
       this.vehicle = { ...this.vehicle, license_plate: this.editPlateValue.trim() };
       this.editingPlate = false;
       this.successMessage = msg('License plate updated.');
+    } else if (response.status === 409) {
+      this.errorMessage = msg('This license plate is already assigned to another vehicle in your fleet.');
     } else {
       this.errorMessage = response.error || msg('Failed to update license plate.');
     }
