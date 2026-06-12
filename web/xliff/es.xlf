@@ -1030,10 +1030,6 @@
   <source>Disconnected</source>
   <target>Desconectado</target>
 </trans-unit>
-<trans-unit id="sa5f7052fbe45d40d">
-  <source>Transferred</source>
-  <target>Transferido</target>
-</trans-unit>
 <trans-unit id="s6a3912feda823e1e">
   <source>View Identity Info</source>
   <target>Ver Info de Identidad</target>
@@ -1237,10 +1233,6 @@
 <trans-unit id="sac432d5d9bb20916">
   <source>You do not have the required permissions to access the Reports section.</source>
   <target>No tiene los permisos necesarios para acceder a la sección de Reportes.</target>
-</trans-unit>
-<trans-unit id="s81e40c4a7344983f">
-  <source>Existing Reports</source>
-  <target>Reportes Existentes</target>
 </trans-unit>
 <trans-unit id="se6850e989ab3591e">
   <source>Loading reports...</source>
@@ -1622,10 +1614,6 @@
   <source>Failed to load vehicle identity</source>
   <target>Error al cargar identidad del vehículo</target>
 </trans-unit>
-<trans-unit id="s1a7d1a91f4212c93">
-  <source>This week</source>
-  <target>Esta semana</target>
-</trans-unit>
 <trans-unit id="sf08825084467201b">
   <source>Failed to load trips</source>
   <target>Error al cargar viajes</target>
@@ -1842,10 +1830,6 @@
   <source>Expires At</source>
   <target>Expira el</target>
 </trans-unit>
-<trans-unit id="sdd5b71ef1b191637">
-  <source>No sharing information available</source>
-  <target>No hay información de compartir disponible</target>
-</trans-unit>
 <trans-unit id="s59f86282bcc88563">
   <source>No IMEI or API service provided</source>
   <target>No se proporcionó IMEI o servicio API</target>
@@ -1883,7 +1867,7 @@
   <target>Combustible</target>
 </trans-unit>
 <trans-unit id="s2615a3939b0639bb">
-  <source>Immobilizer</source>
+  <source>Engine</source>
   <target>Imobilizador</target>
 </trans-unit>
 <trans-unit id="se8bc25ae43fe22b1">
@@ -2034,6 +2018,480 @@
 <trans-unit id="s0cfd7011c5af6255">
   <source>Failed to synchronize vendor data.</source>
   <target>Error al sincronizar datos del proveedor.</target>
+</trans-unit>
+<trans-unit id="sef70bf9f18114bf1">
+  <source>we have control over any vehicle under this account to transfer or delete</source>
+</trans-unit>
+<trans-unit id="sf072d582c213e3d4">
+  <source>Shared</source>
+</trans-unit>
+<trans-unit id="sf87e9fe050a7d68d">
+  <source>Device Definitions</source>
+</trans-unit>
+<trans-unit id="s84307e1b7abdebfc">
+  <source>Emails</source>
+</trans-unit>
+<trans-unit id="s9669bd7587b7c11a">
+  <source>My Profile</source>
+  <target>Mi Perfil</target>
+</trans-unit>
+<trans-unit id="s2966e4fa1643025f">
+  <source>Submitting shared-account transfer...</source>
+</trans-unit>
+<trans-unit id="s6e048acb7130a958">
+  <source>Checking transfer status... </source>
+</trans-unit>
+<trans-unit id="sfe8c6231f61dff73">
+  <source>Update Device Definition</source>
+</trans-unit>
+<trans-unit id="s8d5360c65e415492">
+  <source>Loading device definition...</source>
+</trans-unit>
+<trans-unit id="se6d8cc266d1acd53">
+  <source>Vehicle Identity</source>
+</trans-unit>
+<trans-unit id="scb320e45978d3390">
+  <source>Manufacturer</source>
+</trans-unit>
+<trans-unit id="s5da52af9b083c29a">
+  <source>Model</source>
+</trans-unit>
+<trans-unit id="sa6f2645578b2d2bc">
+  <source>Year</source>
+</trans-unit>
+<trans-unit id="sd6c626fcebd75fbd">
+  <source>Definition ID</source>
+</trans-unit>
+<trans-unit id="s663f0dc12ffe7f21">
+  <source>Device Type</source>
+</trans-unit>
+<trans-unit id="sd409aa8e8034d33c">
+  <source>Vehicle Attributes</source>
+</trans-unit>
+<trans-unit id="s5ac4880719a8a605">
+  <source>Additional Attributes</source>
+</trans-unit>
+<trans-unit id="se352ea2236bce413">
+  <source>Device definition ID is missing.</source>
+</trans-unit>
+<trans-unit id="s00eea675d6ccb2c6">
+  <source>Failed to load device definition.</source>
+</trans-unit>
+<trans-unit id="sfc63e31ac7c956ed">
+  <source>Select</source>
+</trans-unit>
+<trans-unit id="s5e211a662fb04a77">
+  <source>Only applicable for BEV vehicles.</source>
+</trans-unit>
+<trans-unit id="s05b28c37cb331838">
+  <source>Not applicable for BEV vehicles.</source>
+</trans-unit>
+<trans-unit id="sc642039922c374f7">
+  <source>Required for BEV vehicles.</source>
+</trans-unit>
+<trans-unit id="se63103458284fedd">
+  <source>Manufacturer is required.</source>
+</trans-unit>
+<trans-unit id="sfb7372f3da237a33">
+  <source>Model is required.</source>
+</trans-unit>
+<trans-unit id="s8e0967f301dd0509">
+  <source>Year is required.</source>
+</trans-unit>
+<trans-unit id="see94444ce2737c38">
+  <source>Year must be a 4-digit number.</source>
+</trans-unit>
+<trans-unit id="s07ab0462c1b126aa">
+  <source><x id="0" equiv-text="${field.label}"/> is required.</source>
+  <target><x id="0" equiv-text="${field.label}"/> es obligatorio.</target>
+</trans-unit>
+<trans-unit id="sd162a654098d4a3e">
+  <source><x id="0" equiv-text="${field.label}"/> must be numeric.</source>
+  <target><x id="0" equiv-text="${field.label}"/> debe ser numérico.</target>
+</trans-unit>
+<trans-unit id="sed063c150093d371">
+  <source>Fuel Type must include letters.</source>
+</trans-unit>
+<trans-unit id="s93dbfcb77302122a">
+  <source>Driven Wheels must be one of FWD, RWD, AWD, or 4WD.</source>
+</trans-unit>
+<trans-unit id="s435622b41a403823">
+  <source>Please fix the highlighted fields.</source>
+</trans-unit>
+<trans-unit id="s4a09d02e947b4929">
+  <source>Vehicle tokenDID is missing.</source>
+</trans-unit>
+<trans-unit id="s77c74939ae5a6be1">
+  <source>Failed to submit device definition update.</source>
+</trans-unit>
+<trans-unit id="s87449a8aa9ada50a">
+  <source>Device definition update submitted.</source>
+</trans-unit>
+<trans-unit id="sb1a5075e4ce45f40">
+  <source>Please select a vehicle from the suggestions</source>
+</trans-unit>
+<trans-unit id="s95ac88eb306f2de6">
+  <source>Shared account mode</source>
+</trans-unit>
+<trans-unit id="scf02d757f01f03be">
+  <source>This vehicle is owned by a kernel account that authorised your tenant signer. Your tenant will sign and submit the transfer on its behalf — no passkey signature is required.</source>
+</trans-unit>
+<trans-unit id="sb5a5f25fb18844e7">
+  <source>Insurance</source>
+</trans-unit>
+<trans-unit id="se1ef56fd05a573b8">
+  <source>Registration</source>
+</trans-unit>
+<trans-unit id="s99f110d27e30b289">
+  <source>Title</source>
+</trans-unit>
+<trans-unit id="s64f83dfc83a74667">
+  <source>Service Invoice</source>
+</trans-unit>
+<trans-unit id="sb43a2a8ac136c113">
+  <source>Inspection</source>
+</trans-unit>
+<trans-unit id="sdd70d07233c9c3ad">
+  <source>Finance</source>
+</trans-unit>
+<trans-unit id="s5dbc8beeef9a19f2">
+  <source>Regulatory (other)</source>
+</trans-unit>
+<trans-unit id="s286491c69ea288ec">
+  <source>Driver License</source>
+</trans-unit>
+<trans-unit id="s26e43e007bf14f0e">
+  <source>Extract failed — you can still submit, but the type will default to Unknown.</source>
+</trans-unit>
+<trans-unit id="s7bba7d19d4270419">
+  <source>Attestation submission failed. Please try again.</source>
+</trans-unit>
+<trans-unit id="sd94ac5328eacefe6">
+  <source>Attestation submission failed.</source>
+</trans-unit>
+<trans-unit id="s2a2bd02d6468c6cb">
+  <source>Upload Document Attestation</source>
+</trans-unit>
+<trans-unit id="se7692167f1edeef2">
+  <source>Uploading...</source>
+</trans-unit>
+<trans-unit id="s96668830629e0dfc">
+  <source>Upload</source>
+</trans-unit>
+<trans-unit id="scf4669f87f73adfd">
+  <source>Drag a document here, or click to browse.</source>
+</trans-unit>
+<trans-unit id="sb3556c3da595d6bd">
+  <source>PDF, JPEG, or PNG.</source>
+</trans-unit>
+<trans-unit id="sdc5b8005b739171a">
+  <source>Extracting document metadata...</source>
+</trans-unit>
+<trans-unit id="secebc281d6ed83d8">
+  <source>VIN mismatch:</source>
+</trans-unit>
+<trans-unit id="s199a69ff3b3f85c4">
+  <source>extract detected</source>
+</trans-unit>
+<trans-unit id="s8de7bb512876f298">
+  <source>but this vehicle is</source>
+</trans-unit>
+<trans-unit id="s791b7223519377fc">
+  <source>You can proceed if this is intentional.</source>
+</trans-unit>
+<trans-unit id="s67c4fccf3a919bd4">
+  <source>Document type</source>
+</trans-unit>
+<trans-unit id="s11ed5d81d1f6a387">
+  <source>Show extract details</source>
+</trans-unit>
+<trans-unit id="sd2cdd2a347b90268">
+  <source>No downloadable file</source>
+</trans-unit>
+<trans-unit id="saf43c94c85cb6c43">
+  <source>—</source>
+</trans-unit>
+<trans-unit id="sd3386a2ef42e80b9">
+  <source>Download</source>
+</trans-unit>
+<trans-unit id="s7f5869b3d14d7cbc">
+  <source>Provider</source>
+</trans-unit>
+<trans-unit id="s43233658edfb8a28">
+  <source>Service Date</source>
+</trans-unit>
+<trans-unit id="sc9474bf7a0668d73">
+  <source>Summary</source>
+</trans-unit>
+<trans-unit id="s367d079d1aed1358">
+  <source>Cost</source>
+</trans-unit>
+<trans-unit id="sd1f81284eeb7b503">
+  <source>File</source>
+</trans-unit>
+<trans-unit id="sd2223afb7d6b100d">
+  <source>Type</source>
+</trans-unit>
+<trans-unit id="s079a052719914d71">
+  <source>Category</source>
+</trans-unit>
+<trans-unit id="sac8252732f2edb19">
+  <source>Date</source>
+</trans-unit>
+<trans-unit id="s889fce46bd2236e5">
+  <source>Documents</source>
+</trans-unit>
+<trans-unit id="s9c4f8150cfbba2e2">
+  <source>Upload a document attestation</source>
+</trans-unit>
+<trans-unit id="s68039eb77d9cb53e">
+  <source>Vehicle token not loaded yet</source>
+</trans-unit>
+<trans-unit id="sa377ac762b083a33">
+  <source>+ Upload</source>
+</trans-unit>
+<trans-unit id="s5019a40086c85449">
+  <source>Loading documents...</source>
+</trans-unit>
+<trans-unit id="s96cc038ff5bf9681">
+  <source>No documents attested for this vehicle.</source>
+</trans-unit>
+<trans-unit id="s59f2c54efd73bc8b">
+  <source>Other Documents</source>
+</trans-unit>
+<trans-unit id="s5ae07c190671be5c">
+  <source>On-chain owner is a different wallet</source>
+</trans-unit>
+<trans-unit id="sce182dbb9b5510f7">
+  <source>Not Owned</source>
+</trans-unit>
+<trans-unit id="s4ad03a59dc35a809">
+  <source>Failed to load sharing information</source>
+</trans-unit>
+<trans-unit id="sdf8400244b00049a">
+  <source>Vehicle not shared with any entities. Have user login to mobile app</source>
+</trans-unit>
+<trans-unit id="sf9081a55bc456d92">
+  <source>Immobilizer</source>
+</trans-unit>
+<trans-unit id="s420221496824eeb5">
+  <source>Failed to load manufacturers.</source>
+</trans-unit>
+<trans-unit id="s6373c43bfee071b9">
+  <source>Failed to load device definitions.</source>
+</trans-unit>
+<trans-unit id="sc0ea854bccba80b6">
+  <source>Select manufacturer</source>
+</trans-unit>
+<trans-unit id="s1cd1d9ba0f3911f9">
+  <source>Filter by model</source>
+</trans-unit>
+<trans-unit id="sfa1b0319a0621ef4">
+  <source>ADD</source>
+</trans-unit>
+<trans-unit id="sbe22432ab215c749">
+  <source>Updating results...</source>
+</trans-unit>
+<trans-unit id="s5378e22204d21ef5">
+  <source>results</source>
+</trans-unit>
+<trans-unit id="see523ff78eb747bc">
+  <source>PowerTrain Type</source>
+</trans-unit>
+<trans-unit id="sd9964d79c9bef803">
+  <source>Select a manufacturer to view device definitions.</source>
+</trans-unit>
+<trans-unit id="s4650630fb23766f1">
+  <source>Loading device definitions...</source>
+</trans-unit>
+<trans-unit id="s91ee4684585951b0">
+  <source>No device definitions found.</source>
+</trans-unit>
+<trans-unit id="sc5d38c70d65f029c">
+  <source>Failed to load emails</source>
+</trans-unit>
+<trans-unit id="s332753e96660744f">
+  <source>Recent Emails</source>
+</trans-unit>
+<trans-unit id="sea11c109fa703f82">
+  <source>Loading emails...</source>
+</trans-unit>
+<trans-unit id="sb1c1f688dd4aeeef">
+  <source>No emails found.</source>
+</trans-unit>
+<trans-unit id="s57ade424d57c6edf">
+  <source>Sent</source>
+</trans-unit>
+<trans-unit id="s377cb3cf619060d8">
+  <source>Recipient</source>
+</trans-unit>
+<trans-unit id="sbbc53e0e54d7946f">
+  <source>Subject</source>
+</trans-unit>
+<trans-unit id="s8ca3b021833cbf6f">
+  <source>Delivered</source>
+</trans-unit>
+<trans-unit id="sce6a3502c71baa60">
+  <source>Opened</source>
+</trans-unit>
+<trans-unit id="sdc0fff9a58db59c2">
+  <source>Delivery ID</source>
+</trans-unit>
+<trans-unit id="saa3ed2eba509a685">
+  <source>Failed to load your profile data.</source>
+  <target>No se pudieron cargar los datos de su perfil.</target>
+</trans-unit>
+<trans-unit id="s5afb6d50a46faf7f">
+  <source>Loading your profile...</source>
+  <target>Cargando su perfil...</target>
+</trans-unit>
+<trans-unit id="s6b2beba7ab637e9e">
+  <source>Roles</source>
+  <target>Roles</target>
+</trans-unit>
+<trans-unit id="sd7a6d3abe9f8f3a6">
+  <source>Fleet Group Access</source>
+  <target>Acceso a Grupos de Flota</target>
+</trans-unit>
+<trans-unit id="s9817212c01122e93">
+  <source>You can view all fleet groups in this tenant.</source>
+  <target>Puede ver todos los grupos de flota de este inquilino.</target>
+</trans-unit>
+<trans-unit id="s1ad9df26353dd35f">
+  <source>You don't have access to any fleet groups. Contact your administrator.</source>
+  <target>No tiene acceso a ningún grupo de flota. Contacte a su administrador.</target>
+</trans-unit>
+<trans-unit id="s24ff675ff8ff0ed4">
+  <source>vehicles</source>
+  <target>vehículos</target>
+</trans-unit>
+<trans-unit id="sdd5b01bc8b2b9fe2">
+  <source>Your report is being processed. This may take a moment…</source>
+</trans-unit>
+<trans-unit id="s06fb179477c1f5aa">
+  <source>End date must be on or after start date.</source>
+</trans-unit>
+<trans-unit id="sb99a8f15603958e7">
+  <source>Date range cannot exceed 1 year.</source>
+</trans-unit>
+<trans-unit id="sa60812d233bdff75">
+  <source>Submitting report…</source>
+</trans-unit>
+<trans-unit id="s2dbc21cf6cd643af">
+  <source>Could not start the report. Please try again.</source>
+</trans-unit>
+<trans-unit id="s6e404206b246f1cb">
+  <source>Failed to run report. Please try again.</source>
+</trans-unit>
+<trans-unit id="s4618e6292497d33a">
+  <source>Report timed out after 15 minutes. Please try again.</source>
+</trans-unit>
+<trans-unit id="s2fe3edef38a24dae">
+  <source>took</source>
+</trans-unit>
+<trans-unit id="se418b4095e724c91">
+  <source>Your report is ready — download it from Report History below.</source>
+</trans-unit>
+<trans-unit id="s53553b289e71fe16">
+  <source>failed after</source>
+</trans-unit>
+<trans-unit id="s817f169b55e287ac">
+  <source>Report processing failed. Please try again.</source>
+</trans-unit>
+<trans-unit id="s5d5304ab9f2c700f">
+  <source>Status:</source>
+</trans-unit>
+<trans-unit id="s50193749e307129b">
+  <source>Running for</source>
+</trans-unit>
+<trans-unit id="s12d6dde9b30c3093">
+  <source>Dismiss</source>
+</trans-unit>
+<trans-unit id="s03c44f5a1b0581d4">
+  <source>selected</source>
+</trans-unit>
+<trans-unit id="sddd906cb10b3c573">
+  <source>Search fleet groups...</source>
+</trans-unit>
+<trans-unit id="s6969ba9654835def">
+  <source>No matching fleet groups</source>
+</trans-unit>
+<trans-unit id="s29082378c79e2390">
+  <source>Excel</source>
+</trans-unit>
+<trans-unit id="s4a8265983051d640">
+  <source>PROCESSING…</source>
+</trans-unit>
+<trans-unit id="sbfc8be926245ac93">
+  <source>Report History</source>
+</trans-unit>
+<trans-unit id="sfec13d5bbf592117">
+  <source>Run time</source>
+</trans-unit>
+<trans-unit id="s050c022891975f7a">
+  <source>Tenant ID copied</source>
+</trans-unit>
+<trans-unit id="s3687049d1af562c4">
+  <source>Copy</source>
+</trans-unit>
+<trans-unit id="sfc73e619cc0f1e56">
+  <source>Last 2 weeks</source>
+</trans-unit>
+<trans-unit id="se6347c363919b0a4">
+  <source>This vehicle is shared with you, but the share is missing the following permissions:</source>
+</trans-unit>
+<trans-unit id="sfc295d0713cf94c4">
+  <source>Please un-share this vehicle first, then re-share with the additional permissions to restore full access.</source>
+</trans-unit>
+<trans-unit id="s932556419283f6aa">
+  <source>Re-share Permissions</source>
+</trans-unit>
+<trans-unit id="s63ccbe12811892bd">
+  <source>Permissions have expired for this vehicle. Please re-share to restore access.</source>
+</trans-unit>
+<trans-unit id="s5dfd80e4749404c0">
+  <source>Click to edit</source>
+</trans-unit>
+<trans-unit id="s22fa1ffafd6adf06">
+  <source>+ Plate</source>
+</trans-unit>
+<trans-unit id="s31ce12d6dadced54">
+  <source>UPDATE</source>
+</trans-unit>
+<trans-unit id="s41a6b4dd4f7be09b">
+  <source>License plate updated.</source>
+  <target>Patente actualizada.</target>
+</trans-unit>
+<trans-unit id="s6399c9b4e42dd144">
+  <source>This license plate is already assigned to another vehicle in your fleet.</source>
+  <target>Esta patente ya está asignada a otro vehículo de su flota.</target>
+</trans-unit>
+<trans-unit id="sd246c2e3e1f60745">
+  <source>Failed to update license plate.</source>
+  <target>No se pudo actualizar la patente.</target>
+</trans-unit>
+<trans-unit id="s4199227a948ee485">
+  <source>Permission expired for the following vehicles:</source>
+</trans-unit>
+<trans-unit id="sb16836dd796986be">
+  <source>Re-share</source>
+</trans-unit>
+<trans-unit id="s293aa6a6446fb153">
+  <source>Export</source>
+</trans-unit>
+<trans-unit id="s75bf1ef85c9b9f84">
+  <source>Excel (.xlsx)</source>
+</trans-unit>
+<trans-unit id="s2a3030ee3bd0c6ec">
+  <source>CSV (.csv)</source>
+</trans-unit>
+<trans-unit id="s3ab3b951f86a542f">
+  <source>Search groups...</source>
+  <target>Buscar grupos...</target>
+</trans-unit>
+<trans-unit id="s55034be016bced24">
+  <source>No fleet groups match your search.</source>
+  <target>Ningún grupo de flota coincide con su búsqueda.</target>
 </trans-unit>
 </body>
 </file>

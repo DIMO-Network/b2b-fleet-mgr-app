@@ -1,5 +1,5 @@
 import { html, nothing, LitElement, css } from 'lit';
-import { msg } from '@lit/localize';
+import { msg, str } from '@lit/localize';
 import { customElement, property, state } from 'lit/decorators.js';
 import { globalStyles } from '../global-styles.ts';
 import {
@@ -217,7 +217,7 @@ export class EditDeviceDefinitionModalElement extends LitElement {
                       const isBatteryRequired = field.key === 'battery_capacity_kwh' && this.isBatteryRequired;
                       return this.renderTextField(
                         field.key,
-                        msg(field.label),
+                        field.label,
                         this.attributeValues[field.key] ?? '',
                         (value) => this.handleAttributeChange(field.key, value),
                         {
@@ -450,7 +450,7 @@ export class EditDeviceDefinitionModalElement extends LitElement {
                 ?disabled=${options.disabled}
                 @change=${(e: Event) => onChange((e.target as HTMLSelectElement).value)}
               >
-                <option value="" ?selected=${!normalizedSelectValue}>${msg(options.placeholder || 'Select')}</option>
+                <option value="" ?selected=${!normalizedSelectValue}>${options.placeholder || msg('Select')}</option>
                 ${(options.options ?? []).map((option) => html`
                   <option value=${option} ?selected=${option === normalizedSelectValue}>${option}</option>
                 `)}
@@ -461,7 +461,7 @@ export class EditDeviceDefinitionModalElement extends LitElement {
                 type="text"
                 class=${options.disabled ? 'disabled-field' : ''}
                 inputmode=${options.type === 'number' ? (options.allowDecimal ? 'decimal' : 'numeric') : 'text'}
-                .placeholder=${msg(options.placeholder || '')}
+                .placeholder=${options.placeholder || ""}
                 .value=${value}
                 ?disabled=${options.disabled}
                 @input=${(e: Event) => onChange((e.target as HTMLInputElement).value)}
@@ -607,12 +607,12 @@ export class EditDeviceDefinitionModalElement extends LitElement {
       const required = this.isFieldRequired(field.key);
 
       if (required && !value) {
-        errors[field.key] = msg(`${field.label} is required.`);
+        errors[field.key] = msg(str`${field.label} is required.`);
         return;
       }
 
       if (value && (field.type === 'number' || numericFields.has(field.key)) && Number.isNaN(Number(value))) {
-        errors[field.key] = msg(`${field.label} must be numeric.`);
+        errors[field.key] = msg(str`${field.label} must be numeric.`);
       }
 
       if (field.key === 'fuel_type' && value && /^\d+(\.\d+)?$/.test(value)) {
