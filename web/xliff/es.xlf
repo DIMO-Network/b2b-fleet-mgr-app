@@ -2493,6 +2493,38 @@
   <source>No fleet groups match your search.</source>
   <target>Ningún grupo de flota coincide con su búsqueda.</target>
 </trans-unit>
+<trans-unit id="sc16164a17f86f7fc">
+  <source>Enter a valid vehicle token ID.</source>
+  <target>Ingrese un token ID de vehículo válido.</target>
+</trans-unit>
+<trans-unit id="s8c41a7affa31065d">
+  <source>Vehicle synced successfully — VIN <x id="0" equiv-text="${resp.data.vin}"/>, IMEI <x id="1" equiv-text="${resp.data.imei}"/>.</source>
+  <target>Vehículo sincronizado correctamente — VIN <x id="0" equiv-text="${resp.data.vin}"/>, IMEI <x id="1" equiv-text="${resp.data.imei}"/>.</target>
+</trans-unit>
+<trans-unit id="sefedf9365c4aec8b">
+  <source>Failed to sync the device.</source>
+  <target>No se pudo sincronizar el dispositivo.</target>
+</trans-unit>
+<trans-unit id="sb1b167fa1a805b47">
+  <source>R1 Devices</source>
+  <target>Dispositivos R1</target>
+</trans-unit>
+<trans-unit id="sd4291f7b9561dd43">
+  <source>Vehicle Token ID</source>
+  <target>Token ID del Vehículo</target>
+</trans-unit>
+<trans-unit id="s930ec210d1639957">
+  <source>e.g. 192420</source>
+  <target>ej. 192420</target>
+</trans-unit>
+<trans-unit id="s05073d2537b45d1a">
+  <source>Sync</source>
+  <target>Sincronizar</target>
+</trans-unit>
+<trans-unit id="se576a4a2bd041eaf">
+  <source>Import an R1 device installed outside this application. The vehicle must be shared (SACD) with this tenant’s DIMO client ID; its VIN and device info are pulled from the Identity and Telemetry APIs.</source>
+  <target>Importe un dispositivo R1 instalado fuera de esta aplicación. El vehículo debe estar compartido (SACD) con el client ID de DIMO de este inquilino; su VIN y la información del dispositivo se obtienen de las APIs de Identity y Telemetry.</target>
+</trans-unit>
 </body>
 </file>
 </xliff>

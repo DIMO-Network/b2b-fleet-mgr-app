@@ -1,6 +1,6 @@
 import {LitElement, css, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
-import {msg} from '@lit/localize';
+import {msg, str} from '@lit/localize';
 import {globalStyles} from '../global-styles.ts';
 import {ApiService} from '@services/api-service.ts';
 import {TenantSettings, SettingsService} from '@services/settings-service.ts';
@@ -158,6 +158,34 @@ export class TenantSettingsView extends LitElement {
     this.success = msg('Settings saved successfully');
   }
 
+  @state() private r1TokenId: string = '';
+  @state() private r1Syncing = false;
+  @state() private r1Error: string = '';
+  @state() private r1Success: string = '';
+
+  private async syncR1Device() {
+    const tokenId = parseInt(this.r1TokenId.trim(), 10);
+    if (!Number.isFinite(tokenId) || tokenId <= 0) {
+      this.r1Error = msg('Enter a valid vehicle token ID.');
+      this.r1Success = '';
+      return;
+    }
+    this.r1Syncing = true;
+    this.r1Error = '';
+    this.r1Success = '';
+
+    const resp = await this.api.callApi<{ vin: string; imei: string }>(
+      'POST', '/fleet/vehicles/r1/sync', { token_id: tokenId }, true, true, true);
+    this.r1Syncing = false;
+
+    if (resp.success && resp.data) {
+      this.r1Success = msg(str`Vehicle synced successfully — VIN ${resp.data.vin}, IMEI ${resp.data.imei}.`);
+      this.r1TokenId = '';
+    } else {
+      this.r1Error = resp.error || msg('Failed to sync the device.');
+    }
+  }
+
   private async syncKore() {
     this.syncing = true;
     this.error = '';
@@ -292,6 +320,32 @@ export class TenantSettingsView extends LitElement {
             <p>${msg(html`To connect your fleet you will need a DIMO developer account. If you don't have one yet, create one at <a href="https://console.dimo.org" target="_blank">console.dimo.org</a>.`)}</p>
             <p>${msg(html`Your <strong>DIMO Client ID</strong> and <strong>DIMO Secret</strong> can be found in your developer console under your license credentials.`)}</p>
             <p>${msg(html`The <strong>Kore</strong> credentials are provided by your hardware / connectivity provider and are used to sync SIM and device information.`)}</p>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <span>${msg('R1 Devices')}</span>
+            </div>
+            <div class="panel-body">
+              ${this.r1Error ? html`<div class="alert alert-error">${this.r1Error}</div>` : nothing}
+              ${this.r1Success ? html`<div class="alert alert-success">${this.r1Success}</div>` : nothing}
+
+              <fieldset>
+                <label class="form-label">${msg('Vehicle Token ID')}</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="number" min="1" style="width: 200px" .value=${this.r1TokenId}
+                    placeholder="${msg('e.g. 192420')}"
+                    @input=${(e: InputEvent) => this.onInput(e, v => this.r1TokenId = v)}
+                    @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') { e.preventDefault(); this.syncR1Device(); } }}>
+                  <button type="button" class="btn btn-sm btn-success ${this.r1Syncing ? 'processing' : ''}"
+                    @click=${this.syncR1Device}
+                    ?disabled=${this.r1Syncing || !this.r1TokenId}>
+                    ${this.r1Syncing ? msg('Syncing...') : msg('Sync')}
+                  </button>
+                </div>
+                <div class="field-hint">${msg('Import an R1 device installed outside this application. The vehicle must be shared (SACD) with this tenant’s DIMO client ID; its VIN and device info are pulled from the Identity and Telemetry APIs.')}</div>
+              </fieldset>
+            </div>
           </div>
         </div>
       </div>
