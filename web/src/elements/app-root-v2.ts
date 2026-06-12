@@ -451,10 +451,10 @@ export class AppRootV2 extends LitElement {
             <div class="app-container">
                 <!-- Sidebar -->
                 <aside class="sidebar">
-                    <div class="sidebar-header" @click=${this.onSidebarClick}>
+                    <div class="sidebar-header" @click=${this.onNavLinkClick}>
                         <img src="/assets/dimo-logo-d.png" alt="DIMO" class="logo" />
                     </div>
-                    <nav class="sidebar-nav" @click=${this.onSidebarClick}>
+                    <nav class="sidebar-nav" @click=${this.onNavLinkClick}>
                         <div class="nav-item ${this.isActive('/') ? 'active' : ''}" data-page="home">
                             <a data-page="home" href="#/" aria-current="${this.isActive('/') ? 'page' : 'false'}">${msg('Home')}</a>
                         </div>
@@ -530,7 +530,7 @@ export class AppRootV2 extends LitElement {
                             </select>
                         </div>
                         <div class="header-right">
-                            <a class="profile-icon-btn" href="#/my-profile" title="${msg('My Profile')}" aria-label="${msg('My Profile')}">
+                            <a class="profile-icon-btn" href="#/my-profile" @click=${this.onNavLinkClick} title="${msg('My Profile')}" aria-label="${msg('My Profile')}">
                                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="8" r="4"></circle>
                                     <path d="M4 20c0-3.3 3.6-5 8-5s8 1.7 8 5"></path>
@@ -590,8 +590,11 @@ export class AppRootV2 extends LitElement {
         `;
     }
 
-    private onSidebarClick = async (e: MouseEvent) => {
-        // Delegate anchor clicks to ensure hash navigation triggers our router.
+    // Delegated click handler for hash-link anchors (sidebar nav and header icons).
+    // preventDefault is load-bearing: without it, @lit-labs/router's global click
+    // interceptor takes the click, pushStates the href (no hashchange event) and
+    // routes by anchor.pathname — which is always "/" for hash links, rendering Home.
+    private onNavLinkClick = async (e: MouseEvent) => {
         const target = e.target as HTMLElement | null;
         const anchor = target?.closest?.('a[href^="#"]') as HTMLAnchorElement | null;
         if (!anchor || anchor.closest('.nav-item.disabled')) return;
