@@ -67,6 +67,24 @@ export class AppRootV2 extends LitElement {
                 cursor: pointer;
             }
 
+            .profile-icon-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                color: #555;
+                border: 1px solid #ddd;
+                background: #fff;
+                cursor: pointer;
+            }
+
+            .profile-icon-btn:hover {
+                background: #f5f5f5;
+                color: #000;
+            }
+
             .update-modal-overlay {
                 position: fixed;
                 top: 0;
@@ -220,6 +238,7 @@ export class AppRootV2 extends LitElement {
             { path: '/onboarding', render: () => html`<onboarding-view></onboarding-view>` },
             { path: '/tenant-selector', render: () => html`<tenant-selector-view></tenant-selector-view>` },
             { path: '/tenant-settings', render: () => html`<tenant-settings-view></tenant-settings-view>` },
+            { path: '/my-profile', render: () => html`<my-profile-view></my-profile-view>` },
         ]);
     }
 
@@ -357,6 +376,7 @@ export class AppRootV2 extends LitElement {
         if (path.startsWith('/emails')) return msg('Emails');
         if (path.startsWith('/tenant-selector')) return msg('Tenant Selector');
         if (path.startsWith('/tenant-settings')) return msg('Tenant Settings');
+        if (path.startsWith('/my-profile')) return msg('My Profile');
         return msg('Home');
     }
 
@@ -510,6 +530,12 @@ export class AppRootV2 extends LitElement {
                             </select>
                         </div>
                         <div class="header-right">
+                            <a class="profile-icon-btn" href="#/my-profile" title="${msg('My Profile')}" aria-label="${msg('My Profile')}">
+                                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="8" r="4"></circle>
+                                    <path d="M4 20c0-3.3 3.6-5 8-5s8 1.7 8 5"></path>
+                                </svg>
+                            </a>
                             <div class="user-block">
                                 <span class="user-info user-email" title="${userEmail}">${userEmail}</span>
                                 <click-to-copy-element .valueToCopy="${userWalletAddress}">
