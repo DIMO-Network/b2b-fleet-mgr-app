@@ -26,13 +26,13 @@ dayjs.extend(relativeTime);
 
 interface TelemetryInfo {
   signalsLatest: {
-    currentLocationCoordinates: {
-      value: {
+    currentLocationCoordinates?: {
+      value?: {
         latitude: number;
         longitude: number;
-      };
+      } | null;
       timestamp: string;
-    };
+    } | null;
     obdIsEngineBlocked: {
       value: number | null;
       timestamp: string;
@@ -764,7 +764,7 @@ export class VehicleDetailView extends LitElement {
               </div>
               <div style="text-align: right;">
                 <div style="color: #666; font-size: 10px;">${msg('LAST TELEMETRY')}</div>
-                <div>${this.lastTelemetry ? this.formatLastTelemetry(this.lastTelemetry.signalsLatest.currentLocationCoordinates.timestamp) : msg('Loading...')}</div>
+                <div>${this.lastTelemetry ? this.formatLastTelemetry(this.lastTelemetry.signalsLatest.currentLocationCoordinates?.timestamp) : msg('Loading...')}</div>
                 <div style="color: #666; font-size: 10px; margin-top: 12px;">${msg('HARDWARE')}</div>
                 <div>${this.renderHardwareDetails()}</div>
               </div>
@@ -885,19 +885,19 @@ export class VehicleDetailView extends LitElement {
               </div>
               <div class="panel-body">
                 <fleet-map class="map-placeholder"
-                    .lat="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.latitude ?? 0.0}"
-                    .lng="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.longitude ?? 0.0}"
+                    .lat="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates?.value?.latitude ?? 0.0}"
+                    .lng="${this.lastTelemetry?.signalsLatest.currentLocationCoordinates?.value?.longitude ?? 0.0}"
                     .routePoints=${this.tripRoutePoints}
                     @address-updated=${this.handleAddressUpdated}>
                 </fleet-map>
                 <div class="mt-16">
                   <div class="detail-row">
                     <span class="detail-label">${msg('Latitude')}</span>
-                    <span class="detail-value">${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.latitude ?? 0.0}</span>
+                    <span class="detail-value">${this.lastTelemetry?.signalsLatest.currentLocationCoordinates?.value?.latitude ?? 0.0}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">${msg('Longitude')}</span>
-                    <span class="detail-value">${this.lastTelemetry?.signalsLatest.currentLocationCoordinates.value.longitude ?? 0.0}</span>
+                    <span class="detail-value">${this.lastTelemetry?.signalsLatest.currentLocationCoordinates?.value?.longitude ?? 0.0}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">${msg('Address')}</span>
