@@ -37,20 +37,20 @@ interface Vehicle {
 
 interface TelemetrySignals {
   signalsLatest: {
-    currentLocationCoordinates: {
-      value: {
+    currentLocationCoordinates?: {
+      value?: {
         latitude: number;
         longitude: number;
-      };
+      } | null;
       timestamp: string;
-    };
-    obdIsEngineBlocked: {
+    } | null;
+    obdIsEngineBlocked?: {
       value: number;
       timestamp: string;
-    };
-    powertrainTransmissionTravelledDistance: {
+    } | null;
+    powertrainTransmissionTravelledDistance?: {
       value: number;
-    };
+    } | null;
   };
 }
 
