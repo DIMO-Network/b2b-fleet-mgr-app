@@ -212,6 +212,26 @@ func (v *VehiclesController) SubmitSharedAccountTransfer(c *fiber.Ctx) error {
 	return ProxyRequest(c, targetURL, c.Body(), v.logger)
 }
 
+// SubmitSharedAccountDisconnect forwards the server-signed disconnect request to the kaufmann
+// oracle endpoint that burns the synthetic device on behalf of a shared kernel account using
+// the tenant signer. Body: { tokenId }. Response: { jobId }.
+func (v *VehiclesController) SubmitSharedAccountDisconnect(c *fiber.Ctx) error {
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/disconnect/shared")
+	return ProxyRequest(c, targetURL, c.Body(), v.logger)
+}
+
+// SubmitSharedAccountDelete forwards the server-signed delete request to the kaufmann oracle
+// endpoint that burns the vehicle NFT (auto-chaining the disconnect) on behalf of a shared
+// kernel account using the tenant signer. Body: { tokenId }. Response: { jobId }.
+func (v *VehiclesController) SubmitSharedAccountDelete(c *fiber.Ctx) error {
+	u := GetOracleURL(c, v.settings)
+
+	targetURL := u.JoinPath("/v1/vehicle/delete/shared")
+	return ProxyRequest(c, targetURL, c.Body(), v.logger)
+}
+
 func (v *VehiclesController) SubmitCommand(c *fiber.Ctx) error {
 	imei := c.Params("imei", "")
 

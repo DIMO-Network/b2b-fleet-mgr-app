@@ -97,12 +97,12 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   </button>
                   <button ?hidden=${!this.canDisconnect(this.item)}
                       type="button"
-                      ?disabled=${this.processing || !this.item.syntheticDevice.tokenId || !this.item.isCurrentUserOwner}
+                      ?disabled=${this.processing || !this.item.syntheticDevice.tokenId || (!this.item.isCurrentUserOwner && !this.isSharedSigner(this.item))}
                       class=${this.connectionProcessing ? 'processing action-btn secondary' : 'action-btn secondary'}
                       @click=${this.disconnectVehicle}
                   >
                       ${msg('disconnect')}
-                      ${!this.item.isCurrentUserOwner ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
+                      ${(!this.item.isCurrentUserOwner && !this.isSharedSigner(this.item)) ? html`<span class="access-denied-icon-inline">🚫</span>` : ''}
                   </button>
                   <!--
                   <button ?hidden
@@ -197,13 +197,22 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         return [ConnectionStatus.UNKNOWN, ConnectionStatus.DISCONNECTED, ConnectionStatus.CONNECTION_FAILED].includes(this.getConnectionStatus(item));
     }
 
+    // isSharedSigner is true when the connected wallet isn't the owner but our tenant can sign
+    // for the owning kernel account — the server-signed shared-account flow applies.
+    isSharedSigner(item: Vehicle): boolean {
+        return !item.isCurrentUserOwner && !!item.isSharedAccountSigner;
+    }
+
     canDisconnect(item: Vehicle): boolean {
-        if (!item.isCurrentUserOwner) return false;
+        if (!item.isCurrentUserOwner && !this.isSharedSigner(item)) return false;
         return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item));
     }
 
     canDelete(item: Vehicle): boolean {
         if (item.tokenId === 0) return false;
+        // Shared-account delete auto-chains the disconnect on the backend, so it may be invoked
+        // regardless of connection state (a still-connected vehicle is disconnected first).
+        if (this.isSharedSigner(item)) return true;
         if (!item.isCurrentUserOwner) return false;
         return [
             ConnectionStatus.UNKNOWN,
@@ -261,7 +270,9 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
         this.processing = true;
         this.connectionProcessing = true;
-        const result = await this.disconnectVins([this.item.vin]);
+        const result = this.isSharedSigner(this.item)
+            ? await this.disconnectSharedAccountVehicle(this.item.tokenId, this.item.vin)
+            : await this.disconnectVins([this.item.vin]);
         if (result.success) {
             await delay(5000);
             this.processing = false;
@@ -279,13 +290,19 @@ export class VehicleListItemElement extends BaseOnboardingElement {
             return;
         }
 
-        if (!confirm(msg("Are you sure you want to delete the vehicle?"))) {
+        const sharedSigner = this.isSharedSigner(this.item);
+        const deleteConfirm = sharedSigner
+            ? msg("This will disconnect and delete the vehicle. Are you sure?")
+            : msg("Are you sure you want to delete the vehicle?");
+        if (!confirm(deleteConfirm)) {
             return;
         }
 
         this.processing = true;
         this.deletionProcessing = true;
-        const result = await this.deleteVins([this.item.vin]);
+        const result = sharedSigner
+            ? await this.deleteSharedAccountVehicle(this.item.tokenId, this.item.vin)
+            : await this.deleteVins([this.item.vin]);
         if (result.success) {
             await delay(5000);
             this.processing = false;

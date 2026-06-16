@@ -147,6 +147,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	// Disconnect vehicle
 	oracleApp.Get("/vehicle/disconnect", genericProxyCtrl.Proxy)
 	oracleApp.Post("/vehicle/disconnect", vehiclesCtrl.SubmitDisconnectData)
+	oracleApp.Post("/vehicle/disconnect/shared", vehiclesCtrl.SubmitSharedAccountDisconnect)
 	oracleApp.Get("/vehicle/disconnect/status", vehiclesCtrl.GetDisconnectStatus)
 
 	// Transfer vehicle
@@ -158,6 +159,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	// Delete vehicle
 	oracleApp.Get("/vehicle/delete", vehiclesCtrl.GetDeleteData)
 	oracleApp.Post("/vehicle/delete", vehiclesCtrl.SubmitDeleteData)
+	oracleApp.Post("/vehicle/delete/shared", vehiclesCtrl.SubmitSharedAccountDelete)
 	oracleApp.Get("/vehicle/delete/status", vehiclesCtrl.GetDeleteStatus)
 
 	oracleApp.Get("/vehicle/:vin", vehiclesCtrl.GetVehicleFromOracle)
