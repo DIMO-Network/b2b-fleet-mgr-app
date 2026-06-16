@@ -692,4 +692,81 @@ export class BaseOnboardingElement extends LitElement {
 
         return { success: true, data: undefined };
     }
+
+    // disconnectSharedAccountVehicle is the server-signed disconnect flow used when the vehicle's
+    // on-chain owner is a shared kernel account that registered our tenant signer. The backend
+    // (POST /vehicle/disconnect/shared) burns the synthetic device itself, so no passkey signature
+    // is required — there is no GET-prepare/sign step. We poll the same per-VIN disconnect status
+    // endpoint the passkey flow uses, since the shared worker lands on the same onboarding status.
+    async disconnectSharedAccountVehicle(tokenId: number, vin: string): Promise<Result<void, string>> {
+        this.dispatchStatusUpdate(msg("Submitting shared-account disconnect..."));
+        const submitResp = await this.api.callApi<VinTransferResponse>(
+            'POST',
+            '/vehicle/disconnect/shared',
+            { tokenId },
+            true,
+        );
+        if (!submitResp.success || !submitResp.data) {
+            return { success: false, error: submitResp.error || "Failed to submit shared-account disconnect" };
+        }
+
+        return this.pollSharedAccountStatus(vin, '/vehicle/disconnect/status', 'Disconnect');
+    }
+
+    // deleteSharedAccountVehicle is the server-signed delete flow for a shared kernel account.
+    // The backend (POST /vehicle/delete/shared) auto-chains the disconnect (burns the synthetic
+    // device first if still live, then the vehicle NFT), so it can be called regardless of the
+    // connection state. No passkey signature is required.
+    async deleteSharedAccountVehicle(tokenId: number, vin: string): Promise<Result<void, string>> {
+        this.dispatchStatusUpdate(msg("Submitting shared-account delete..."));
+        const submitResp = await this.api.callApi<VinTransferResponse>(
+            'POST',
+            '/vehicle/delete/shared',
+            { tokenId },
+            true,
+        );
+        if (!submitResp.success || !submitResp.data) {
+            return { success: false, error: submitResp.error || "Failed to submit shared-account delete" };
+        }
+
+        return this.pollSharedAccountStatus(vin, '/vehicle/delete/status', 'Delete');
+    }
+
+    // pollSharedAccountStatus polls a per-VIN status endpoint until every status reads 'Success'
+    // or the operation times out. Shared disconnect/delete reuse the same status endpoints as the
+    // passkey flow because the shared workers update the same onboarding status.
+    private async pollSharedAccountStatus(vin: string, statusEndpoint: string, label: string): Promise<Result<void, string>> {
+        let success = false;
+        for (const attempt of range(30)) {
+            success = true;
+            const query = qs.stringify({ vins: vin }, { arrayFormat: 'comma' });
+            const status = await this.api.callApi<VinsStatusResult>('GET', `${statusEndpoint}?${query}`, null, true);
+            this.dispatchStatusUpdate(`Checking ${label.toLowerCase()} status... ` + attempt);
+
+            if (!status.success || !status.data) {
+                return { success: false, error: status.error || `Failed to check ${label.toLowerCase()} status` };
+            }
+
+            for (const s of status.data.statuses) {
+                if (s.status !== 'Success') {
+                    success = false;
+                    break;
+                }
+            }
+
+            if (success) {
+                break;
+            }
+
+            if (attempt < 29) {
+                await delay(5000);
+            }
+        }
+
+        if (!success) {
+            return { success: false, error: `${label} operation timed out` };
+        }
+
+        return { success: true, data: undefined };
+    }
 }
