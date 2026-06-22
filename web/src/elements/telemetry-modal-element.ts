@@ -496,6 +496,10 @@ export class TelemetryModalElement extends LitElement {
                 console.error("Failed to load identity data:", identityResponse.error);
             }
 
+            // If the modal opened without an authoritative VIN (brand-new device), derive it
+            // from the polled frames once it appears. No-op once a VIN is known.
+            this.maybeDeriveVin();
+
             if (initial) {
                 this.currentIndex = 0;
                 this.currentIdentityIndex = 0;
@@ -603,6 +607,39 @@ export class TelemetryModalElement extends LitElement {
                 <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(ioElements)}</pre>
             </details>
         `;
+    }
+
+    // VIN is transmitted across IO 104/105/106 (OBD VIN), each an ASCII chunk, in order.
+    private static readonly VIN_IO_IDS = [104, 105, 106];
+
+    // maybeDeriveVin fills the VIN label from polled frames only when the modal opened
+    // without an authoritative VIN (set by the parent on load). The !this.vin guard means
+    // once a VIN is known — authoritative or derived — we stop scanning IO 104-106.
+    private maybeDeriveVin() {
+        if (this.vin) return;
+        const derived = this.extractVinFromFrames();
+        if (derived) this.vin = derived;
+    }
+
+    // extractVinFromFrames concatenates the decoded ASCII of IO 104/105/106 within a single
+    // record across the polled telemetry frames, returning the first VIN-length result.
+    private extractVinFromFrames(): string {
+        for (const item of this.telemetryData) {
+            for (const row of this.getRawTelemetryRows(item)) {
+                const io = row.io_elements;
+                if (!Array.isArray(io)) continue;
+                const part = (id: number): string => {
+                    const el = (io as IoElement[]).find(e => e && typeof e === 'object' && e.id === id);
+                    if (!el || typeof el.value !== 'string') return '';
+                    const decoded = decodeIo(id, el.value);
+                    return decoded.display !== '—' ? decoded.display : '';
+                };
+                const vin = TelemetryModalElement.VIN_IO_IDS.map(part).join('').trim();
+                // Mirror the backend's "looks like a VIN" threshold (length > 10).
+                if (vin.length > 10) return vin;
+            }
+        }
+        return '';
     }
 
     private getRawTelemetryRows(item: TelemetryData): { header: unknown; io_elements: unknown }[] {
