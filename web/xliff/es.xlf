@@ -2525,6 +2525,70 @@
   <source>Import an R1 device installed outside this application. The vehicle must be shared (SACD) with this tenant’s DIMO client ID; its VIN and device info are pulled from the Identity and Telemetry APIs.</source>
   <target>Importe un dispositivo R1 instalado fuera de esta aplicación. El vehículo debe estar compartido (SACD) con el client ID de DIMO de este inquilino; su VIN y la información del dispositivo se obtienen de las APIs de Identity y Telemetry.</target>
 </trans-unit>
+<trans-unit id="sb17f14264ed59878">
+  <source>Submitting shared-account disconnect...</source>
+  <target>Enviando desconexión de cuenta compartida...</target>
+</trans-unit>
+<trans-unit id="s565ffa1f5e427517">
+  <source>Submitting shared-account delete...</source>
+  <target>Enviando eliminación de cuenta compartida...</target>
+</trans-unit>
+<trans-unit id="s8623bc65b307b05a">
+  <source>Device connected — receiving data</source>
+  <target>Dispositivo conectado — recibiendo datos</target>
+</trans-unit>
+<trans-unit id="s22832777859ca4b7">
+  <source>No data received recently</source>
+  <target>No se han recibido datos recientemente</target>
+</trans-unit>
+<trans-unit id="s3d1396b47ff4a56f">
+  <source>Live</source>
+  <target>En vivo</target>
+</trans-unit>
+<trans-unit id="scde3342a428aaee8">
+  <source>Offline</source>
+  <target>Sin conexión</target>
+</trans-unit>
+<trans-unit id="s09241907b5b8e8f1">
+  <source>IO</source>
+  <target>IO</target>
+</trans-unit>
+<trans-unit id="s41f7dca46d3f1b4a">
+  <source>Value</source>
+  <target>Valor</target>
+</trans-unit>
+<trans-unit id="s49534419cd9c812a">
+  <source>Hex</source>
+  <target>Hex</target>
+</trans-unit>
+<trans-unit id="s9fffe119feb85df1">
+  <source>Raw</source>
+  <target>Sin procesar</target>
+</trans-unit>
+<trans-unit id="s246144d94749cb33">
+  <source>This will disconnect and delete the vehicle. Are you sure?</source>
+  <target>Esto desconectará y eliminará el vehículo. ¿Está seguro?</target>
+</trans-unit>
+<trans-unit id="s33267bce84238c41">
+  <source>Time since last refresh</source>
+  <target>Tiempo desde la última actualización</target>
+</trans-unit>
+<trans-unit id="hc812368af3c5befc">
+  <source>Last refresh: <x id="0" equiv-text="&lt;strong&gt;${this.lastRefreshDisplay}&lt;/strong&gt;"/> ago</source>
+  <target>Última actualización: hace <x id="0" equiv-text="&lt;strong&gt;${this.lastRefreshDisplay}&lt;/strong&gt;"/></target>
+</trans-unit>
+<trans-unit id="s0bfaf53ad990cdd6">
+  <source>Not refreshed yet</source>
+  <target>Aún no actualizado</target>
+</trans-unit>
+<trans-unit id="sf9091a2d83a890fd">
+  <source>Refresh all vehicle data</source>
+  <target>Actualizar todos los datos del vehículo</target>
+</trans-unit>
+<trans-unit id="s537534ff0214c8a6">
+  <source>Refreshing…</source>
+  <target>Actualizando…</target>
+</trans-unit>
 </body>
 </file>
 </xliff>
