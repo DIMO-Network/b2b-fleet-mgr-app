@@ -819,7 +819,8 @@ export class TelemetryModalElement extends LitElement {
         }
 
         const decimal = this.findIoValueDecimal(item, 94);
-        this.rpmDisplay = decimal !== null ? String(decimal) : "—";
+        // IO 94 reports RPM in 0.25-rpm units; divide by 4 for actual RPM (frontend-only).
+        this.rpmDisplay = decimal !== null ? String(decimal / 4) : "—";
     }
 
     private updateIgnitionDisplay(item: TelemetryData | undefined): void {
