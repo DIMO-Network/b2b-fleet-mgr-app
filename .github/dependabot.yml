@@ -1,0 +1,32 @@
+version: 2
+
+# This config exists primarily to apply `ignore` rules to Dependabot SECURITY updates
+# (those run from repo settings, not from this file). `open-pull-requests-limit: 0` keeps
+# version-update PR noise off while leaving security updates active and honoring the
+# ignores below — quieting the low-value/unfixable churn without changing how patches land.
+updates:
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+    ignore:
+      # Vite 7/8 switched to the rolldown bundler, whose linux native binding fails to load
+      # in our Docker build (broke every build; see PR #147). Stay on v6 here and upgrade
+      # deliberately (raise Docker Node, verify rolldown on linux) rather than via a bump.
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vite-plugin-static-copy"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitejs/plugin-basic-ssl"
+        update-types: ["version-update:semver-major"]
+      # Transitive, dev/build-only advisories with no resolvable fix path — they only
+      # produce failing Dependabot runs, not actionable updates. esbuild is included because
+      # its advisory is what drove the breaking Vite 8 bump; the issue is the dev server
+      # only and does not affect production builds.
+      - dependency-name: "esbuild"
+      - dependency-name: "uuid"
+      - dependency-name: "undici"
+      - dependency-name: "tmp"
+      - dependency-name: "ws"
+      - dependency-name: "serialize-javascript"
