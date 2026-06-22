@@ -181,6 +181,51 @@ export class VehicleDetailView extends LitElement {
       margin-left: 12px;
       vertical-align: middle;
     }
+    .refresh-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .refresh-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .refresh-meta {
+      color: #666;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+    .refresh-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .refresh-btn:disabled {
+      background-color: #e9ecef;
+      border-color: #ced4da;
+      color: #6c757d;
+      opacity: 0.8;
+      cursor: not-allowed;
+    }
+    .refresh-btn .refresh-icon {
+      display: inline-block;
+      line-height: 1;
+    }
+    .refresh-btn.spinning .refresh-icon {
+      animation: spin 1s linear infinite;
+    }
+    /* Green success highlight that fades in then out on a successful refresh. */
+    .refresh-btn.flash-success {
+      animation: refreshFlash 1.5s ease-in-out;
+    }
+    @keyframes refreshFlash {
+      0%   { background-color: #fff;     border-color: #ced4da; color: inherit; }
+      25%  { background-color: #28a745;  border-color: #28a745; color: #fff; }
+      60%  { background-color: #28a745;  border-color: #28a745; color: #fff; }
+      100% { background-color: #fff;     border-color: #ced4da; color: inherit; }
+    }
   `];
 
   @property({ type: Number })
@@ -267,6 +312,24 @@ export class VehicleDetailView extends LitElement {
   @state()
   private immobilizerError: string = '';
 
+  // Manual refresh of all vehicle data sources.
+  @state()
+  private refreshing: boolean = false;
+
+  @state()
+  private refreshFlash: boolean = false;
+
+  // Epoch ms of the last completed data load (initial load counts), and a 1s clock tick
+  // so the "last refresh" elapsed time re-renders every second.
+  @state()
+  private lastRefreshAt: number = 0;
+
+  @state()
+  private nowTick: number = Date.now();
+
+  private refreshTickTimer: number | null = null;
+  private refreshFlashTimer: number | null = null;
+
   @state()
   private showImmobilizerConfirm: boolean = false;
 
@@ -343,6 +406,14 @@ export class VehicleDetailView extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
+    // Tick once per second so the "last refresh" elapsed display stays current.
+    this.refreshTickTimer = window.setInterval(() => { this.nowTick = Date.now(); }, 1000);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.refreshTickTimer !== null) { window.clearInterval(this.refreshTickTimer); this.refreshTickTimer = null; }
+    if (this.refreshFlashTimer !== null) { window.clearTimeout(this.refreshFlashTimer); this.refreshFlashTimer = null; }
   }
 
   async updated(changedProperties: Map<string | number | symbol, unknown>) {
@@ -351,15 +422,20 @@ export class VehicleDetailView extends LitElement {
     }
   }
 
-  private async loadVehicleData(): Promise<[Vehicle | null, string | null]> {
+  // loadVehicleData reloads every data source. On a manual refresh (isRefresh=true) the
+  // existing data stays on screen until the new data arrives, instead of blanking to
+  // "Loading…", so the refresh feels like an in-place update.
+  private async loadVehicleData(isRefresh: boolean = false): Promise<[Vehicle | null, string | null]> {
     this.errorMessage = '';
-    this.vehicle = null;
-    this.vehicleIdentity = null;
-    this.fuelTankCapacity = null;
-    this.lastTelemetry = null;
-    this.trips = [];
-    this.ownerInfo = null;
-    this.ownerWalletAddress = null;
+    if (!isRefresh) {
+      this.vehicle = null;
+      this.vehicleIdentity = null;
+      this.fuelTankCapacity = null;
+      this.lastTelemetry = null;
+      this.trips = [];
+      this.ownerInfo = null;
+      this.ownerWalletAddress = null;
+    }
     if (!this.apiService || !this.tokenID) {
       const error = 'API service or token ID is missing';
       console.error(error, this.tokenID);
@@ -369,7 +445,7 @@ export class VehicleDetailView extends LitElement {
 
     const [vehicle, vehicleError] = await this.loadVehicle(this.tokenID);
     if (!vehicle) {
-      this.vehicle = null;
+      if (!isRefresh) this.vehicle = null;
       this.errorMessage = vehicleError || msg('Failed to load vehicle data');
       return [null, this.errorMessage];
     }
@@ -396,7 +472,47 @@ export class VehicleDetailView extends LitElement {
     await this.loadTrips(this.tokenID);
     await this.loadOwnerInfo(this.tokenID);
 
+    this.lastRefreshAt = Date.now();
+    this.nowTick = this.lastRefreshAt;
     return [this.vehicle, this.errorMessage || null];
+  }
+
+  // handleRefresh re-fetches every data source for the current vehicle. The button is
+  // disabled/greyed while in flight and flashes green on a clean success.
+  private async handleRefresh() {
+    if (this.refreshing || !this.apiService || !this.tokenID) return;
+    this.refreshing = true;
+    try {
+      await this.loadVehicleData(true);
+      if (!this.errorMessage) {
+        this.triggerRefreshFlash();
+      }
+    } finally {
+      this.refreshing = false;
+    }
+  }
+
+  // triggerRefreshFlash restarts the green fade animation, even on rapid repeat clicks,
+  // by toggling the class off then on across a frame.
+  private triggerRefreshFlash() {
+    if (this.refreshFlashTimer !== null) { window.clearTimeout(this.refreshFlashTimer); this.refreshFlashTimer = null; }
+    this.refreshFlash = false;
+    requestAnimationFrame(() => {
+      this.refreshFlash = true;
+      this.refreshFlashTimer = window.setTimeout(() => {
+        this.refreshFlash = false;
+        this.refreshFlashTimer = null;
+      }, 1500);
+    });
+  }
+
+  // Elapsed time since the last refresh, formatted m:ss (e.g. "1:05"). "—" before any load.
+  private get lastRefreshDisplay(): string {
+    if (!this.lastRefreshAt) return '—';
+    const totalSec = Math.max(0, Math.floor((this.nowTick - this.lastRefreshAt) / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
   private async maybeSyncOwner(tokenId: number, localOwner: string | undefined, identityOwner: string | undefined): Promise<void> {
@@ -720,8 +836,23 @@ export class VehicleDetailView extends LitElement {
       <div class="page active" id="page-vehicle-detail">
         ${this.renderErrorAlert()}
         ${this.successMessage ? html`<div class="alert alert-success">${this.successMessage}</div>` : ''}
-        <div class="toolbar mb-16">
+        <div class="toolbar mb-16 refresh-toolbar">
           <button class="btn" @click=${this.goBack}>${msg('← BACK TO VEHICLES')}</button>
+          <div class="refresh-controls">
+            <span class="refresh-meta" title=${msg('Time since last refresh')}>
+              ${this.lastRefreshAt
+                ? msg(html`Last refresh: <strong>${this.lastRefreshDisplay}</strong> ago`)
+                : msg('Not refreshed yet')}
+            </span>
+            <button
+              class="btn btn-sm refresh-btn ${this.refreshing ? 'spinning' : ''} ${this.refreshFlash ? 'flash-success' : ''}"
+              ?disabled=${this.refreshing}
+              @click=${this.handleRefresh}
+              title=${msg('Refresh all vehicle data')}>
+              <span class="refresh-icon">🔄</span>
+              ${this.refreshing ? msg('Refreshing…') : msg('Refresh')}
+            </button>
+          </div>
         </div>
 
         <!-- Header Block -->
