@@ -142,13 +142,13 @@ export class TelemetryModalElement extends LitElement {
 
                     <div class="modal-header">
                         <h3 style="display: flex; align-items: center; gap: 0.6rem;">
+                            ${msg('Telemetry Data')} - ${this.imei}${this.vin ? ` (${this.vin})` : ''}
                             <span
                                 title=${this.isLive ? msg('Device connected — receiving data') : msg('No data received recently')}
                                 style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; font-weight: 600; color: ${this.isLive ? '#16a34a' : '#9ca3af'};">
                                 <span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${this.isLive ? '#16a34a' : '#9ca3af'}; ${this.isLive ? 'box-shadow: 0 0 0 3px rgba(22,163,74,0.2);' : ''}"></span>
                                 ${this.isLive ? msg('Live') : msg('Offline')}
                             </span>
-                            ${msg('Telemetry Data')} - ${this.imei}${this.vin ? ` (${this.vin})` : ''}
                         </h3>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <button type="button"
@@ -819,7 +819,8 @@ export class TelemetryModalElement extends LitElement {
         }
 
         const decimal = this.findIoValueDecimal(item, 94);
-        this.rpmDisplay = decimal !== null ? String(decimal) : "—";
+        // IO 94 reports RPM in 0.25-rpm units; divide by 4 for actual RPM (frontend-only).
+        this.rpmDisplay = decimal !== null ? String(decimal / 4) : "—";
     }
 
     private updateIgnitionDisplay(item: TelemetryData | undefined): void {
