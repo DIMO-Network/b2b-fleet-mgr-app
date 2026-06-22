@@ -4,6 +4,7 @@ import {customElement, property, state} from "lit/decorators.js";
 import {LitElement} from 'lit';
 import { ApiService } from '../services/api-service';
 import {globalStyles} from "../global-styles.ts";
+import {decodeIo} from "../services/ruptela-io-types.ts";
 import './confirm-modal-element';
 
 interface IoElement {
@@ -88,6 +89,25 @@ export class TelemetryModalElement extends LitElement {
     @state()
     private currentIdentityIndex: number = 0;
 
+    // Live mode: epoch ms of the newest frame received, and a clock tick refreshed each
+    // poll so the "live" indicator re-evaluates without new data.
+    @state()
+    private lastFrameMs: number = 0;
+
+    @state()
+    private nowMs: number = Date.now();
+
+    // Poll the telemetry endpoint while the modal is open so the panel stays current
+    // during a hardware install. Cross-replica safe: reads go through Postgres.
+    private static readonly POLL_INTERVAL_MS = 5000;
+    // Safety stop so a forgotten-open modal doesn't poll forever.
+    private static readonly POLL_MAX_MS = 15 * 60 * 1000;
+    // A frame seen within this window means the device is currently connected.
+    private static readonly LIVE_WINDOW_MS = 40 * 1000;
+
+    private pollTimer: number | null = null;
+    private pollDeadline: number = 0;
+
     private apiService: ApiService;
 
     constructor() {
@@ -97,6 +117,16 @@ export class TelemetryModalElement extends LitElement {
 
     connectedCallback() {
         super.connectedCallback();
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this.stopPolling();
+    }
+
+    // True when a frame was received within the live window (device currently connected).
+    private get isLive(): boolean {
+        return this.lastFrameMs > 0 && (this.nowMs - this.lastFrameMs) < TelemetryModalElement.LIVE_WINDOW_MS;
     }
 
     // Use shadow DOM; styles are provided via globalStyles
@@ -111,7 +141,15 @@ export class TelemetryModalElement extends LitElement {
                 <div class="modal-content telemetry-modal" @click=${(e: Event) => e.stopPropagation()} style="width: 90%; max-width: 90%;">
 
                     <div class="modal-header">
-                        <h3>${msg('Telemetry Data')} - ${this.imei}${this.vin ? ` (${this.vin})` : ''}</h3>
+                        <h3 style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span
+                                title=${this.isLive ? msg('Device connected — receiving data') : msg('No data received recently')}
+                                style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; font-weight: 600; color: ${this.isLive ? '#16a34a' : '#9ca3af'};">
+                                <span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${this.isLive ? '#16a34a' : '#9ca3af'}; ${this.isLive ? 'box-shadow: 0 0 0 3px rgba(22,163,74,0.2);' : ''}"></span>
+                                ${this.isLive ? msg('Live') : msg('Offline')}
+                            </span>
+                            ${msg('Telemetry Data')} - ${this.imei}${this.vin ? ` (${this.vin})` : ''}
+                        </h3>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <button type="button"
                                     class="btn btn-secondary"
@@ -206,7 +244,7 @@ export class TelemetryModalElement extends LitElement {
                                                 </div>
                                                 <div>
                                                     <div class="tile-label" style="margin-bottom:6px;">${msg('IO Elements')}</div>
-                                                    <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(this.pages[this.currentIndex].io_elements)}</pre>
+                                                    ${this.renderIoElements(this.pages[this.currentIndex].io_elements)}
                                                 </div>
                                             ` : html`
                                                 <div class="no-data">${msg('No telemetry data available')}</div>
@@ -273,9 +311,11 @@ export class TelemetryModalElement extends LitElement {
     }
 
     private closeModal() {
+        this.stopPolling();
         this.show = false;
         this.telemetryData = [];
         this.identityData = [];
+        this.lastFrameMs = 0;
         this.error = "";
         this.loading = false;
         this.resetting = false;
@@ -407,15 +447,26 @@ export class TelemetryModalElement extends LitElement {
         this.sendImmobilizerCommand('off');
     }
 
-    // Method to load telemetry data (to be called from parent)
+    // Method to load telemetry data (to be called from parent). Performs the initial
+    // load with a spinner, then starts the live poll loop.
     public async loadTelemetryData() {
+        await this.applyTelemetry(true);
+        this.startPolling();
+    }
+
+    // applyTelemetry fetches the latest telemetry + identity frames and refreshes the view.
+    // `initial` shows the loading spinner and resets paging; subsequent (poll) refreshes do
+    // neither, so the installer's scroll position and the panel don't flicker.
+    private async applyTelemetry(initial: boolean) {
         if (!this.imei) {
             this.error = msg("No IMEI provided");
             return;
         }
 
-        this.loading = true;
-        this.error = "";
+        if (initial) {
+            this.loading = true;
+            this.error = "";
+        }
 
         try {
             // Fetch both telemetry and identity data in parallel
@@ -433,7 +484,6 @@ export class TelemetryModalElement extends LitElement {
                     this.updateRpmDisplay(first);
                     this.updateIgnitionDisplay(first);
                     this.updateEngineBlockDisplay(first);
-                    this.currentIndex = 0;
                 }
             } else {
                 console.error("Failed to load telemetry data:", telemetryResponse.error);
@@ -442,21 +492,117 @@ export class TelemetryModalElement extends LitElement {
             // Handle identity data
             if (identityResponse.success && identityResponse.data) {
                 this.identityData = Array.isArray(identityResponse.data) ? identityResponse.data : [];
-                this.currentIdentityIndex = 0;
             } else {
                 console.error("Failed to load identity data:", identityResponse.error);
             }
 
-            // Only set error if both failed
-            if (!telemetryResponse.success && !identityResponse.success) {
-                this.error = msg("Failed to load telemetry and identity data");
+            if (initial) {
+                this.currentIndex = 0;
+                this.currentIdentityIndex = 0;
+                // Only surface an error on the initial load; a transient poll failure should
+                // not blow away a working view.
+                if (!telemetryResponse.success && !identityResponse.success) {
+                    this.error = msg("Failed to load telemetry and identity data");
+                }
+            } else {
+                this.clampIndices();
             }
+
+            this.updateLiveness();
         } catch (err) {
-            this.error = msg("Failed to load telemetry data");
+            if (initial) {
+                this.error = msg("Failed to load telemetry data");
+            }
             console.error("Error loading telemetry data:", err);
         } finally {
-            this.loading = false;
+            if (initial) {
+                this.loading = false;
+            }
         }
+    }
+
+    // updateLiveness records the newest frame timestamp (across both feeds) and ticks the
+    // clock so the "Live" indicator re-evaluates on every poll.
+    private updateLiveness() {
+        this.nowMs = Date.now();
+        let latest = 0;
+        for (const arr of [this.telemetryData, this.identityData]) {
+            for (const it of arr) {
+                if (!it.receivedAt) continue;
+                const t = new Date(it.receivedAt).getTime();
+                if (!isNaN(t) && t > latest) latest = t;
+            }
+        }
+        this.lastFrameMs = latest;
+    }
+
+    // Keep the paging indices in range after a refresh changes the number of frames.
+    private clampIndices() {
+        const maxT = this.pages.length - 1;
+        if (this.currentIndex > maxT) this.currentIndex = Math.max(0, maxT);
+        const maxI = this.identityPages.length - 1;
+        if (this.currentIdentityIndex > maxI) this.currentIdentityIndex = Math.max(0, maxI);
+    }
+
+    private startPolling() {
+        this.stopPolling();
+        if (!this.show || !this.imei) return;
+        this.pollDeadline = Date.now() + TelemetryModalElement.POLL_MAX_MS;
+        this.pollTimer = window.setInterval(() => {
+            if (!this.show || Date.now() > this.pollDeadline) {
+                this.stopPolling();
+                return;
+            }
+            void this.applyTelemetry(false);
+        }, TelemetryModalElement.POLL_INTERVAL_MS);
+    }
+
+    private stopPolling() {
+        if (this.pollTimer !== null) {
+            window.clearInterval(this.pollTimer);
+            this.pollTimer = null;
+        }
+    }
+
+    // Decode a record's IO elements (hex values) into a typed, human-readable table.
+    private renderIoElements(ioElements: unknown) {
+        if (!Array.isArray(ioElements) || ioElements.length === 0) {
+            return html`<pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(ioElements)}</pre>`;
+        }
+        const rows = ioElements
+            .filter((el: any) => el && typeof el === 'object' && 'id' in el)
+            .map((el: any) => {
+                const decoded = decodeIo(Number(el.id), typeof el.value === 'string' ? el.value : '');
+                return {id: Number(el.id), ...decoded};
+            });
+        return html`
+            <div style="max-height:30vh; overflow:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+                    <thead>
+                        <tr style="text-align:left; border-bottom:1px solid #e5e7eb;">
+                            <th style="padding:2px 6px;">${msg('IO')}</th>
+                            <th style="padding:2px 6px;">${msg('Type')}</th>
+                            <th style="padding:2px 6px;">${msg('Value')}</th>
+                            <th style="padding:2px 6px;">${msg('Hex')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows.map(r => html`
+                            <tr style="border-bottom:1px solid #f3f4f6;">
+                                <td style="padding:2px 6px; font-variant-numeric: tabular-nums;">${r.id}</td>
+                                <td style="padding:2px 6px; opacity:0.7;">${r.type}</td>
+                                <td style="padding:2px 6px; font-weight:600; font-variant-numeric: tabular-nums;">${r.display}</td>
+                                <td style="padding:2px 6px; opacity:0.6;"><code>${r.hex}</code></td>
+                            </tr>
+                        `)}
+                    </tbody>
+                </table>
+            </div>
+            <details style="margin-top:6px;">
+                <summary style="cursor:pointer; font-size:0.75rem; opacity:0.7;">${msg('Raw')}</summary>
+                <pre class="telemetry-blob" style="max-height:30vh; overflow:auto;">${this.formatJsonForDisplay(ioElements)}</pre>
+            </details>
+        `;
     }
 
     private getRawTelemetryRows(item: TelemetryData): { header: unknown; io_elements: unknown }[] {
