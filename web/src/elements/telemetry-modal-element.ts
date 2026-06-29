@@ -5,6 +5,7 @@ import {LitElement} from 'lit';
 import { ApiService } from '../services/api-service';
 import {globalStyles} from "../global-styles.ts";
 import {decodeIo} from "../services/ruptela-io-types.ts";
+import {getIoName} from "../services/ruptela-io-names.ts";
 import './confirm-modal-element';
 
 interface IoElement {
@@ -576,8 +577,9 @@ export class TelemetryModalElement extends LitElement {
         const rows = ioElements
             .filter((el: any) => el && typeof el === 'object' && 'id' in el)
             .map((el: any) => {
-                const decoded = decodeIo(Number(el.id), typeof el.value === 'string' ? el.value : '');
-                return {id: Number(el.id), ...decoded};
+                const id = Number(el.id);
+                const decoded = decodeIo(id, typeof el.value === 'string' ? el.value : '');
+                return {id, name: getIoName(id), ...decoded};
             });
         return html`
             <div style="max-height:30vh; overflow:auto;">
@@ -585,6 +587,7 @@ export class TelemetryModalElement extends LitElement {
                     <thead>
                         <tr style="text-align:left; border-bottom:1px solid #e5e7eb;">
                             <th style="padding:2px 6px;">${msg('IO')}</th>
+                            <th style="padding:2px 6px;">${msg('Name')}</th>
                             <th style="padding:2px 6px;">${msg('Type')}</th>
                             <th style="padding:2px 6px;">${msg('Value')}</th>
                             <th style="padding:2px 6px;">${msg('Hex')}</th>
@@ -594,6 +597,7 @@ export class TelemetryModalElement extends LitElement {
                         ${rows.map(r => html`
                             <tr style="border-bottom:1px solid #f3f4f6;">
                                 <td style="padding:2px 6px; font-variant-numeric: tabular-nums;">${r.id}</td>
+                                <td style="padding:2px 6px;">${r.name}</td>
                                 <td style="padding:2px 6px; opacity:0.7;">${r.type}</td>
                                 <td style="padding:2px 6px; font-weight:600; font-variant-numeric: tabular-nums;">${r.display}</td>
                                 <td style="padding:2px 6px; opacity:0.6;"><code>${r.hex}</code></td>
@@ -900,7 +904,7 @@ export class TelemetryModalElement extends LitElement {
         for (const item of this.telemetryData) {
             const decimal = this.findIoValueDecimal(item, ioId);
             if (decimal !== null) {
-                this.ioSearchResult = String(decimal);
+                this.ioSearchResult = `${getIoName(ioId)}: ${decimal}`;
                 return;
             }
         }
