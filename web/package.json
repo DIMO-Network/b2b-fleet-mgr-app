@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint src --fix",
+    "gen:io-names": "node scripts/gen-ruptela-io-names.mjs",
     "localize:extract": "lit-localize extract",
     "localize:build": "lit-localize build"
   },
