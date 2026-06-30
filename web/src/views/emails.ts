@@ -22,6 +22,13 @@ interface EmailsResponse {
     next: string;
 }
 
+interface EmailEventsResponse {
+    deliveredAt?: number;
+    openedAt?: number;
+    bouncedAt?: number;
+    status: string;
+}
+
 @customElement("emails-view")
 export class EmailsView extends LitElement {
     static styles = [
@@ -51,6 +58,10 @@ export class EmailsView extends LitElement {
     @state() private nextCursor = "";
     @state() private cursorStack: string[] = [];
     @state() private pageSize = 50;
+    // Delivery ids currently being resolved on demand, and those already resolved
+    // (so we stop offering the button even when no delivery/open event came back).
+    @state() private resolving: Set<string> = new Set();
+    @state() private resolved: Set<string> = new Set();
 
     async connectedCallback() {
         super.connectedCallback();
@@ -60,6 +71,9 @@ export class EmailsView extends LitElement {
     private async fetchEmails(cursor: string) {
         this.loading = true;
         this.errorMessage = "";
+        // Each page is a fresh set of rows; drop any per-row resolve state.
+        this.resolving = new Set();
+        this.resolved = new Set();
         try {
             const params = new URLSearchParams({ limit: String(this.pageSize) });
             if (cursor) params.set("next", cursor);
@@ -117,6 +131,39 @@ export class EmailsView extends LitElement {
         return d.toLocaleString();
     }
 
+    // resolveEvents fetches a single message's delivery lifecycle on demand and fills
+    // delivered/opened/bounced + status into that row. The listing itself stays one cheap
+    // call; the provider (Postmark) resolves per-message details only when asked.
+    private async resolveEvents(m: EmailMessage) {
+        if (!m.deliveryId || this.resolving.has(m.deliveryId)) return;
+        this.resolving = new Set(this.resolving).add(m.deliveryId);
+        try {
+            const result = await ApiService.getInstance().callApi<EmailEventsResponse>(
+                "GET",
+                `/emails/${encodeURIComponent(m.deliveryId)}/events`,
+                null,
+                true,
+                true
+            );
+            if (result.success && result.data) {
+                m.deliveredAt = result.data.deliveredAt;
+                m.openedAt = result.data.openedAt;
+                m.bouncedAt = result.data.bouncedAt;
+                if (result.data.status) m.status = result.data.status;
+                this.emails = [...this.emails]; // trigger re-render with the mutated row
+            }
+        } catch (e) {
+            // Non-fatal: leave the row as-is and let the user retry via Refresh.
+            // eslint-disable-next-line no-console
+            console.error("Failed to resolve email events:", e);
+        } finally {
+            const next = new Set(this.resolving);
+            next.delete(m.deliveryId);
+            this.resolving = next;
+            this.resolved = new Set(this.resolved).add(m.deliveryId);
+        }
+    }
+
     render() {
         return html`
             <div
@@ -165,7 +212,20 @@ export class EmailsView extends LitElement {
                                                                 ${m.status}
                                                             </span>
                                                         </td>
-                                                        <td>${this.formatTimestamp(m.deliveredAt)}</td>
+                                                        <td>
+                                                            ${m.deliveredAt
+                                                                ? this.formatTimestamp(m.deliveredAt)
+                                                                : this.resolving.has(m.deliveryId)
+                                                                    ? html`<span style="opacity:0.6;">${msg("Resolving...")}</span>`
+                                                                    : this.resolved.has(m.deliveryId)
+                                                                        ? "-"
+                                                                        : html`<button
+                                                                              class="btn btn-sm"
+                                                                              @click=${() => this.resolveEvents(m)}
+                                                                          >
+                                                                              ${msg("Resolve")}
+                                                                          </button>`}
+                                                        </td>
                                                         <td>${this.formatTimestamp(m.openedAt)}</td>
                                                         <td style="font-family: monospace; font-size: 12px;">
                                                             ${m.deliveryId}

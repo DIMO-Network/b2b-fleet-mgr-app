@@ -191,6 +191,7 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 
 	// emails (Kaufmann-only on the oracle side)
 	oracleApp.Get("/emails", genericProxyCtrl.Proxy)
+	oracleApp.Get("/emails/:messageId/events", genericProxyCtrl.Proxy)
 
 	// settings the app needs to operate, pulled from config / env vars
 	oracleApp.Get("/settings", settingsCtrl.GetSettings) // todo some of these are oracle specific
