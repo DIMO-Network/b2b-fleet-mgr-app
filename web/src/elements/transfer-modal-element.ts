@@ -122,7 +122,27 @@ export class TransferModalElement extends BaseOnboardingElement {
     @state()
     private accountFound: boolean = false;
 
+    // Email-lookup state (mirrors the wallet lookup). Populated by the debounced
+    // lookupEmailAccount so we can transfer to an existing account directly instead of always
+    // creating a new one.
+    @state()
+    private isCheckingEmail = false;
+
+    @state()
+    private emailAccountFound = false; // existing account; resolvedEmailWallet is set
+
+    @state()
+    private emailAccountNew = false; // 404 from lookup: no account yet, will create one
+
+    @state()
+    private emailLookupError = ""; // lookup unavailable/blocked (e.g. non-allowlisted tenant)
+
+    @state()
+    private resolvedEmailWallet = "";
+
     private accountCheckTimeout?: number;
+
+    private emailCheckTimeout?: number;
 
     constructor() {
         super();
@@ -212,24 +232,41 @@ export class TransferModalElement extends BaseOnboardingElement {
                                 </div>
                                 
                                 <div class="transfer-option">
-                                    <h4>${msg('Transfer by Email (new accounts)')}</h4>
+                                    <h4>${msg('Transfer by Email')}</h4>
                                     <form class="transfer-form">
                                         <label>
                                             ${msg('Email Address')}
-                                            <input type="email" 
-                                                   placeholder="user@example.com"
-                                                   .value=${this.email}
-                                                   @input=${this.handleEmailInput}>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <input type="email"
+                                                       placeholder="user@example.com"
+                                                       style="flex: 1; min-width: 0;"
+                                                       .value=${this.email}
+                                                       @input=${this.handleEmailInput}>
+                                                ${this.isCheckingEmail ? html`<span style="font-size: 12px; color: #666; flex: 0 0 auto;">${msg('Checking...')}</span>` : nothing}
+                                                ${this.emailAccountFound ? html`<span style="color: #22c55e; font-size: 16px; flex: 0 0 auto;">✓</span>` : nothing}
+                                            </div>
                                         </label>
-                                        <button type="button" 
-                                                class="action-btn ${this.processing ? 'processing' : ''}" 
+                                        ${this.emailAccountFound ? html`
+                                            <div style="font-size: 12px; color: #16a34a; margin-top: 6px;">
+                                                ${msg('An existing account was found. The vehicle will be transferred directly to their wallet.')}
+                                            </div>
+                                        ` : nothing}
+                                        ${this.emailAccountNew ? html`
+                                            <div style="font-size: 12px; color: #666; margin-top: 6px;">
+                                                ${msg('No account exists for this email yet. The user will receive an email with an OTP code to log in and claim the vehicle.')}
+                                            </div>
+                                        ` : nothing}
+                                        ${this.emailLookupError ? html`
+                                            <div style="font-size: 12px; color: #fc0303; margin-top: 6px;">
+                                                ${this.emailLookupError}
+                                            </div>
+                                        ` : nothing}
+                                        <button type="button"
+                                                class="action-btn ${this.processing ? 'processing' : ''}"
                                                 @click=${() => this.confirmTransfer('email')}
-                                                ?disabled=${!this.email.trim() || this.processing}>
+                                                ?disabled=${!this.email.trim() || this.processing || this.isCheckingEmail || !!this.emailLookupError}>
                                             ${this.processing ? msg('Processing...') : msg('Transfer by Email')}
                                         </button>
-                                        <p>
-                                           ${msg('User will receive an email with an OTP code to login to the App. This will not work for existing accounts.')}
-                                        </p>
                                     </form>
                                 </div>
                             </div>
@@ -250,6 +287,14 @@ export class TransferModalElement extends BaseOnboardingElement {
         this.email = "";
         this.errorMessage = "";
         this.statusMessage = "";
+        this.isCheckingEmail = false;
+        this.emailAccountFound = false;
+        this.emailAccountNew = false;
+        this.emailLookupError = "";
+        this.resolvedEmailWallet = "";
+        if (this.emailCheckTimeout) {
+            clearTimeout(this.emailCheckTimeout);
+        }
         console.log("Closing transfer modal");
         
         // Dispatch event to parent
@@ -260,8 +305,59 @@ export class TransferModalElement extends BaseOnboardingElement {
     }
 
     private handleEmailInput = (e: InputEvent) => {
-        this.email = (e.target as HTMLInputElement).value;
+        const value = (e.target as HTMLInputElement).value;
+        this.email = value;
+        this.emailAccountFound = false;
+        this.emailAccountNew = false;
+        this.emailLookupError = "";
+        this.resolvedEmailWallet = "";
+
+        if (this.emailCheckTimeout) {
+            clearTimeout(this.emailCheckTimeout);
+        }
+
+        const trimmed = value.trim();
+        if (!trimmed || !this.isLikelyEmail(trimmed)) {
+            this.isCheckingEmail = false;
+            return;
+        }
+
+        this.isCheckingEmail = true;
+        this.emailCheckTimeout = window.setTimeout(() => {
+            this.lookupEmailAccount(trimmed);
+        }, 400);
     };
+
+    private isLikelyEmail(value: string): boolean {
+        return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
+    }
+
+    // Resolve an account by email. An existing account returns a walletAddress (the Accounts
+    // service only echoes it to our allowlisted developer JWT); a 404 means no account yet, so
+    // we'll create one on submit; anything else means the lookup is unavailable for this tenant.
+    private async lookupEmailAccount(email: string) {
+        this.isCheckingEmail = true;
+        const query = `?email=${encodeURIComponent(email)}`;
+        // Backend GET /account requires Tenant-Id (matches the wallet lookup + POST create path).
+        const resp = await this.api.callApi<AccountData>('GET', `/account${query}`, null, true, true, true);
+
+        if (resp.success && resp.data?.walletAddress) {
+            this.emailAccountFound = true;
+            this.resolvedEmailWallet = resp.data.walletAddress;
+            this.emailAccountNew = false;
+            this.emailLookupError = "";
+        } else if (resp.status === 404) {
+            this.emailAccountNew = true;
+            this.emailAccountFound = false;
+            this.emailLookupError = "";
+        } else {
+            // 401/5xx, or a 200 with no walletAddress (non-allowlisted tenant): can't resolve.
+            this.emailAccountFound = false;
+            this.emailAccountNew = false;
+            this.emailLookupError = msg("Account lookup isn't available for this tenant. Please transfer by wallet address instead.");
+        }
+        this.isCheckingEmail = false;
+    }
 
     private handleWalletInput = (e: InputEvent) => {
         const value = (e.target as HTMLInputElement).value;
@@ -312,16 +408,31 @@ export class TransferModalElement extends BaseOnboardingElement {
         this.statusMessage = msg("Processing transfer for IMEI: ") + this.imei;
         
         if (transferType === 'email') {
-            this.statusMessage = msg("Creating account for email: ") + this.email;
-            const createAccountResp = await this.createAccount(this.email);
-            if (!createAccountResp.success) {
-                this.errorMessage = createAccountResp.error;
+            if (this.emailLookupError) {
+                this.errorMessage = this.emailLookupError;
                 this.processing = false;
                 return;
             }
-            this.walletAddress = createAccountResp.data.walletAddress;
-            console.log("Created account with wallet address:", this.walletAddress);
-            this.statusMessage = msg("Account created with wallet address: ") + this.walletAddress;
+
+            if (this.emailAccountFound && this.resolvedEmailWallet) {
+                // Existing account: transfer straight to the resolved wallet — no account
+                // creation, no OTP email.
+                this.walletAddress = this.resolvedEmailWallet;
+                console.log("Transferring to existing account wallet:", this.walletAddress);
+                this.statusMessage = msg("Transferring to existing account: ") + this.walletAddress;
+            } else {
+                // New account: create it (user gets an OTP email) then transfer.
+                this.statusMessage = msg("Creating account for email: ") + this.email;
+                const createAccountResp = await this.createAccount(this.email);
+                if (!createAccountResp.success) {
+                    this.errorMessage = createAccountResp.error;
+                    this.processing = false;
+                    return;
+                }
+                this.walletAddress = createAccountResp.data.walletAddress;
+                console.log("Created account with wallet address:", this.walletAddress);
+                this.statusMessage = msg("Account created with wallet address: ") + this.walletAddress;
+            }
         }
 
         if (this.walletAddress == "") {
