@@ -830,10 +830,6 @@
   <source>OR</source>
   <target>O</target>
 </trans-unit>
-<trans-unit id="s6b6aa40896f2f508">
-  <source>Transfer by Email (new accounts)</source>
-  <target>Transferir por Correo (cuentas nuevas)</target>
-</trans-unit>
 <trans-unit id="s1e2e135dac5ba993">
   <source>Email Address</source>
   <target>Dirección de Correo</target>
@@ -841,10 +837,6 @@
 <trans-unit id="s75e98404c877a843">
   <source>Transfer by Email</source>
   <target>Transferir por Correo</target>
-</trans-unit>
-<trans-unit id="s843bb7ff5e8fe2da">
-  <source>User will receive an email with an OTP code to login to the App. This will not work for existing accounts.</source>
-  <target>El usuario recibirá un correo con un código OTP para iniciar sesión en la App. Esto no funcionará para cuentas existentes.</target>
 </trans-unit>
 <trans-unit id="sfa1eef635795b63c">
   <source>Processing transfer for IMEI: </source>
@@ -2588,6 +2580,30 @@
 <trans-unit id="s537534ff0214c8a6">
   <source>Refreshing…</source>
   <target>Actualizando…</target>
+</trans-unit>
+<trans-unit id="s4821c2e8d60cdfeb">
+  <source>An existing account was found. The vehicle will be transferred directly to their wallet.</source>
+  <target>Se encontró una cuenta existente. El vehículo se transferirá directamente a su wallet.</target>
+</trans-unit>
+<trans-unit id="s6657ec390e642b35">
+  <source>No account exists for this email yet. The user will receive an email with an OTP code to log in and claim the vehicle.</source>
+  <target>Aún no existe una cuenta para este correo. El usuario recibirá un correo con un código OTP para iniciar sesión y reclamar el vehículo.</target>
+</trans-unit>
+<trans-unit id="s74680840bad16cf8">
+  <source>Account lookup isn't available for this tenant. Please transfer by wallet address instead.</source>
+  <target>La búsqueda de cuentas no está disponible para este inquilino. Por favor, transfiera usando la dirección de wallet.</target>
+</trans-unit>
+<trans-unit id="sb7d62e5ad10d8e7b">
+  <source>Transferring to existing account: </source>
+  <target>Transfiriendo a cuenta existente: </target>
+</trans-unit>
+<trans-unit id="sc513edd6534cd35a">
+  <source>Resolving...</source>
+  <target>Resolviendo...</target>
+</trans-unit>
+<trans-unit id="s4de430b40c94e903">
+  <source>Resolve</source>
+  <target>Resolver</target>
 </trans-unit>
 </body>
 </file>
