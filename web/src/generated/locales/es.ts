@@ -5,8 +5,8 @@
     import {html} from 'lit';
     import {str} from '@lit/localize';
 
-    /* eslint-disable no-irregular-whitespace */
-    /* eslint-disable @typescript-eslint/no-explicit-any */
+     
+     
 
     export const templates = {
       'h104d0372d43faa07': html`Para conectar su flota necesitará una cuenta de desarrollador DIMO. Si aún no tiene una, cree una en <a href="https://console.dimo.org" target="_blank">console.dimo.org</a>.`,
@@ -174,6 +174,7 @@
 's479350a32274d64c': `Plantillas de Reporte`,
 's47d2a0ab45bec70a': `Fecha de Fin`,
 's47f4637aaa012055': `Grupos de Flota`,
+'s4821c2e8d60cdfeb': `Se encontró una cuenta existente. El vehículo se transferirá directamente a su wallet.`,
 's484c770275ea96db': `Error al registrar al menos un VIN`,
 's49534419cd9c812a': `Hex`,
 's49730f3d5751a433': `Cargando...`,
@@ -187,6 +188,7 @@
 's4bdf85b3b7899924': `Usuarios Administradores`,
 's4bea2bd4fd7c752a': `¿Está seguro de que desea continuar?`,
 's4cb3d569372cf980': `Confirmar Registro`,
+'s4de430b40c94e903': `Resolver`,
 's4e035c2ccf0535fd': `Error al cargar datos del vehículo`,
 's4e2391300b797f3c': `VER PERFIL DE USUARIO →`,
 's4ee6d90c2eb5ecdc': `Nombre del Inquilino`,
@@ -239,6 +241,7 @@
 's64f1b498f33d3ec6': `Ingrese el nombre del inquilino`,
 's65480c812ea72845': `Revise y opcionalmente actualice las definiciones de vehículos antes del registro:`,
 's659773b2545b1d37': `El aumento del nivel de combustible por encima de este % es un evento de recarga`,
+'s6657ec390e642b35': `Aún no existe una cuenta para este correo. El usuario recibirá un correo con un código OTP para iniciar sesión y reclamar el vehículo.`,
 's666854dc11c7d9aa': `Cargando usuarios administradores...`,
 's6686fcc6d2c8f0bd': `Nota`,
 's6694b6896680ffb2': `Resumen de Flota`,
@@ -259,7 +262,6 @@
 's6b28de40b64d4995': `Usar OTP`,
 's6b2beba7ab637e9e': `Roles`,
 's6b37d154cadc74f3': `Seleccione una plantilla de reporte, elija grupos de flota y haga clic en EJECUTAR REPORTE`,
-'s6b6aa40896f2f508': `Transferir por Correo (cuentas nuevas)`,
 's6d3efe9c3d836a5f': `Cargando permisos...`,
 's6e196b93c62518bb': `Se encuentra en su consola de desarrollador DIMO.`,
 's6e21b7074a7aa5ea': `¿Está seguro de que desea eliminar el vehículo?`,
@@ -269,6 +271,7 @@
 's71176fa2fc28ff49': `Compartir vehículos con Desarrollador`,
 's74185329ba1871db': `Marca Modelo Año`,
 's744a500def5015c5': `CAN / Instantánea de Telemetría`,
+'s74680840bad16cf8': `La búsqueda de cuentas no está disponible para este inquilino. Por favor, transfiera usando la dirección de wallet.`,
 's74b31022385d5341': `Por favor reclame sus IMEIs cada vez que compre o agregue un nuevo dispositivo a su flota`,
 's74b85ca082cba3d6': `No se encontraron vehículos compartidos.`,
 's75d83fc3f0cfab40': `Encabezado`,
@@ -300,7 +303,6 @@
 's8405cb72d831fbb4': `Error al Forzar Eliminación`,
 's843885ab933dbeb4': `Buscar usuarios administradores...`,
 's84399fda8df166f8': `Confirmar Registro de Vehículos`,
-'s843bb7ff5e8fe2da': `El usuario recibirá un correo con un código OTP para iniciar sesión en la App. Esto no funcionará para cuentas existentes.`,
 's8492be16503be576': `Definición (requerida):`,
 's853062af0bcf2d88': `Tipo de ID Gubernamental`,
 's85b3fc77a7f5c9e4': `Cargando datos del usuario...`,
@@ -410,6 +412,7 @@
 'sb6fa8ad2ae025529': `Compartir Seguimiento`,
 'sb78a66c8b3d23215': `Verificando...`,
 'sb79b345ef0ba51ef': `Cargando usuarios...`,
+'sb7d62e5ad10d8e7b': `Transfiriendo a cuenta existente: `,
 'sb7efe2955d7a41f8': `Registro`,
 'sb8054673c62ea9ed': `Vehículos Propios`,
 'sb819464683a062e5': `Clic para actualizar estado de inventario`,
@@ -430,6 +433,7 @@
 'sc2c6ab213f763d92': `Información del Perfil`,
 'sc30957ee63a1f7de': `Es Administrador`,
 'sc4d6d7415e991063': `Formato de color inválido. Por favor use formato hexadecimal (ej., #FF5733)`,
+'sc513edd6534cd35a': `Resolviendo...`,
 'sc592307ea80f16b9': `Desconocido`,
 'sc7641c9aab0c2232': `El nombre del grupo es requerido`,
 'scab045cc56e0e078': `Dispositivos existentes sin acuñar`,
