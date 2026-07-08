@@ -9,6 +9,7 @@ import { FleetService, FleetGroup } from '@services/fleet-service.ts';
 import { SettingsService } from '@services/settings-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { inventoryStateClass, inventoryStateLabel } from '../utils/inventory-states.ts';
 
 dayjs.extend(relativeTime);
 
@@ -523,7 +524,7 @@ export class VehiclesFleetsView extends LitElement {
   }
 
   private getInventoryClass(inventory: string): string {
-    return inventory ? `status-${inventory.toLowerCase()}` : '';
+    return inventoryStateClass(inventory);
   }
 
   private getEngineClass(engine: string): string {
@@ -715,7 +716,7 @@ export class VehiclesFleetsView extends LitElement {
                             <td>${vehicle.vin}</td>
                             <td><span class="status ${this.getStatusClass(vehicle.connection_status)}">${vehicle.connection_status}</span></td>
                             <td title="${vehicle.last_telemetry}">${this.formatLastTelemetry(vehicle.last_telemetry)}</td>
-                            <td>${vehicle.inventory ? html`<span class="status ${this.getInventoryClass(vehicle.inventory)}">${vehicle.inventory}</span>` : '—'}</td>
+                            <td>${vehicle.inventory ? html`<span class="status ${this.getInventoryClass(vehicle.inventory)}">${inventoryStateLabel(vehicle.inventory)}</span>` : '—'}</td>
                             <td>${vehicle.groups.length > 0 ? vehicle.groups.map(group => html`<span class="badge" style="background-color: ${group.color}; color: #fff;">${group.name}</span>`) : '—'}</td>
                             <td>${vehicle.odometer || '—'}</td>
                             <td><span class="status ${this.getEngineClass(vehicle.engine)}">${this.getEngineDisplay(vehicle.engine)}</span></td>

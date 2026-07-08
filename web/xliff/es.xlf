@@ -858,17 +858,9 @@
   <source>Check Info for final transfer verification</source>
   <target>Verifique la información para la verificación final de transferencia</target>
 </trans-unit>
-<trans-unit id="s238a02fdbce1b187">
-  <source>Recording inventory state change...</source>
-  <target>Registrando cambio de estado de inventario...</target>
-</trans-unit>
 <trans-unit id="s7bf37ab2a7b802cc">
   <source>Failed to create account</source>
   <target>Error al crear cuenta</target>
-</trans-unit>
-<trans-unit id="s9b7f299c18dc9703">
-  <source>Failed to add inventory state</source>
-  <target>Error al agregar estado de inventario</target>
 </trans-unit>
 <trans-unit id="sd8e49265fe5a495a">
   <source>Update Inventory Status</source>
@@ -2757,6 +2749,26 @@
 <trans-unit id="s4de430b40c94e903">
   <source>Resolve</source>
   <target>Resolver</target>
+</trans-unit>
+<trans-unit id="s7e24010b03787d8b">
+  <source>Vehicles in Dealer Inventory / Standby are not billed. At most 3% of your connected fleet can be in this state.</source>
+  <target>Los vehículos en Inventario del Concesionario / En Espera no se facturan. Como máximo el 3% de su flota conectada puede estar en este estado.</target>
+</trans-unit>
+<trans-unit id="s201c9c90f7f5ccf8">
+  <source>Dealer Inventory / Standby</source>
+  <target>Inventario del Concesionario / En Espera</target>
+</trans-unit>
+<trans-unit id="sfd98c3fd50d281c5">
+  <source>Billable Vehicles</source>
+  <target>Vehículos Facturables</target>
+</trans-unit>
+<trans-unit id="s0934cd8f1f0d223d">
+  <source>Connected minus Dealer Inventory / Standby</source>
+  <target>Conectados menos Inventario del Concesionario / En Espera</target>
+</trans-unit>
+<trans-unit id="s3ac1ea08482df1d1">
+  <source>Change Status</source>
+  <target>Cambiar Estado</target>
 </trans-unit>
 </body>
 </file>

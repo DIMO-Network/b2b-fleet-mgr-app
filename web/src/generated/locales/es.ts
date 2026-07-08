@@ -5,8 +5,8 @@
     import {html} from 'lit';
     import {str} from '@lit/localize';
 
-    /* eslint-disable no-irregular-whitespace */
-    /* eslint-disable @typescript-eslint/no-explicit-any */
+     
+     
 
     export const templates = {
       'h104d0372d43faa07': html`Para conectar su flota necesitará una cuenta de desarrollador DIMO. Si aún no tiene una, cree una en <a href="https://console.dimo.org" target="_blank">console.dimo.org</a>.`,
@@ -41,6 +41,7 @@
 's091d3407b5b2f824': `O`,
 's091d3d07b5b3076f': `OK`,
 's09241907b5b8e8f1': `IO`,
+'s0934cd8f1f0d223d': `Conectados menos Inventario del Concesionario / En Espera`,
 's096870834409c059': `Acuñado el`,
 's097b8b53f3d7f13e': `Agregar Nuevo Inquilino`,
 's0a11c2ffb8309d1a': `No encontrado`,
@@ -99,6 +100,7 @@
 's1e9160456cf320df': `Error al Eliminar`,
 's1f0d05eb8a0e0f3f': `Inventario`,
 's1f2a7c84b9784d52': `Licencia de Desarrollador 0x Client ID`,
+'s201c9c90f7f5ccf8': `Inventario del Concesionario / En Espera`,
 's208ff236d16dca19': `¿Está seguro de que desea desconectar el vehículo?`,
 's21d83df228901500': `Error al eliminar usuario administrador.`,
 's21f68e65dbf5b5a4': `Procesando...`,
@@ -109,7 +111,6 @@
 's22fa1ffafd6adf06': `+ Placa`,
 's22ff40785c781ed0': `Error al Desconectar`,
 's233ae776268cd44b': `Empresa`,
-'s238a02fdbce1b187': `Registrando cambio de estado de inventario...`,
 's239708c2cf30d3a8': `Ocurrió un error inesperado al eliminar el vehículo.`,
 's240732794d597f70': `Martes`,
 's246144d94749cb33': `Esto desconectará y eliminará el vehículo. ¿Está seguro?`,
@@ -171,6 +172,7 @@
 's3a231b3f6a7cdeb4': `Propiedad del Cliente`,
 's3a8601d715da564b': `Genere un enlace temporal para compartir el seguimiento del vehículo en vivo.`,
 's3ab3b951f86a542f': `Buscar grupos...`,
+'s3ac1ea08482df1d1': `Cambiar Estado`,
 's3bce12db754e774f': `Reclamar nuevo IMEI`,
 's3bd128de03e7e2c3': `Actualizando...`,
 's3c05fa34487c7a9e': `Estado de la Cuenta`,
@@ -359,6 +361,7 @@
 's7cff7b8a99de26ef': `1 lectura por hora`,
 's7d32c3d09009bb5e': `Error al conectar vehículo`,
 's7da178cd5e1c395e': `DIMO Secret`,
+'s7e24010b03787d8b': `Los vehículos en Inventario del Concesionario / En Espera no se facturan. Como máximo el 3% de su flota conectada puede estar en este estado.`,
 's7f0235d2ac159249': `Resultado de Registro`,
 's7f5869b3d14d7cbc': `Proveedor`,
 's80d410d589eae08a': `Cargando seguimiento del vehículo...`,
@@ -447,7 +450,6 @@
 's9a453768c4472e07': `Sincronizar SIMs y Flota`,
 's9a8e784897a942dd': `Incorporados y acuñados`,
 's9b16f99b17c2462b': `marca_modelo_año`,
-'s9b7f299c18dc9703': `Error al agregar estado de inventario`,
 's9c4f8150cfbba2e2': `Subir una atestación de documento`,
 's9cef4f0964a3bc87': `Error al cargar datos de telemetría e identidad`,
 's9d3ec532a393026d': str`Registro ${0} de ${1}`,
@@ -692,6 +694,7 @@
 'sfce4234dff6e2947': `Error al eliminar vehículo pendiente`,
 'sfd4aadec2ada796a': `No se encontraron resultados, asegúrese de haber`,
 'sfd4e03bfca6b24fb': `Error al restablecer datos de telemetría`,
+'sfd98c3fd50d281c5': `Vehículos Facturables`,
 'sfe8c6231f61dff73': `Actualizar Definición de Dispositivo`,
 'sfec13d5bbf592117': `Tiempo de ejecución`,
 'sff29be900b3b70eb': `Crear Nuevo Reporte`,

@@ -10,6 +10,7 @@ interface DashboardStats {
   total_vehicles: number;
   connected: number;
   pending_onboard: number;
+  billable_vehicles: number;
 }
 
 @customElement('home-view')
@@ -69,6 +70,11 @@ export class HomeView extends LitElement {
                     <div class="tile-label">${msg('Pending Onboard')}</div>
                     <div class="tile-value">${this.loading ? '—' : this.stats?.pending_onboard ?? 0}</div>
                     <div class="tile-subtitle">${msg('Devices existing but not minted')}</div>
+                </div>
+                <div class="tile">
+                    <div class="tile-label">${msg('Billable Vehicles')}</div>
+                    <div class="tile-value">${this.loading ? '—' : this.stats?.billable_vehicles ?? 0}</div>
+                    <div class="tile-subtitle">${msg('Connected minus Dealer Inventory / Standby')}</div>
                 </div>
             </div>
         </div>
