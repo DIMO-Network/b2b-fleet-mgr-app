@@ -14,6 +14,7 @@ import {OracleTenantService} from '@services/oracle-tenant-service.ts';
 import {SettingsService} from '@services/settings-service.ts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import {inventoryStateClass, inventoryStateLabel} from '../utils/inventory-states.ts';
 import '../elements/update-inventory-modal-element';
 import '../elements/fleet-map';
 import '../elements/click-to-copy-element';
@@ -886,10 +887,13 @@ export class VehicleDetailView extends LitElement {
                 </div>
                 <div>
                   <span class="status status-connected">${msg('Connected')}</span>
-                  <span class="status status-${(this.vehicle?.inventory || 'Inventory').toLowerCase()}"
+                  <span class="status ${inventoryStateClass(this.vehicle?.inventory || 'Inventory')}"
                         style="cursor: pointer;"
                         @click=${this.openInventoryModal}
-                        title="${msg('Click to update inventory status')}">${this.vehicle?.inventory || msg('Inventory')}</span>
+                        title="${msg('Click to update inventory status')}">${inventoryStateLabel(this.vehicle?.inventory || 'Inventory')}</span>
+                  <button class="btn btn-sm" style="margin-left: 8px; vertical-align: middle;" @click=${this.openInventoryModal}>
+                    ${msg('Change Status')}
+                  </button>
                   ${this.vehicle?.groups?.map(group => html`<span class="badge" style="background-color: ${group.color}; color: #fff;">${group.name}</span>`)}
                 </div>
               </div>
@@ -1226,7 +1230,7 @@ export class VehicleDetailView extends LitElement {
                   <tbody>
                   ${this.vehicle?.inventory_audit && this.vehicle.inventory_audit.length > 0 ? this.vehicle.inventory_audit.map(audit => html`
                     <tr>
-                      <td><span class="status status-${audit.state.toLowerCase()}">${audit.state}</span></td>
+                      <td><span class="status ${inventoryStateClass(audit.state)}">${inventoryStateLabel(audit.state)}</span></td>
                       <td>${audit.note}</td>
                       <td>${this.formatLastTelemetry(audit.created_at)}</td>
                     </tr>

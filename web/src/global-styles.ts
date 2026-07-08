@@ -408,6 +408,11 @@ export const globalStyles = css`
         color: #856404;
     }
 
+    .status-dealerinventory {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
     .status-not-owned {
         background: #ffe5b4;
         color: #856404;

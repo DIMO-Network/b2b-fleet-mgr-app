@@ -3,6 +3,12 @@ import {msg} from '@lit/localize';
 import { customElement, property, state } from 'lit/decorators.js';
 import { globalStyles } from '../global-styles.ts';
 import { ApiService } from '@services/api-service.ts';
+import {
+  INVENTORY_STATE_CUSTOMER,
+  INVENTORY_STATE_DEALER_INVENTORY,
+  INVENTORY_STATE_INVENTORY,
+  inventoryStateLabel,
+} from '../utils/inventory-states.ts';
 
 @customElement('update-inventory-modal-element')
 export class UpdateInventoryModalElement extends LitElement {
@@ -63,9 +69,15 @@ export class UpdateInventoryModalElement extends LitElement {
                   .value=${this.selectedState}
                   @change=${this.handleStateChange}
                 >
-                  <option value="Inventory">${msg('Inventory')}</option>
-                  <option value="Customer">${msg('Customer')}</option>
+                  <option value=${INVENTORY_STATE_INVENTORY}>${inventoryStateLabel(INVENTORY_STATE_INVENTORY)}</option>
+                  <option value=${INVENTORY_STATE_CUSTOMER}>${inventoryStateLabel(INVENTORY_STATE_CUSTOMER)}</option>
+                  <option value=${INVENTORY_STATE_DEALER_INVENTORY}>${inventoryStateLabel(INVENTORY_STATE_DEALER_INVENTORY)}</option>
                 </select>
+                ${this.selectedState === INVENTORY_STATE_DEALER_INVENTORY ? html`
+                  <div style="font-size: 13px; color: #666; margin-top: 8px;">
+                    ${msg('Vehicles in Dealer Inventory / Standby are not billed. At most 3% of your connected fleet can be in this state.')}
+                  </div>
+                ` : nothing}
               </div>
 
               <div>

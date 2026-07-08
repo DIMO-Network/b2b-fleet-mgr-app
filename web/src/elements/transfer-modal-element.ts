@@ -459,13 +459,8 @@ export class TransferModalElement extends BaseOnboardingElement {
         }
         this.statusMessage = msg("Transfer completed successfully");
 
-        // Add inventory state record
-        this.statusMessage = msg("Recording inventory state change...");
-        const inventoryResult = await this.addInventoryState(this.imei, this.walletAddress);
-        if (!inventoryResult.success) {
-            console.error("Failed to add inventory state:", inventoryResult.error);
-            // Don't fail the whole transfer if inventory tracking fails
-        }
+        // The backend transfer job records the Customer inventory state when the
+        // transfer lands on chain, so no frontend write is needed here.
 
         await delay(500);
         this.processing = false;
@@ -493,23 +488,4 @@ export class TransferModalElement extends BaseOnboardingElement {
         };
     }
 
-    async addInventoryState(imei: string, walletAddress: string): Promise<Result<any, string>> {
-        const payload = {
-            state: "Customer",
-            note: `Transfer to customer ${walletAddress}`
-        };
-
-        const resp = await this.api.callApi<any>('POST', `/fleet/vehicles/${imei}/inventory`, payload, true, true);
-        if (!resp.success) {
-            return {
-                success: false,
-                error: resp.error || msg("Failed to add inventory state")
-            };
-        }
-
-        return {
-            success: true,
-            data: resp.data
-        };
-    }
 }
