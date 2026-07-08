@@ -2770,6 +2770,22 @@
   <source>Change Status</source>
   <target>Cambiar Estado</target>
 </trans-unit>
+<trans-unit id="s2548c90a84697add">
+  <source>Vehicles Minted</source>
+  <target>Vehículos Acuñados</target>
+</trans-unit>
+<trans-unit id="s829d58b64702b452">
+  <source>last 6 months</source>
+  <target>últimos 6 meses</target>
+</trans-unit>
+<trans-unit id="s744fd0cfbd3b2b91">
+  <source>Vehicles minted per month, last 6 months</source>
+  <target>Vehículos acuñados por mes, últimos 6 meses</target>
+</trans-unit>
+<trans-unit id="s9b26b821e2fdfc2d">
+  <source><x id="0" equiv-text="${this.monthLabel(bucket.month)}"/>: <x id="1" equiv-text="${bucket.count}"/> vehicles minted</source>
+  <target><x id="0" equiv-text="${this.monthLabel(bucket.month)}"/>: <x id="1" equiv-text="${bucket.count}"/> vehículos acuñados</target>
+</trans-unit>
 </body>
 </file>
 </xliff>
