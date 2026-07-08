@@ -2786,6 +2786,10 @@
   <source><x id="0" equiv-text="${this.monthLabel(bucket.month)}"/>: <x id="1" equiv-text="${bucket.count}"/> vehicles minted</source>
   <target><x id="0" equiv-text="${this.monthLabel(bucket.month)}"/>: <x id="1" equiv-text="${bucket.count}"/> vehículos acuñados</target>
 </trans-unit>
+<trans-unit id="s87043d44655bcbce">
+  <source>Excludes R1 and other externally connected devices.</source>
+  <target>Excluye dispositivos R1 y otros conectados externamente.</target>
+</trans-unit>
 </body>
 </file>
 </xliff>

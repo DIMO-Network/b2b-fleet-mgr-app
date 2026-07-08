@@ -387,6 +387,7 @@
 's861bd8a8203b4c16': `Enlaces Activos`,
 's8623bc65b307b05a': `Dispositivo conectado — recibiendo datos`,
 's863a334030f271d3': `Error al cargar identidad del vehículo`,
+'s87043d44655bcbce': `Excluye dispositivos R1 y otros conectados externamente.`,
 's871b1fe6d1846958': `Número de Teléfono`,
 's87449a8aa9ada50a': `Actualización de la definición de dispositivo enviada.`,
 's87ddaf748f20de21': `Fecha de Inicio`,

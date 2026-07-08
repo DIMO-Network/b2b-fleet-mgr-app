@@ -86,6 +86,11 @@ export class HomeView extends LitElement {
       .mint-col:hover .mint-bar {
         background: #004a94;
       }
+      .mint-footnote {
+        font-size: 12px;
+        color: #666;
+        margin-top: 12px;
+      }
     ` ];
 
   @consume({ context: apiServiceContext, subscribe: true })
@@ -191,6 +196,7 @@ export class HomeView extends LitElement {
                         </div>
                     `)}
                 </div>
+                <div class="mint-footnote">${msg('Excludes R1 and other externally connected devices.')}</div>
             </div>
         </div>
     `;
