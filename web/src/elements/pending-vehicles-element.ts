@@ -9,7 +9,21 @@ import './claim-imei-modal-element';
 interface PendingVehicle {
     vin: string;
     imei: string;
+    deviceType: string;
     firstSeen: string;
+}
+
+// deviceTypeLabel maps the oracle's device_type to a human-friendly name. New
+// device types fall back to the raw value so they are visible rather than hidden.
+function deviceTypeLabel(deviceType: string): string {
+    switch (deviceType) {
+        case 'smart5':
+            return 'Ruptela Smart5';
+        case 'gv58':
+            return 'Kamaleon GV58';
+        default:
+            return deviceType || 'Unknown';
+    }
 }
 
 interface PendingVehiclesResponse {
@@ -173,6 +187,7 @@ export class PendingVehiclesElement extends LitElement {
                             </th>
                             <th>${msg('VIN')}</th>
                             <th>${msg('IMEI')}</th>
+                            <th>${msg('Device')}</th>
                             <th>${msg('First Seen')}</th>
                             <th>${msg('Action')}</th>
                         </tr>
@@ -180,11 +195,11 @@ export class PendingVehiclesElement extends LitElement {
                         <tbody>
                         ${this.items.length === 0 ? html`
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
                                 ${msg('No results found, make sure you have')} <a href="#" @click=${(e: Event) => { e.preventDefault(); this.openClaimImeiModal(); }} style="color: #007bff; text-decoration: underline; cursor: pointer;">${msg('claimed')}</a> ${msg('your devices')}
                             </td>
                         </tr>
-                        ` : repeat(this.items, (item) => item.vin, (item) => html`
+                        ` : repeat(this.items, (item) => item.imei, (item) => html`
                         <tr>
                             <td>
                                 <input type="checkbox"
@@ -199,6 +214,7 @@ export class PendingVehiclesElement extends LitElement {
                             </td>
                             <td>${item.vin || msg('N/A')}</td>
                             <td>${item.imei}</td>
+                            <td>${deviceTypeLabel(item.deviceType)}</td>
                             <td>${item.firstSeen}</td>
                             <td>
                                 <button class="action-btn" @click=${() => this.openTelemetryModal(item.imei, item.vin)} style="margin-left: 0.5rem;">
