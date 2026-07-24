@@ -445,6 +445,7 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         modal.show = true;
         modal.imei = this.item?.imei || '';
         modal.vin = this.item?.vin || '';
+        modal.deviceType = this.item?.device_type || '';
         
         // Add event listener for modal close
         modal.addEventListener('modal-closed', () => {

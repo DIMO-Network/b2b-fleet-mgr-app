@@ -27,4 +27,7 @@ export interface Vehicle {
     // tenant's signer (via providedSignerAddress at account creation). Lets the tenant drive
     // transfers on its behalf even though isCurrentUserOwner is false.
     isSharedAccountSigner?: boolean;
+    // Telemetry hardware ("smart5" | "gv58"); drives the telemetry modal's decode view. May be
+    // absent on the minted-vehicle source, in which case the modal auto-detects from frame shape.
+    device_type?: string;
 }
