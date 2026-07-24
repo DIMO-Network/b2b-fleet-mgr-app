@@ -147,6 +147,9 @@ interface Vehicle {
   inventory_audit: InventoryAudit[];
   vendor_data?: Record<string, string>;
   license_plate?: string;
+  // device_type identifies the telemetry hardware (oracle vins.device_type): "smart5" (Ruptela)
+  // or "gv58" (Queclink/Kamaleon via flespi). Drives the hardware label; may be absent on older rows.
+  device_type?: string;
   // owner is the last known on-chain owner stored in kaufmann's vins table. Identity is the
   // source of truth; we compare against it on detail load and PATCH back when it drifts.
   owner?: string;
@@ -1494,10 +1497,24 @@ export class VehicleDetailView extends LitElement {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }
 
+  // deviceTypeLabel maps the oracle's vins.device_type to a human-friendly hardware name.
+  // Mirrors the label logic in pending-vehicles-element. Unknown/absent types fall back to
+  // "Ruptela Smart5" — smart5 is the DB column default and legacy rows predate the column.
+  private deviceTypeLabel(deviceType: string | undefined): string {
+    switch (deviceType) {
+      case 'gv58':
+        return 'Kamaleon GV58';
+      case 'smart5':
+        return 'Ruptela Smart5';
+      default:
+        return deviceType || 'Ruptela Smart5';
+    }
+  }
+
   private renderHardwareDetails(): string {
     const aftermarketDevice = this.vehicleIdentity?.vehicle?.aftermarketDevice;
     if (!aftermarketDevice) {
-      return `Smart5 | IMEI: ${this.vehicle?.imei || 'N/A'}`;
+      return `${this.deviceTypeLabel(this.vehicle?.device_type)} | IMEI: ${this.vehicle?.imei || 'N/A'}`;
     }
 
     const serial = aftermarketDevice.serial || 'N/A';
