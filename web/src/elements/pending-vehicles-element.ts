@@ -217,7 +217,7 @@ export class PendingVehiclesElement extends LitElement {
                             <td>${deviceTypeLabel(item.deviceType)}</td>
                             <td>${item.firstSeen}</td>
                             <td>
-                                <button class="action-btn" @click=${() => this.openTelemetryModal(item.imei, item.vin)} style="margin-left: 0.5rem;">
+                                <button class="action-btn" @click=${() => this.openTelemetryModal(item.imei, item.vin, item.deviceType)} style="margin-left: 0.5rem;">
                                     ${msg('TELEMETRY')}
                                 </button>
                             </td>
@@ -236,14 +236,15 @@ export class PendingVehiclesElement extends LitElement {
         `;
     }
 
-    private openTelemetryModal(imei: string, vin?: string) {
-        console.log("Opening telemetry modal for IMEI:", imei, "VIN:", vin);
-        
+    private openTelemetryModal(imei: string, vin?: string, deviceType?: string) {
+        console.log("Opening telemetry modal for IMEI:", imei, "VIN:", vin, "deviceType:", deviceType);
+
         // Create the telemetry modal using the separate component
         const modal = document.createElement('telemetry-modal-element') as any;
         modal.show = true;
         modal.imei = imei;
         modal.vin = vin || '';
+        modal.deviceType = deviceType || '';
         
         // Add event listener for modal close
         modal.addEventListener('modal-closed', () => {

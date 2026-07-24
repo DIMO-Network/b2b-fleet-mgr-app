@@ -38,6 +38,11 @@ export class TelemetryModalElement extends LitElement {
     @property({attribute: true})
     public vin = "";
 
+    // deviceType selects how the telemetry area renders: "smart5" (Ruptela IO decode) vs "gv58"
+    // (Kamaleon named-field decode). Empty/unknown falls back to shape auto-detection.
+    @property({attribute: true})
+    public deviceType = "";
+
     @state()
     private telemetryData: TelemetryData[] = [];
 
@@ -206,6 +211,7 @@ export class TelemetryModalElement extends LitElement {
                         ${this.vinError ? html`<div style="color: #dc2626; font-size: 0.85rem; flex-basis: 100%;">${this.vinError}</div>` : ''}
                     </div>
                     ` : nothing}
+                    ${!this.isKamaleon ? html`
                     <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 0.75rem;">
                         <button type="button"
                                 class="btn btn-danger"
@@ -227,13 +233,14 @@ export class TelemetryModalElement extends LitElement {
                             <div style="color: #dc2626; font-size: 0.875rem;">${this.immobilizerError}</div>
                         ` : ''}
                     </div>
+                    ` : nothing}
                     <div class="modal-body">
                         ${this.loading ? html`
                             <div class="loading-message">${msg('Loading telemetry data...')}</div>
                         ` : html`
                             ${this.error ? html`
                                 <div class="alert alert-error">${this.error}</div>
-                            ` : html`
+                            ` : this.isKamaleon ? this.renderKamaleonBody() : html`
                                 <div class="telemetry-metrics" style="display: flex; align-items: baseline; gap: 2rem; margin-bottom: 0.5rem;">
                                     <div><span style="opacity: 0.8;">${msg('Odometer:')}</span> <strong>${this.odometerDisplay}</strong></div>
                                     <div><span style="opacity: 0.8;">${msg('RPM:')}</span> <strong>${this.rpmDisplay}</strong></div>
@@ -343,6 +350,193 @@ export class TelemetryModalElement extends LitElement {
               @modal-confirm=${this.handleRemoveVinConfirm}
               @modal-cancel=${this.handleRemoveVinCancel}
             ></confirm-modal-element>
+        `;
+    }
+
+    // ---------------------------------------------------------------------------
+    // Kamaleon / GV58 rendering
+    //
+    // GV58 devices don't report ruptela IO elements; each stored frame is the decoded
+    // Kamaleon `Frame` JSON with a `record_id` (DA/DB/PA/E*/F*/G*) and a `record` of
+    // human-named fields. There is no identification feed for GV58, so the second panel
+    // shows device info instead. Immobilizer + IO search are ruptela-only and hidden.
+    // ---------------------------------------------------------------------------
+
+    // isKamaleon: explicit deviceType wins; otherwise auto-detect from the frame shape so the
+    // modal still renders correctly when opened without a device type (e.g. the minted list).
+    private get isKamaleon(): boolean {
+        if (this.deviceType === 'gv58') return true;
+        if (this.deviceType === 'smart5') return false;
+        return this.looksLikeKamaleon;
+    }
+
+    private get looksLikeKamaleon(): boolean {
+        const f = this.parseKamFrame(this.telemetryData[0]?.rawTelemetry);
+        return !!f && (f.record_id != null || f.report_name != null);
+    }
+
+    // parseKamFrame normalizes a stored blob (object, array, or stringified JSON) to a frame object.
+    private parseKamFrame(raw: unknown): any | null {
+        if (raw == null) return null;
+        let obj: any = raw;
+        if (typeof raw === 'string') {
+            try { obj = JSON.parse(raw); } catch { return null; }
+        }
+        if (Array.isArray(obj)) obj = obj[0];
+        if (!obj || typeof obj !== 'object') return null;
+        return obj;
+    }
+
+    // All Kamaleon frames in the window, newest-first (as the API returns them).
+    private get kamFrames(): { frame: any; receivedAt: string }[] {
+        const out: { frame: any; receivedAt: string }[] = [];
+        for (const item of this.telemetryData) {
+            const f = this.parseKamFrame(item.rawTelemetry);
+            if (f) out.push({ frame: f, receivedAt: item.receivedAt || '' });
+        }
+        return out;
+    }
+
+    private kamRecordLabel(recordId: string | undefined): string {
+        const id = (recordId || '').toUpperCase();
+        if (!id) return 'Record';
+        const map: Record<string, string> = {
+            DA: 'Periodic snapshot', DB: 'Periodic snapshot 2', DE: 'EV snapshot',
+            PA: 'Engine start', PB: 'Engine stop',
+        };
+        if (map[id]) return `${id} — ${map[id]}`;
+        if (id.startsWith('E')) return `${id} — Event`;
+        if (id.startsWith('F')) return `${id} — Trip summary`;
+        if (id.startsWith('G')) return `${id} — Histogram`;
+        return id;
+    }
+
+    // Newest value of a named record field across the window (0 is a valid reading, so guard null).
+    private kamLatestField(field: string): unknown {
+        for (const { frame } of this.kamFrames) {
+            const rec = frame?.record;
+            if (rec && typeof rec === 'object' && rec[field] != null) return rec[field];
+        }
+        return null;
+    }
+
+    private kamMetric(field: string, suffix = ''): string {
+        const v = this.kamLatestField(field);
+        return v == null ? '—' : `${v}${suffix}`;
+    }
+
+    private get kamDeviceInfo(): [string, unknown][] {
+        const frames = this.kamFrames;
+        const first = frames[0]?.frame;
+        const info: [string, unknown][] = [];
+        info.push(['IMEI', this.imei || first?.imei || '—']);
+        if (first?.protocol_version) info.push(['Protocol version', first.protocol_version]);
+        if (first?.device_name) info.push(['Device name', first.device_name]);
+        // Firmware/serial live in a PA (engine-start) record's `extra` array: [serial, firmware, ...].
+        for (const { frame } of frames) {
+            if ((frame?.record_id || '').toUpperCase() === 'PA') {
+                const extra = frame?.record?.extra;
+                if (Array.isArray(extra)) {
+                    if (extra[0]) info.push(['Serial', String(extra[0])]);
+                    if (extra[1]) info.push(['Firmware', String(extra[1])]);
+                }
+                break;
+            }
+        }
+        const types = Array.from(new Set(frames.map(f => (f.frame?.record_id || '').toUpperCase()).filter(Boolean)));
+        if (types.length) info.push(['Records seen', types.join(', ')]);
+        return info;
+    }
+
+    private renderKvTable(rows: [string, unknown][]) {
+        return html`
+            <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+                <tbody>
+                    ${rows.map(([k, v]) => html`
+                        <tr style="border-bottom:1px solid #f3f4f6;">
+                            <td style="padding:2px 6px; opacity:0.7; white-space:nowrap; vertical-align:top;">${k}</td>
+                            <td style="padding:2px 6px; font-weight:600; font-variant-numeric: tabular-nums; word-break:break-all;">${this.formatKvValue(v)}</td>
+                        </tr>`)}
+                </tbody>
+            </table>`;
+    }
+
+    private formatKvValue(v: unknown): string {
+        if (v == null) return '—';
+        if (Array.isArray(v) || typeof v === 'object') return JSON.stringify(v);
+        return String(v);
+    }
+
+    private renderKamFrame(frame: any, receivedAt: string) {
+        const buffered = !!frame.buffered;
+        const gpsTime = frame.gps_time ?? frame.record?.gps_time;
+        const lat = frame.latitude, lon = frame.longitude;
+        const record = frame.record;
+        const rows: [string, unknown][] = (record && typeof record === 'object') ? Object.entries(record) : [];
+        return html`
+            <div>
+                <div class="tile-label" style="margin-bottom:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <strong>${this.kamRecordLabel(frame.record_id)}</strong>
+                    <span style="opacity:0.7;">${frame.report_name || ''}</span>
+                    ${buffered ? html`<span style="background:#fef3c7; color:#92400e; padding:1px 6px; border-radius:4px; font-size:0.7rem;">${msg('buffered')}</span>` : ''}
+                </div>
+                <div style="font-size:0.8rem; opacity:0.75; margin-bottom:6px;">
+                    ${gpsTime ? html`${msg('Time')}: ${this.formatTimestamp(gpsTime)}` : ''}
+                    ${(lat != null && lon != null) ? html` &nbsp;·&nbsp; ${msg('GPS')}: ${Number(lat).toFixed(5)}, ${Number(lon).toFixed(5)}` : ''}
+                    ${receivedAt ? html` &nbsp;·&nbsp; ${msg('Received')}: ${new Date(receivedAt).toLocaleTimeString()}` : ''}
+                </div>
+            </div>
+            <div>
+                <div class="tile-label" style="margin-bottom:6px;">${msg('Decoded Record')}</div>
+                ${rows.length > 0 ? this.renderKvTable(rows) : html`<div class="no-data">${msg('No decoded fields')}</div>`}
+            </div>
+            ${frame.raw_record ? html`
+                <details>
+                    <summary style="cursor:pointer; font-size:0.75rem; opacity:0.7;">${msg('Raw record')}</summary>
+                    <pre class="telemetry-blob" style="max-height:20vh; overflow:auto;">${frame.raw_record}</pre>
+                </details>` : ''}
+        `;
+    }
+
+    private renderKamaleonBody() {
+        const frames = this.kamFrames;
+        const idx = Math.min(this.currentIndex, Math.max(0, frames.length - 1));
+        const current = frames[idx]?.frame;
+        return html`
+            <div class="telemetry-metrics" style="display: flex; align-items: baseline; gap: 2rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                <div><span style="opacity: 0.8;">${msg('Odometer:')}</span> <strong>${this.kamMetric('odometer_km', ' km')}</strong></div>
+                <div><span style="opacity: 0.8;">${msg('Speed:')}</span> <strong>${this.kamMetric('speed_kmh', ' km/h')}</strong></div>
+                <div><span style="opacity: 0.8;">${msg('RPM:')}</span> <strong>${this.kamMetric('engine_rpm')}</strong></div>
+                <div><span style="opacity: 0.8;">${msg('Fuel:')}</span> <strong>${this.kamMetric('fuel_tank_level_pct', '%')}</strong></div>
+                <div><span style="opacity: 0.8;">${msg('Engine Temp:')}</span> <strong>${this.kamMetric('engine_temp_c', ' °C')}</strong></div>
+                <div><span style="opacity: 0.8;">${msg('Hourmeter:')}</span> <strong>${this.kamMetric('hourmeter_h', ' h')}</strong></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-top: 8px;">
+                <!-- Telemetry Frames Panel -->
+                <div class="panel">
+                    <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                        <div style="font-weight: bold;">${msg('Telemetry Frames')}</div>
+                        ${frames.length > 0 ? html`
+                            <div class="pagination" style="margin:0;">
+                                <button class="pagination-btn" @click=${this.prevPage} ?disabled=${idx <= 0} aria-label="Previous">←</button>
+                                <span>${msg(str`Frame ${idx + 1} of ${frames.length}`)}</span>
+                                <button class="pagination-btn" @click=${this.nextPage} ?disabled=${idx >= frames.length - 1} aria-label="Next">→</button>
+                            </div>` : ''}
+                    </div>
+                    <div class="panel-body" style="display:grid; gap:12px; max-height:50vh; overflow:auto;">
+                        ${current ? this.renderKamFrame(current, frames[idx].receivedAt) : html`<div class="no-data">${msg('No telemetry data available')}</div>`}
+                    </div>
+                </div>
+                <!-- Device Info Panel -->
+                <div class="panel">
+                    <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                        <div style="font-weight: bold;">${msg('Device Info')}</div>
+                    </div>
+                    <div class="panel-body" style="display:grid; gap:12px; max-height:50vh; overflow:auto;">
+                        ${frames.length > 0 ? this.renderKvTable(this.kamDeviceInfo) : html`<div class="no-data">${msg('No device data available')}</div>`}
+                    </div>
+                </div>
+            </div>
         `;
     }
 
@@ -623,9 +817,14 @@ export class TelemetryModalElement extends LitElement {
         this.lastFrameMs = latest;
     }
 
+    // Number of frames the main panel pages over — Kamaleon frames or ruptela IO pages.
+    private get currentFrameCount(): number {
+        return this.isKamaleon ? this.kamFrames.length : this.pages.length;
+    }
+
     // Keep the paging indices in range after a refresh changes the number of frames.
     private clampIndices() {
-        const maxT = this.pages.length - 1;
+        const maxT = this.currentFrameCount - 1;
         if (this.currentIndex > maxT) this.currentIndex = Math.max(0, maxT);
         const maxI = this.identityPages.length - 1;
         if (this.currentIdentityIndex > maxI) this.currentIdentityIndex = Math.max(0, maxI);
@@ -702,7 +901,8 @@ export class TelemetryModalElement extends LitElement {
     // without an authoritative VIN (set by the parent on load). The !this.vin guard means
     // once a VIN is known — authoritative or derived — we stop scanning IO 104-106.
     private maybeDeriveVin() {
-        if (this.vin) return;
+        // Ruptela-only: VIN rides IO 104-106. Kamaleon frames have no such IOs.
+        if (this.vin || this.isKamaleon) return;
         const derived = this.extractVinFromFrames();
         if (derived) this.vin = derived;
     }
@@ -834,7 +1034,7 @@ export class TelemetryModalElement extends LitElement {
     }
 
     private nextPage = () => {
-        if (this.currentIndex < this.pages.length - 1) {
+        if (this.currentIndex < this.currentFrameCount - 1) {
             this.currentIndex += 1;
         }
     };
