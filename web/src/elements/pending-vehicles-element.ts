@@ -249,7 +249,13 @@ export class PendingVehiclesElement extends LitElement {
         modal.addEventListener('modal-closed', () => {
             document.body.removeChild(modal);
         });
-        
+
+        // A manually-entered VIN (Kamaleon/GV58 devices don't report one) means this row can now
+        // be selected for minting — reload the list so its VIN and enabled checkbox show up.
+        modal.addEventListener('vin-associated', async () => {
+            await this.loadPendingVehicles();
+        });
+
         // Add to body
         document.body.appendChild(modal);
         

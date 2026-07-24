@@ -59,6 +59,17 @@ export class TelemetryModalElement extends LitElement {
     @state()
     private showRemoveVinConfirm = false;
 
+    // Manual VIN entry — Kamaleon/GV58 devices don't transmit a VIN, so an operator must supply
+    // one before the vehicle can be selected for minting in the pending list.
+    @state()
+    private vinInput = "";
+
+    @state()
+    private savingVin = false;
+
+    @state()
+    private vinError = "";
+
     @state()
     private odometerDisplay: string = "—";
 
@@ -171,9 +182,33 @@ export class TelemetryModalElement extends LitElement {
                             <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                         </div>
                     </div>
+                    ${!this.vin ? html`
+                    <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; background: #fffbeb;">
+                        <span style="font-weight: 600; color: #92400e;">${msg('No VIN on file')}</span>
+                        <span style="font-size: 0.85rem; color: #92400e;">${msg('This device does not report a VIN. Enter it to enable onboarding.')}</span>
+                        <input
+                            type="text"
+                            .placeholder=${msg('Enter VIN')}
+                            .value=${this.vinInput}
+                            @input=${(e: InputEvent) => { this.vinInput = (e.target as HTMLInputElement).value; this.vinError = ""; }}
+                            @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') this.saveVin(); }}
+                            ?disabled=${this.savingVin}
+                            maxlength="17"
+                            style="flex: 1; min-width: 180px; padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 4px; font-family: monospace; text-transform: uppercase;"
+                        >
+                        <button type="button"
+                                class="btn btn-primary ${this.savingVin ? 'processing' : ''}"
+                                ?disabled=${this.savingVin || this.vinInput.trim().length <= 10}
+                                @click=${this.saveVin}
+                                style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                            ${this.savingVin ? msg('Saving...') : msg('Save VIN')}
+                        </button>
+                        ${this.vinError ? html`<div style="color: #dc2626; font-size: 0.85rem; flex-basis: 100%;">${this.vinError}</div>` : ''}
+                    </div>
+                    ` : nothing}
                     <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 0.75rem;">
-                        <button type="button" 
-                                class="btn btn-danger" 
+                        <button type="button"
+                                class="btn btn-danger"
                                 ?disabled=${this.immobilizerLoading}
                                 @click=${this.immobilizerOn}
                                 style="font-size: 0.875rem; padding: 0.5rem 1rem; background-color: #dc2626; color: white; border: none; border-radius: 0.375rem; cursor: pointer;">
@@ -322,6 +357,9 @@ export class TelemetryModalElement extends LitElement {
         this.resetting = false;
         this.removingVin = false;
         this.showRemoveVinConfirm = false;
+        this.vinInput = "";
+        this.savingVin = false;
+        this.vinError = "";
         this.immobilizerLoading = false;
         this.immobilizerError = "";
         this.odometerDisplay = "—";
@@ -407,6 +445,50 @@ export class TelemetryModalElement extends LitElement {
             console.error("Error deleting pending vehicle:", err);
         } finally {
             this.removingVin = false;
+        }
+    }
+
+    // saveVin associates the operator-entered VIN with this device via the oracle, then notifies
+    // the parent (pending list) so the row reloads with its VIN and becomes selectable for minting.
+    private async saveVin() {
+        const vin = this.vinInput.trim().toUpperCase();
+        if (vin.length <= 10) {
+            this.vinError = msg("Please enter a valid VIN");
+            return;
+        }
+        if (!this.imei) {
+            this.vinError = msg("No IMEI provided");
+            return;
+        }
+
+        this.savingVin = true;
+        this.vinError = "";
+
+        try {
+            const response = await this.apiService.callApi(
+                'POST',
+                `/pending-vehicle/vin-to-imei/${this.imei}`,
+                { vin },
+                true,
+                true
+            );
+            if (response.success) {
+                this.vin = vin;
+                this.vinInput = "";
+                // Let the pending-vehicles list refresh so the newly-VINed row is mintable.
+                this.dispatchEvent(new CustomEvent('vin-associated', {
+                    detail: { imei: this.imei, vin },
+                    bubbles: true,
+                    composed: true
+                }));
+            } else {
+                this.vinError = response.error || msg("Failed to save VIN");
+            }
+        } catch (err) {
+            this.vinError = msg("Failed to save VIN");
+            console.error("Error saving VIN:", err);
+        } finally {
+            this.savingVin = false;
         }
     }
 
