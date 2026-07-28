@@ -140,15 +140,6 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                   >
                       ${msg('reset onboarding')}
                   </button>
-                  <button
-                      type="button"
-                      ?hidden=${this.item.tokenId == 0 || this.item.isCurrentUserOwner || this.item.isSharedAccountSigner}
-                      ?disabled=${this.processing}
-                      @click=${this.forceDeleteVehicle}
-                      class=${this.deletionProcessing ? 'processing action-btn secondary' : 'action-btn secondary'}
-                  >
-                      ${msg('force delete')}
-                  </button>
               </td>
             </tr>
           ` : nothing;
@@ -229,6 +220,14 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         }));
     }
 
+    private dispatchItemDeleted() {
+        this.dispatchEvent(new CustomEvent('item-deleted', {
+            detail: { value: this.item },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
     async connectVehicle() {
         if (!this.item) {
             return;
@@ -303,39 +302,14 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         const result = sharedSigner
             ? await this.deleteSharedAccountVehicle(this.item.tokenId, this.item.vin)
             : await this.deleteVins([this.item.vin]);
+        this.processing = false;
+        this.deletionProcessing = false;
         if (result.success) {
-            await delay(5000);
-            this.processing = false;
-            this.deletionProcessing = false;
-            this.dispatchItemChanged();
+            // The backend delete can lag behind the response, so drop the row locally
+            // instead of re-fetching a list that may still contain it.
+            this.dispatchItemDeleted();
         } else {
-            this.processing = false;
-            this.deletionProcessing = false;
             this.openErrorModal(result.error || msg('Vehicle delete failed'), msg('Delete Failed'));
-        }
-    }
-
-    // abandons the NFT
-    async forceDeleteVehicle() {
-        if (!this.item) {
-            return;
-        }
-
-        if (!confirm(msg("Are you sure you want to FORCE delete this vehicle? This will abandon all the vehicle history attached to their NFT. Only do this if you are unable to get access to vehicle NFT."))) {
-            return;
-        }
-
-        this.processing = true;
-        this.deletionProcessing = true;
-        const result = await this.api.callApi('DELETE', `/vehicle/force/${this.item.imei}`, null, true, true);
-        if (result.success) {
-            this.processing = false;
-            this.deletionProcessing = false;
-            this.dispatchItemChanged();
-        } else {
-            this.processing = false;
-            this.deletionProcessing = false;
-            this.openErrorModal(result.error || msg('Vehicle force delete failed'), msg('Force Delete Failed'));
         }
     }
 
