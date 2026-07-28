@@ -75,11 +75,13 @@ export class VehicleListElement extends LitElement {
         super.connectedCallback();
         // Listen for bubbling item change events from row items
         this.addEventListener('item-changed', this.handleItemChanged as EventListener);
+        this.addEventListener('item-deleted', this.handleItemDeleted as EventListener);
         await this.loadVehicles();
     }
 
     disconnectedCallback(): void {
         this.removeEventListener('item-changed', this.handleItemChanged as EventListener);
+        this.removeEventListener('item-deleted', this.handleItemDeleted as EventListener);
         super.disconnectedCallback();
     }
 
@@ -116,6 +118,18 @@ export class VehicleListElement extends LitElement {
     private handleItemChanged = async () => {
         // Refresh the list when any row dispatches an item update event
         await this.loadVehicles();
+    };
+
+    // The backend delete may not be reflected in /vehicles right away, so drop the row
+    // locally rather than re-fetching a list that could still include it.
+    private handleItemDeleted = (e: CustomEvent<{ value?: Vehicle }>) => {
+        const deleted = e.detail?.value;
+        if (!deleted) return;
+        const remaining = this.items.filter((item) => item.id !== deleted.id);
+        if (remaining.length === this.items.length) return;
+        this.items = remaining;
+        this.totalItems = Math.max(0, this.totalItems - 1);
+        this.shouldShowPagination = this.totalItems > this.pageSize;
     };
 
     private async goToPage(page: number) {
