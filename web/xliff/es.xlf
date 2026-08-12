@@ -326,17 +326,9 @@
   <source>Please claim your IMEI's every time you purchase or add a new device to your fleet.</source>
   <target>Por favor reclame sus IMEIs cada vez que compre o agregue un nuevo dispositivo a su flota.</target>
 </trans-unit>
-<trans-unit id="se1568af2f62db3b2">
-  <source>Enter one or more IMEIs (one per line):</source>
-  <target>Ingrese uno o más IMEIs (uno por línea):</target>
-</trans-unit>
 <trans-unit id="s529857138984b12c">
   <source>Upload CSV</source>
   <target>Subir CSV</target>
-</trans-unit>
-<trans-unit id="s5837bff27fb01af4">
-  <source>Enter IMEIs here...</source>
-  <target>Ingrese IMEIs aquí...</target>
 </trans-unit>
 <trans-unit id="sd15b4f4616e597ad">
   <source>Claiming...</source>
@@ -353,10 +345,6 @@
 <trans-unit id="s4435a4a2458c2e83">
   <source>The CSV file is empty</source>
   <target>El archivo CSV está vacío</target>
-</trans-unit>
-<trans-unit id="s781666b2baece061">
-  <source>Could not find 'imei' or 'IMEI' column in CSV and it has multiple columns.</source>
-  <target>No se encontró la columna 'imei' o 'IMEI' en el CSV y tiene múltiples columnas.</target>
 </trans-unit>
 <trans-unit id="s5369c18c779a2c8d">
   <source>No IMEIs found in the CSV file</source>
@@ -617,10 +605,6 @@
 <trans-unit id="sb0dcafc51f88f7bb">
   <source>PENDING TO ONBOARD VEHICLES</source>
   <target>VEHÍCULOS PENDIENTES DE REGISTRO</target>
-</trans-unit>
-<trans-unit id="s8b4996bbba86682a">
-  <source>Search by IMEI or VIN</source>
-  <target>Buscar por IMEI o VIN</target>
 </trans-unit>
 <trans-unit id="s74b31022385d5341">
   <source>Please claim your IMEI's every time you purchase or add a new device to your fleet</source>
@@ -1038,10 +1022,6 @@
   <source>reset onboarding</source>
   <target>restablecer registro</target>
 </trans-unit>
-<trans-unit id="s616bb2c8fed325c7">
-  <source>force delete</source>
-  <target>eliminar forzado</target>
-</trans-unit>
 <trans-unit id="s3262afdc2333010e">
   <source>vin is empty!</source>
   <target>¡el VIN está vacío!</target>
@@ -1077,18 +1057,6 @@
 <trans-unit id="s1e9160456cf320df">
   <source>Delete Failed</source>
   <target>Error al Eliminar</target>
-</trans-unit>
-<trans-unit id="sb3d938104578866c">
-  <source>Are you sure you want to FORCE delete this vehicle? This will abandon all the vehicle history attached to their NFT. Only do this if you are unable to get access to vehicle NFT.</source>
-  <target>¿Está seguro de que desea FORZAR la eliminación de este vehículo? Esto abandonará todo el historial del vehículo adjunto a su NFT. Solo haga esto si no puede acceder al NFT del vehículo.</target>
-</trans-unit>
-<trans-unit id="s46b8e31db0d98f7c">
-  <source>Vehicle force delete failed</source>
-  <target>Error al forzar eliminación del vehículo</target>
-</trans-unit>
-<trans-unit id="s8405cb72d831fbb4">
-  <source>Force Delete Failed</source>
-  <target>Error al Forzar Eliminación</target>
 </trans-unit>
 <trans-unit id="s22ff40785c781ed0">
   <source>Disconnect Failed</source>
@@ -2789,6 +2757,194 @@
 <trans-unit id="s87043d44655bcbce">
   <source>Excludes R1 and other externally connected devices.</source>
   <target>Excluye dispositivos R1 y otros conectados externamente.</target>
+</trans-unit>
+<trans-unit id="s9f5a435ce8381e5b">
+  <source>IMEI must be exactly 15 digits</source>
+  <target>El IMEI debe tener exactamente 15 dígitos</target>
+</trans-unit>
+<trans-unit id="sb9ec9c57a2d8e4b9">
+  <source>VIN may only contain letters and numbers</source>
+  <target>El VIN solo puede contener letras y números</target>
+</trans-unit>
+<trans-unit id="s1352608ca618a9e6">
+  <source>VIN must be between <x id="0" equiv-text="${VIN_MIN_LENGTH}"/> and <x id="1" equiv-text="${VIN_MAX_LENGTH}"/> characters (this one is <x id="2" equiv-text="${value.length}"/>)</source>
+  <target>El VIN debe tener entre <x id="0" equiv-text="${VIN_MIN_LENGTH}"/> y <x id="1" equiv-text="${VIN_MAX_LENGTH}"/> caracteres (este tiene <x id="2" equiv-text="${value.length}"/>)</target>
+</trans-unit>
+<trans-unit id="s2ebe766c453b8893">
+  <source>A standard VIN is <x id="0" equiv-text="${VIN_STANDARD_LENGTH}"/> characters; this one is <x id="1" equiv-text="${value.length}"/>. It will be accepted but may fail to decode.</source>
+  <target>Un VIN estándar tiene <x id="0" equiv-text="${VIN_STANDARD_LENGTH}"/> caracteres; este tiene <x id="1" equiv-text="${value.length}"/>. Se aceptará, pero puede que no se decodifique.</target>
+</trans-unit>
+<trans-unit id="s191d4534511e51ac">
+  <source>A standard VIN never contains I, O or Q — check for a mistyped 1 or 0.</source>
+  <target>Un VIN estándar nunca contiene I, O ni Q — verifique si escribió mal un 1 o un 0.</target>
+</trans-unit>
+<trans-unit id="s0c5adc3c96588165">
+  <source>License plates are stored as <x id="0" equiv-text="${PLATE_MAX_LENGTH}"/> characters; this one will be shortened to "<x id="1" equiv-text="${stripped.slice(0, PLATE_MAX_LENGTH)}"/>".</source>
+  <target>Las patentes se guardan con <x id="0" equiv-text="${PLATE_MAX_LENGTH}"/> caracteres; esta se acortará a "<x id="1" equiv-text="${stripped.slice(0, PLATE_MAX_LENGTH)}"/>".</target>
+</trans-unit>
+<trans-unit id="s9fb99cbceaf110fd">
+  <source>Too many values on this line — expected IMEI, VIN, license plate</source>
+  <target>Demasiados valores en esta línea — se esperaba IMEI, VIN, patente</target>
+</trans-unit>
+<trans-unit id="s5e48d8985f7f29c6">
+  <source>Enter one vehicle per line:</source>
+  <target>Ingrese un vehículo por línea:</target>
+</trans-unit>
+<trans-unit id="sdbb5a41d951bfcb8">
+  <source>LICENSE PLATE</source>
+  <target>PATENTE</target>
+</trans-unit>
+<trans-unit id="sed258ba7655704db">
+  <source>VIN and license plate are optional. 123456789012345, 1HGCM82633A004352, ABC1234</source>
+  <target>El VIN y la patente son opcionales. 123456789012345, 1HGCM82633A004352, ABC1234</target>
+</trans-unit>
+<trans-unit id="s68cdaff15474c84c">
+  <source>123456789012345, 1HGCM82633A004352, ABC1234</source>
+  <target>123456789012345, 1HGCM82633A004352, ABC1234</target>
+</trans-unit>
+<trans-unit id="s08e8c9e1c33f5f38">
+  <source>License Plate</source>
+  <target>Patente</target>
+</trans-unit>
+<trans-unit id="s3c86941119523cba">
+  <source>This IMEI appears more than once</source>
+  <target>Este IMEI aparece más de una vez</target>
+</trans-unit>
+<trans-unit id="sd3984981e5223936">
+  <source><x id="0" equiv-text="${errorCount}"/> of <x id="1" equiv-text="${rows.length}"/> rows need fixing before you can submit</source>
+  <target><x id="0" equiv-text="${errorCount}"/> de <x id="1" equiv-text="${rows.length}"/> filas necesitan corrección antes de enviar</target>
+</trans-unit>
+<trans-unit id="s84f0a724d2966177">
+  <source>Remove the duplicate IMEIs before submitting</source>
+  <target>Elimine los IMEIs duplicados antes de enviar</target>
+</trans-unit>
+<trans-unit id="sa5014e3e29bb1a9b">
+  <source><x id="0" equiv-text="${rows.length}"/> ready to claim</source>
+  <target><x id="0" equiv-text="${rows.length}"/> listos para reclamar</target>
+</trans-unit>
+<trans-unit id="s9cfb5f17e84a464d">
+  <source>+<x id="0" equiv-text="${hidden}"/> more not shown</source>
+  <target>+<x id="0" equiv-text="${hidden}"/> más no mostrados</target>
+</trans-unit>
+<trans-unit id="s8f3d223923b156c6">
+  <source>not set</source>
+  <target>sin definir</target>
+</trans-unit>
+<trans-unit id="se23bc20a8cd0a620">
+  <source>Looks good</source>
+  <target>Correcto</target>
+</trans-unit>
+<trans-unit id="sf2e7af7e23fc9381">
+  <source><x id="0" equiv-text="${this.results.length - failed.length}"/> of <x id="1" equiv-text="${this.results.length}"/> claimed</source>
+  <target><x id="0" equiv-text="${this.results.length - failed.length}"/> de <x id="1" equiv-text="${this.results.length}"/> reclamados</target>
+</trans-unit>
+<trans-unit id="s84f2ce9d1f1bb4c8">
+  <source>Could not find an 'imei' column in the CSV and it has more columns than IMEI, VIN, license plate.</source>
+  <target>No se encontró una columna 'imei' en el CSV y tiene más columnas que IMEI, VIN, patente.</target>
+</trans-unit>
+<trans-unit id="s8e30d726aa4664ae">
+  <source>Please fix the highlighted rows before submitting</source>
+  <target>Corrija las filas marcadas antes de enviar</target>
+</trans-unit>
+<trans-unit id="sdf9e39765fe23c81">
+  <source>Failed to claim</source>
+  <target>No se pudo reclamar</target>
+</trans-unit>
+<trans-unit id="sd9d9e14c1a671e97">
+  <source>Search by IMEI, VIN or license plate</source>
+  <target>Buscar por IMEI, VIN o patente</target>
+</trans-unit>
+<trans-unit id="s0b0a02a4470de153">
+  <source>Device</source>
+  <target>Dispositivo</target>
+</trans-unit>
+<trans-unit id="scf7f5e8fffa56186">
+  <source>No VIN on file</source>
+  <target>Sin VIN registrado</target>
+</trans-unit>
+<trans-unit id="sb13ff51283d8f591">
+  <source>This device does not report a VIN. Enter it to enable onboarding.</source>
+  <target>Este dispositivo no reporta un VIN. Ingréselo para habilitar la incorporación.</target>
+</trans-unit>
+<trans-unit id="s471233e696e1a0e0">
+  <source>Enter VIN</source>
+  <target>Ingresar VIN</target>
+</trans-unit>
+<trans-unit id="s717d4a2cd3f7d66f">
+  <source>Saving...</source>
+  <target>Guardando...</target>
+</trans-unit>
+<trans-unit id="s04da3a5ca587c6b5">
+  <source>Save VIN</source>
+  <target>Guardar VIN</target>
+</trans-unit>
+<trans-unit id="s65802efcc90a033a">
+  <source>buffered</source>
+  <target>almacenado</target>
+</trans-unit>
+<trans-unit id="s48e186fb300e5464">
+  <source>Time</source>
+  <target>Hora</target>
+</trans-unit>
+<trans-unit id="seabf9019983e6183">
+  <source>GPS</source>
+  <target>GPS</target>
+</trans-unit>
+<trans-unit id="s752f8d9ba5e51d72">
+  <source>Received</source>
+  <target>Recibido</target>
+</trans-unit>
+<trans-unit id="safa7897be94ae692">
+  <source>Decoded Record</source>
+  <target>Registro decodificado</target>
+</trans-unit>
+<trans-unit id="s898c8a5bd4a24119">
+  <source>No decoded fields</source>
+  <target>Sin campos decodificados</target>
+</trans-unit>
+<trans-unit id="s1d4bcd4a26280bb2">
+  <source>Raw record</source>
+  <target>Registro sin procesar</target>
+</trans-unit>
+<trans-unit id="saa26c3a1f0b325ae">
+  <source>Speed:</source>
+  <target>Velocidad:</target>
+</trans-unit>
+<trans-unit id="sd0c779c271b9d695">
+  <source>Fuel:</source>
+  <target>Combustible:</target>
+</trans-unit>
+<trans-unit id="s159aeee5ca6fa373">
+  <source>Engine Temp:</source>
+  <target>Temp. motor:</target>
+</trans-unit>
+<trans-unit id="s3339c7d41c0b95a2">
+  <source>Hourmeter:</source>
+  <target>Horómetro:</target>
+</trans-unit>
+<trans-unit id="sabd1f5a55ed24c1a">
+  <source>Telemetry Frames</source>
+  <target>Tramas de telemetría</target>
+</trans-unit>
+<trans-unit id="s4de75216b423310b">
+  <source>Frame <x id="0" equiv-text="${idx + 1}"/> of <x id="1" equiv-text="${frames.length}"/></source>
+  <target>Trama <x id="0" equiv-text="${idx + 1}"/> de <x id="1" equiv-text="${frames.length}"/></target>
+</trans-unit>
+<trans-unit id="sa38a33cccb3bac11">
+  <source>Device Info</source>
+  <target>Información del dispositivo</target>
+</trans-unit>
+<trans-unit id="sb2a061fcceaf89f3">
+  <source>No device data available</source>
+  <target>No hay datos del dispositivo disponibles</target>
+</trans-unit>
+<trans-unit id="s781f389d9de76c89">
+  <source>Please enter a valid VIN</source>
+  <target>Ingrese un VIN válido</target>
+</trans-unit>
+<trans-unit id="s654601d2e33b4107">
+  <source>Failed to save VIN</source>
+  <target>No se pudo guardar el VIN</target>
 </trans-unit>
 </body>
 </file>

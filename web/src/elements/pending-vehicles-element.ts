@@ -10,6 +10,9 @@ interface PendingVehicle {
     vin: string;
     imei: string;
     deviceType: string;
+    // Recorded at claim time when the operator supplies one. DB-only until the vehicle is
+    // minted — the plate attestation is published post-mint by the oracle.
+    licensePlate: string;
     firstSeen: string;
 }
 
@@ -162,7 +165,7 @@ export class PendingVehiclesElement extends LitElement {
                 <div class="onboard-header">${msg('PENDING TO ONBOARD VEHICLES')}</div>
                 <div class="onboard-toolbar">
                     <input type="text"
-                       .placeholder=${msg('Search by IMEI or VIN')}
+                       .placeholder=${msg('Search by IMEI, VIN or license plate')}
                        style="width: 40%; min-width: 200px;"
                        .value=${this.searchTerm}
                        @input=${this.onSearchInput}>
@@ -187,6 +190,7 @@ export class PendingVehiclesElement extends LitElement {
                             </th>
                             <th>${msg('VIN')}</th>
                             <th>${msg('IMEI')}</th>
+                            <th>${msg('License Plate')}</th>
                             <th>${msg('Device')}</th>
                             <th>${msg('First Seen')}</th>
                             <th>${msg('Action')}</th>
@@ -195,7 +199,7 @@ export class PendingVehiclesElement extends LitElement {
                         <tbody>
                         ${this.items.length === 0 ? html`
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                            <td colspan="7" style="text-align: center; padding: 2rem; color: #666;">
                                 ${msg('No results found, make sure you have')} <a href="#" @click=${(e: Event) => { e.preventDefault(); this.openClaimImeiModal(); }} style="color: #007bff; text-decoration: underline; cursor: pointer;">${msg('claimed')}</a> ${msg('your devices')}
                             </td>
                         </tr>
@@ -214,6 +218,7 @@ export class PendingVehiclesElement extends LitElement {
                             </td>
                             <td>${item.vin || msg('N/A')}</td>
                             <td>${item.imei}</td>
+                            <td>${item.licensePlate || msg('N/A')}</td>
                             <td>${deviceTypeLabel(item.deviceType)}</td>
                             <td>${item.firstSeen}</td>
                             <td>
