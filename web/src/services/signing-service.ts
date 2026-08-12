@@ -16,6 +16,44 @@ const SIGNING_SERVICE_SESSION_KEY = "signingServiceSession";
 const SIGNING_SERVICE_WALLET_KEY = "signingServiceWallet";
 const SESSION_TIME_S = 30 * 60;
 
+// Nothing in the Turnkey/ZeroDev chain below imposes a deadline of its own: the passkey
+// prompt (createReadWriteSession) is a WebAuthn call that can sit unresolved indefinitely,
+// and the Turnkey and RPC fetches have no timeout either. An unbounded await here never
+// settles the caller's promise, which leaves the calling modal spinning with no error and no
+// network request — the failure mode is invisible in both the UI and the server logs.
+const PASSKEY_TIMEOUT_MS = 120_000;
+const NETWORK_TIMEOUT_MS = 30_000;
+
+// withTimeout rejects if the operation has not settled in time. The underlying work is not
+// cancellable (WebAuthn and fetch both keep running), so this bounds what the *caller* waits
+// for rather than aborting the operation itself.
+function withTimeout<T>(operation: Promise<T>, ms: number, label: string): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        const timer = setTimeout(
+            () => reject(new Error(`${label} timed out after ${Math.round(ms / 1000)}s. Please try again.`)),
+            ms,
+        );
+        operation.then(
+            value => {
+                clearTimeout(timer);
+                resolve(value);
+            },
+            error => {
+                clearTimeout(timer);
+                reject(error);
+            },
+        );
+    });
+}
+
+// SigningResult keeps `signature` and `error` on one non-discriminated shape, which is how
+// every caller reads it (`if (!res.success || !res.signature) { ...res.error }`).
+interface SigningResult {
+    success: boolean;
+    signature?: any;
+    error?: string;
+}
+
 interface SigningServiceSession {
     organizationId: {
         organizationId: string;
@@ -40,7 +78,9 @@ export class SigningService {
         return SigningService.instance;
     }
 
-    public async signUserOperation(payload: any) {
+    // The return type is stated explicitly so that callers can keep reading `.signature` and
+    // `.error` off a single value; buildKernelAccount's discriminated union stays internal.
+    public async signUserOperation(payload: any): Promise<SigningResult> {
         const settings = this.settings.privateSettings;
         const accountInfo = this.settings.accountInfo;
 
@@ -51,47 +91,17 @@ export class SigningService {
             };
         }
 
-        const {turnkeyApiUrl, turnkeyOrgId, turnkeyRpId} = settings;
-        const {subOrganizationId} = accountInfo;
-
-        const turnkeyClient = await this.getTurnkeyClient(turnkeyApiUrl, turnkeyRpId, turnkeyOrgId, subOrganizationId);
-
-        if (!turnkeyClient) {
-            return {
-                success: false,
-                error: "Failed to get turnkey client"
-            };
-        }
-
-        const wallet = await this.getTurnkeyWallet(turnkeyClient, subOrganizationId);
-
         try {
-            const turnkeyAccount = await createAccount({
-                client: turnkeyClient,
-                organizationId: accountInfo.subOrganizationId,
-                signWith: wallet,
-            });
+            const kernelAccount = await this.buildKernelAccount(settings, accountInfo);
+            if (!kernelAccount.success) {
+                return kernelAccount;
+            }
 
-            const publicClient = createPublicClient({
-                transport: http(settings.rpcUrl),
-                chain: settings.environment === 'prod' ? polygon : polygonAmoy,
-            });
-
-            const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
-                signer: turnkeyAccount,
-                entryPoint: getEntryPoint("0.7"),
-                kernelVersion: KERNEL_V3_1
-            });
-
-            const kernelAccount = await createKernelAccount(publicClient, {
-                plugins: {
-                    sudo: ecdsaValidator,
-                },
-                entryPoint: getEntryPoint("0.7"),
-                kernelVersion: KERNEL_V3_1,
-            });
-
-            const signature = await kernelAccount?.signUserOperation(payload);
+            const signature = await withTimeout(
+                kernelAccount.account.signUserOperation(payload),
+                PASSKEY_TIMEOUT_MS,
+                "Signing the transaction",
+            );
             return {
                 success: true,
                 signature: signature,
@@ -107,7 +117,7 @@ export class SigningService {
         }
     }
 
-    public async signTypedData(payload: any) {
+    public async signTypedData(payload: any): Promise<SigningResult> {
         const settings = this.settings.privateSettings;
         const accountInfo = this.settings.accountInfo;
 
@@ -118,46 +128,17 @@ export class SigningService {
             };
         }
 
-        const {turnkeyApiUrl, turnkeyOrgId, turnkeyRpId} = settings;
-        const {subOrganizationId} = accountInfo;
-
-        const turnkeyClient = await this.getTurnkeyClient(turnkeyApiUrl, turnkeyRpId, turnkeyOrgId, subOrganizationId);
-
-        if (!turnkeyClient) {
-            return {
-                success: false,
-                error: "Failed to get turnkey client"
-            };
-        }
-
-        const wallet = await this.getTurnkeyWallet(turnkeyClient, subOrganizationId);
-
         try {
-            const turnkeyAccount = await createAccount({
-                client: turnkeyClient,
-                organizationId: accountInfo.subOrganizationId,
-                signWith: wallet,
-            });
+            const kernelAccount = await this.buildKernelAccount(settings, accountInfo);
+            if (!kernelAccount.success) {
+                return kernelAccount;
+            }
 
-            const publicClient = createPublicClient({
-                transport: http(settings.rpcUrl),
-                chain: settings.environment === 'prod' ? polygon : polygonAmoy,
-            });
-
-            const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
-                signer: turnkeyAccount,
-                entryPoint: getEntryPoint("0.7"),
-                kernelVersion: KERNEL_V3_1
-            });
-
-            const kernelAccount = await createKernelAccount(publicClient, {
-                plugins: {
-                    sudo: ecdsaValidator,
-                },
-                entryPoint: getEntryPoint("0.7"),
-                kernelVersion: KERNEL_V3_1,
-            });
-            const signature = await kernelAccount?.signTypedData(payload);
+            const signature = await withTimeout(
+                kernelAccount.account.signTypedData(payload),
+                PASSKEY_TIMEOUT_MS,
+                "Signing the transaction",
+            );
             return {
                 success: true,
                 signature: signature,
@@ -171,6 +152,80 @@ export class SigningService {
                 error: error.message || "An unexpected error occurred",
             };
         }
+    }
+
+    // buildKernelAccount resolves the passkey session, wallet and ZeroDev kernel account that
+    // both signing methods need. It is called from inside their try blocks: the passkey and
+    // wallet steps can reject (a dismissed WebAuthn dialog rejects) and previously ran outside
+    // any handler, so the rejection escaped to the click handler as an unhandled rejection and
+    // the caller never saw a result at all.
+    private async buildKernelAccount(
+        settings: NonNullable<SettingsService["privateSettings"]>,
+        accountInfo: NonNullable<SettingsService["accountInfo"]>,
+    ): Promise<{success: true; account: any} | {success: false; error: string}> {
+        const {turnkeyApiUrl, turnkeyOrgId, turnkeyRpId} = settings;
+        const {subOrganizationId} = accountInfo;
+
+        const turnkeyClient = await withTimeout(
+            this.getTurnkeyClient(turnkeyApiUrl, turnkeyRpId, turnkeyOrgId, subOrganizationId),
+            PASSKEY_TIMEOUT_MS,
+            "Passkey authorization",
+        );
+
+        if (!turnkeyClient) {
+            return {
+                success: false,
+                error: "Failed to get turnkey client"
+            };
+        }
+
+        const wallet = await withTimeout(
+            this.getTurnkeyWallet(turnkeyClient, subOrganizationId),
+            NETWORK_TIMEOUT_MS,
+            "Wallet lookup",
+        );
+
+        const turnkeyAccount = await createAccount({
+            client: turnkeyClient,
+            organizationId: accountInfo.subOrganizationId,
+            signWith: wallet,
+        });
+
+        const publicClient = createPublicClient({
+            transport: http(settings.rpcUrl),
+            chain: settings.environment === 'prod' ? polygon : polygonAmoy,
+        });
+
+        const ecdsaValidator = await withTimeout(
+            signerToEcdsaValidator(publicClient, {
+                signer: turnkeyAccount,
+                entryPoint: getEntryPoint("0.7"),
+                kernelVersion: KERNEL_V3_1
+            }),
+            NETWORK_TIMEOUT_MS,
+            "Validator setup",
+        );
+
+        const account = await withTimeout(
+            createKernelAccount(publicClient, {
+                plugins: {
+                    sudo: ecdsaValidator,
+                },
+                entryPoint: getEntryPoint("0.7"),
+                kernelVersion: KERNEL_V3_1,
+            }),
+            NETWORK_TIMEOUT_MS,
+            "Account setup",
+        );
+
+        if (!account) {
+            return {
+                success: false,
+                error: "Failed to build signing account",
+            };
+        }
+
+        return {success: true, account};
     }
 
     public saveSession({ credentialBundle, privateKey }:{ credentialBundle: string; privateKey: string; }) {

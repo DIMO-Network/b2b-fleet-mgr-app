@@ -402,70 +402,77 @@ export class TransferModalElement extends BaseOnboardingElement {
         this.errorMessage = "";
         this.statusMessage = "";
 
-        console.log("Vehicle VIN:", this.vehicleVin);
-        console.log("Vehicle IMEI", this.imei);
-        console.log("Transfer Type:", transferType);
-        this.statusMessage = msg("Processing transfer for IMEI: ") + this.imei;
-        
-        if (transferType === 'email') {
-            if (this.emailLookupError) {
-                this.errorMessage = this.emailLookupError;
-                this.processing = false;
-                return;
-            }
+        // Everything below is wrapped so that a *thrown* error still reaches the user. The
+        // signing path can reject rather than return a failed Result (a dismissed passkey
+        // dialog is the common case), and this method is invoked straight from a click
+        // handler, so an escaping rejection previously left `processing` stuck at true — the
+        // modal spun forever showing neither an error nor any sign it had stopped.
+        try {
+            console.log("Vehicle VIN:", this.vehicleVin);
+            console.log("Vehicle IMEI", this.imei);
+            console.log("Transfer Type:", transferType);
+            this.statusMessage = msg("Processing transfer for IMEI: ") + this.imei;
 
-            if (this.emailAccountFound && this.resolvedEmailWallet) {
-                // Existing account: transfer straight to the resolved wallet — no account
-                // creation, no OTP email.
-                this.walletAddress = this.resolvedEmailWallet;
-                console.log("Transferring to existing account wallet:", this.walletAddress);
-                this.statusMessage = msg("Transferring to existing account: ") + this.walletAddress;
-            } else {
-                // New account: create it (user gets an OTP email) then transfer.
-                this.statusMessage = msg("Creating account for email: ") + this.email;
-                const createAccountResp = await this.createAccount(this.email);
-                if (!createAccountResp.success) {
-                    this.errorMessage = createAccountResp.error;
-                    this.processing = false;
+            if (transferType === 'email') {
+                if (this.emailLookupError) {
+                    this.errorMessage = this.emailLookupError;
                     return;
                 }
-                this.walletAddress = createAccountResp.data.walletAddress;
-                console.log("Created account with wallet address:", this.walletAddress);
-                this.statusMessage = msg("Account created with wallet address: ") + this.walletAddress;
+
+                if (this.emailAccountFound && this.resolvedEmailWallet) {
+                    // Existing account: transfer straight to the resolved wallet — no account
+                    // creation, no OTP email.
+                    this.walletAddress = this.resolvedEmailWallet;
+                    console.log("Transferring to existing account wallet:", this.walletAddress);
+                    this.statusMessage = msg("Transferring to existing account: ") + this.walletAddress;
+                } else {
+                    // New account: create it (user gets an OTP email) then transfer.
+                    this.statusMessage = msg("Creating account for email: ") + this.email;
+                    const createAccountResp = await this.createAccount(this.email);
+                    if (!createAccountResp.success) {
+                        this.errorMessage = createAccountResp.error;
+                        return;
+                    }
+                    this.walletAddress = createAccountResp.data.walletAddress;
+                    console.log("Created account with wallet address:", this.walletAddress);
+                    this.statusMessage = msg("Account created with wallet address: ") + this.walletAddress;
+                }
             }
-        }
 
-        if (this.walletAddress == "") {
-            alert(msg("Please enter a wallet address"));
-            this.processing = false;
-            return;
-        }
-
-        console.log("Target Wallet to transfer to", this.walletAddress);
-        // Shared-account vehicles can't be passkey-signed by the connected wallet (it isn't
-        // the owner). The backend signs server-side via the tenant signer.
-        const result = this.useSharedAccountFlow
-            ? await this.transferSharedAccountVehicle(this.tokenId, this.walletAddress)
-            : await this.transferVehicle(this.imei, this.walletAddress);
-        if (!result.success) {
-            if (result.error.toLowerCase().includes('timeout')) {
-                this.errorMessage = msg("Check Info for final transfer verification");
-            } else {
-                this.errorMessage = result.error;
-                this.processing = false;
+            if (this.walletAddress == "") {
+                this.errorMessage = msg("Please enter a wallet address");
                 return;
             }
 
+            console.log("Target Wallet to transfer to", this.walletAddress);
+            // Shared-account vehicles can't be passkey-signed by the connected wallet (it isn't
+            // the owner). The backend signs server-side via the tenant signer.
+            const result = this.useSharedAccountFlow
+                ? await this.transferSharedAccountVehicle(this.tokenId, this.walletAddress)
+                : await this.transferVehicle(this.imei, this.walletAddress);
+            if (!result.success) {
+                if (result.error.toLowerCase().includes('timeout')) {
+                    this.errorMessage = msg("Check Info for final transfer verification");
+                } else {
+                    this.errorMessage = result.error;
+                    return;
+                }
+
+            }
+            this.statusMessage = msg("Transfer completed successfully");
+
+            // The backend transfer job records the Customer inventory state when the
+            // transfer lands on chain, so no frontend write is needed here.
+
+            await delay(500);
+
+            this.closeModal();
+        } catch (error: any) {
+            console.error("Transfer failed:", error?.message, error?.stack);
+            this.errorMessage = error?.message || msg("Transfer failed unexpectedly");
+        } finally {
+            this.processing = false;
         }
-        this.statusMessage = msg("Transfer completed successfully");
-
-        // The backend transfer job records the Customer inventory state when the
-        // transfer lands on chain, so no frontend write is needed here.
-
-        await delay(500);
-        this.processing = false;
-
-        this.closeModal();
     }
 
     async createAccount(email:string): Promise<Result<AccountData, string>> {
