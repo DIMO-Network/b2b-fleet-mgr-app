@@ -16,6 +16,27 @@ export interface AccountData {
 export class TransferModalElement extends BaseOnboardingElement {
     static styles = [ globalStyles,
         css`
+          /* The header is a flex row with the close button pushed to the far end. Grouping
+             the heading and the identifiers keeps that layout intact, and min-width: 0 lets
+             the group shrink rather than shoving the close button off the edge. */
+          .modal-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+          }
+          /* .modal-header sets font-weight: bold, hence the explicit normal here. */
+          .modal-title-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            font-weight: normal;
+            color: #6b7280;
+            overflow-wrap: anywhere;
+          }
           .transfer-options {
             display: grid;
             grid-template-columns: 1fr;
@@ -196,7 +217,19 @@ export class TransferModalElement extends BaseOnboardingElement {
             <div class="modal-overlay" @click=${this.closeModal}>
                 <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
                     <div class="modal-header">
-                        <h3>${msg('Transfer Vehicle')}</h3>
+                        <div class="modal-title-group">
+                            <h3>${msg('Transfer Vehicle')}</h3>
+                            ${this.vehicleVin || this.tokenId ? html`
+                                <span class="modal-title-meta">
+                                    ${this.vehicleVin ? html`
+                                        <span title=${msg('VIN')}>${this.vehicleVin}</span>
+                                    ` : nothing}
+                                    ${this.tokenId ? html`
+                                        <span title=${msg('Vehicle token ID')}>#${this.tokenId}</span>
+                                    ` : nothing}
+                                </span>
+                            ` : nothing}
+                        </div>
                         <button type="button" class="modal-close" @click=${this.closeModal}>×</button>
                     </div>
                         <div class="modal-body">
