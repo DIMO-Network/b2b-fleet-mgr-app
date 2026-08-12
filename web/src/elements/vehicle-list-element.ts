@@ -4,6 +4,7 @@ import {repeat} from 'lit/directives/repeat.js';
 import {customElement, property, state} from "lit/decorators.js";
 import {Vehicle} from "@datatypes//vehicle.ts";
 import {ApiService} from "@services/api-service.ts";
+import {IdentityService} from "@services/identity-service.ts";
 import {globalStyles} from "../global-styles.ts";
 
 interface VehiclesResponse {
@@ -50,6 +51,10 @@ export class VehicleListElement extends LitElement {
     @state()
     private exporting: boolean = false;
 
+    // The connected user's capabilities, shared with every row so each one does not refetch.
+    @state()
+    private permissions: string[] = [];
+
     private searchDebounce?: number;
 
 
@@ -76,7 +81,20 @@ export class VehicleListElement extends LitElement {
         // Listen for bubbling item change events from row items
         this.addEventListener('item-changed', this.handleItemChanged as EventListener);
         this.addEventListener('item-deleted', this.handleItemDeleted as EventListener);
+        // Fetched once here rather than per row: every row asks the same question, and the
+        // list can be 500 items. Not awaited alongside the vehicles because a failure to
+        // resolve permissions must not stop the list rendering — it only means nothing is
+        // gated client-side, which the backend still refuses.
+        void this.loadPermissions();
         await this.loadVehicles();
+    }
+
+    private async loadPermissions() {
+        try {
+            this.permissions = await IdentityService.getInstance().getUserPermissions();
+        } catch (e) {
+            console.error('Failed to load permissions for vehicle list', e);
+        }
     }
 
     disconnectedCallback(): void {
@@ -244,7 +262,7 @@ export class VehicleListElement extends LitElement {
                         </thead>
                         <tbody>
                         ${repeat(this.filteredItems, (item) => item.id, (item) =>
-                                html`<vehicle-list-item-element style="display: contents" .item=${item}></vehicle-list-item-element>`)}
+                                html`<vehicle-list-item-element style="display: contents" .item=${item} .permissions=${this.permissions}></vehicle-list-item-element>`)}
                         </tbody>
                     </table>
                 </div>

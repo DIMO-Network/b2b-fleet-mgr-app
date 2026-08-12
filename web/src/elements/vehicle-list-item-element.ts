@@ -7,6 +7,23 @@ import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
 import {delay} from "@utils/utils.ts";
 import {globalStyles} from "../global-styles.ts";
 
+// Capability required by the backend for the shared-account routes — transfer, disconnect and
+// delete performed by the tenant's signer on an account it does not own.
+const MANAGE_VEHICLES = 'manage_vehicles';
+
+// Shown when the user may not run one of those. The buttons stay visible and clickable on
+// purpose: the action is real and the tenant can perform it, so the useful thing to say is
+// which permission is missing, rather than removing the control and leaving no explanation.
+//
+// Written out per action rather than interpolated: lit-localize needs the `str` tag to
+// extract a template with expressions, and a translated sentence cannot be assembled from an
+// English verb anyway.
+const disconnectDeniedMessage = () =>
+    msg("You don't have permission to disconnect this vehicle. It is owned by a shared account, so disconnecting it acts on someone else's behalf and needs the manage_vehicles permission. Ask an administrator to grant it.");
+
+const deleteDeniedMessage = () =>
+    msg("You don't have permission to delete this vehicle. It is owned by a shared account, so deleting it acts on someone else's behalf and needs the manage_vehicles permission. Ask an administrator to grant it.");
+
 interface SyncFromIdentityResult {
     tokenId: number;
     ownerChanged: boolean;
@@ -46,6 +63,13 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
     @property({attribute: true})
     public item?: Vehicle;
+
+    // The connected user's capabilities, fetched once by the list rather than per row.
+    // Advisory only: the backend is authoritative and refuses these operations on its own.
+    // Empty is the safe default — before the list resolves them nothing is gated, and the
+    // server still refuses, so a slow fetch cannot hand anyone access they lack.
+    @property({attribute: false})
+    public permissions: string[] = [];
 
     @state()
     private connectionProcessing = false;
@@ -194,6 +218,16 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         return !item.isCurrentUserOwner && !!item.isSharedAccountSigner;
     }
 
+    // lacksManageVehicles reports whether this action would take the shared-account path
+    // without the capability the backend now requires for it.
+    //
+    // The shared-account path is the only one gated. Owning the vehicle already authorises
+    // the passkey flows — those refuse anyone who isn't the on-chain owner — so requiring the
+    // capability there would block people from acting on their own vehicles.
+    private lacksManageVehicles(item: Vehicle): boolean {
+        return this.isSharedSigner(item) && !this.permissions.includes(MANAGE_VEHICLES);
+    }
+
     canDisconnect(item: Vehicle): boolean {
         if (!item.isCurrentUserOwner && !this.isSharedSigner(item)) return false;
         return [ConnectionStatus.CONNECTED, ConnectionStatus.DISCONNECTION_FAILED].includes(this.getConnectionStatus(item));
@@ -263,6 +297,13 @@ export class VehicleListItemElement extends BaseOnboardingElement {
             return;
         }
 
+        // Gated before the confirm: asking someone to confirm an action they cannot run and
+        // then refusing them is worse than saying so up front.
+        if (this.lacksManageVehicles(this.item)) {
+            this.openErrorModal(disconnectDeniedMessage(), msg('Permission required'));
+            return;
+        }
+
         if (!confirm(msg("Are you sure you want to disconnect the vehicle?"))) {
             return;
         }
@@ -286,6 +327,11 @@ export class VehicleListItemElement extends BaseOnboardingElement {
 
     async deleteVehicle() {
         if (!this.item) {
+            return;
+        }
+
+        if (this.lacksManageVehicles(this.item)) {
+            this.openErrorModal(deleteDeniedMessage(), msg('Permission required'));
             return;
         }
 
@@ -337,6 +383,9 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         // The connected wallet isn't the literal owner but our tenant can sign for the
         // owning kernel — modal will use the server-signed shared-account flow.
         modal.useSharedAccountFlow = !!(this.item && !this.item.isCurrentUserOwner && this.item.isSharedAccountSigner);
+        // Opened either way — the modal explains the missing permission rather than the
+        // button disappearing with no reason given.
+        modal.permissionDenied = !!(this.item && this.lacksManageVehicles(this.item));
 
         // Add event listener for modal close
         modal.addEventListener('modal-closed', () => {

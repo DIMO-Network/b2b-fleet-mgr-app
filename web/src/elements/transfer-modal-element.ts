@@ -81,6 +81,21 @@ export class TransferModalElement extends BaseOnboardingElement {
           .shared-account-text {
             flex: 1 1 auto;
           }
+          .permission-denied-banner {
+            background-color: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-left: 4px solid #ea580c;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 16px;
+            color: #7c2d12;
+            font-size: 13px;
+            line-height: 1.45;
+          }
+          .permission-denied-banner strong {
+            display: block;
+            margin-bottom: 4px;
+          }
         `
     ];
     @property({attribute: true, type: Boolean})
@@ -100,6 +115,14 @@ export class TransferModalElement extends BaseOnboardingElement {
     // POST /v1/vehicle/transfer/shared instead of asking the wallet for a passkey signature.
     @property({attribute: true, type: Boolean})
     public useSharedAccountFlow = false;
+
+    // Set when the connected user lacks manage_vehicles and this transfer would take the
+    // shared-account path. The modal still opens: the action is real and available to the
+    // tenant, so the useful thing to show is why *this* user cannot run it, rather than a
+    // button that silently vanished. The backend refuses it regardless — this only moves the
+    // refusal to click time instead of after the form is filled in.
+    @property({attribute: false, type: Boolean})
+    public permissionDenied = false;
 
     @state()
     private walletAddress = "";
@@ -185,6 +208,12 @@ export class TransferModalElement extends BaseOnboardingElement {
                                     </span>
                                 </div>
                             ` : nothing}
+                            ${this.permissionDenied ? html`
+                                <div class="permission-denied-banner" role="alert">
+                                    <strong>${msg('You don\'t have permission to transfer this vehicle.')}</strong>
+                                    ${msg('This vehicle is owned by a shared account, so transferring it acts on someone else\'s behalf and needs the manage_vehicles permission. Ask an administrator to grant it.')}
+                                </div>
+                            ` : nothing}
                             ${this.errorMessage ? html`
                                 <div style="background-color: #fee; border: 1px solid #fcc; border-radius: 4px; padding: 12px; margin-bottom: 16px; color: #c33;">
                                     ${this.errorMessage}
@@ -221,7 +250,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                         <button type="button" 
                                                 class="action-btn ${this.processing ? 'processing' : ''}" 
                                                 @click=${() => this.confirmTransfer('wallet')}
-                                                ?disabled=${!this.walletAddress.trim() || this.processing}>
+                                                ?disabled=${!this.walletAddress.trim() || this.processing || this.permissionDenied}>
                                             ${this.processing ? msg('Processing...') : msg('Transfer by Wallet')}
                                         </button>
                                     </form>
@@ -264,7 +293,7 @@ export class TransferModalElement extends BaseOnboardingElement {
                                         <button type="button"
                                                 class="action-btn ${this.processing ? 'processing' : ''}"
                                                 @click=${() => this.confirmTransfer('email')}
-                                                ?disabled=${!this.email.trim() || this.processing || this.isCheckingEmail || !!this.emailLookupError}>
+                                                ?disabled=${!this.email.trim() || this.processing || this.isCheckingEmail || !!this.emailLookupError || this.permissionDenied}>
                                             ${this.processing ? msg('Processing...') : msg('Transfer by Email')}
                                         </button>
                                     </form>
@@ -398,6 +427,13 @@ export class TransferModalElement extends BaseOnboardingElement {
     }
 
     async confirmTransfer(transferType: 'wallet' | 'email') {
+        // The buttons are disabled in this state, so reaching here means the property changed
+        // after render or the click came from somewhere else. Refuse rather than let the
+        // request go out only to be refused by the backend.
+        if (this.permissionDenied) {
+            return;
+        }
+
         this.processing = true;
         this.errorMessage = "";
         this.statusMessage = "";
