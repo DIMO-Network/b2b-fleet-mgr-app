@@ -23,6 +23,21 @@ export type { OperatorFleetVehicle } from "@services/tenancy-stub.ts";
 // lands, change STUB_BY_DEFAULT to false; when the stub is no longer wanted,
 // delete tenancy-stub.ts and the branch in call().
 //
+// THE FLAG IS ALL-OR-NOTHING, AND THE BACKEND IS ARRIVING IN SLICES. As of the
+// tenants slice these are served for real:
+//
+//   GET/PATCH  /tenancy/operator
+//   GET/POST   /tenancy/customers
+//   GET/PATCH  /tenancy/customers/{id}
+//   GET        /tenancy/customers/{id}/members
+//
+// while member provisioning and everything under /vehicles are still fixtures.
+// So flipping the flag today gives a working customer list, creation, settings
+// and users table, and a 404 on provisioning or assigning a vehicle. That is
+// why the default is still the stub: a half-live console is harder to reason
+// about than an obviously fake one. Flip the default once the remaining slices
+// land, not before.
+//
 // ROUTING. Live mode calls /tenancy/* under the oracle prefix, so a request
 // leaves the browser as
 //
@@ -204,6 +219,12 @@ export class TenancyService {
     if (this.isStubbed()) return stubbed();
     return this.api.callApi<T>(method, `/tenancy${path}`, body, true, true, true);
   }
+
+  // The customer id the console works in terms of is the tenant id. The two
+  // paths below differ because the operator is implied by the caller's own
+  // Tenant-Id header rather than named in the URL — the console never selects
+  // an operator, it *is* one.
+
 
   // CUSTOMERS
 
