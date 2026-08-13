@@ -4,11 +4,35 @@ The design for turning this app into an **operator console** — where one tenan
 configures and manages other tenants that end customers use in `fleet-lite-app` —
 lives in:
 
-> `../fleet-lite-app/docs/operator-tenancy/`
+> `../fleet-tenancy-api/docs/operator-tenancy/`
 
-(It's over there because the centrepiece is a new shared service that doesn't
-have a repo yet, and fleet-lite-app is the most affected app. It'll move when
-that repo exists.)
+plus `../fleet-tenancy-api/docs/HANDOFF.md` for what is actually built and
+deployed, which is not the same as what the design describes.
+
+(It moved there on 2026-08-12, from `fleet-lite-app`, once the shared service had
+a repo of its own. A byte-identical copy remains in `fleet-lite-app`.)
+
+## Status of the console in this repo
+
+The **Customers** section exists in the frontend and is built against a **stub**:
+`web/src/services/tenancy-service.ts` speaks the contract, and
+`web/src/services/tenancy-stub.ts` answers it from in-memory fixtures. Every
+customer screen carries a `<stub-data-banner>` saying so.
+
+That is because the backend it needs does not exist. `fleet-tenancy-api` serves
+`/v1/authz`, `/v1/resolve/client-id/{clientId}` and the membership writes added
+on 2026-08-12 — the `/user/v1` management surface the console calls (tenants,
+members, entitlements) is unbuilt. Flip `localStorage.tenancyStub = 'false'` to
+point at the live backend once it exists.
+
+**The vehicle picker is already real.** It reads `GET /fleet/vehicles` from the
+oracle, so the minted-only rule is enforced against real token ids; it falls back
+to fixtures only when no oracle is reachable.
+
+**Routing, when the backend lands:** the console calls `/tenancy/*` under the
+oracle prefix, so a request goes b2b → kaufmann → fleet-tenancy-api. b2b holds no
+DIMO developer licence and cannot authenticate to the tenancy service directly;
+kaufmann can, and already does for `/v1/authz`.
 
 ## This app and fleet-lite are different surfaces
 

@@ -236,6 +236,8 @@ export class AppRootV2 extends LitElement {
             { path: '/emails', render: () => html`<emails-view></emails-view>` },
             { path: '/reports', render: () => html`<reports-view></reports-view>` },
             { path: '/onboarding', render: () => html`<onboarding-view></onboarding-view>` },
+            { path: '/customers', render: () => html`<customers-view></customers-view>` },
+            { path: '/customers/:customerId', render: ({ customerId }) => html`<customer-detail-view .customerId=${customerId}></customer-detail-view>` },
             { path: '/tenant-selector', render: () => html`<tenant-selector-view></tenant-selector-view>` },
             { path: '/tenant-settings', render: () => html`<tenant-settings-view></tenant-settings-view>` },
             { path: '/my-profile', render: () => html`<my-profile-view></my-profile-view>` },
@@ -357,6 +359,20 @@ export class AppRootV2 extends LitElement {
         return this.currentPath === targetPath;
     }
 
+    // Managing customers is managing members, one level out — so it is gated on
+    // the same capability.
+    //
+    // Both spellings are accepted because the rename is mid-flight: the shared
+    // tenancy model calls this manage_members, but /permissions is still served
+    // from kaufmann's own access_tenants rows, which carry the old
+    // manage_admin_users. Checking one name only would lock out whichever side
+    // hasn't caught up. Drop manage_admin_users once kaufmann serves permissions
+    // from the tenancy service.
+    private canManageMembers(): boolean {
+        return this.permissions.includes('manage_members')
+            || this.permissions.includes('manage_admin_users');
+    }
+
     private isKaufmannTenant(): boolean {
         return !!this.selectedTenant?.name && this.selectedTenant.name.toLowerCase().includes('kaufmann');
     }
@@ -372,6 +388,8 @@ export class AppRootV2 extends LitElement {
         if (path.startsWith('/users/edit')) return msg('Edit User');
         if (path.startsWith('/users/profile')) return msg('User Profile');
         if (path.startsWith('/users')) return msg('Users');
+        if (path.startsWith('/customers/')) return msg('Customer');
+        if (path.startsWith('/customers')) return msg('Customers');
         if (path.startsWith('/device-definitions')) return msg('Device Definitions');
         if (path.startsWith('/emails')) return msg('Emails');
         if (path.startsWith('/tenant-selector')) return msg('Tenant Selector');
@@ -487,6 +505,14 @@ export class AppRootV2 extends LitElement {
                                aria-current="${this.isActive('/users') ? 'page' : 'false'}"
                                tabindex="${!this.permissions.includes('manage_admin_users') ? '-1' : '0'}"
                                aria-disabled="${!this.permissions.includes('manage_admin_users') ? 'true' : 'false'}">${msg('Users')}</a>
+                        </div>
+                        <div class="nav-item ${this.isActive('/customers') ? 'active' : ''} ${!this.canManageMembers() ? 'disabled' : ''}"
+                             title="${!this.canManageMembers() ? msg('You don\'t have access') : ''}">
+                            <a data-page="customers"
+                               href="#/customers"
+                               aria-current="${this.isActive('/customers') ? 'page' : 'false'}"
+                               tabindex="${!this.canManageMembers() ? '-1' : '0'}"
+                               aria-disabled="${!this.canManageMembers() ? 'true' : 'false'}">${msg('Customers')}</a>
                         </div>
                         <div class="nav-item ${this.isActive('/device-definitions') ? 'active' : ''}">
                             <a data-page="device-definitions" href="#/device-definitions" aria-current="${this.isActive('/device-definitions') ? 'page' : 'false'}">${msg('Device Definitions')}</a>

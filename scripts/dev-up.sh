@@ -33,9 +33,14 @@ killtree() {
 }
 
 WEB_PID=""
+API_PID=""
 cleanup() {
-  if [ -n "$WEB_PID" ]; then
+  if [ -n "$API_PID" ]; then
     echo
+    echo "▶ shutting down backend…"
+    killtree "$API_PID"
+  fi
+  if [ -n "$WEB_PID" ]; then
     echo "▶ shutting down frontend…"
     killtree "$WEB_PID"
   fi
@@ -58,5 +63,21 @@ done
 echo "✓ dev certs present"
 
 echo "▶ starting backend (api on https://$DEV_HOST:$API_PORT)…"
-# Foreground: when this exits (or Ctrl-C), the EXIT trap stops the frontend.
-( cd api && go run ./cmd/fleet-onboard-app )
+# Backgrounded and killtree'd on the way out, exactly like the frontend.
+#
+# It used to run in the foreground, which looked simpler and did not work:
+# `go run` compiles to a temp binary and runs it as a child, and on Ctrl-C the
+# `go run` wrapper goes away while the compiled server keeps running and keeps
+# port 3007. The next `make dev` then died on "address already in use", or
+# worse, quietly talked to yesterday's build. killtree walks the descendants,
+# so the actual server is what gets signalled.
+( cd api && go run ./cmd/fleet-onboard-app ) &
+API_PID=$!
+
+# Block until either side exits, then let the EXIT trap take the other down.
+# Deliberately a poll rather than `wait -n`: this script runs under whatever
+# bash is on the PATH, and macOS still ships 3.2, where `wait -n` does not
+# exist.
+while kill -0 "$WEB_PID" 2>/dev/null && kill -0 "$API_PID" 2>/dev/null; do
+  sleep 0.5
+done

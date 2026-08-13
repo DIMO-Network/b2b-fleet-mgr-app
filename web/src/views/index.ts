@@ -12,3 +12,5 @@ export * from "./tenant-settings.ts";
 export * from "./device-definitions.ts";
 export * from "./emails.ts";
 export * from "./my-profile.ts";
+export * from "./customers.ts";
+export * from "./customer-detail.ts";
