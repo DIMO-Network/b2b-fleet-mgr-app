@@ -826,7 +826,14 @@ export const globalStyles = css`
         display: flex;
     }
 
-    /* Dialog container */
+    /* Dialog container.
+     *
+     * The flex column is what makes "header/footer stick, body scrolls" true.
+     * Without it the three children stack at their natural heights, the body
+     * grows with its content, and the footer is pushed past max-height and
+     * clipped by overflow:hidden — invisible and unreachable. That is exactly
+     * what happened to the onboarding confirmation dialog past ~4 vehicles:
+     * Cancel and Confirm were rendered but unclickable. */
     .modal-content, .modal {
         background: #fff;
         border: 1px solid #000;
@@ -835,7 +842,9 @@ export const globalStyles = css`
         max-width: 800px;
         width: min(90vw, 800px);
         max-height: 90vh;
-        overflow: hidden; /* header/footer stick, body scrolls */
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     .modal-header {
@@ -873,10 +882,21 @@ export const globalStyles = css`
         border-color: #ccc;
     }
 
+    /* The body is the only part that scrolls, and it takes whatever height the
+     * header and footer leave. min-height:0 is load-bearing: a flex item
+     * defaults to min-height:auto, which refuses to shrink below its content
+     * and would push the footer out again. The old max-height of
+     * calc(90vh - 56px) subtracted the header but not the footer, so the
+     * three together always exceeded the container. */
     .modal-body {
         padding: 16px;
         overflow: auto;
-        max-height: calc(90vh - 56px); /* subtract header approx */
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    .modal-header, .modal-footer {
+        flex: 0 0 auto;
     }
 
     .modal-footer {
