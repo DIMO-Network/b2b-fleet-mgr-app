@@ -197,6 +197,17 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	// settings the app needs to operate, pulled from config / env vars
 	oracleApp.Get("/settings", settingsCtrl.GetSettings) // todo some of these are oracle specific
 
+	// Operator console: customer tenants. These reach fleet-tenancy-api through
+	// the oracle, which authenticates to it with a developer licence this app
+	// does not have. Plain proxies — the oracle checks the user's capability.
+	oracleApp.Get("/tenancy/operator", genericProxyCtrl.Proxy)
+	oracleApp.Patch("/tenancy/operator", genericProxyCtrl.Proxy)
+	oracleApp.Get("/tenancy/customers", genericProxyCtrl.Proxy)
+	oracleApp.Post("/tenancy/customers", genericProxyCtrl.Proxy)
+	oracleApp.Get("/tenancy/customers/:customerID", genericProxyCtrl.Proxy)
+	oracleApp.Patch("/tenancy/customers/:customerID", genericProxyCtrl.Proxy)
+	oracleApp.Get("/tenancy/customers/:customerID/members", genericProxyCtrl.Proxy)
+
 	oracleApp.Get("/tenants", genericProxyCtrl.Proxy)
 	oracleApp.Post("/tenant", genericProxyCtrl.Proxy)
 	oracleApp.Get("/tenant/settings", genericProxyCtrl.Proxy)
