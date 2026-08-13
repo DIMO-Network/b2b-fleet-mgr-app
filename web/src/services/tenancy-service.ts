@@ -1,6 +1,33 @@
 import { ApiService } from "@services/api-service.ts";
 import { ApiResponse } from "@datatypes/api-response.ts";
 import { TenancyStub } from "@services/tenancy-stub.ts";
+import { FleetService } from "@services/fleet-service.ts";
+
+// How many of the operator's vehicles to pull when joining token ids to VINs.
+// fleet-lite targets sub-500 fleets per customer and the console nudges at 500,
+// so this covers the intended range; past it, rows render with a token id and
+// no description rather than vanishing.
+const HYDRATE_LIMIT = 2000;
+
+// The oracle's vehicle shape, as GET /fleet/vehicles returns it.
+interface OracleVehicle {
+  vin: string;
+  vehicle_token_id: number | null;
+  license_plate: string | null;
+  make: string;
+  model: string;
+  year: number;
+}
+
+// The tenancy service's entitlement shape: token id and provenance, no fleet
+// data. Joined to OracleVehicle above to make an EntitledVehicle.
+interface RawEntitlement {
+  vehicleTokenId: number;
+  source: string;
+  sourceGroupId: string | null;
+  grantedByWallet: string | null;
+  createdAt: string;
+}
 
 // The shape the assign picker works in, whether the rows came from the real
 // GET /fleet/vehicles or from fixtures.
@@ -8,12 +35,8 @@ export type { OperatorFleetVehicle } from "@services/tenancy-stub.ts";
 
 // Client for the operator console's tenancy surface.
 //
-// THE BACKEND DOES NOT EXIST YET. fleet-tenancy-api currently serves only
-// GET /v1/authz and GET /v1/resolve/client-id/{clientId} — the authorization
-// hot path. Everything this file calls (tenants, members, entitlements) is the
-// /user/v1 management surface from 03-tenancy-api-spec.md, which is unbuilt.
-//
-// So this service has two backends behind one interface:
+// THE BACKEND IS ARRIVING IN SLICES, so this service has two backends behind
+// one interface:
 //
 //   stub — in-memory fixtures (tenancy-stub.ts). The default, because the real
 //          one would 404. isStubbed() is true and the UI says so on screen.
@@ -23,27 +46,27 @@ export type { OperatorFleetVehicle } from "@services/tenancy-stub.ts";
 // lands, change STUB_BY_DEFAULT to false; when the stub is no longer wanted,
 // delete tenancy-stub.ts and the branch in call().
 //
-// THE FLAG IS ALL-OR-NOTHING, AND THE BACKEND IS ARRIVING IN SLICES. As of the
-// tenants slice these are served for real:
+// THE FLAG IS ALL-OR-NOTHING. Served for real as of the entitlements slice:
 //
 //   GET/PATCH  /tenancy/operator
 //   GET/POST   /tenancy/customers
 //   GET/PATCH  /tenancy/customers/{id}
 //   GET        /tenancy/customers/{id}/members
+//   GET/POST   /tenancy/customers/{id}/vehicles
+//   DELETE     /tenancy/customers/{id}/vehicles/{tokenId}
 //
-// while member provisioning and everything under /vehicles are still fixtures.
-// So flipping the flag today gives a working customer list, creation, settings
-// and users table, and a 404 on provisioning or assigning a vehicle. That is
-// why the default is still the stub: a half-live console is harder to reason
-// about than an obviously fake one. Flip the default once the remaining slices
-// land, not before.
+// Still fixtures: provisioning and editing a member, which need the tenancy
+// service to reach accounts-api. So flipping the flag today gives a working
+// console except that adding a user 404s. That is why the default is still the
+// stub — a half-live console is harder to reason about than an obviously fake
+// one. Flip the default when provisioning lands, not before.
 //
 // ROUTING. Live mode calls /tenancy/* under the oracle prefix, so a request
 // leaves the browser as
 //
 //   /oracle/{oracleId}/tenancy/customers
 //        -> b2b proxy      -> kaufmann /v1/tenancy/customers
-//        -> fleet-tenancy-api /user/v1/...
+//        -> fleet-tenancy-api /v1/operators/{id}/children
 //
 // b2b holds no DIMO developer license, so it cannot authenticate to
 // fleet-tenancy-api directly; kaufmann can, and already does for /v1/authz.
@@ -291,10 +314,45 @@ export class TenancyService {
 
   // VEHICLES
 
-  public listEntitlements(tenantId: string): Promise<ApiResponse<EntitledVehicle[]>> {
-    return this.call("GET", `/customers/${tenantId}/vehicles`, null, () =>
-      this.stub.listEntitlements(tenantId),
-    );
+  // THE JOIN THE ARCHITECTURE REQUIRES.
+  //
+  // The tenancy service stores token ids and provenance, never VIN, plate or
+  // model — those belong to the oracle, and a copy in the tenancy service would
+  // be a second, staler source of fleet data. So the console is the thing that
+  // joins them, here.
+  //
+  // Bounded at HYDRATE_LIMIT vehicles. fleet-lite targets sub-500 fleets per
+  // customer and the nudge fires at 500, so this covers the intended range with
+  // room to spare; beyond it, rows render with their token id and no
+  // description rather than silently disappearing.
+  public async listEntitlements(tenantId: string): Promise<ApiResponse<EntitledVehicle[]>> {
+    if (this.isStubbed()) return this.stub.listEntitlements(tenantId);
+
+    const raw = await this.api.callApi<RawEntitlement[]>(
+      "GET", `/tenancy/customers/${tenantId}/vehicles`, null, true, true, true);
+    if (!raw.success) return { success: false, error: raw.error, status: raw.status };
+
+    const rows = raw.data ?? [];
+    const [fleet, groups] = await Promise.all([this.fleetIndex(), this.groupNames()]);
+
+    return {
+      success: true,
+      data: rows.map((e) => {
+        const v = fleet.get(e.vehicleTokenId);
+        return {
+          vehicleTokenId: e.vehicleTokenId,
+          vin: v?.vin ?? null,
+          licensePlate: v?.license_plate ?? null,
+          make: v?.make ?? null,
+          model: v?.model ?? null,
+          year: v?.year ?? null,
+          source: e.source as EntitledVehicle["source"],
+          sourceGroupId: e.sourceGroupId,
+          sourceGroupName: e.sourceGroupId ? (groups.get(e.sourceGroupId) ?? e.sourceGroupId) : null,
+          createdAt: e.createdAt,
+        };
+      }),
+    };
   }
 
   public assignVehicles(
@@ -312,19 +370,111 @@ export class TenancyService {
     );
   }
 
-  public getDrift(tenantId: string): Promise<ApiResponse<GroupDrift[]>> {
-    return this.call("GET", `/customers/${tenantId}/vehicles/drift`, null, () =>
-      this.stub.getDrift(tenantId),
-    );
+  // DRIFT IS COMPUTED HERE, NOT SERVED.
+  //
+  // It is the difference between the vehicles a group holds *now* and the ones
+  // that were entitled when it was assigned. The first half lives in the oracle
+  // and the second in the tenancy service, and only this console sees both — so
+  // it is the only place the subtraction can happen without one service
+  // learning the other's domain. The spec sketched a /vehicles/drift endpoint
+  // on the tenancy service; it was dropped for exactly this reason.
+  public async getDrift(tenantId: string): Promise<ApiResponse<GroupDrift[]>> {
+    if (this.isStubbed()) return this.stub.getDrift(tenantId);
+
+    const entitled = await this.api.callApi<RawEntitlement[]>(
+      "GET", `/tenancy/customers/${tenantId}/vehicles`, null, true, true, true);
+    if (!entitled.success) return { success: false, error: entitled.error, status: entitled.status };
+
+    const rows = entitled.data ?? [];
+    const byGroup = new Map<string, { tokens: Set<number>; assignedAt: string }>();
+    for (const e of rows) {
+      if (!e.sourceGroupId) continue;
+      const seen = byGroup.get(e.sourceGroupId);
+      if (seen) {
+        seen.tokens.add(e.vehicleTokenId);
+        // The earliest row is when the group was applied; later ones are
+        // re-applies, and reporting the newest would understate the drift.
+        if (e.createdAt < seen.assignedAt) seen.assignedAt = e.createdAt;
+      } else {
+        byGroup.set(e.sourceGroupId, {
+          tokens: new Set([e.vehicleTokenId]),
+          assignedAt: e.createdAt,
+        });
+      }
+    }
+    if (byGroup.size === 0) return { success: true, data: [] };
+
+    const groupNames = await this.groupNames();
+    const drift: GroupDrift[] = [];
+
+    for (const [groupId, snapshot] of byGroup) {
+      const current = await this.groupMembers(groupId);
+      if (current === null) continue; // group gone, or unreadable — not drift
+      const added = current.filter((t) => !snapshot.tokens.has(t));
+      if (added.length > 0) {
+        drift.push({
+          groupId,
+          groupName: groupNames.get(groupId) ?? groupId,
+          addedTokenIds: added,
+          assignedAt: snapshot.assignedAt,
+        });
+      }
+    }
+    return { success: true, data: drift };
   }
 
-  public reapplyGroup(
+  // Re-expands a group and assigns whatever is now in it. Vehicles already held
+  // come back as no-ops, so this converges rather than duplicating.
+  public async reapplyGroup(
     tenantId: string,
     groupId: string,
   ): Promise<ApiResponse<AssignVehiclesResult>> {
-    return this.call("POST", `/customers/${tenantId}/vehicles/reapply-group`, { groupId }, () =>
-      this.stub.reapplyGroup(tenantId, groupId),
-    );
+    if (this.isStubbed()) return this.stub.reapplyGroup(tenantId, groupId);
+
+    const current = await this.groupMembers(groupId);
+    if (current === null) {
+      return { success: false, error: "could not read that fleet group" };
+    }
+    return this.assignVehicles(tenantId, { tokenIds: current, fromGroupId: groupId });
+  }
+
+  // FLEET LOOKUPS — the oracle half of the joins above.
+
+  private async fleetIndex(): Promise<Map<number, OracleVehicle>> {
+    const res = await this.api.callApi<{ items: OracleVehicle[] }>(
+      "GET", `/fleet/vehicles?skip=0&take=${HYDRATE_LIMIT}&search=&filter=`, null, true, true);
+    const index = new Map<number, OracleVehicle>();
+    for (const v of res.data?.items ?? []) {
+      if (v.vehicle_token_id) index.set(v.vehicle_token_id, v);
+    }
+    return index;
+  }
+
+  private async groupNames(): Promise<Map<string, string>> {
+    const names = new Map<string, string>();
+    try {
+      for (const g of (await FleetService.getInstance().getFleetGroups()) ?? []) {
+        names.set(g.id, g.name);
+      }
+    } catch {
+      // A missing name only costs a prettier label; the id is shown instead.
+    }
+    return names;
+  }
+
+  // Minted vehicles currently in a group, or null if the group could not be
+  // read. Null and empty are distinguished on purpose: "the group is now empty"
+  // is drift information, while "we could not ask" is not, and treating the
+  // second as the first would report every vehicle as removed.
+  private async groupMembers(groupId: string): Promise<number[] | null> {
+    const res = await this.api.callApi<{ items: OracleVehicle[] }>(
+      "GET",
+      `/fleet/vehicles?skip=0&take=${HYDRATE_LIMIT}&search=&filter=group:${encodeURIComponent(groupId)}`,
+      null, true, true);
+    if (!res.success) return null;
+    return (res.data?.items ?? [])
+      .filter((v) => !!v.vehicle_token_id)
+      .map((v) => v.vehicle_token_id as number);
   }
 
   // FLEET PICKER SUPPORT
