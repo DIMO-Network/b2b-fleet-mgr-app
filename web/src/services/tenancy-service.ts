@@ -35,31 +35,30 @@ export type { OperatorFleetVehicle } from "@services/tenancy-stub.ts";
 
 // Client for the operator console's tenancy surface.
 //
-// THE BACKEND IS ARRIVING IN SLICES, so this service has two backends behind
-// one interface:
+// THE BACKEND IS COMPLETE: every action the console offers is served for real
+// — the provisioning slice was the last, and with it the member routes below
+// went live. The stub remains only as a demo/development mode:
 //
-//   stub — in-memory fixtures (tenancy-stub.ts). The default, because the real
-//          one would 404. isStubbed() is true and the UI says so on screen.
 //   live — HTTP, via the b2b proxy to kaufmann-oracle to fleet-tenancy-api.
+//          The default.
+//   stub — in-memory fixtures (tenancy-stub.ts). isStubbed() is true and the
+//          UI says so on screen.
 //
-// Flip with localStorage.setItem('tenancyStub', 'false'). When the backend
-// lands, change STUB_BY_DEFAULT to false; when the stub is no longer wanted,
-// delete tenancy-stub.ts and the branch in call().
+// Flip back with localStorage.setItem('tenancyStub', 'true') — useful against
+// an environment whose oracle lacks the tenancy routes. When the stub is no
+// longer wanted at all, delete tenancy-stub.ts and the branch in call().
 //
-// THE FLAG IS ALL-OR-NOTHING. Served for real as of the entitlements slice:
+// THE FLAG IS ALL-OR-NOTHING. Served for real:
 //
 //   GET/PATCH  /tenancy/operator
 //   GET/POST   /tenancy/customers
 //   GET/PATCH  /tenancy/customers/{id}
 //   GET        /tenancy/customers/{id}/members
+//   POST       /tenancy/customers/{id}/members/provision
+//   PATCH      /tenancy/customers/{id}/members/{wallet}
+//   DELETE     /tenancy/customers/{id}/members/{wallet}
 //   GET/POST   /tenancy/customers/{id}/vehicles
 //   DELETE     /tenancy/customers/{id}/vehicles/{tokenId}
-//
-// Still fixtures: provisioning and editing a member, which need the tenancy
-// service to reach accounts-api. So flipping the flag today gives a working
-// console except that adding a user 404s. That is why the default is still the
-// stub — a half-live console is harder to reason about than an obviously fake
-// one. Flip the default when provisioning lands, not before.
 //
 // ROUTING. Live mode calls /tenancy/* under the oracle prefix, so a request
 // leaves the browser as
@@ -73,7 +72,7 @@ export type { OperatorFleetVehicle } from "@services/tenancy-stub.ts";
 // Going through it is deliberate rather than incidental.
 
 const STUB_FLAG_KEY = "tenancyStub";
-const STUB_BY_DEFAULT = true;
+const STUB_BY_DEFAULT = false;
 
 export type TenantKind = "operator" | "customer";
 export type TenantStatus = "active" | "suspended";
