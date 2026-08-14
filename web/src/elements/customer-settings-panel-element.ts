@@ -59,6 +59,7 @@ export class CustomerSettingsPanel extends LitElement {
   @state() private error = "";
   @state() private notice = "";
   @state() private confirmStatusChange = false;
+  @state() private confirmEnforcement = false;
   @state() private seeded = false;
 
   private tenancy = TenancyService.getInstance();
@@ -116,9 +117,32 @@ export class CustomerSettingsPanel extends LitElement {
     this.saving = false;
   }
 
+  // Turning enforcement ON is the consequential direction: vehicles without an
+  // active membership stop being returned to this customer. Turning it off only
+  // ever shows more, so it needs no confirmation.
+  private async toggleEnforcement() {
+    this.confirmEnforcement = false;
+    const next = !this.customer.membershipsEnforced;
+    this.saving = true;
+    this.error = "";
+    const res = await this.tenancy.updateCustomer(this.customer.id, {
+      membershipsEnforced: next,
+    });
+    if (res.success) {
+      this.notice = next
+        ? msg("Membership enforcement is on. This customer now only sees vehicles with an active membership.")
+        : msg("Membership enforcement is off. This customer sees every vehicle assigned to them.");
+      this.notifyChanged();
+    } else {
+      this.error = res.error || msg("Failed to change membership enforcement");
+    }
+    this.saving = false;
+  }
+
   render() {
     this.seed();
     const suspended = this.customer.status === "suspended";
+    const enforced = this.customer.membershipsEnforced;
 
     return html`
       <div class="section-header">${msg("Settings")}</div>
@@ -193,6 +217,34 @@ export class CustomerSettingsPanel extends LitElement {
         </div>
       </div>
 
+      <div class="panel">
+        <div class="panel-header">${msg("Memberships")}</div>
+        <div class="panel-body">
+          <div class="row">
+            <span>
+              ${enforced
+                ? msg(
+                    "Fleet Lite is only showing this customer vehicles with an active membership. Vehicles without one are hidden from them entirely.",
+                  )
+                : msg(
+                    "This customer sees every vehicle assigned to them, whether or not it has a membership. Memberships are still recorded — turning this on is what makes them decide what is visible.",
+                  )}
+            </span>
+            <button
+              class="btn ${enforced ? "btn-secondary" : "btn-primary"}"
+              @click=${() =>
+                enforced ? this.toggleEnforcement() : (this.confirmEnforcement = true)}
+              ?disabled=${this.saving}
+            >
+              ${enforced ? msg("TURN OFF") : msg("TURN ON")}
+            </button>
+          </div>
+          <p class="helper-text">
+            ${msg("Add and manage memberships on the Memberships tab.")}
+          </p>
+        </div>
+      </div>
+
       <div class="panel danger-zone">
         <div class="panel-header">${suspended ? msg("Suspended") : msg("Suspend access")}</div>
         <div class="panel-body">
@@ -229,6 +281,18 @@ export class CustomerSettingsPanel extends LitElement {
         .confirmButtonClass=${suspended ? "btn-success" : "btn-danger"}
         @modal-confirm=${this.toggleStatus}
         @modal-cancel=${() => (this.confirmStatusChange = false)}
+      ></confirm-modal-element>
+
+      <confirm-modal-element
+        .show=${this.confirmEnforcement}
+        .title=${msg("Turn on membership enforcement")}
+        .message=${msg(
+          str`Any vehicle assigned to ${this.customer.name} without an active membership will disappear from their Fleet Lite within about a minute. Nothing is deleted, and turning this back off restores everything.`,
+        )}
+        .confirmText=${msg("Turn on")}
+        .confirmButtonClass=${"btn-primary"}
+        @modal-confirm=${this.toggleEnforcement}
+        @modal-cancel=${() => (this.confirmEnforcement = false)}
       ></confirm-modal-element>
     `;
   }

@@ -2954,6 +2954,635 @@
   <source>All device types</source>
   <target>Todos los tipos de dispositivo</target>
 </trans-unit>
+<trans-unit id="s0a571b770afa181e">
+  <source>Customers</source>
+</trans-unit>
+<trans-unit id="s13c414833f0a5d8b">
+  <source>not minted</source>
+</trans-unit>
+<trans-unit id="s0c17375e7aea912d">
+  <source>already assigned</source>
+</trans-unit>
+<trans-unit id="s109204e64b87b6c5">
+  <source>held by <x id="0" equiv-text="${holder}"/></source>
+</trans-unit>
+<trans-unit id="s5f9f9a71a9e56aef">
+  <source>Search by VIN, plate or model...</source>
+</trans-unit>
+<trans-unit id="sc19bb0747013cb8f">
+  <source>SELECT ALL SHOWN</source>
+</trans-unit>
+<trans-unit id="sa0001ef052aa6002">
+  <source>CLEAR</source>
+</trans-unit>
+<trans-unit id="s91d5fd0205ea1a7d">
+  <source>No vehicles match that search.</source>
+</trans-unit>
+<trans-unit id="sf8277c6b6b0436f5">
+  <source>Showing up to <x id="0" equiv-text="${PAGE_SIZE}"/> vehicles. Narrow with search to find more.</source>
+</trans-unit>
+<trans-unit id="sfaf2f88e10f4af44">
+  <source>Fleet group</source>
+</trans-unit>
+<trans-unit id="s2b858c5186f8f2fd">
+  <source>Select a group...</source>
+</trans-unit>
+<trans-unit id="s45b15b5e3499aff8">
+  <source><x id="0" equiv-text="${assignable.length}"/> vehicle(s) will be assigned.</source>
+</trans-unit>
+<trans-unit id="sf9d8f1fb8f764add">
+  <source><x id="0" equiv-text="${blocked}"/> skipped — unminted, already assigned, or held by another customer.</source>
+</trans-unit>
+<trans-unit id="s017f51d87d43172c">
+  <source>This records the group as the source, so vehicles added to it later show up as drift you can re-apply. They are never granted automatically.</source>
+</trans-unit>
+<trans-unit id="s9faa1e2ff80dbb1d">
+  <source>No fleet groups found for this operator.</source>
+</trans-unit>
+<trans-unit id="s91a25301f60fe448">
+  <source>Assign vehicles to <x id="0" equiv-text="${this.customerName}"/></source>
+</trans-unit>
+<trans-unit id="s7b332b9f24b35dad">
+  <source>No oracle reachable, so these are sample vehicles. The real picker reads your fleet from the oracle.</source>
+</trans-unit>
+<trans-unit id="sb67801902f0a8f66">
+  <source>Individual</source>
+</trans-unit>
+<trans-unit id="s11656278ef989dc3">
+  <source>By fleet group</source>
+</trans-unit>
+<trans-unit id="s58bfb494feb8eb02">
+  <source><x id="0" equiv-text="${count}"/> selected</source>
+</trans-unit>
+<trans-unit id="s116ea48ad492f482">
+  <source>Assigning...</source>
+</trans-unit>
+<trans-unit id="sc92c1a54034e21cc">
+  <source>Assign</source>
+</trans-unit>
+<trans-unit id="s496ae7329b285ec7">
+  <source>Failed to assign vehicles</source>
+</trans-unit>
+<trans-unit id="sb67d140db12ac267">
+  <source>New Customer</source>
+</trans-unit>
+<trans-unit id="sd566a9967d559554">
+  <source>Customer business name</source>
+</trans-unit>
+<trans-unit id="s5c12d6ed9eea3f29">
+  <source>This is what the customer sees when they log into fleet-lite.</source>
+</trans-unit>
+<trans-unit id="s33a2819345a38bab">
+  <source>Your reference</source>
+</trans-unit>
+<trans-unit id="s629576c6b305d539">
+  <source>optional</source>
+</trans-unit>
+<trans-unit id="sed05807681abaee2">
+  <source>e.g. your own account number</source>
+</trans-unit>
+<trans-unit id="se61fd9f1d923f99c">
+  <source>Only shown to you — useful for matching this customer to your own records.</source>
+</trans-unit>
+<trans-unit id="s382a2aa3984474dd">
+  <source>Create</source>
+</trans-unit>
+<trans-unit id="se018798fb3487be9">
+  <source>Failed to create customer</source>
+</trans-unit>
+<trans-unit id="s33473ee43a8214de">
+  <source>Failed to load memberships</source>
+        <target>No se pudieron cargar las membresías</target>
+</trans-unit>
+<trans-unit id="s0b01674a2bee9574">
+  <source>Membership moved.</source>
+        <target>Membresía movida.</target>
+</trans-unit>
+<trans-unit id="sc2e87c8a03fad811">
+  <source>Membership renewed.</source>
+        <target>Membresía renovada.</target>
+</trans-unit>
+<trans-unit id="sfa03da565f6453f3">
+  <source>Membership added.</source>
+        <target>Membresía agregada.</target>
+</trans-unit>
+<trans-unit id="sdfe6c0639b9d1b43">
+  <source>Membership for <x id="0" equiv-text="${m.vin ?? m.vehicleTokenId}"/> cancelled.</source>
+        <target>Membresía de <x id="0" equiv-text="${m.vin ?? m.vehicleTokenId}"/> cancelada.</target>
+</trans-unit>
+<trans-unit id="sb32efcc686a08f03">
+  <source>Failed to cancel membership</source>
+        <target>No se pudo cancelar la membresía</target>
+</trans-unit>
+<trans-unit id="s86959994f28077dc">
+  <source>Expiring soon</source>
+        <target>Por vencer</target>
+</trans-unit>
+<trans-unit id="sd923f95605fed7b2">
+  <source>Expired</source>
+        <target>Vencida</target>
+</trans-unit>
+<trans-unit id="s3bb786d3b55ba37c">
+  <source>Cancelled</source>
+        <target>Cancelada</target>
+</trans-unit>
+<trans-unit id="s006b069f5ca21682">
+  <source>no longer assigned to this customer</source>
+        <target>ya no está asignado a este cliente</target>
+</trans-unit>
+<trans-unit id="s4e1258af637b5d34">
+  <source>MOVE</source>
+        <target>MOVER</target>
+</trans-unit>
+<trans-unit id="s21a47e603104dd6e">
+  <source>RENEW</source>
+        <target>RENOVAR</target>
+</trans-unit>
+<trans-unit id="s6271a8cd2fb6c1fb">
+  <source>Fleet Lite is only showing this customer the vehicles with an active membership. Anything unlisted here is hidden from them.</source>
+        <target>Fleet Lite solo le muestra a este cliente los vehículos con una membresía activa. Todo lo que no aparezca aquí está oculto para ellos.</target>
+</trans-unit>
+<trans-unit id="s266bf8b7420ddd99">
+  <source><x id="0" equiv-text="${orphans}"/> membership(s) are on vehicles this customer is no longer assigned. The paid term is untouched — move each one to another vehicle, or cancel it.</source>
+        <target><x id="0" equiv-text="${orphans}"/> membresía(s) están en vehículos que ya no están asignados a este cliente. El plazo pagado no se modifica: mueva cada una a otro vehículo o cancélela.</target>
+</trans-unit>
+<trans-unit id="s644b4e3cd4845bbe">
+  <source>Memberships</source>
+        <target>Membresías</target>
+</trans-unit>
+<trans-unit id="s235503de5a201930">
+  <source>Memberships aren't available on this environment yet — the backend routes haven't shipped. Turn on demo mode to try the screen.</source>
+        <target>Las membresías aún no están disponibles en este entorno: las rutas del backend no se han publicado. Active el modo demo para probar la pantalla.</target>
+</trans-unit>
+<trans-unit id="s9812909ac431fbbf">
+  <source>+ ADD MEMBERSHIP</source>
+        <target>+ AGREGAR MEMBRESÍA</target>
+</trans-unit>
+<trans-unit id="s750c25de7ef6f80c">
+  <source>Loading memberships...</source>
+        <target>Cargando membresías...</target>
+</trans-unit>
+<trans-unit id="se363fa3313a82759">
+  <source>No memberships yet. Add one per vehicle the customer has paid for; a membership can be moved to another vehicle later.</source>
+        <target>Aún no hay membresías. Agregue una por cada vehículo que el cliente haya pagado; una membresía se puede mover a otro vehículo más adelante.</target>
+</trans-unit>
+<trans-unit id="sf79a39f62d0d9d25">
+  <source>Cancel membership</source>
+        <target>Cancelar membresía</target>
+</trans-unit>
+<trans-unit id="sb63a0c49c3ed2319">
+  <source>The vehicle stops counting as paid for. If enforcement is on, the customer stops seeing it within about a minute. Nothing on chain changes, and the vehicle stays assigned to them.</source>
+        <target>El vehículo deja de contar como pagado. Si la aplicación está activada, el cliente deja de verlo en aproximadamente un minuto. Nada cambia en la cadena, y el vehículo sigue asignado a ellos.</target>
+</trans-unit>
+<trans-unit id="s8519b9e7ce380af7">
+  <source>Settings saved.</source>
+</trans-unit>
+<trans-unit id="se5f8257f3b52247b">
+  <source>Failed to save settings</source>
+</trans-unit>
+<trans-unit id="s68c441862e2a78e2">
+  <source>Customer suspended. Their users can no longer sign in.</source>
+</trans-unit>
+<trans-unit id="sdaf288dc882d87a6">
+  <source>Customer resumed.</source>
+</trans-unit>
+<trans-unit id="s23ee1f9b5ec3c313">
+  <source>Failed to change status</source>
+</trans-unit>
+<trans-unit id="s104cbaee46d13178">
+  <source>Membership enforcement is on. This customer now only sees vehicles with an active membership.</source>
+        <target>La aplicación de membresías está activada. Este cliente ahora solo ve vehículos con una membresía activa.</target>
+</trans-unit>
+<trans-unit id="s5b3a2bbdcb413bdc">
+  <source>Membership enforcement is off. This customer sees every vehicle assigned to them.</source>
+        <target>La aplicación de membresías está desactivada. Este cliente ve todos los vehículos que tiene asignados.</target>
+</trans-unit>
+<trans-unit id="s9e11f32e92f82127">
+  <source>Failed to change membership enforcement</source>
+        <target>No se pudo cambiar la aplicación de membresías</target>
+</trans-unit>
+<trans-unit id="s816f99b6736dbb40">
+  <source>What the customer sees in fleet-lite.</source>
+</trans-unit>
+<trans-unit id="sf86089bb58760cb1">
+  <source>Only visible to you.</source>
+</trans-unit>
+<trans-unit id="se496de88a0f3038d">
+  <source>How this customer sees data</source>
+</trans-unit>
+<trans-unit id="s8dd057c4b3793603">
+  <source>Vehicle access</source>
+</trans-unit>
+<trans-unit id="s078a880798ec5be0">
+  <source>Only vehicles you assign on the Vehicles tab</source>
+</trans-unit>
+<trans-unit id="sd22ad6de41c73146">
+  <source>Everything their own DIMO license is privileged on</source>
+</trans-unit>
+<trans-unit id="sfaf1f1161284f3a0">
+  <source>DIMO credentials</source>
+</trans-unit>
+<trans-unit id="s9670d75fe919925d">
+  <source>Uses your developer license</source>
+</trans-unit>
+<trans-unit id="s77e8fc0c2575beb8">
+  <source>Has its own developer license</source>
+</trans-unit>
+<trans-unit id="sd5c5b46783543689">
+  <source>Fleet Lite is only showing this customer vehicles with an active membership. Vehicles without one are hidden from them entirely.</source>
+        <target>Fleet Lite solo le muestra a este cliente vehículos con una membresía activa. Los vehículos sin membresía están completamente ocultos para ellos.</target>
+</trans-unit>
+<trans-unit id="s91050f95546723b6">
+  <source>This customer sees every vehicle assigned to them, whether or not it has a membership. Memberships are still recorded — turning this on is what makes them decide what is visible.</source>
+        <target>Este cliente ve todos los vehículos que tiene asignados, tengan o no membresía. Las membresías se siguen registrando: activar esto es lo que determina lo que se ve.</target>
+</trans-unit>
+<trans-unit id="sf733cbe5b53824ab">
+  <source>TURN OFF</source>
+        <target>DESACTIVAR</target>
+</trans-unit>
+<trans-unit id="s18e91cf8e0a33307">
+  <source>TURN ON</source>
+        <target>ACTIVAR</target>
+</trans-unit>
+<trans-unit id="s27f8e3212d1ecd8b">
+  <source>Add and manage memberships on the Memberships tab.</source>
+        <target>Agregue y administre las membresías en la pestaña Membresías.</target>
+</trans-unit>
+<trans-unit id="s155e35813a089462">
+  <source>Suspended</source>
+</trans-unit>
+<trans-unit id="sc7eb70d1f4145ac7">
+  <source>Suspend access</source>
+</trans-unit>
+<trans-unit id="sca857384a28a3c90">
+  <source>This customer's users cannot sign in. Their vehicle assignments and users are intact.</source>
+</trans-unit>
+<trans-unit id="sfb475d0f16d466f7">
+  <source>Stops this customer's users signing in, without changing anything they own. Assignments are kept, so resuming restores everything.</source>
+</trans-unit>
+<trans-unit id="s08a773944f314b2a">
+  <source>RESUME</source>
+</trans-unit>
+<trans-unit id="s491ddc3644eefda3">
+  <source>SUSPEND</source>
+</trans-unit>
+<trans-unit id="sdf8ac2a935542d26">
+  <source>Resume customer</source>
+</trans-unit>
+<trans-unit id="s819510a75a279d25">
+  <source>Suspend customer</source>
+</trans-unit>
+<trans-unit id="se56c36a423c369de">
+  <source>Their users will be able to sign in again within about a minute.</source>
+</trans-unit>
+<trans-unit id="sb9af41df2ff97de6">
+  <source>Suspend <x id="0" equiv-text="${this.customer.name}"/>? Their users will lose access within about a minute. Nothing is deleted.</source>
+</trans-unit>
+<trans-unit id="s89118d3a7be870ca">
+  <source>Resume</source>
+</trans-unit>
+<trans-unit id="s3906cd4a102867a3">
+  <source>Suspend</source>
+</trans-unit>
+<trans-unit id="sa2370c7d35ed7553">
+  <source>Turn on membership enforcement</source>
+        <target>Activar la aplicación de membresías</target>
+</trans-unit>
+<trans-unit id="s5ac0a2e7b1329017">
+  <source>Any vehicle assigned to <x id="0" equiv-text="${this.customer.name}"/> without an active membership will disappear from their Fleet Lite within about a minute. Nothing is deleted, and turning this back off restores everything.</source>
+        <target>Cualquier vehículo asignado a <x id="0" equiv-text="${this.customer.name}"/> sin una membresía activa desaparecerá de su Fleet Lite en aproximadamente un minuto. No se elimina nada, y desactivar esto restaura todo.</target>
+</trans-unit>
+<trans-unit id="s6bb329b249dd1ee7">
+  <source>Turn on</source>
+        <target>Activar</target>
+</trans-unit>
+<trans-unit id="s0ed1d8d2baf283b3">
+  <source>Failed to load users</source>
+</trans-unit>
+<trans-unit id="s0a7049882e7208c1">
+  <source><x id="0" equiv-text="${detail.member.email}"/> can now sign into fleet-lite as <x id="1" equiv-text="${this.customer.name}"/>.</source>
+</trans-unit>
+<trans-unit id="scd0423fc1c499316">
+  <source>Access updated.</source>
+</trans-unit>
+<trans-unit id="s959913a902a31dfd">
+  <source><x id="0" equiv-text="${m.email ?? m.wallet}"/> no longer has access.</source>
+</trans-unit>
+<trans-unit id="s1f381d861870a136">
+  <source>Failed to remove user</source>
+</trans-unit>
+<trans-unit id="s5c82363c1f9fa8a4">
+  <source>All groups</source>
+</trans-unit>
+<trans-unit id="s0a0df885fe464036">
+  <source>No groups</source>
+</trans-unit>
+<trans-unit id="sa191ac4aefecd8da">
+  <source>no email</source>
+</trans-unit>
+<trans-unit id="s17c02dabef679de5">
+  <source>provisioned by you</source>
+</trans-unit>
+<trans-unit id="s3c0d17bad169557b">
+  <source>none</source>
+</trans-unit>
+<trans-unit id="s8b97ea84af17c029">
+  <source>Never</source>
+</trans-unit>
+<trans-unit id="s79cb43dc6cbe3039">
+  <source>EDIT ACCESS</source>
+</trans-unit>
+<trans-unit id="s6c71ae6ae12c973d">
+  <source>REMOVE</source>
+</trans-unit>
+<trans-unit id="s3048c1a1bbf3f488">
+  <source>+ PROVISION USER</source>
+</trans-unit>
+<trans-unit id="sa6f6dcc3d53ef6c6">
+  <source>No users yet. Provision one by email and they can sign straight into fleet-lite — no invitation to accept.</source>
+</trans-unit>
+<trans-unit id="s58c867aac77b9158">
+  <source>Last login</source>
+</trans-unit>
+<trans-unit id="s9e99952d8fdcc0f4">
+  <source>Remove user</source>
+</trans-unit>
+<trans-unit id="s97926960fc69f153">
+  <source>Remove this user's access to this customer? They keep their DIMO account and can be provisioned again later.</source>
+</trans-unit>
+<trans-unit id="sb6d9697b6815a3b8">
+  <source>No new vehicles were assigned.</source>
+</trans-unit>
+<trans-unit id="s0f1fe0c83bf456a2">
+  <source>Assigned <x id="0" equiv-text="${assigned}"/> vehicle(s) to <x id="1" equiv-text="${this.customer.name}"/>.</source>
+</trans-unit>
+<trans-unit id="s41191df2c6b3c718">
+  <source>Vehicle <x id="0" equiv-text="${v.vin ?? v.vehicleTokenId}"/> is no longer visible to this customer.</source>
+</trans-unit>
+<trans-unit id="s7ded99bd84e94035">
+  <source>Failed to revoke vehicle</source>
+</trans-unit>
+<trans-unit id="sd096137a8f07d39c">
+  <source>Failed to re-apply group</source>
+</trans-unit>
+<trans-unit id="s03463158f51998f0">
+  <source><x id="0" equiv-text="${d.addedTokenIds.length}"/> vehicle(s) have been added to "<x id="1" equiv-text="${d.groupName}"/>" since you assigned it <x id="2" equiv-text="${dayjs(d.assignedAt).fromNow()}"/>.</source>
+</trans-unit>
+<trans-unit id="sb2b49c4789b5410f">
+  <source>They are not visible to this customer.</source>
+</trans-unit>
+<trans-unit id="sa99caba3c9b14322">
+  <source>RE-APPLY GROUP</source>
+</trans-unit>
+<trans-unit id="sdde803cb77df70f7">
+  <source>assigned individually</source>
+</trans-unit>
+<trans-unit id="sb6c7f9adc620c233">
+  <source>REVOKE</source>
+</trans-unit>
+<trans-unit id="s33786b69365cb0b4">
+  <source>+ ASSIGN VEHICLES</source>
+</trans-unit>
+<trans-unit id="se0258ecd8230fea7">
+  <source>Vehicle <x id="0" equiv-text="${r.tokenId}"/> was skipped — <x id="1" equiv-text="${r.heldBy}"/> already has it.</source>
+</trans-unit>
+<trans-unit id="s8628d8ad93d5db2b">
+  <source>No vehicles assigned. This customer can sign in but will see an empty fleet.</source>
+</trans-unit>
+<trans-unit id="s13ecf5afa0b5f263">
+  <source>Plate</source>
+</trans-unit>
+<trans-unit id="sa120a9eabbc2520d">
+  <source>Assigned via</source>
+</trans-unit>
+<trans-unit id="s0e7536ff12ae7c3d">
+  <source>Assigned</source>
+</trans-unit>
+<trans-unit id="sfad19f4692848dab">
+  <source>Revoke vehicle</source>
+</trans-unit>
+<trans-unit id="secca0f2f47920c94">
+  <source>This customer will stop seeing this vehicle within about a minute. Nothing on chain changes and the vehicle stays in your fleet — you can assign it again, or to a different customer.</source>
+</trans-unit>
+<trans-unit id="sa74976c6604e644a">
+  <source>1 month</source>
+        <target>1 mes</target>
+</trans-unit>
+<trans-unit id="scfdf6a9c76e5e2cc">
+  <source><x id="0" equiv-text="${months}"/> months</source>
+        <target><x id="0" equiv-text="${months}"/> meses</target>
+</trans-unit>
+<trans-unit id="s7eefa5833f06a3c4">
+  <source>Move membership</source>
+        <target>Mover membresía</target>
+</trans-unit>
+<trans-unit id="se558ae419d3daf2e">
+  <source>Renew membership</source>
+        <target>Renovar membresía</target>
+</trans-unit>
+<trans-unit id="s3216bf5bbdabfb64">
+  <source>Add membership</source>
+        <target>Agregar membresía</target>
+</trans-unit>
+<trans-unit id="s379c18aec5654894">
+  <source>Move</source>
+        <target>Mover</target>
+</trans-unit>
+<trans-unit id="s0cb2bd54ccf0da6e">
+  <source>Renew</source>
+        <target>Renovar</target>
+</trans-unit>
+<trans-unit id="sf9aee319a006c9b4">
+  <source>Add</source>
+        <target>Agregar</target>
+</trans-unit>
+<trans-unit id="sab8b4cbbb1fa71fa">
+  <source>Current</source>
+        <target>Actual</target>
+</trans-unit>
+<trans-unit id="s4fd67663886c1705">
+  <source>expires <x id="0" equiv-text="${dayjs(m.expiresAt).format(&quot;D MMM YYYY&quot;)}"/></source>
+        <target>vence <x id="0" equiv-text="${dayjs(m.expiresAt).format(&quot;D MMM YYYY&quot;)}"/></target>
+</trans-unit>
+<trans-unit id="s691a6e812bcd8d9b">
+  <source>Every other vehicle assigned to this customer already has a membership. Assign another vehicle on the Vehicles tab, or cancel one first.</source>
+        <target>Todos los demás vehículos asignados a este cliente ya tienen membresía. Asigne otro vehículo en la pestaña Vehículos o cancele una primero.</target>
+</trans-unit>
+<trans-unit id="s34e71c1c4acc7d91">
+  <source>Every vehicle assigned to this customer already has a membership. Assign more vehicles on the Vehicles tab first.</source>
+        <target>Todos los vehículos asignados a este cliente ya tienen membresía. Asigne más vehículos en la pestaña Vehículos primero.</target>
+</trans-unit>
+<trans-unit id="s4e9cfb1fc29f5f15">
+  <source>Move to</source>
+        <target>Mover a</target>
+</trans-unit>
+<trans-unit id="se38a7162c56fc87f">
+  <source>Only vehicles assigned to this customer that don't already have a membership.</source>
+        <target>Solo vehículos asignados a este cliente que aún no tienen membresía.</target>
+</trans-unit>
+<trans-unit id="s2470dafb1ae8a017">
+  <source>Term</source>
+        <target>Plazo</target>
+</trans-unit>
+<trans-unit id="s20ab3bd6ae4642fe">
+  <source>Added to the end of the current term if it hasn't expired yet, otherwise it starts today.</source>
+        <target>Se agrega al final del plazo actual si aún no ha vencido; de lo contrario, comienza hoy.</target>
+</trans-unit>
+<trans-unit id="s820ac5e76f1fd6fd">
+  <source>The vehicle is visible in Fleet Lite until this runs out.</source>
+        <target>El vehículo es visible en Fleet Lite hasta que esto se agote.</target>
+</trans-unit>
+<trans-unit id="s51e6831ee053e632">
+  <source>Failed to save membership</source>
+        <target>No se pudo guardar la membresía</target>
+</trans-unit>
+<trans-unit id="s304d7b13e7a33a3a">
+  <source>Failed to load operator settings</source>
+</trans-unit>
+<trans-unit id="sf345ddcc2e10c7ba">
+  <source>Failed to save</source>
+</trans-unit>
+<trans-unit id="sb1e3482822dd3e16">
+  <source>fleet-lite visibility</source>
+</trans-unit>
+<trans-unit id="s0b24537ffdd448fe">
+  <source>Your own fleet is</source>
+</trans-unit>
+<trans-unit id="s0975878d271389af">
+  <source>visible in fleet-lite</source>
+</trans-unit>
+<trans-unit id="s3a4a372279e8d972">
+  <source>hidden from fleet-lite</source>
+</trans-unit>
+<trans-unit id="sfb75fa37b99fb796">
+  <source>HIDE FROM FLEET-LITE</source>
+</trans-unit>
+<trans-unit id="s5cce084b2985af96">
+  <source>SHOW IN FLEET-LITE</source>
+</trans-unit>
+<trans-unit id="s8fa96496d3dfc118">
+  <source>This controls whether your operator tenant is offered as a fleet to open in fleet-lite. It does not affect your customers, who always see their own tenant there, and it does not affect this app.</source>
+</trans-unit>
+<trans-unit id="sbba952fe623ec0be">
+  <source>Your fleet is <x id="0" equiv-text="${op.vehicleCount}"/> vehicles. fleet-lite is tuned for fewer than <x id="1" equiv-text="${FLEET_LITE_SOFT_LIMIT}"/> and its map view gets slow beyond that — this app is the better tool at your size. Consider hiding your fleet from fleet-lite, or scoping individual people to a few fleet groups instead.</source>
+</trans-unit>
+<trans-unit id="sf6ef31788146caf0">
+  <source>All of this customer's vehicles</source>
+</trans-unit>
+<trans-unit id="s5ce45cf7688af096">
+  <source>No groups — this user sees nothing</source>
+</trans-unit>
+<trans-unit id="s41c3a5bef07e9a19">
+  <source>Edit access</source>
+</trans-unit>
+<trans-unit id="s66701660060bec83">
+  <source>Provision user</source>
+</trans-unit>
+<trans-unit id="sd10aeeeacc5d58db">
+  <source>person@customer.com</source>
+</trans-unit>
+<trans-unit id="sd576775748db80c1">
+  <source>Email cannot be changed here — remove and re-provision instead.</source>
+</trans-unit>
+<trans-unit id="s9d51bd8a78621728">
+  <source>We look this up with DIMO accounts and create an account if there isn't one. They sign into fleet-lite with it; there is no invitation to accept.</source>
+</trans-unit>
+<trans-unit id="sca7fed2bef53cb99">
+  <source>Role</source>
+</trans-unit>
+<trans-unit id="s5f48fa447188559e">
+  <source>A label, and a preset for the permissions below. Permissions are what actually get checked.</source>
+</trans-unit>
+<trans-unit id="s5a62616749d01896">
+  <source>A user with no permissions can still sign in and see the fleet — permissions gate management actions.</source>
+</trans-unit>
+<trans-unit id="s4a6ddee37fc76100">
+  <source>Group scope</source>
+</trans-unit>
+<trans-unit id="sb6ef875e214b4e51">
+  <source>Set by the customer in fleet-lite, using their own fleet groups. You control which vehicles the customer has; they decide who among their people sees which.</source>
+</trans-unit>
+<trans-unit id="s939a59ecfb52da40">
+  <source>Provision</source>
+</trans-unit>
+<trans-unit id="scd82598359d20868">
+  <source>Failed to save access</source>
+</trans-unit>
+<trans-unit id="s796d03a64881cd45">
+  <source>Sample data</source>
+</trans-unit>
+<trans-unit id="s1d678d644963a116">
+  <source>the tenancy management API is not built yet, so these customers, users and vehicle assignments are fixtures held in memory. Changes are lost on reload and reach nothing real.</source>
+</trans-unit>
+<trans-unit id="s80186815c747d8dd">
+  <source>switches to the live backend once it exists.</source>
+</trans-unit>
+<trans-unit id="s827cfca2fffba7a3">
+  <source>Vehicle token ID</source>
+</trans-unit>
+<trans-unit id="s3cf470f1a63d354d">
+  <source>You don't have permission to transfer this vehicle.</source>
+</trans-unit>
+<trans-unit id="s16b91800d4eb5f1d">
+  <source>This vehicle is owned by a shared account, so transferring it acts on someone else's behalf and needs the manage_vehicles permission. Ask an administrator to grant it.</source>
+</trans-unit>
+<trans-unit id="sa7dd953a4ce5ac41">
+  <source>Transfer failed unexpectedly</source>
+</trans-unit>
+<trans-unit id="s89d0e20b6f119c1c">
+  <source>You don't have permission to disconnect this vehicle. It is owned by a shared account, so disconnecting it acts on someone else's behalf and needs the manage_vehicles permission. Ask an administrator to grant it.</source>
+</trans-unit>
+<trans-unit id="sbf51d5fc0ee3b8c3">
+  <source>You don't have permission to delete this vehicle. It is owned by a shared account, so deleting it acts on someone else's behalf and needs the manage_vehicles permission. Ask an administrator to grant it.</source>
+</trans-unit>
+<trans-unit id="sfb675cc7d8e4952f">
+  <source>Permission required</source>
+</trans-unit>
+<trans-unit id="s3f6043c5356c07b9">
+  <source>Failed to load customer</source>
+</trans-unit>
+<trans-unit id="se5917c3523e800ed">
+  <source>Loading customer...</source>
+</trans-unit>
+<trans-unit id="s87c360914ca0b8c2">
+  <source>← Back to customers</source>
+</trans-unit>
+<trans-unit id="s42288471628c3333">
+  <source>users</source>
+</trans-unit>
+<trans-unit id="s10785a4cc14c2db5">
+  <source>last active</source>
+</trans-unit>
+<trans-unit id="s2f0fc153a70a38ee">
+  <source>never signed in</source>
+</trans-unit>
+<trans-unit id="s01074c55cea1da56">
+  <source>This customer is suspended. Their users cannot sign in, and their vehicle assignments are kept so resuming restores everything.</source>
+</trans-unit>
+<trans-unit id="s1c9af219c6913c3e">
+  <source>Failed to load customers</source>
+</trans-unit>
+<trans-unit id="sd84f8ffa8b153cb6">
+  <source>MANAGE</source>
+</trans-unit>
+<trans-unit id="s109ab53b273f5b70">
+  <source>+ NEW CUSTOMER</source>
+</trans-unit>
+<trans-unit id="sad7ca0962ecb324a">
+  <source>Search customers...</source>
+</trans-unit>
+<trans-unit id="s30187fff953e5a0c">
+  <source>Loading customers...</source>
+</trans-unit>
+<trans-unit id="sc3bef597756500cc">
+  <source>No customers yet. Create one to give an end customer their own fleet-lite tenant.</source>
+</trans-unit>
+<trans-unit id="s3dea388678dae181">
+  <source>No customers match that search.</source>
+</trans-unit>
+<trans-unit id="s1ea4026dd1f23ca2">
+  <source>Last activity</source>
+</trans-unit>
 </body>
 </file>
 </xliff>

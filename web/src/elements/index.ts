@@ -23,6 +23,8 @@ export * from "./stub-data-banner-element.ts";
 export * from "./create-customer-modal-element.ts";
 export * from "./customer-users-panel-element.ts";
 export * from "./customer-vehicles-panel-element.ts";
+export * from "./customer-memberships-panel-element.ts";
+export * from "./membership-modal-element.ts";
 export * from "./customer-settings-panel-element.ts";
 export * from "./provision-user-modal-element.ts";
 export * from "./assign-vehicles-modal-element.ts";

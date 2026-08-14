@@ -3,13 +3,19 @@ import type {
   AssignVehiclesInput,
   AssignVehiclesResult,
   CreateCustomerInput,
+  CreateMembershipInput,
   CustomerTenant,
   EntitledVehicle,
   GroupDrift,
   Member,
+  MembershipList,
+  MembershipStatus,
+  MoveMembershipInput,
   ProvisionMemberInput,
+  RenewMembershipInput,
   UpdateCustomerInput,
   UpdateMemberInput,
+  VehicleMembership,
 } from "@services/tenancy-service.ts";
 
 // In-memory stand-in for the /user/v1 management surface, which is not built.
@@ -53,6 +59,24 @@ export interface OperatorFleetVehicle {
 
 const OPERATOR_ID = "7be1ab9e-0000-4000-8000-0000000000ff";
 
+// Mirrors EXPIRING_SOON_DAYS in tenancy-service. Duplicated rather than
+// imported on purpose: the import at the top of this file is type-only so the
+// two modules cannot form a runtime cycle, and a value import would.
+const EXPIRING_SOON_DAYS = 30;
+
+// Mirrors MEMBERSHIP_TERMS, duplicated for the same no-runtime-cycle reason.
+const VALID_TERMS = [1, 12, 24, 36, 48];
+
+// Month arithmetic for the fixtures. The real service does this in Postgres
+// (starts_at + make_interval(months => n)), which clamps a 31st to the shorter
+// month; Date.setMonth overflows it into the next one instead. Close enough for
+// fixtures, and a reason not to port this helper anywhere real.
+function addMonths(iso: string, months: number): string {
+  const d = new Date(iso);
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString();
+}
+
 function delay(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 180 + Math.random() * 220));
 }
@@ -90,6 +114,18 @@ interface StubMember extends Member {
   tenantId: string;
 }
 
+// The commercial record, keyed by its own id rather than by vehicle — that is
+// what lets it move between vehicles and keep its identity, term and history.
+interface StubMembership {
+  id: string;
+  tenantId: string;
+  tokenId: number;
+  termMonths: number;
+  startsAt: string;
+  expiresAt: string;
+  canceledAt: string | null;
+}
+
 interface StubGroupAssignment {
   tenantId: string;
   groupId: string;
@@ -110,6 +146,9 @@ export class TenancyStub {
     managed: false,
     entitlementMode: "implicit",
     fleetLiteEnabled: true,
+    // An operator resolves its own fleet from its license and is never hidden
+    // behind memberships — the flag only means anything for managed customers.
+    membershipsEnforced: false,
     externalRef: null,
     createdAt: daysAgo(420),
     vehicleCount: 524,
@@ -120,7 +159,9 @@ export class TenancyStub {
   // Counts are derived by recount(), never set here: a literal would drift from
   // the entitlement and membership rows below and quietly become a lie.
   private customers: CustomerTenant[] = [
-    this.customer("Northwind Logistics", 1, { lastActivity: 0 }),
+    // Northwind has enforcement ON, so the panel's "fleet-lite is hiding
+    // unmembered vehicles" state is reachable without changing a setting first.
+    this.customer("Northwind Logistics", 1, { lastActivity: 0, membershipsEnforced: true }),
     this.customer("Cedar Valley Rentals", 2, { lastActivity: 2 }),
     this.customer("Atlas Courier", 3, { lastActivity: 11 }),
     this.customer("Pine Ridge Transit", 4, { lastActivity: null, status: "suspended" }),
@@ -144,8 +185,13 @@ export class TenancyStub {
 
   private groupAssignments: StubGroupAssignment[] = [];
 
+  private memberships: StubMembership[] = [];
+
+  private membershipSeq = 0;
+
   constructor() {
     this.seedEntitlements();
+    this.seedMemberships();
   }
 
   // FIXTURE CONSTRUCTION
@@ -156,6 +202,7 @@ export class TenancyStub {
     opts: {
       lastActivity: number | null;
       status?: "active" | "suspended";
+      membershipsEnforced?: boolean;
     },
   ): CustomerTenant {
     return {
@@ -167,6 +214,7 @@ export class TenancyStub {
       managed: true,
       entitlementMode: "explicit",
       fleetLiteEnabled: true,
+      membershipsEnforced: opts.membershipsEnforced ?? false,
       externalRef: null,
       createdAt: daysAgo(120 - seed * 20),
       vehicleCount: 0,
@@ -283,6 +331,80 @@ export class TenancyStub {
     assignIndividually(this.customers[2].id, 6, 40);
   }
 
+  private nextMembershipId(): string {
+    this.membershipSeq += 1;
+    return `m0000000-0000-4000-8000-${this.membershipSeq.toString().padStart(12, "0")}`;
+  }
+
+  private seedMemberships() {
+    const northwind = this.customers[0];
+    const held = this.entitlements
+      .filter((e) => e.tenantId === northwind.id)
+      .map((e) => e.tokenId);
+
+    // A spread of statuses, so every badge and every action is reachable in the
+    // demo without having to set something up first.
+    const spread = [
+      { term: 12, expiresInDays: 210 }, // active
+      { term: 12, expiresInDays: 18 }, // inside EXPIRING_SOON_DAYS
+      { term: 1, expiresInDays: -5 }, // lapsed: fleet-lite is hiding this one
+      { term: 24, expiresInDays: 600 }, // active
+    ];
+
+    spread.forEach((s, i) => {
+      const tokenId = held[i];
+      if (tokenId === undefined) return;
+      const expiresAt = new Date(Date.now() + s.expiresInDays * 86400000).toISOString();
+      this.memberships.push({
+        id: this.nextMembershipId(),
+        tenantId: northwind.id,
+        tokenId,
+        termMonths: s.term,
+        startsAt: addMonths(expiresAt, -s.term),
+        expiresAt,
+        canceledAt: null,
+      });
+    });
+
+    // One membership on a vehicle this customer is NOT entitled to — the
+    // discontinued-vehicle case that move exists for. Revoking a vehicle
+    // deliberately leaves its paid time alone rather than destroying a
+    // commercial record as a side effect, so the console has to surface it.
+    const orphan = this.fleet.find(
+      (v) =>
+        v.vehicleTokenId !== null &&
+        !this.entitlements.some((e) => e.tokenId === v.vehicleTokenId),
+    );
+    if (orphan) {
+      const startsAt = daysAgo(60);
+      this.memberships.push({
+        id: this.nextMembershipId(),
+        tenantId: northwind.id,
+        tokenId: orphan.vehicleTokenId as number,
+        termMonths: 12,
+        startsAt,
+        expiresAt: addMonths(startsAt, 12),
+        canceledAt: null,
+      });
+    }
+
+    // Cedar Valley gets one so a second customer's tab is not empty.
+    const cedar = this.customers[1];
+    const cedarHeld = this.entitlements.find((e) => e.tenantId === cedar.id);
+    if (cedarHeld) {
+      const startsAt = daysAgo(10);
+      this.memberships.push({
+        id: this.nextMembershipId(),
+        tenantId: cedar.id,
+        tokenId: cedarHeld.tokenId,
+        termMonths: 36,
+        startsAt,
+        expiresAt: addMonths(startsAt, 36),
+        canceledAt: null,
+      });
+    }
+  }
+
   private membersFor(tenantId: string): StubMember[] {
     return this.members.filter((m) => m.tenantId === tenantId);
   }
@@ -331,6 +453,9 @@ export class TenancyStub {
       managed: true,
       entitlementMode: "explicit",
       fleetLiteEnabled: true,
+      // Off for a new customer: they have no memberships yet, so enforcing
+      // would show them an empty fleet the moment they signed in.
+      membershipsEnforced: false,
       externalRef: input.externalRef?.trim() || null,
       createdAt: new Date().toISOString(),
       vehicleCount: 0,
@@ -360,6 +485,7 @@ export class TenancyStub {
     }
     if (input.status !== undefined) c.status = input.status;
     if (input.fleetLiteEnabled !== undefined) c.fleetLiteEnabled = input.fleetLiteEnabled;
+    if (input.membershipsEnforced !== undefined) c.membershipsEnforced = input.membershipsEnforced;
     if (input.externalRef !== undefined) c.externalRef = input.externalRef;
     return ok({ ...c });
   }
@@ -559,6 +685,175 @@ export class TenancyStub {
       fromGroupId: groupId,
       fromGroupName: ga.groupName,
     });
+  }
+
+  // MEMBERSHIPS
+  //
+  // Four rules modelled here because the real service enforces them, and a UI
+  // built against a stub that only ever succeeds grows no error paths:
+  //
+  //   1. ENTITLED ONLY — a membership may only sit on a vehicle the customer is
+  //      currently assigned. 422.
+  //   2. ONE LIVE PER VEHICLE — creating or moving onto a vehicle that already
+  //      has an unexpired membership is a 409, not a silent replacement.
+  //      Replacing paid time quietly is the bug nobody reports until an invoice
+  //      is wrong.
+  //   3. SUPERSEDE ON LAPSE — the same action over an EXPIRED membership is
+  //      allowed and cancels the old row, so a lapsed vehicle can start fresh.
+  //   4. RENEWAL NEVER BACKDATES — early renewal extends from the existing
+  //      expiry, late renewal starts from now.
+
+  private membershipStatus(m: StubMembership): MembershipStatus {
+    if (m.canceledAt) return "canceled";
+    const remaining = new Date(m.expiresAt).getTime() - Date.now();
+    if (remaining <= 0) return "expired";
+    if (remaining <= EXPIRING_SOON_DAYS * 86400000) return "expiring_soon";
+    return "active";
+  }
+
+  // Live means "not canceled". An EXPIRED membership is still live: it is shown,
+  // it can be renewed, and it still blocks nothing — only cancelling or being
+  // superseded ends one.
+  private liveMembership(tenantId: string, tokenId: number): StubMembership | undefined {
+    return this.memberships.find(
+      (m) => m.tenantId === tenantId && m.tokenId === tokenId && !m.canceledAt,
+    );
+  }
+
+  private findMembership(tenantId: string, id: string): StubMembership | undefined {
+    return this.memberships.find(
+      (m) => m.id === id && m.tenantId === tenantId && !m.canceledAt,
+    );
+  }
+
+  private toMembershipWire(m: StubMembership): VehicleMembership {
+    const v = this.fleet.find((f) => f.vehicleTokenId === m.tokenId);
+    return {
+      id: m.id,
+      vehicleTokenId: m.tokenId,
+      termMonths: m.termMonths,
+      startsAt: m.startsAt,
+      expiresAt: m.expiresAt,
+      canceledAt: m.canceledAt,
+      status: this.membershipStatus(m),
+      vin: v?.vin ?? null,
+      licensePlate: v?.licensePlate ?? null,
+      make: v?.make ?? null,
+      model: v?.model ?? null,
+      year: v?.year ?? null,
+      entitled: this.entitlements.some(
+        (e) => e.tenantId === m.tenantId && e.tokenId === m.tokenId,
+      ),
+    };
+  }
+
+  private isEntitled(tenantId: string, tokenId: number): boolean {
+    return this.entitlements.some((e) => e.tenantId === tenantId && e.tokenId === tokenId);
+  }
+
+  // Canceled rows are omitted: cancelling is how a membership ends, and a list
+  // that accumulated them would grow without bound. The status union keeps
+  // "canceled" for the record itself, which a history view would read.
+  async listMemberships(tenantId: string): Promise<ApiResponse<MembershipList>> {
+    await delay();
+    const c = this.findCustomer(tenantId);
+    if (!c) return fail("customer not found", 404);
+    return ok({
+      enforced: c.membershipsEnforced,
+      memberships: this.memberships
+        .filter((m) => m.tenantId === tenantId && !m.canceledAt)
+        .map((m) => this.toMembershipWire(m)),
+    });
+  }
+
+  async createMembership(
+    tenantId: string,
+    input: CreateMembershipInput,
+  ): Promise<ApiResponse<VehicleMembership>> {
+    await delay();
+    if (!this.findCustomer(tenantId)) return fail("customer not found", 404);
+    if (!VALID_TERMS.includes(input.termMonths)) return fail("unsupported term");
+    if (!this.isEntitled(tenantId, input.vehicleTokenId)) {
+      return fail("that vehicle is not assigned to this customer", 422);
+    }
+
+    const live = this.liveMembership(tenantId, input.vehicleTokenId);
+    if (live) {
+      if (this.membershipStatus(live) !== "expired") {
+        return fail("that vehicle already has a membership — renew or move it instead", 409);
+      }
+      live.canceledAt = new Date().toISOString();
+    }
+
+    const startsAt = new Date().toISOString();
+    const created: StubMembership = {
+      id: this.nextMembershipId(),
+      tenantId,
+      tokenId: input.vehicleTokenId,
+      termMonths: input.termMonths,
+      startsAt,
+      expiresAt: addMonths(startsAt, input.termMonths),
+      canceledAt: null,
+    };
+    this.memberships = [...this.memberships, created];
+    return ok(this.toMembershipWire(created));
+  }
+
+  async moveMembership(
+    tenantId: string,
+    membershipId: string,
+    input: MoveMembershipInput,
+  ): Promise<ApiResponse<VehicleMembership>> {
+    await delay();
+    const m = this.findMembership(tenantId, membershipId);
+    if (!m) return fail("membership not found", 404);
+    if (input.vehicleTokenId === m.tokenId) {
+      return fail("that membership is already on this vehicle");
+    }
+    if (!this.isEntitled(tenantId, input.vehicleTokenId)) {
+      return fail("that vehicle is not assigned to this customer", 422);
+    }
+
+    const live = this.liveMembership(tenantId, input.vehicleTokenId);
+    if (live) {
+      if (this.membershipStatus(live) !== "expired") {
+        return fail("that vehicle already has a membership", 409);
+      }
+      live.canceledAt = new Date().toISOString();
+    }
+
+    // The term and the remaining time move with it — the customer paid for a
+    // period, not for a particular vehicle.
+    m.tokenId = input.vehicleTokenId;
+    return ok(this.toMembershipWire(m));
+  }
+
+  async renewMembership(
+    tenantId: string,
+    membershipId: string,
+    input: RenewMembershipInput,
+  ): Promise<ApiResponse<VehicleMembership>> {
+    await delay();
+    const m = this.findMembership(tenantId, membershipId);
+    if (!m) return fail("membership not found", 404);
+    if (!VALID_TERMS.includes(input.termMonths)) return fail("unsupported term");
+
+    // Renewing early adds to the end of the existing term; renewing after a
+    // lapse starts now. Never backdated into a period the customer could not use.
+    const from = Math.max(new Date(m.expiresAt).getTime(), Date.now());
+    m.expiresAt = addMonths(new Date(from).toISOString(), input.termMonths);
+    m.termMonths = input.termMonths;
+    return ok(this.toMembershipWire(m));
+  }
+
+  // Soft, mirroring entitlement revocation: knowing a vehicle used to carry a
+  // membership matters for support, and the row is what a refund would refer to.
+  async cancelMembership(tenantId: string, membershipId: string): Promise<ApiResponse<void>> {
+    await delay();
+    const m = this.findMembership(tenantId, membershipId);
+    if (!m) return fail("membership not found", 404);
+    m.canceledAt = new Date().toISOString();
+    return ok(undefined as unknown as void);
   }
 
   // OPERATOR
