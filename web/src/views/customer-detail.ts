@@ -7,20 +7,23 @@ import { globalStyles } from "../global-styles.ts";
 import { CustomerTenant, TenancyService } from "@services/tenancy-service.ts";
 import "../elements/customer-users-panel-element.ts";
 import "../elements/customer-vehicles-panel-element.ts";
+import "../elements/customer-memberships-panel-element.ts";
 import "../elements/customer-settings-panel-element.ts";
 import "../elements/stub-data-banner-element.ts";
 
 dayjs.extend(relativeTime);
 
-type Tab = "users" | "vehicles" | "settings";
+type Tab = "users" | "vehicles" | "memberships" | "settings";
 
 // One customer, configured from the outside.
 //
-// Three tabs, matching the three things an operator controls: who may use it,
-// which vehicles it can see, and the tenant's own settings. Note what is absent
-// — there is no way to view the customer's fleet as they see it, because
-// operator staff are b2b-only and impersonation was deliberately dropped from
-// the design.
+// Four tabs, matching the four things an operator controls: who may use it,
+// which vehicles it can see, which of those are paid for, and the tenant's own
+// settings. Vehicles and Memberships are adjacent but distinct — the first is
+// access, the second is what was bought — and they are separate tabs for the
+// same reason they are separate records. Note what is absent — there is no way
+// to view the customer's fleet as they see it, because operator staff are
+// b2b-only and impersonation was deliberately dropped from the design.
 @customElement("customer-detail-view")
 export class CustomerDetailView extends LitElement {
   static styles = [
@@ -144,6 +147,7 @@ export class CustomerDetailView extends LitElement {
         <div class="inner-tabs">
           ${this.renderTab("users", msg("Users"))}
           ${this.renderTab("vehicles", msg("Vehicles"))}
+          ${this.renderTab("memberships", msg("Memberships"))}
           ${this.renderTab("settings", msg("Settings"))}
         </div>
 
@@ -162,6 +166,14 @@ export class CustomerDetailView extends LitElement {
                   .customer=${c}
                   @customer-changed=${this.onCustomerChanged}
                 ></customer-vehicles-panel>
+              `
+            : nothing}
+          ${this.tab === "memberships"
+            ? html`
+                <customer-memberships-panel
+                  .customer=${c}
+                  @customer-changed=${this.onCustomerChanged}
+                ></customer-memberships-panel>
               `
             : nothing}
           ${this.tab === "settings"

@@ -35,9 +35,12 @@ export type { OperatorFleetVehicle } from "@services/tenancy-stub.ts";
 
 // Client for the operator console's tenancy surface.
 //
-// THE BACKEND IS COMPLETE: every action the console offers is served for real
-// — the provisioning slice was the last, and with it the member routes below
-// went live. The stub remains only as a demo/development mode:
+// THE BACKEND IS COMPLETE: every action the console offers is served for real.
+// Vehicle memberships were the most recent addition, built UI-first against the
+// stub and then wired through (fleet-tenancy-api docs/plans/02-vehicle-memberships.md).
+// The memberships panel still renders a "not available on this environment yet"
+// state on a 404 from the proxy, which is what an environment running an older
+// oracle or tenancy service will answer. The stub remains a demo mode:
 //
 //   live — HTTP, via the b2b proxy to kaufmann-oracle to fleet-tenancy-api.
 //          The default.
@@ -59,6 +62,11 @@ export type { OperatorFleetVehicle } from "@services/tenancy-stub.ts";
 //   DELETE     /tenancy/customers/{id}/members/{wallet}
 //   GET/POST   /tenancy/customers/{id}/vehicles
 //   DELETE     /tenancy/customers/{id}/vehicles/{tokenId}
+//
+//   GET/POST   /tenancy/customers/{id}/memberships
+//   POST       /tenancy/customers/{id}/memberships/{mid}/move
+//   POST       /tenancy/customers/{id}/memberships/{mid}/renew
+//   DELETE     /tenancy/customers/{id}/memberships/{mid}
 //
 // ROUTING. Live mode calls /tenancy/* under the oracle prefix, so a request
 // leaves the browser as
@@ -115,6 +123,11 @@ export interface CustomerTenant {
   managed: boolean;
   entitlementMode: EntitlementMode;
   fleetLiteEnabled: boolean;
+  // When true, fleet-lite hides this customer's vehicles that have no active
+  // membership. Default false so existing customers are unaffected until an
+  // operator deliberately turns it on — self-serve tenants have no console to
+  // manage memberships from at all.
+  membershipsEnforced: boolean;
   externalRef: string | null;
   createdAt: string;
   // Counts come from /v1/operators/{id}/children, which backs the list view.
@@ -174,6 +187,7 @@ export interface UpdateCustomerInput {
   name?: string;
   status?: TenantStatus;
   fleetLiteEnabled?: boolean;
+  membershipsEnforced?: boolean;
   externalRef?: string | null;
 }
 
@@ -204,6 +218,89 @@ export interface AssignVehiclesResult {
   // at most one explicit-mode tenant per vehicle per operator — is enforced in
   // the service layer, so a partial success is a normal outcome, not an error.
   rejected: { tokenId: number; reason: string; heldBy: string }[];
+}
+
+// MEMBERSHIPS
+//
+// A membership is the commercial record: one vehicle, paid for a term, movable
+// to another vehicle when the first is discontinued. It is deliberately NOT the
+// entitlement — the entitlement says "this customer may see this vehicle", the
+// membership says "this vehicle is paid for, until when". Keeping them apart is
+// what lets a membership move without destroying entitlement provenance, and
+// gives a future purchase flow something to attach to.
+
+// The terms an operator can pick. Constrained here and again by a CHECK on the
+// tenancy service's column, so a term that reaches the database is one of these.
+export const MEMBERSHIP_TERMS = [1, 12, 24, 36, 48] as const;
+
+export type MembershipTerm = (typeof MEMBERSHIP_TERMS)[number];
+
+// Computed by the service from starts_at + term, never stored as a state that
+// could go stale — an expired membership is expired the moment the clock passes
+// it, with no job needing to have run.
+export type MembershipStatus = "active" | "expiring_soon" | "expired" | "canceled";
+
+// Days before expiry that a membership starts warning. The console's whole job
+// on expiry is to surface this early enough that an operator renews first.
+export const EXPIRING_SOON_DAYS = 30;
+
+// The tenancy service's membership shape: the record and nothing about the
+// vehicle, for the same reason entitlements carry no VIN — fleet data belongs
+// to the oracle. Joined below into VehicleMembership.
+interface RawMembership {
+  id: string;
+  vehicleTokenId: number;
+  termMonths: number;
+  startsAt: string;
+  expiresAt: string;
+  canceledAt: string | null;
+  status: MembershipStatus;
+}
+
+export interface VehicleMembership {
+  id: string;
+  vehicleTokenId: number;
+  termMonths: number;
+  startsAt: string;
+  expiresAt: string;
+  canceledAt: string | null;
+  status: MembershipStatus;
+  // Joined from the oracle's fleet list.
+  vin: string | null;
+  licensePlate: string | null;
+  make: string | null;
+  model: string | null;
+  year: number | null;
+  // False when the customer is no longer entitled to this vehicle — paid time
+  // pointing at something they cannot see. Revoking an entitlement deliberately
+  // does NOT cancel the membership (that is the discontinued-vehicle case, and
+  // destroying a commercial record as a side effect of an access change would
+  // be irreversible), so the console flags it and the operator moves or cancels.
+  //
+  // Computed here, like drift: it needs the entitlement list and the membership
+  // list together, and only the console sees both.
+  entitled: boolean;
+}
+
+export interface MembershipList {
+  // Whether fleet-lite is hiding this customer's unmembered vehicles right now.
+  // Carried on the list response so the one call answers both questions — it is
+  // the shape fleet-lite reads, and the console shows it as context.
+  enforced: boolean;
+  memberships: VehicleMembership[];
+}
+
+export interface CreateMembershipInput {
+  vehicleTokenId: number;
+  termMonths: number;
+}
+
+export interface MoveMembershipInput {
+  vehicleTokenId: number;
+}
+
+export interface RenewMembershipInput {
+  termMonths: number;
 }
 
 export class TenancyService {
@@ -367,6 +464,99 @@ export class TenancyService {
     return this.call("DELETE", `/customers/${tenantId}/vehicles/${tokenId}`, null, () =>
       this.stub.revokeVehicle(tenantId, tokenId),
     );
+  }
+
+  // MEMBERSHIPS
+
+  // Hydrated the same way entitlements are, and for the same reason: the tenancy
+  // service holds the record, the oracle holds the fleet data, and the console
+  // is the only thing that sees both. The entitlement cross-check rides along
+  // here rather than in a second round trip from the panel.
+  public async listMemberships(tenantId: string): Promise<ApiResponse<MembershipList>> {
+    if (this.isStubbed()) return this.stub.listMemberships(tenantId);
+
+    const raw = await this.api.callApi<{ enforced: boolean; memberships: RawMembership[] }>(
+      "GET", `/tenancy/customers/${tenantId}/memberships`, null, true, true, true);
+    if (!raw.success) return { success: false, error: raw.error, status: raw.status };
+
+    const rows = raw.data?.memberships ?? [];
+    const [fleet, entitled] = await Promise.all([
+      this.fleetIndex(),
+      this.entitledTokenIds(tenantId),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        enforced: raw.data?.enforced ?? false,
+        memberships: rows.map((m) => {
+          const v = fleet.get(m.vehicleTokenId);
+          return {
+            ...m,
+            vin: v?.vin ?? null,
+            licensePlate: v?.license_plate ?? null,
+            make: v?.make ?? null,
+            model: v?.model ?? null,
+            year: v?.year ?? null,
+            // null means the entitlement list could not be read. Treated as
+            // entitled: "we could not ask" must not render as "this customer
+            // lost the vehicle", which would send an operator chasing nothing.
+            entitled: entitled === null || entitled.has(m.vehicleTokenId),
+          };
+        }),
+      },
+    };
+  }
+
+  public createMembership(
+    tenantId: string,
+    input: CreateMembershipInput,
+  ): Promise<ApiResponse<VehicleMembership>> {
+    return this.call("POST", `/customers/${tenantId}/memberships`, { ...input }, () =>
+      this.stub.createMembership(tenantId, input),
+    );
+  }
+
+  // Move and renew are actions rather than a PATCH of the same fields. They
+  // validate differently — move needs an entitled, unmembered target; renew
+  // needs a term — and this programme has twice been bitten by tri-state
+  // "absent vs empty vs set" JSON on update endpoints.
+  public moveMembership(
+    tenantId: string,
+    membershipId: string,
+    input: MoveMembershipInput,
+  ): Promise<ApiResponse<VehicleMembership>> {
+    return this.call(
+      "POST", `/customers/${tenantId}/memberships/${membershipId}/move`, { ...input },
+      () => this.stub.moveMembership(tenantId, membershipId, input),
+    );
+  }
+
+  public renewMembership(
+    tenantId: string,
+    membershipId: string,
+    input: RenewMembershipInput,
+  ): Promise<ApiResponse<VehicleMembership>> {
+    return this.call(
+      "POST", `/customers/${tenantId}/memberships/${membershipId}/renew`, { ...input },
+      () => this.stub.renewMembership(tenantId, membershipId, input),
+    );
+  }
+
+  public cancelMembership(tenantId: string, membershipId: string): Promise<ApiResponse<void>> {
+    return this.call("DELETE", `/customers/${tenantId}/memberships/${membershipId}`, null, () =>
+      this.stub.cancelMembership(tenantId, membershipId),
+    );
+  }
+
+  // Token ids this customer is currently entitled to, or null if that could not
+  // be read. Null and empty are distinguished deliberately — the same trap as
+  // groupMembers below, and as scopeGroupIds throughout this domain.
+  private async entitledTokenIds(tenantId: string): Promise<Set<number> | null> {
+    const res = await this.api.callApi<RawEntitlement[]>(
+      "GET", `/tenancy/customers/${tenantId}/vehicles`, null, true, true, true);
+    if (!res.success) return null;
+    return new Set((res.data ?? []).map((e) => e.vehicleTokenId));
   }
 
   // DRIFT IS COMPUTED HERE, NOT SERVED.
