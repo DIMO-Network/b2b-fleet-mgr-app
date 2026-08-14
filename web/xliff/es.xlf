@@ -3583,6 +3583,14 @@
 <trans-unit id="s1ea4026dd1f23ca2">
   <source>Last activity</source>
 </trans-unit>
+<trans-unit id="s6d30f5882472d8c2">
+  <source>Signature failed</source>
+  <target>Falló la firma</target>
+</trans-unit>
+<trans-unit id="s8b8fecb722342643">
+  <source>Signing failed for: <x id="0" equiv-text="${signFailures.join(', ')}"/>. Nothing was submitted — please retry.</source>
+  <target>Falló la firma para: <x id="0" equiv-text="${signFailures.join(', ')}"/>. No se envió nada — vuelva a intentarlo.</target>
+</trans-unit>
 </body>
 </file>
 </xliff>
