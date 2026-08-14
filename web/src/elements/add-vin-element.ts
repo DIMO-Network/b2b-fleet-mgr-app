@@ -414,8 +414,10 @@ export class AddVinElement extends BaseOnboardingElement {
                 this.vinsBulk = "";
                 this.requestUpdate();
 
-                // Clear selection and reload pending vehicles component
-                const pendingVehiclesElement = this.querySelector('pending-vehicles-element') as any;
+                // Clear selection and reload pending vehicles component. It renders in
+                // this element's shadow root, so look it up via renderRoot —
+                // this.querySelector only sees light-DOM children and finds nothing.
+                const pendingVehiclesElement = this.renderRoot.querySelector('pending-vehicles-element') as any;
                 if (pendingVehiclesElement) {
                     pendingVehiclesElement.clearSelection();
                     // Reload the pending vehicles list after successful onboarding
