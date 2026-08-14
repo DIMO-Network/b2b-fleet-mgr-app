@@ -35,12 +35,12 @@ export type { OperatorFleetVehicle } from "@services/tenancy-stub.ts";
 
 // Client for the operator console's tenancy surface.
 //
-// THE BACKEND IS COMPLETE, WITH ONE EXCEPTION: every action the console offers
-// is served for real except VEHICLE MEMBERSHIPS, which are being built UI-first
-// (see fleet-tenancy-api docs/plans/02-vehicle-memberships.md, step 1). Until
-// the tenancy endpoints and the kaufmann/b2b proxy routes land, the membership
-// calls below 404 at the b2b proxy in live mode and the panel says so; run with
-// the stub to click through them. The stub is otherwise a demo mode:
+// THE BACKEND IS COMPLETE: every action the console offers is served for real.
+// Vehicle memberships were the most recent addition, built UI-first against the
+// stub and then wired through (fleet-tenancy-api docs/plans/02-vehicle-memberships.md).
+// The memberships panel still renders a "not available on this environment yet"
+// state on a 404 from the proxy, which is what an environment running an older
+// oracle or tenancy service will answer. The stub remains a demo mode:
 //
 //   live — HTTP, via the b2b proxy to kaufmann-oracle to fleet-tenancy-api.
 //          The default.
@@ -62,8 +62,6 @@ export type { OperatorFleetVehicle } from "@services/tenancy-stub.ts";
 //   DELETE     /tenancy/customers/{id}/members/{wallet}
 //   GET/POST   /tenancy/customers/{id}/vehicles
 //   DELETE     /tenancy/customers/{id}/vehicles/{tokenId}
-//
-// NOT yet served — stub only, pending the backend steps of the plan:
 //
 //   GET/POST   /tenancy/customers/{id}/memberships
 //   POST       /tenancy/customers/{id}/memberships/{mid}/move
