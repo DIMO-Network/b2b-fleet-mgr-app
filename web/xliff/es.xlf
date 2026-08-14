@@ -2946,6 +2946,14 @@
   <source>Failed to save VIN</source>
   <target>No se pudo guardar el VIN</target>
 </trans-unit>
+<trans-unit id="s699123b4bb198982">
+  <source>Filter by device type</source>
+  <target>Filtrar por tipo de dispositivo</target>
+</trans-unit>
+<trans-unit id="s6c62c461324d9ec3">
+  <source>All device types</source>
+  <target>Todos los tipos de dispositivo</target>
+</trans-unit>
 </body>
 </file>
 </xliff>
