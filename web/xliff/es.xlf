@@ -2782,10 +2782,6 @@
   <source>License plates are stored as <x id="0" equiv-text="${PLATE_MAX_LENGTH}"/> characters; this one will be shortened to "<x id="1" equiv-text="${stripped.slice(0, PLATE_MAX_LENGTH)}"/>".</source>
   <target>Las patentes se guardan con <x id="0" equiv-text="${PLATE_MAX_LENGTH}"/> caracteres; esta se acortará a "<x id="1" equiv-text="${stripped.slice(0, PLATE_MAX_LENGTH)}"/>".</target>
 </trans-unit>
-<trans-unit id="s9fb99cbceaf110fd">
-  <source>Too many values on this line — expected IMEI, VIN, license plate</source>
-  <target>Demasiados valores en esta línea — se esperaba IMEI, VIN, patente</target>
-</trans-unit>
 <trans-unit id="s5e48d8985f7f29c6">
   <source>Enter one vehicle per line:</source>
   <target>Ingrese un vehículo por línea:</target>
@@ -2793,14 +2789,6 @@
 <trans-unit id="sdbb5a41d951bfcb8">
   <source>LICENSE PLATE</source>
   <target>PATENTE</target>
-</trans-unit>
-<trans-unit id="sed258ba7655704db">
-  <source>VIN and license plate are optional. 123456789012345, 1HGCM82633A004352, ABC1234</source>
-  <target>El VIN y la patente son opcionales. 123456789012345, 1HGCM82633A004352, ABC1234</target>
-</trans-unit>
-<trans-unit id="s68cdaff15474c84c">
-  <source>123456789012345, 1HGCM82633A004352, ABC1234</source>
-  <target>123456789012345, 1HGCM82633A004352, ABC1234</target>
 </trans-unit>
 <trans-unit id="s08e8c9e1c33f5f38">
   <source>License Plate</source>
@@ -2837,10 +2825,6 @@
 <trans-unit id="sf2e7af7e23fc9381">
   <source><x id="0" equiv-text="${this.results.length - failed.length}"/> of <x id="1" equiv-text="${this.results.length}"/> claimed</source>
   <target><x id="0" equiv-text="${this.results.length - failed.length}"/> de <x id="1" equiv-text="${this.results.length}"/> reclamados</target>
-</trans-unit>
-<trans-unit id="s84f2ce9d1f1bb4c8">
-  <source>Could not find an 'imei' column in the CSV and it has more columns than IMEI, VIN, license plate.</source>
-  <target>No se encontró una columna 'imei' en el CSV y tiene más columnas que IMEI, VIN, patente.</target>
 </trans-unit>
 <trans-unit id="s8e30d726aa4664ae">
   <source>Please fix the highlighted rows before submitting</source>
@@ -3726,6 +3710,54 @@
 <trans-unit id="s35f2737fcd154e16">
   <source>Send invitation</source>
         <target>Enviar invitación</target>
+</trans-unit>
+<trans-unit id="s1e61b38fd4e5d06a">
+  <source>Device definition must be make_model_year, e.g. ford_escape-lx_2025</source>
+  <target>La definición del dispositivo debe tener el formato make_model_year, por ejemplo ford_escape-lx_2025</target>
+</trans-unit>
+<trans-unit id="s492831c980f2fb10">
+  <source>Too many values on this line — expected IMEI, VIN, license plate, device definition</source>
+  <target>Demasiados valores en esta línea — se esperaba IMEI, VIN, patente, definición del dispositivo</target>
+</trans-unit>
+<trans-unit id="sf12e5dac060867a2">
+  <source>could not be decoded</source>
+  <target>no se pudo decodificar</target>
+</trans-unit>
+<trans-unit id="sf2532ae534fff20c">
+  <source>DEVICE DEFINITION</source>
+  <target>DEFINICIÓN DEL DISPOSITIVO</target>
+</trans-unit>
+<trans-unit id="s95e46ebc5fdb17b2">
+  <source>Everything after the IMEI is optional. 123456789012345, 1HGCM82633A004352, ABC1234, ford_escape-lx_2025</source>
+  <target>Todo lo que sigue al IMEI es opcional. 123456789012345, 1HGCM82633A004352, ABC1234, ford_escape-lx_2025</target>
+</trans-unit>
+<trans-unit id="s3f2a06a6b52f5e5e">
+  <source>Leave the device definition blank and it is decoded from the VIN.</source>
+  <target>Deje la definición del dispositivo en blanco y se decodificará a partir del VIN.</target>
+</trans-unit>
+<trans-unit id="s63429bb1c99cb4da">
+  <source>123456789012345, 1HGCM82633A004352, ABC1234, ford_escape-lx_2025</source>
+  <target>123456789012345, 1HGCM82633A004352, ABC1234, ford_escape-lx_2025</target>
+</trans-unit>
+<trans-unit id="s19489695ff0226cc">
+  <source>Device Definition</source>
+  <target>Definición del dispositivo</target>
+</trans-unit>
+<trans-unit id="s3489fe5ffcd2c23a">
+  <source>decoding…</source>
+  <target>decodificando…</target>
+</trans-unit>
+<trans-unit id="s3ddc722917042585">
+  <source>This VIN could not be decoded (<x id="0" equiv-text="${failure}"/>). The vehicle can still be claimed — the definition is worked out during onboarding.</source>
+  <target>No se pudo decodificar este VIN (<x id="0" equiv-text="${failure}"/>). El vehículo igual se puede reclamar — la definición se resuelve durante el registro.</target>
+</trans-unit>
+<trans-unit id="s5a1a3e30dd6bcfb4">
+  <source>not decoded</source>
+  <target>no decodificado</target>
+</trans-unit>
+<trans-unit id="se3e8093a35127449">
+  <source>Could not find an 'imei' column in the CSV and it has more columns than IMEI, VIN, license plate, device definition.</source>
+  <target>No se encontró una columna 'imei' en el CSV y tiene más columnas que IMEI, VIN, patente, definición del dispositivo.</target>
 </trans-unit>
 </body>
 </file>
