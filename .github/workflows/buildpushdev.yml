@@ -3,6 +3,18 @@ on:
   push:
     branches:
       - main
+    # Docs don't go into the image, so a docs-only push shouldn't build one —
+    # it would burn a runner and add an "Update Image Version" commit for a
+    # change nothing ships. A push that touches docs *and* code still builds:
+    # paths-ignore only skips when every changed file matches.
+    #
+    # Deliberately not applied to buildpushprod.yml — that one is triggered by
+    # a v* tag, where the tag is the release intent and a skipped build would
+    # leave values-prod.yaml pinned to the wrong image.
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.planning/**'
 
 jobs:
   build_prod:
