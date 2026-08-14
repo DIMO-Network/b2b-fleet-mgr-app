@@ -213,6 +213,15 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Get("/tenancy/customers/:customerID/vehicles", genericProxyCtrl.Proxy)
 	oracleApp.Post("/tenancy/customers/:customerID/vehicles", genericProxyCtrl.Proxy)
 	oracleApp.Delete("/tenancy/customers/:customerID/vehicles/:tokenID", genericProxyCtrl.Proxy)
+	// Vehicle memberships — what the customer has paid for, per vehicle, as
+	// opposed to the vehicles above, which are what they may see. Registered
+	// one by one like everything else here: the proxy has no catch-all, and an
+	// unregistered path 404s with proxy_route_not_registered.
+	oracleApp.Get("/tenancy/customers/:customerID/memberships", genericProxyCtrl.Proxy)
+	oracleApp.Post("/tenancy/customers/:customerID/memberships", genericProxyCtrl.Proxy)
+	oracleApp.Post("/tenancy/customers/:customerID/memberships/:membershipID/move", genericProxyCtrl.Proxy)
+	oracleApp.Post("/tenancy/customers/:customerID/memberships/:membershipID/renew", genericProxyCtrl.Proxy)
+	oracleApp.Delete("/tenancy/customers/:customerID/memberships/:membershipID", genericProxyCtrl.Proxy)
 
 	oracleApp.Get("/tenants", genericProxyCtrl.Proxy)
 	oracleApp.Post("/tenant", genericProxyCtrl.Proxy)
