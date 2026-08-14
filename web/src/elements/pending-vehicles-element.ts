@@ -16,6 +16,11 @@ interface PendingVehicle {
     firstSeen: string;
 }
 
+// The device types the oracle records in vins.device_type. Kept in step with
+// models.DeviceType* on the oracle side — it rejects anything else with a 400,
+// so an option added here without one there filters to an error.
+const DEVICE_TYPES = ['smart5', 'gv58'] as const;
+
 // deviceTypeLabel maps the oracle's device_type to a human-friendly name. New
 // device types fall back to the raw value so they are visible rather than hidden.
 function deviceTypeLabel(deviceType: string): string {
@@ -70,6 +75,12 @@ export class PendingVehiclesElement extends LitElement {
 	@state()
 	private searchTerm: string = "";
 
+	// Empty means "all device types". Sent to the oracle rather than applied here:
+	// the list is paginated server-side, so a client-side filter would only narrow
+	// the current page while the count and page numbers described the full set.
+	@state()
+	private deviceTypeFilter: string = "";
+
 	private searchDebounce?: number;
 
     @state()
@@ -105,7 +116,9 @@ export class PendingVehiclesElement extends LitElement {
         const take = this.pageSize;
         
 		const search = this.searchTerm?.trim();
-		const url = `/pending-vehicles?skip=${skip}&take=${take}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
+		const url = `/pending-vehicles?skip=${skip}&take=${take}`
+			+ (search ? `&search=${encodeURIComponent(search)}` : '')
+			+ (this.deviceTypeFilter ? `&deviceType=${encodeURIComponent(this.deviceTypeFilter)}` : '');
         
         const response = await this.apiService.callApi<PendingVehiclesResponse>(
             'GET',
@@ -169,6 +182,15 @@ export class PendingVehiclesElement extends LitElement {
                        style="width: 40%; min-width: 200px;"
                        .value=${this.searchTerm}
                        @input=${this.onSearchInput}>
+                    <select aria-label=${msg('Filter by device type')}
+                            style="margin-left: 0.5rem; min-width: 170px;"
+                            .value=${this.deviceTypeFilter}
+                            @change=${this.onDeviceTypeChange}>
+                        <option value="">${msg('All device types')}</option>
+                        ${DEVICE_TYPES.map((dt) => html`
+                            <option value=${dt} ?selected=${this.deviceTypeFilter === dt}>${deviceTypeLabel(dt)}</option>
+                        `)}
+                    </select>
                     <button class="btn btn-primary" @click=${this.openClaimImeiModal} style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
                         <span style="font-size: 1.2rem; font-weight: bold;" title=${msg("Please claim your IMEI's every time you purchase or add a new device to your fleet")} >+</span>
                         ${msg('Claim new IMEI')}
@@ -339,6 +361,15 @@ export class PendingVehiclesElement extends LitElement {
 			this.currentPage = 1;
 			this.loadPendingVehicles();
 		}, 500);
+	};
+
+	// No debounce: a select fires once on commit, unlike typing. Resets to page 1
+	// for the same reason search does — the old page number rarely exists in the
+	// narrowed set, and staying on it shows an empty table.
+	private onDeviceTypeChange = (e: Event) => {
+		this.deviceTypeFilter = (e.target as HTMLSelectElement).value;
+		this.currentPage = 1;
+		void this.loadPendingVehicles();
 	};
 
     // Public method to get selected vehicles
