@@ -8,6 +8,8 @@ import type {
   EntitledVehicle,
   GroupDrift,
   Member,
+  Invitation,
+  CreateInvitationInput,
   MembershipList,
   MembershipStatus,
   MoveMembershipInput,
@@ -499,6 +501,91 @@ export class TenancyStub {
     const { tenantId, ...wire } = m;
     void tenantId;
     return wire;
+  }
+
+  // INVITATIONS — demo fixtures for the invite-by-email path.
+  //
+  // Kept deliberately thin: the interesting behaviour (single-use tokens,
+  // hashing, expiry, the accept-time membership write) all lives in
+  // fleet-tenancy-api and cannot be meaningfully faked here. What the stub has
+  // to get right is the SHAPE — especially the three-valued scope and the
+  // emailSent partial success — so the console renders the same in demo mode.
+  private invitations: Invitation[] = [];
+
+  async listInvitations(tenantId: string): Promise<ApiResponse<Invitation[]>> {
+    await delay();
+    if (!this.findCustomer(tenantId)) return fail("customer not found", 404);
+    return ok(this.invitations.filter((i) => i.tenantId === tenantId));
+  }
+
+  async createInvitation(
+    tenantId: string,
+    input: CreateInvitationInput,
+  ): Promise<ApiResponse<Invitation>> {
+    await delay();
+    if (!this.findCustomer(tenantId)) return fail("customer not found", 404);
+    const email = input.email.trim().toLowerCase();
+    if (!email || !email.includes("@")) return fail("a valid email is required");
+
+    // Creating supersedes any pending invitation for the same address, so only
+    // one link is ever live — the real service does this too.
+    this.invitations = this.invitations.map((i) =>
+      i.tenantId === tenantId && i.email === email && i.status === "pending"
+        ? { ...i, status: "revoked" as const }
+        : i,
+    );
+
+    const now = new Date();
+    const created: Invitation = {
+      id: `inv-${this.invitations.length + 1}-${Math.floor(Math.random() * 1e6)}`,
+      tenantId,
+      email,
+      role: input.role,
+      status: "pending",
+      createdByTenantId: OPERATOR_ID,
+      scopeGroupIds: input.scopeGroupIds,
+      emailStatus: "sent",
+      emailStatusAt: now.toISOString(),
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 7 * 24 * 3600 * 1000).toISOString(),
+      emailSent: true,
+    };
+    this.invitations = [created, ...this.invitations];
+    return ok(created);
+  }
+
+  async revokeInvitation(tenantId: string, invitationId: string): Promise<ApiResponse<void>> {
+    await delay();
+    if (!this.findCustomer(tenantId)) return fail("customer not found", 404);
+    this.invitations = this.invitations.map((i) =>
+      i.id === invitationId && i.tenantId === tenantId
+        ? { ...i, status: "revoked" as const }
+        : i,
+    );
+    return ok(undefined as unknown as void);
+  }
+
+  async resendInvitation(
+    tenantId: string,
+    invitationId: string,
+  ): Promise<ApiResponse<Invitation>> {
+    await delay();
+    const found = this.invitations.find((i) => i.id === invitationId && i.tenantId === tenantId);
+    if (!found) return fail("invitation not found", 404);
+    if (found.status !== "pending") return fail("no pending invitation to resend", 404);
+    const now = new Date();
+    // A resend clears delivery tracking: it is a NEW message, and the previous
+    // one's state does not describe it.
+    const updated: Invitation = {
+      ...found,
+      expiresAt: new Date(now.getTime() + 7 * 24 * 3600 * 1000).toISOString(),
+      emailStatus: "sent",
+      emailStatusAt: now.toISOString(),
+      emailStatusDetail: null,
+      emailSent: true,
+    };
+    this.invitations = this.invitations.map((i) => (i.id === found.id ? updated : i));
+    return ok(updated);
   }
 
   async listMembers(tenantId: string): Promise<ApiResponse<Member[]>> {
