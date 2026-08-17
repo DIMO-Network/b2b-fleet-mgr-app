@@ -3583,6 +3583,150 @@
 <trans-unit id="s1ea4026dd1f23ca2">
   <source>Last activity</source>
 </trans-unit>
+<trans-unit id="s6d30f5882472d8c2">
+  <source>Signature failed</source>
+  <target>Falló la firma</target>
+</trans-unit>
+<trans-unit id="s8b8fecb722342643">
+  <source>Signing failed for: <x id="0" equiv-text="${signFailures.join(', ')}"/>. Nothing was submitted — please retry.</source>
+  <target>Falló la firma para: <x id="0" equiv-text="${signFailures.join(', ')}"/>. No se envió nada — vuelva a intentarlo.</target>
+</trans-unit>
+<trans-unit id="sfe04e539028949b7">
+  <source>Failed to load invitations</source>
+        <target>No se pudieron cargar las invitaciones</target>
+</trans-unit>
+<trans-unit id="s67a3c5c94393c8df">
+  <source><x id="0" equiv-text="${inv.email}"/> was invited, but the email could not be sent. Use RESEND once mail delivery is working.</source>
+        <target><x id="0" equiv-text="${inv.email}"/> fue invitado, pero no se pudo enviar el correo. Usa REENVIAR cuando el envío de correo funcione.</target>
+</trans-unit>
+<trans-unit id="sef0e9754d33af9eb">
+  <source>Invitation sent to <x id="0" equiv-text="${inv.email}"/>.</source>
+        <target>Invitación enviada a <x id="0" equiv-text="${inv.email}"/>.</target>
+</trans-unit>
+<trans-unit id="s38a85cbff9df99fe">
+  <source>The invitation for <x id="0" equiv-text="${inv.email}"/> no longer works.</source>
+        <target>La invitación para <x id="0" equiv-text="${inv.email}"/> ya no funciona.</target>
+</trans-unit>
+<trans-unit id="s2a68da7d1f079040">
+  <source>Failed to revoke invitation</source>
+        <target>No se pudo revocar la invitación</target>
+</trans-unit>
+<trans-unit id="s08c0c279e0f6d87f">
+  <source>A new link was created for <x id="0" equiv-text="${inv.email}"/>, but the email could not be sent.</source>
+        <target>Se creó un nuevo enlace para <x id="0" equiv-text="${inv.email}"/>, pero no se pudo enviar el correo.</target>
+</trans-unit>
+<trans-unit id="sa93d7405b8fa7537">
+  <source>A new invitation was sent to <x id="0" equiv-text="${inv.email}"/>. The previous link no longer works.</source>
+        <target>Se envió una nueva invitación a <x id="0" equiv-text="${inv.email}"/>. El enlace anterior ya no funciona.</target>
+</trans-unit>
+<trans-unit id="s120f6fe66290a44b">
+  <source>Failed to resend invitation</source>
+        <target>No se pudo reenviar la invitación</target>
+</trans-unit>
+<trans-unit id="se0d1d6bd81fc1980">
+  <source>Accepted</source>
+        <target>Aceptada</target>
+</trans-unit>
+<trans-unit id="sfa9d8c928d994bf5">
+  <source>Revoked</source>
+        <target>Revocada</target>
+</trans-unit>
+<trans-unit id="s78636b92c1a3909c">
+  <source>Pending</source>
+        <target>Pendiente</target>
+</trans-unit>
+<trans-unit id="sb1b241f06bb1cf03">
+  <source>expires</source>
+        <target>vence</target>
+</trans-unit>
+<trans-unit id="s739264aa3476b5b4">
+  <source>Not sent</source>
+        <target>No enviado</target>
+</trans-unit>
+<trans-unit id="s3620ac092b82ce7b">
+  <source>Bounced</source>
+        <target>Rebotado</target>
+</trans-unit>
+<trans-unit id="se9d88aea0cd4ae37">
+  <source>sent by you</source>
+        <target>enviada por ti</target>
+</trans-unit>
+<trans-unit id="sbf243dc3d8e1b089">
+  <source>sent by the customer</source>
+        <target>enviada por el cliente</target>
+</trans-unit>
+<trans-unit id="s919002949c43521e">
+  <source>RESEND</source>
+        <target>REENVIAR</target>
+</trans-unit>
+<trans-unit id="s8226f48cb1a80997">
+  <source>Invitations</source>
+        <target>Invitaciones</target>
+</trans-unit>
+<trans-unit id="secedf90b80e6f67c">
+  <source>+ INVITE BY EMAIL</source>
+        <target>+ INVITAR POR CORREO</target>
+</trans-unit>
+<trans-unit id="s17140c8edcb16ba3">
+  <source>Loading invitations...</source>
+        <target>Cargando invitaciones...</target>
+</trans-unit>
+<trans-unit id="s8b9cb77d7af2caee">
+  <source>No invitations. Inviting sends an email and lets the person sign in with their own DIMO account — use it when you don't want to create one on their behalf.</source>
+        <target>Sin invitaciones. Invitar envía un correo y permite que la persona inicie sesión con su propia cuenta DIMO — úsalo cuando no quieras crear una en su nombre.</target>
+</trans-unit>
+<trans-unit id="s13958f723f45a995">
+  <source>Delivery</source>
+        <target>Entrega</target>
+</trans-unit>
+<trans-unit id="s5c3a926e94f7d0b2">
+  <source>Revoke invitation</source>
+        <target>Revocar invitación</target>
+</trans-unit>
+<trans-unit id="se4e05da6e031c2c4">
+  <source>Revoke this invitation? The link in the email stops working immediately. You can invite the same address again afterwards.</source>
+        <target>¿Revocar esta invitación? El enlace del correo deja de funcionar de inmediato. Puedes volver a invitar a la misma dirección después.</target>
+</trans-unit>
+<trans-unit id="s46563e9ba699aec9">
+  <source>Resend invitation</source>
+        <target>Reenviar invitación</target>
+</trans-unit>
+<trans-unit id="sc25107fafba46dfa">
+  <source>Send a new invitation email? This creates a new link and the one already sent stops working.</source>
+        <target>¿Enviar un nuevo correo de invitación? Esto crea un enlace nuevo y el ya enviado deja de funcionar.</target>
+</trans-unit>
+<trans-unit id="sb85f7c51c0308d2b">
+  <source>An email address is required.</source>
+        <target>Se requiere una dirección de correo.</target>
+</trans-unit>
+<trans-unit id="s86d5a0d166f281f5">
+  <source>Failed to send the invitation.</source>
+        <target>No se pudo enviar la invitación.</target>
+</trans-unit>
+<trans-unit id="se79672ee68341fa0">
+  <source>An owner can manage this customer's members and settings once they accept.</source>
+        <target>Un propietario podrá gestionar los miembros y la configuración de este cliente una vez que acepte.</target>
+</trans-unit>
+<trans-unit id="s93e805b1014b3bc8">
+  <source>A member can sign in and see the fleet, but manages nothing. You can grant more from the users table after they accept.</source>
+        <target>Un miembro puede iniciar sesión y ver la flota, pero no gestiona nada. Puedes otorgar más desde la tabla de usuarios después de que acepte.</target>
+</trans-unit>
+<trans-unit id="s444738d48e164693">
+  <source>Invite user</source>
+        <target>Invitar usuario</target>
+</trans-unit>
+<trans-unit id="s592fd15681452620">
+  <source>We email a single-use link. They sign in with their own DIMO account and join when they accept — no account is created for them.</source>
+        <target>Enviamos un enlace de un solo uso. Inicia sesión con su propia cuenta DIMO y se une al aceptar — no se le crea ninguna cuenta.</target>
+</trans-unit>
+<trans-unit id="s686306cdb839fb8d">
+  <source>Sending...</source>
+        <target>Enviando...</target>
+</trans-unit>
+<trans-unit id="s35f2737fcd154e16">
+  <source>Send invitation</source>
+        <target>Enviar invitación</target>
+</trans-unit>
 </body>
 </file>
 </xliff>

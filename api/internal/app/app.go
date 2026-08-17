@@ -210,6 +210,13 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Post("/tenancy/customers/:customerID/members/provision", genericProxyCtrl.Proxy)
 	oracleApp.Patch("/tenancy/customers/:customerID/members/:wallet", genericProxyCtrl.Proxy)
 	oracleApp.Delete("/tenancy/customers/:customerID/members/:wallet", genericProxyCtrl.Proxy)
+	// Invitations on a customer tenant (P3 of the invitations move): invite by
+	// email, without creating a wallet on the person's behalf the way
+	// provisioning does.
+	oracleApp.Get("/tenancy/customers/:customerID/invitations", genericProxyCtrl.Proxy)
+	oracleApp.Post("/tenancy/customers/:customerID/invitations", genericProxyCtrl.Proxy)
+	oracleApp.Delete("/tenancy/customers/:customerID/invitations/:invitationID", genericProxyCtrl.Proxy)
+	oracleApp.Post("/tenancy/customers/:customerID/invitations/:invitationID/resend", genericProxyCtrl.Proxy)
 	oracleApp.Get("/tenancy/customers/:customerID/vehicles", genericProxyCtrl.Proxy)
 	oracleApp.Post("/tenancy/customers/:customerID/vehicles", genericProxyCtrl.Proxy)
 	oracleApp.Delete("/tenancy/customers/:customerID/vehicles/:tokenID", genericProxyCtrl.Proxy)

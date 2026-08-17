@@ -12,6 +12,7 @@ import {
   TenancyService,
 } from "@services/tenancy-service.ts";
 import "./provision-user-modal-element.ts";
+import "./customer-invitations-panel-element.ts";
 import "./confirm-modal-element.ts";
 
 dayjs.extend(relativeTime);
@@ -223,6 +224,11 @@ export class CustomerUsersPanel extends LitElement {
                 `}
         </div>
       </div>
+
+      <!-- The other way in. Both paths belong on the Users tab: an operator
+           asking "how do I add someone?" should see the choice, not have to
+           know that invitations live somewhere else. -->
+      <customer-invitations-panel .customer=${this.customer}></customer-invitations-panel>
 
       <confirm-modal-element
         .show=${this.confirmRemove !== null}

@@ -1,5 +1,5 @@
 import {LitElement} from 'lit';
-import {msg} from '@lit/localize';
+import {msg, str} from '@lit/localize';
 import { property, state} from "lit/decorators.js";
 import {ApiService} from "@services/api-service.ts";
 import {SigningService} from "@services/signing-service.ts";
@@ -197,14 +197,20 @@ export class BaseOnboardingElement extends LitElement {
         return [mintData.data.vinMintingData, null];
     }
 
-    // signMintingData adds the signature from frontend signer to the mintingData objects. If enableOracleOwner is true, does not add signature
-    async signMintingData(mintingData: VinMintData[]) {
+    // signMintingData adds the signature from frontend signer to the mintingData objects. Items
+    // with no typedData pass through unsigned (server-owner case). Returns the signed items and
+    // the VINs whose signature failed. Failures used to be silently dropped here (`continue`),
+    // which submitted a shrunken batch and reported success for vehicles that were never sent —
+    // their result rows just sat at "Unknown" while the operator believed everything minted.
+    async signMintingData(mintingData: VinMintData[]): Promise<[VinMintData[], string[]]> {
         const result: VinMintData[] = [];
+        const failed: string[] = [];
         for (const d of mintingData) {
             if (d.typedData) {
                 const signature = await this.signingService.signTypedData(d.typedData);
                 if (!signature.success || !signature.signature) {
                     console.error(`Signature failed: ${signature.error} ${d.typedData}`);
+                    failed.push(d.vin);
                     continue;
                 }
                 result.push({
@@ -216,7 +222,7 @@ export class BaseOnboardingElement extends LitElement {
             }
         }
 
-        return result;
+        return [result, failed];
     }
 
     async submitMintingData(mintingData: VinMintData[], sacd: SacdInput[] | null): Promise<[boolean, string | null]> {
@@ -232,8 +238,15 @@ export class BaseOnboardingElement extends LitElement {
             return [false, mintResponse.error || 'Failed to submit minting data'];
         }
 
+        // The oracle serializes mints behind a single lock and each one waits for its receipt,
+        // so a batch takes roughly (vehicles × one on-chain mint) end to end. The old fixed
+        // window (~100s — 30 attempts, but a stale `attempt < 19` guard dropped the delay on
+        // the last 11) guaranteed a timeout on any real batch: a 6-vehicle prod mint on
+        // 2026-08-13 was reported failed while its jobs were still working. Scale with the
+        // batch instead: ~2.5 minutes base plus a minute per vehicle.
+        const maxAttempts = 30 + 12 * mintingData.length;
         let success = true;
-        for (const attempt of range(30)) {
+        for (const attempt of range(maxAttempts)) {
             success = true;
             const query = qs.stringify({vins: mintingData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
             const status = await this.api.callApi<VinsOnboardingResult>('GET', `/vehicle/mint/status?${query}`, null, true);
@@ -255,7 +268,7 @@ export class BaseOnboardingElement extends LitElement {
                 break;
             }
 
-            if (attempt < 19) {
+            if (attempt < maxAttempts - 1) {
                 await delay(5000);
             }
         }
@@ -296,7 +309,18 @@ export class BaseOnboardingElement extends LitElement {
             return false;
         }
 
-        const signedMintData = await this.signMintingData(mintData);
+        const [signedMintData, signFailures] = await this.signMintingData(mintData);
+        if (signFailures.length > 0) {
+            // Fail the whole batch rather than submitting whatever happened to get signed.
+            // Signature failures are usually systemic (expired signing session, dismissed
+            // passkey prompt), and a partial submit misleads: the poll below would only cover
+            // the survivors and the flow would report success with vehicles missing.
+            this.onboardResult = this.onboardResult.map(item => signFailures.includes(item.vin)
+                ? {...item, status: "Failure", details: msg("Signature failed")}
+                : item);
+            this.displayFailure(msg(str`Signing failed for: ${signFailures.join(', ')}. Nothing was submitted — please retry.`));
+            return false;
+        }
         const [minted, mintError] = await this.submitMintingData(signedMintData, sacd);
 
         if (!minted) {
@@ -524,8 +548,11 @@ export class BaseOnboardingElement extends LitElement {
             };
         }
 
+        // Burns serialize on the oracle the same way mints do — scale the window with the
+        // batch (see submitMintingData).
+        const maxAttempts = 30 + 12 * disconnectData.length;
         let success = true;
-        for (const attempt of range(30)) {
+        for (const attempt of range(maxAttempts)) {
             success = true;
             const query = qs.stringify({vins: disconnectData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
             const status = await this.api.callApi<VinsStatusResult>('GET', `/vehicle/disconnect/status?${query}`, null, true);
@@ -548,7 +575,7 @@ export class BaseOnboardingElement extends LitElement {
                 break;
             }
 
-            if (attempt < 19) {
+            if (attempt < maxAttempts - 1) {
                 await delay(5000);
             }
         }
@@ -635,8 +662,11 @@ export class BaseOnboardingElement extends LitElement {
             };
         }
 
+        // Burns serialize on the oracle the same way mints do — scale the window with the
+        // batch (see submitMintingData).
+        const maxAttempts = 30 + 12 * deleteData.length;
         let success = true;
-        for (const attempt of range(30)) {
+        for (const attempt of range(maxAttempts)) {
             success = true;
             const query = qs.stringify({vins: deleteData.map(m => m.vin).join(',')}, {arrayFormat: 'comma'});
             const status = await this.api.callApi<VinsStatusResult>('GET', `/vehicle/delete/status?${query}`, null, true);
@@ -659,7 +689,7 @@ export class BaseOnboardingElement extends LitElement {
                 break;
             }
 
-            if (attempt < 19) {
+            if (attempt < maxAttempts - 1) {
                 await delay(5000);
             }
         }

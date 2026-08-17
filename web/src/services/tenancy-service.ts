@@ -152,6 +152,52 @@ export interface Member {
   createdAt: string;
 }
 
+// An email invitation to a customer tenant. The other way a person gets in:
+// provisioning creates a DIMO account and wallet on their behalf, an invitation
+// lets them bring their own. Both paths exist deliberately (design D4).
+//
+// There is no token field and there must never be one. The plaintext exists in
+// the invitee's email and in fleet-tenancy-api's memory at mint time, nowhere
+// else — only its hash is stored.
+export interface Invitation {
+  id: string;
+  tenantId: string;
+  email: string;
+  role: MemberRole;
+  status: "pending" | "accepted" | "revoked";
+  invitedBy?: string;
+  // The wallet that actually accepted, which need not be the emailed address's
+  // expected owner.
+  inviteeWallet?: string | null;
+  // Set when the OPERATOR sent this rather than the customer inviting their
+  // own member — so anything sent from this console carries it.
+  createdByTenantId?: string | null;
+  // Same three-valued scope as Member: null unrestricted, [] nothing. It
+  // becomes the membership's scope verbatim on accept.
+  scopeGroupIds: string[] | null;
+  // Delivery tracking from Postmark, upgraded by webhook. Absent means the
+  // email never dispatched — the send failed, or sending is switched off.
+  emailStatus?: "sent" | "delivered" | "opened" | "bounced" | null;
+  emailStatusAt?: string | null;
+  emailStatusDetail?: string | null;
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt?: string | null;
+  // Create and resend only: false means the record was written but the email
+  // did not go out. A partial success, not a failure.
+  emailSent?: boolean;
+}
+
+export interface CreateInvitationInput {
+  email: string;
+  role: MemberRole;
+  // null = every group, [] = none. Never omit it: fleet-tenancy-api refuses an
+  // absent value rather than guessing, precisely so a forgotten field cannot
+  // silently grant the whole fleet.
+  scopeGroupIds: string[] | null;
+  locale?: string;
+}
+
 export interface EntitledVehicle {
   vehicleTokenId: number;
   vin: string | null;
@@ -405,6 +451,47 @@ export class TenancyService {
   public removeMember(tenantId: string, wallet: string): Promise<ApiResponse<void>> {
     return this.call("DELETE", `/customers/${tenantId}/members/${wallet}`, null, () =>
       this.stub.removeMember(tenantId, wallet),
+    );
+  }
+
+  // INVITATIONS
+
+  // Invite by email instead of provisioning. fleet-tenancy-api mints the
+  // single-use token, stores only its hash, and sends the mail; the person
+  // signs in with their own DIMO account and the membership is written when
+  // they accept.
+  public listInvitations(tenantId: string): Promise<ApiResponse<Invitation[]>> {
+    return this.call("GET", `/customers/${tenantId}/invitations`, null, () =>
+      this.stub.listInvitations(tenantId),
+    );
+  }
+
+  // A 201 whose emailSent is false is a PARTIAL SUCCESS: the invitation exists
+  // and can be resent. Callers must not present it as a failure or the
+  // operator will send a second one.
+  public createInvitation(
+    tenantId: string,
+    input: CreateInvitationInput,
+  ): Promise<ApiResponse<Invitation>> {
+    return this.call("POST", `/customers/${tenantId}/invitations`, { ...input }, () =>
+      this.stub.createInvitation(tenantId, input),
+    );
+  }
+
+  public revokeInvitation(tenantId: string, invitationId: string): Promise<ApiResponse<void>> {
+    return this.call("DELETE", `/customers/${tenantId}/invitations/${invitationId}`, null, () =>
+      this.stub.revokeInvitation(tenantId, invitationId),
+    );
+  }
+
+  // Resend mints a FRESH token; the previous link stops working. That is the
+  // contract rather than a side effect, and the UI says so before confirming.
+  public resendInvitation(
+    tenantId: string,
+    invitationId: string,
+  ): Promise<ApiResponse<Invitation>> {
+    return this.call("POST", `/customers/${tenantId}/invitations/${invitationId}/resend`, {}, () =>
+      this.stub.resendInvitation(tenantId, invitationId),
     );
   }
 
