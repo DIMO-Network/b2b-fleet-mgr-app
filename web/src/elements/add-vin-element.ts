@@ -414,15 +414,7 @@ export class AddVinElement extends BaseOnboardingElement {
                 this.vinsBulk = "";
                 this.requestUpdate();
 
-                // Clear selection and reload pending vehicles component. It renders in
-                // this element's shadow root, so look it up via renderRoot —
-                // this.querySelector only sees light-DOM children and finds nothing.
-                const pendingVehiclesElement = this.renderRoot.querySelector('pending-vehicles-element') as any;
-                if (pendingVehiclesElement) {
-                    pendingVehiclesElement.clearSelection();
-                    // Reload the pending vehicles list after successful onboarding
-                    await pendingVehiclesElement.loadPendingVehicles();
-                }
+                await this.reloadPendingVehicles(true);
             } catch (e) {
                 this.displayFailure(msg("failed to onboard vins: ") + e);
             }
@@ -440,6 +432,24 @@ export class AddVinElement extends BaseOnboardingElement {
             bubbles: true,
             composed: true
         }));
+    }
+
+    // reloadPendingVehicles refreshes the pending list, optionally clearing its selection.
+    // Public because the onboarding view calls it when a vehicle is deleted: deleting burns
+    // the NFT and the oracle then returns the record to the pending pool, so the device
+    // reappears here — but only if something asks for the list again.
+    //
+    // The component renders in this element's shadow root, so it must be looked up via
+    // renderRoot; this.querySelector only sees light-DOM children and finds nothing.
+    public async reloadPendingVehicles(clearSelection = false) {
+        const pendingVehiclesElement = this.renderRoot.querySelector('pending-vehicles-element') as any;
+        if (!pendingVehiclesElement) {
+            return;
+        }
+        if (clearSelection) {
+            pendingVehiclesElement.clearSelection();
+        }
+        await pendingVehiclesElement.loadPendingVehicles();
     }
 
     // todo i think we pass in an array of SacdInput in here and have something that builds the sacd inputs
