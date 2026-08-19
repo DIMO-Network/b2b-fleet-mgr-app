@@ -23,6 +23,20 @@ const VIN_AMBIGUOUS_CHARS = /[IOQ]/;
 // 7 characters. We mirror it so the operator sees what will actually be stored.
 const PLATE_MAX_LENGTH = 7;
 
+// A device definition id is make_model_year, where make and model are lower-case slugs that may
+// contain internal hyphens: ford_escape-lx_2025, mercedes-benz_c-class_2020. This mirrors
+// service.ValidateDefinitionID in kaufmann-oracle — keep the two in step. The oracle additionally
+// checks the definition actually exists, which we can't do here, so a well-formed id can still be
+// rejected on submit.
+const DEFINITION_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*_[a-z0-9]+(?:-[a-z0-9]+)*_(?:19|20)\d{2}$/;
+
+// How long to wait after the last keystroke before decoding VINs. Long enough that typing or
+// pasting a block doesn't fire a request per intermediate state.
+const DECODE_DEBOUNCE_MS = 700;
+
+// Country code sent to the VIN decoder, matching what the onboarding flow uses.
+const DECODE_COUNTRY_CODE = 'USA';
+
 // Rows rendered in the preview at once. Rows with problems are never hidden by this cap.
 const PREVIEW_LIMIT = 50;
 
@@ -41,6 +55,7 @@ interface ParsedRow {
     imei: FieldCheck;
     vin: FieldCheck;
     plate: FieldCheck;
+    definition: FieldCheck;
 }
 
 interface ClaimResult {
@@ -53,7 +68,12 @@ interface ClaimResponse {
     imei: string;
     vin: string;
     license_plate: string;
+    device_definition_id: string;
     warnings: string[];
+}
+
+interface DecodeVinResponse {
+    deviceDefinitionId: string;
 }
 
 @customElement('claim-imei-modal-element')
@@ -167,6 +187,31 @@ export class ClaimImeiModalElement extends LitElement {
                 margin: 0;
                 padding-left: 1.25rem;
             }
+
+            .spinner {
+                display: inline-block;
+                width: 11px;
+                height: 11px;
+                border: 2px solid #ccc;
+                border-top-color: #333;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+                margin-right: 4px;
+                vertical-align: -1px;
+            }
+
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .spinner { animation: none; }
+            }
+
+            .decoding-note {
+                color: #666;
+                font-style: italic;
+            }
         `
     ];
 
@@ -185,11 +230,37 @@ export class ClaimImeiModalElement extends LitElement {
     @state()
     private results: ClaimResult[] = [];
 
+    // VINs with a decode request in flight — drives the per-row spinner.
+    @state()
+    private decodingVins: Set<string> = new Set();
+
+    // VIN -> decoded definition id. Doubles as the cache that stops us decoding the same VIN
+    // twice across edits.
+    @state()
+    private decodedVins: Map<string, string> = new Map();
+
+    // VINs the decoder could not resolve, with the reason. Kept so a failure is reported once
+    // and not retried on every keystroke.
+    @state()
+    private failedVins: Map<string, string> = new Map();
+
+    // VINs whose decoded definition has already been written into the textarea. Auto-fill happens
+    // once per VIN: if the operator then clears or edits that field, we leave their edit alone
+    // rather than restoring what we decoded.
+    private appliedVins: Set<string> = new Set();
+
+    private decodeTimer?: ReturnType<typeof setTimeout>;
+
     private apiService: ApiService;
 
     constructor() {
         super();
         this.apiService = ApiService.getInstance();
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        clearTimeout(this.decodeTimer);
     }
 
     // ---- parsing & validation -------------------------------------------------------------
@@ -261,25 +332,41 @@ export class ClaimImeiModalElement extends LitElement {
         return {value: stripped, status: 'ok', message: ""};
     }
 
+    private checkDefinition(raw: string): FieldCheck {
+        const value = raw.trim().toLowerCase();
+        if (value === "") {
+            return {value, status: 'empty', message: ""};
+        }
+        if (!DEFINITION_PATTERN.test(value)) {
+            return {
+                value,
+                status: 'error',
+                message: msg("Device definition must be make_model_year, e.g. ford_escape-lx_2025"),
+            };
+        }
+        return {value, status: 'ok', message: ""};
+    }
+
     private get parsedRows(): ParsedRow[] {
         return this.imeisText.split('\n')
             .map((line, index) => ({line, lineNumber: index + 1}))
             .filter(({line}) => line.trim().length > 0)
             .map(({line, lineNumber}) => {
-                const [imei = "", vin = "", plate = "", ...rest] = line.split(',');
+                const [imei = "", vin = "", plate = "", definition = "", ...rest] = line.split(',');
                 const row: ParsedRow = {
                     lineNumber,
                     imei: this.checkImei(imei),
                     vin: this.checkVin(vin),
                     plate: this.checkPlate(plate),
+                    definition: this.checkDefinition(definition),
                 };
-                // Anything past the third field is unexpected — flag it rather than dropping it
+                // Anything past the fourth field is unexpected — flag it rather than dropping it
                 // silently, since it usually means a misaligned CSV column.
                 if (rest.some(part => part.trim() !== "")) {
-                    row.plate = {
-                        value: row.plate.value,
+                    row.definition = {
+                        value: row.definition.value,
                         status: 'error',
-                        message: msg("Too many values on this line — expected IMEI, VIN, license plate"),
+                        message: msg("Too many values on this line — expected IMEI, VIN, license plate, device definition"),
                     };
                 }
                 return row;
@@ -287,7 +374,106 @@ export class ClaimImeiModalElement extends LitElement {
     }
 
     private static rowHasError(row: ParsedRow): boolean {
-        return [row.imei, row.vin, row.plate].some(field => field.status === 'error');
+        return [row.imei, row.vin, row.plate, row.definition].some(field => field.status === 'error');
+    }
+
+    // ---- VIN decoding ---------------------------------------------------------------------
+
+    // Called on every edit. Restarting the timer means a burst of typing or a paste produces one
+    // decode pass, not one per keystroke.
+    private scheduleDecode() {
+        clearTimeout(this.decodeTimer);
+        this.decodeTimer = setTimeout(() => this.decodePendingVins(), DECODE_DEBOUNCE_MS);
+    }
+
+    // Decodes every row that has a usable VIN and no definition of its own. Results land in
+    // decodedVins and are written into the textarea by applyDecodedDefinitions.
+    private async decodePendingVins() {
+        const pending = new Set(
+            this.parsedRows
+                .filter(row => row.definition.value === "")
+                .filter(row => row.vin.status === 'ok' || row.vin.status === 'warn')
+                .map(row => row.vin.value)
+                .filter(vin => !this.decodedVins.has(vin)
+                    && !this.failedVins.has(vin)
+                    && !this.decodingVins.has(vin))
+        );
+
+        if (pending.size === 0) {
+            // Rows may still be waiting on a result fetched for an earlier edit.
+            this.applyDecodedDefinitions();
+            return;
+        }
+
+        for (const vin of pending) {
+            this.decodingVins.add(vin);
+        }
+        this.requestUpdate();
+
+        await Promise.all([...pending].map(async (vin) => {
+            try {
+                const response = await this.apiService.callApi<DecodeVinResponse>(
+                    'POST',
+                    '/definitions/decodevin',
+                    {vin, countryCode: DECODE_COUNTRY_CODE},
+                    true,  // auth
+                    false, // this endpoint is not oracle-prefixed
+                );
+                const decoded = response.data?.deviceDefinitionId;
+                if (response.success && decoded) {
+                    this.decodedVins.set(vin, decoded.toLowerCase());
+                } else {
+                    this.failedVins.set(vin, response.error || msg("could not be decoded"));
+                }
+            } catch (e) {
+                this.failedVins.set(vin, `${e}`);
+            } finally {
+                this.decodingVins.delete(vin);
+            }
+        }));
+
+        this.applyDecodedDefinitions();
+        this.requestUpdate();
+    }
+
+    // Writes decoded definitions into the textarea as the fourth field. Always works from the
+    // current text rather than a snapshot, so a decode landing while the operator is still typing
+    // appends to what they have now instead of overwriting it. Each VIN is filled at most once
+    // (appliedVins), so clearing an auto-filled value sticks.
+    private applyDecodedDefinitions() {
+        // A claim in flight rewrites imeisText itself when it finishes (dropping the rows that
+        // succeeded), so writing into it here would race that.
+        if (this.processing) return;
+
+        let changed = false;
+        // Collected during the pass rather than marked as we go: two devices can carry the same
+        // VIN, and marking the first would leave the second permanently unfilled.
+        const justApplied = new Set<string>();
+
+        const lines = this.imeisText.split('\n').map(line => {
+            if (line.trim() === "") return line;
+
+            const parts = line.split(',');
+            const vin = (parts[1] ?? "").trim().toUpperCase();
+            const existing = (parts[3] ?? "").trim();
+            if (vin === "" || existing !== "") return line;
+
+            const decoded = this.decodedVins.get(vin);
+            if (!decoded || this.appliedVins.has(vin)) return line;
+
+            // Pad so the definition lands in the fourth slot even when the plate was omitted;
+            // a spaced placeholder keeps the line readable rather than collapsing to ",,".
+            while (parts.length < 3) parts.push(" ");
+            parts[3] = ` ${decoded}`;
+            justApplied.add(vin);
+            changed = true;
+            return parts.join(',');
+        });
+
+        if (changed) {
+            justApplied.forEach(vin => this.appliedVins.add(vin));
+            this.imeisText = lines.join('\n');
+        }
     }
 
     private get duplicateImeis(): Set<string> {
@@ -334,13 +520,14 @@ export class ClaimImeiModalElement extends LitElement {
                             <input type="file" id="csv-upload" style="display: none;" accept=".csv" @change=${this.handleFileUpload}>
                         </div>
                         <p class="format-hint">
-                            IMEI, VIN, ${msg('LICENSE PLATE')}<br>
-                            <span style="color:#666;">${msg('VIN and license plate are optional. 123456789012345, 1HGCM82633A004352, ABC1234')}</span>
+                            IMEI, VIN, ${msg('LICENSE PLATE')}, ${msg('DEVICE DEFINITION')}<br>
+                            <span style="color:#666;">${msg('Everything after the IMEI is optional. 123456789012345, 1HGCM82633A004352, ABC1234, ford_escape-lx_2025')}</span><br>
+                            <span style="color:#666;">${msg('Leave the device definition blank and it is decoded from the VIN.')}</span>
                         </p>
                         <textarea
-                            .placeholder=${msg('123456789012345, 1HGCM82633A004352, ABC1234')}
+                            .placeholder=${msg('123456789012345, 1HGCM82633A004352, ABC1234, ford_escape-lx_2025')}
                             .value=${this.imeisText}
-                            @input=${(e: InputEvent) => this.imeisText = (e.target as HTMLTextAreaElement).value}
+                            @input=${this.handleTextInput}
                             ?disabled=${this.processing}
                         ></textarea>
                         ${this.renderPreview(rows, duplicates)}
@@ -358,6 +545,11 @@ export class ClaimImeiModalElement extends LitElement {
         `;
     }
 
+    private handleTextInput(e: InputEvent) {
+        this.imeisText = (e.target as HTMLTextAreaElement).value;
+        this.scheduleDecode();
+    }
+
     private renderPreview(rows: ParsedRow[], duplicates: Set<string>) {
         if (rows.length === 0) {
             return nothing;
@@ -371,7 +563,7 @@ export class ClaimImeiModalElement extends LitElement {
         let hidden = 0;
         if (rows.length > PREVIEW_LIMIT) {
             const problems = rows.filter(row => ClaimImeiModalElement.rowHasError(row)
-                || [row.imei, row.vin, row.plate].some(f => f.status === 'warn'));
+                || [row.imei, row.vin, row.plate, row.definition].some(f => f.status === 'warn'));
             const clean = rows.filter(row => !problems.includes(row));
             shown = [...problems, ...clean].slice(0, PREVIEW_LIMIT).sort((a, b) => a.lineNumber - b.lineNumber);
             hidden = rows.length - shown.length;
@@ -386,6 +578,7 @@ export class ClaimImeiModalElement extends LitElement {
                             <th>${msg('IMEI')}</th>
                             <th>${msg('VIN')}</th>
                             <th>${msg('License Plate')}</th>
+                            <th>${msg('Device Definition')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -397,6 +590,7 @@ export class ClaimImeiModalElement extends LitElement {
                                     : "")}</td>
                                 <td>${this.renderField(row.vin)}</td>
                                 <td>${this.renderField(row.plate)}</td>
+                                <td>${this.renderDefinitionField(row)}</td>
                             </tr>
                         `)}
                     </tbody>
@@ -413,6 +607,37 @@ export class ClaimImeiModalElement extends LitElement {
                 ${hidden > 0 ? html`<span style="color:#666;">${msg(str`+${hidden} more not shown`)}</span>` : nothing}
             </div>
         `;
+    }
+
+    // The definition cell has three states the other columns don't: decoding in progress, decoded
+    // from the VIN, and a VIN the decoder couldn't resolve. An operator-typed value renders like
+    // any other field.
+    private renderDefinitionField(row: ParsedRow) {
+        if (row.definition.status !== 'empty') {
+            return this.renderField(row.definition);
+        }
+
+        const vin = row.vin.value;
+        if (vin === "" || row.vin.status === 'error') {
+            return html`<span class="cell-value muted">${msg('not set')}</span>`;
+        }
+        if (this.decodingVins.has(vin)) {
+            return html`
+                <span class="spinner" aria-hidden="true"></span>
+                <span class="decoding-note">${msg('decoding…')}</span>
+            `;
+        }
+        const failure = this.failedVins.get(vin);
+        if (failure) {
+            // Not an error on the row: the claim still lands, and the onboarding verify step
+            // decodes the VIN again later. Only the head start is lost.
+            const title = msg(str`This VIN could not be decoded (${failure}). The vehicle can still be claimed — the definition is worked out during onboarding.`);
+            return html`
+                <span class="status-icon" title=${title} aria-label=${title}>⚠️</span>
+                <span class="decoding-note">${msg('not decoded')}</span>
+            `;
+        }
+        return html`<span class="cell-value muted">${msg('not set')}</span>`;
     }
 
     // renderField shows the normalized value with a status emoji whose title explains any
@@ -491,6 +716,10 @@ export class ClaimImeiModalElement extends LitElement {
         const imeiIndex = findColumn(['imei']);
         const vinIndex = findColumn(['vin']);
         const plateIndex = findColumn(['license_plate', 'license plate', 'licenseplate', 'plate', 'patente']);
+        const definitionIndex = findColumn([
+            'device_definition_id', 'device definition id', 'device_definition', 'device definition',
+            'definition_id', 'definition', 'definicion',
+        ]);
 
         let extracted: string[] = [];
 
@@ -501,18 +730,19 @@ export class ClaimImeiModalElement extends LitElement {
                 if (!imei) continue;
                 const vin = vinIndex !== -1 ? (rows[i][vinIndex] || "") : "";
                 const plate = plateIndex !== -1 ? (rows[i][plateIndex] || "") : "";
-                extracted.push(ClaimImeiModalElement.toLine(imei, vin, plate));
+                const definition = definitionIndex !== -1 ? (rows[i][definitionIndex] || "") : "";
+                extracted.push(ClaimImeiModalElement.toLine(imei, vin, plate, definition));
             }
         } else if (rows[0].length === 1) {
             // No header, single column - assume all rows are IMEIs
             extracted = rows.map(row => row[0]).filter(Boolean);
-        } else if (rows[0].length <= 3) {
-            // No header, but the shape matches what we accept in the textarea: IMEI, VIN, plate.
+        } else if (rows[0].length <= 4) {
+            // No header, but the shape matches what we accept in the textarea.
             extracted = rows
                 .filter(row => row[0])
-                .map(row => ClaimImeiModalElement.toLine(row[0], row[1] || "", row[2] || ""));
+                .map(row => ClaimImeiModalElement.toLine(row[0], row[1] || "", row[2] || "", row[3] || ""));
         } else {
-            this.error = msg("Could not find an 'imei' column in the CSV and it has more columns than IMEI, VIN, license plate.");
+            this.error = msg("Could not find an 'imei' column in the CSV and it has more columns than IMEI, VIN, license plate, device definition.");
             return;
         }
 
@@ -522,12 +752,15 @@ export class ClaimImeiModalElement extends LitElement {
         }
 
         this.imeisText = extracted.join('\n');
+        // An uploaded file is an edit like any other: rows without a definition still get one
+        // decoded from their VIN.
+        this.scheduleDecode();
     }
 
     // toLine renders one textarea line, dropping trailing separators when the optional
     // fields are absent so the box stays readable.
-    private static toLine(imei: string, vin: string, plate: string): string {
-        const parts = [imei.trim(), vin.trim(), plate.trim()];
+    private static toLine(imei: string, vin: string, plate: string, definition: string = ""): string {
+        const parts = [imei.trim(), vin.trim(), plate.trim(), definition.trim()];
         while (parts.length > 1 && parts[parts.length - 1] === "") {
             parts.pop();
         }
@@ -538,10 +771,15 @@ export class ClaimImeiModalElement extends LitElement {
 
     private closeModal() {
         if (this.processing) return;
+        clearTimeout(this.decodeTimer);
         this.show = false;
         this.imeisText = "";
         this.error = "";
         this.results = [];
+        this.decodingVins = new Set();
+        this.decodedVins = new Map();
+        this.failedVins = new Map();
+        this.appliedVins = new Set();
         this.dispatchEvent(new CustomEvent('modal-closed', {
             bubbles: true,
             composed: true
@@ -571,6 +809,9 @@ export class ClaimImeiModalElement extends LitElement {
             const body: Record<string, string> = {};
             if (row.vin.value) body.vin = row.vin.value;
             if (row.plate.value) body.license_plate = row.plate.value;
+            // Only ever the value in the row. A definition decoded but not yet written back is
+            // deliberately not sent — what the operator sees in the textarea is what is claimed.
+            if (row.definition.value) body.device_definition_id = row.definition.value;
 
             try {
                 const response = await this.apiService.callApi<ClaimResponse>(
