@@ -13,7 +13,7 @@ export class OnboardingView extends LitElement {
         <!-- No item-changed binding on vehicle-list-element: it reloads itself on its
              own rows' events, which then bubble here — a binding would reload twice. -->
         <add-vin-element @item-changed=${this.handleItemChanged}></add-vin-element>
-        <vehicle-list-element></vehicle-list-element>
+        <vehicle-list-element @item-deleted=${this.handleItemDeleted}></vehicle-list-element>
     `;
   }
 
@@ -26,8 +26,24 @@ export class OnboardingView extends LitElement {
         }
     }
 
+    private async reloadPendingVehicles() {
+        const addVinElement = this.renderRoot.querySelector('add-vin-element') as any;
+        if (addVinElement && addVinElement.reloadPendingVehicles) {
+            await addVinElement.reloadPendingVehicles();
+        }
+    }
+
     private async handleItemChanged() {
         // When items are added/changed, reload the vehicle list
         await this.reloadVehicleList();
+    }
+
+    // Deleting a vehicle burns its NFT, and the oracle then returns the record to the
+    // pending pool so it can be onboarded again without a separate Reset Onboarding step.
+    // The row removes itself from the vehicle list locally, but the pending list above it
+    // only reloads if asked — without this the device would not reappear until a page
+    // refresh, which reads as the delete having lost it.
+    private async handleItemDeleted() {
+        await this.reloadPendingVehicles();
     }
 }
