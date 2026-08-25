@@ -43,6 +43,13 @@ export class TelemetryModalElement extends LitElement {
     @property({attribute: true})
     public deviceType = "";
 
+    // The vehicle's on-chain token id, 0/undefined when it hasn't been minted. Only used to
+    // suppress "Remove VIN": the VIN is what the vehicle NFT was minted against, so clearing it
+    // post-mint orphans the row from its own vehicle and cannot be undone from anything stored
+    // locally. The oracle refuses it too — this keeps the button from being offered at all.
+    @property({attribute: true, type: Number})
+    public tokenId = 0;
+
     @state()
     private telemetryData: TelemetryData[] = [];
 
@@ -178,7 +185,8 @@ export class TelemetryModalElement extends LitElement {
                             </button>
                             <button type="button"
                                     class="btn btn-danger"
-                                    ?disabled=${this.removingVin || !this.vin}
+                                    ?hidden=${this.isMinted}
+                                    ?disabled=${this.removingVin || !this.vin || this.isMinted}
                                     @click=${this.showRemoveVinConfirmModal}
                                     style="font-size: 0.875rem; padding: 0.5rem 1rem;">
                                 ${this.removingVin ? html`<span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f3f3f3; border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem;"></span>` : ''}
@@ -603,7 +611,13 @@ export class TelemetryModalElement extends LitElement {
         }
     }
 
+    // True once the vehicle is on chain. Minted vehicles keep their VIN permanently.
+    private get isMinted(): boolean {
+        return Number(this.tokenId) > 0;
+    }
+
     private showRemoveVinConfirmModal() {
+        if (this.isMinted) return;
         this.showRemoveVinConfirm = true;
     }
 

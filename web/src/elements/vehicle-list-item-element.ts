@@ -469,6 +469,8 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         modal.imei = this.item?.imei || '';
         modal.vin = this.item?.vin || '';
         modal.deviceType = this.item?.device_type || '';
+        // Minted vehicles must not offer "Remove VIN" — see the guard in telemetry-modal-element.
+        modal.tokenId = this.item?.tokenId || 0;
         
         // Add event listener for modal close
         modal.addEventListener('modal-closed', () => {
