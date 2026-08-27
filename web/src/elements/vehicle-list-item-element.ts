@@ -6,6 +6,7 @@ import {Vehicle} from "@datatypes//vehicle.ts";
 import {BaseOnboardingElement} from "@elements/base-onboarding-element.ts";
 import {delay} from "@utils/utils.ts";
 import {globalStyles} from "../global-styles.ts";
+import "./confirm-modal-element.ts";
 
 // Capability required by the backend for the shared-account routes — transfer, disconnect and
 // delete performed by the tenant's signer on an account it does not own.
@@ -163,6 +164,21 @@ export class VehicleListItemElement extends BaseOnboardingElement {
                       class="action-btn"
                   >
                       ${msg('reset onboarding')}
+                  </button>
+                  <!--
+                  Escape hatch for a minted vehicle whose NFT we cannot act on: not ours, and no
+                  shared-account signer either, so both the passkey delete and the shared delete
+                  are unavailable. Offered only in that case — when either real delete is
+                  possible, that is the correct action and this one would strand an NFT.
+                  -->
+                  <button
+                      type="button"
+                      ?hidden=${!this.isExternallyOwned(this.item)}
+                      ?disabled=${this.processing}
+                      @click=${this.openForceDeleteConfirm}
+                      class=${this.deletionProcessing ? 'processing action-btn secondary' : 'action-btn secondary'}
+                  >
+                      ${msg('force delete')}
                   </button>
               </td>
             </tr>
@@ -369,6 +385,55 @@ export class VehicleListItemElement extends BaseOnboardingElement {
         await delay(1000);
         this.processing = false;
         this.dispatchItemChanged();
+    }
+
+    // Deliberately a modal rather than window.confirm: the consequence needs more than one
+    // sentence to state honestly, and confirm() renders it as an unreadable wall.
+    private openForceDeleteConfirm() {
+        if (!this.item) {
+            return;
+        }
+
+        const modal = document.createElement('confirm-modal-element') as any;
+        modal.show = true;
+        modal.title = msg('Force delete this vehicle?');
+        modal.message = msg("This clears the vehicle from this app only. The on-chain Vehicle NFT and its synthetic device are NOT burned — they keep existing, stay with their current owner, and keep all history attached to them. The device returns to the pending list and can be onboarded again onto a new NFT. Use this only when you cannot get access to the vehicle NFT to delete it properly. This cannot be undone.");
+        modal.confirmText = msg('Force delete');
+        modal.confirmButtonClass = 'btn-danger';
+
+        const dismiss = () => {
+            if (modal.parentNode === document.body) {
+                document.body.removeChild(modal);
+            }
+        };
+        modal.addEventListener('modal-cancel', dismiss);
+        modal.addEventListener('modal-confirm', () => {
+            dismiss();
+            void this.forceDeleteVehicle();
+        });
+
+        document.body.appendChild(modal);
+    }
+
+    // Abandons the NFT: the backend resets the onboarding record (token ids, owner, minted date)
+    // and touches nothing on chain.
+    async forceDeleteVehicle() {
+        if (!this.item) {
+            return;
+        }
+
+        this.processing = true;
+        this.deletionProcessing = true;
+        const result = await this.api.callApi('DELETE', `/vehicle/force/${this.item.imei}`, null, true, true);
+        this.processing = false;
+        this.deletionProcessing = false;
+        if (result.success) {
+            // Unlike delete, the row survives — it comes back unminted (tokenId 0), so refetch
+            // rather than dropping it from the list.
+            this.dispatchItemChanged();
+        } else {
+            this.openErrorModal(result.error || msg('Vehicle force delete failed'), msg('Force Delete Failed'));
+        }
     }
 
     private openTransferModal() {

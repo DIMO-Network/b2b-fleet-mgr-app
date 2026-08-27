@@ -3759,6 +3759,30 @@
   <source>Could not find an 'imei' column in the CSV and it has more columns than IMEI, VIN, license plate, device definition.</source>
   <target>No se encontró una columna 'imei' en el CSV y tiene más columnas que IMEI, VIN, patente, definición del dispositivo.</target>
 </trans-unit>
+<trans-unit id="s616bb2c8fed325c7">
+  <source>force delete</source>
+  <target>forzar eliminación</target>
+</trans-unit>
+<trans-unit id="s9b34d2ec1eacc75a">
+  <source>Force delete this vehicle?</source>
+  <target>¿Forzar la eliminación de este vehículo?</target>
+</trans-unit>
+<trans-unit id="sb29f87b1c46be4b7">
+  <source>This clears the vehicle from this app only. The on-chain Vehicle NFT and its synthetic device are NOT burned — they keep existing, stay with their current owner, and keep all history attached to them. The device returns to the pending list and can be onboarded again onto a new NFT. Use this only when you cannot get access to the vehicle NFT to delete it properly. This cannot be undone.</source>
+  <target>Esto elimina el vehículo solo de esta aplicación. El NFT del vehículo on-chain y su dispositivo sintético NO se queman: siguen existiendo, permanecen con su propietario actual y conservan todo el historial asociado. El dispositivo vuelve a la lista de pendientes y puede registrarse nuevamente en un NFT nuevo. Use esto solo cuando no pueda obtener acceso al NFT del vehículo para eliminarlo correctamente. Esta acción no se puede deshacer.</target>
+</trans-unit>
+<trans-unit id="scf32a292a4b364a7">
+  <source>Force delete</source>
+  <target>Forzar eliminación</target>
+</trans-unit>
+<trans-unit id="s46b8e31db0d98f7c">
+  <source>Vehicle force delete failed</source>
+  <target>Error al forzar la eliminación del vehículo</target>
+</trans-unit>
+<trans-unit id="s8405cb72d831fbb4">
+  <source>Force Delete Failed</source>
+  <target>Error al Forzar la Eliminación</target>
+</trans-unit>
 </body>
 </file>
 </xliff>
