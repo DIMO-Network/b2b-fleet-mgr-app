@@ -5,6 +5,7 @@ import {globalStyles} from '../global-styles.ts';
 import {ApiService} from '@services/api-service.ts';
 import {TenantSettings, SettingsService} from '@services/settings-service.ts';
 import '../elements/operator-fleet-lite-panel-element.ts';
+import '../elements/aa-wallet-panel-element.ts';
 
 @customElement('tenant-settings-view')
 export class TenantSettingsView extends LitElement {
@@ -350,6 +351,7 @@ export class TenantSettingsView extends LitElement {
           </div>
 
           <operator-fleet-lite-panel></operator-fleet-lite-panel>
+          <aa-wallet-panel></aa-wallet-panel>
         </div>
       </div>
     `;

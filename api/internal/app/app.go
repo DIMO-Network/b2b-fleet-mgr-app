@@ -235,6 +235,13 @@ func App(settings *config.Settings, logger *zerolog.Logger, commitHash string) *
 	oracleApp.Get("/tenant/settings", genericProxyCtrl.Proxy)
 	oracleApp.Post("/tenant/settings", genericProxyCtrl.Proxy)
 	oracleApp.Post("/tenant/sync-kore", genericProxyCtrl.Proxy)
+	// The AA fleet wallet (fleet-tenancy-api plan 08): the oracle proxies these
+	// on to the tenancy service, which owns the credential. The PUT body holds
+	// the wallet's root private key for the length of one forward — nothing here
+	// stores or logs it.
+	oracleApp.Get("/tenant/aa-wallet", genericProxyCtrl.Proxy)
+	oracleApp.Put("/tenant/aa-wallet", genericProxyCtrl.Proxy)
+	oracleApp.Delete("/tenant/aa-wallet", genericProxyCtrl.Proxy)
 
 	// Fall-through 404 for the oracle group. Distinguishes "this b2b proxy doesn't know
 	// about that path" from "the upstream oracle returned 404". Upstream-passthrough 404s
